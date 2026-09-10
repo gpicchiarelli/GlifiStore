@@ -1,10 +1,15 @@
 #include "harness.hpp"
 #include "suite.hpp"
 
+#include <charconv>
 #include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <optional>
+#include <stdexcept>
+#include <string>
 #include <string_view>
+#include <system_error>
 #include <vector>
 
 namespace {
@@ -27,7 +32,13 @@ struct Options {
         std::cerr << "missing value for " << flag << '\n';
         std::exit(2);
     }
-    return static_cast<std::size_t>(std::stoull(value));
+    const std::string_view text{value};
+    std::size_t parsed{};
+    const auto converted = std::from_chars(text.data(), text.data() + text.size(), parsed);
+    if (converted.ec != std::errc{} || converted.ptr != text.data() + text.size()) {
+        throw std::invalid_argument{"invalid value for " + std::string{flag} + ": " + std::string{text}};
+    }
+    return parsed;
 }
 
 [[nodiscard]] auto parse_options(int argc, char** argv) -> Options {
@@ -80,7 +91,7 @@ struct Options {
                 std::cerr << "unknown distribution: " << argv[index] << '\n';
                 std::exit(2);
             }
-            options.distribution = *distribution;
+            options.distribution = distribution;
             continue;
         }
         if (arg == "--warmup" && index + 1 < argc) {
@@ -165,7 +176,7 @@ void apply_overrides(glyphastore::bench::Config& config, const Options& options)
 
 } // namespace
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) try {
     const auto options = parse_options(argc, argv);
     if ((options.threads || options.distribution) &&
         !glyphastore::bench::is_parallel_benchmark(options.kind)) {
@@ -212,4 +223,10 @@ int main(int argc, char** argv) {
         }
     }
     return 0;
+} catch (const std::exception& exception) {
+    std::cerr << "benchmark error: " << exception.what() << '\n';
+    return 1;
+} catch (...) {
+    std::cerr << "benchmark error: unknown exception\n";
+    return 1;
 }

@@ -8,6 +8,7 @@
 #include <array>
 #include <atomic>
 #include <barrier>
+#include <charconv>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -19,6 +20,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <thread>
 #include <vector>
 
@@ -43,11 +45,13 @@ struct Options final {
     if (text == nullptr) {
         throw std::invalid_argument{"missing numeric argument"};
     }
-    const auto value = std::stoull(text);
-    if (value == 0U) {
+    const std::string_view input{text};
+    std::size_t value{};
+    const auto converted = std::from_chars(input.data(), input.data() + input.size(), value);
+    if (converted.ec != std::errc{} || converted.ptr != input.data() + input.size() || value == 0U) {
         throw std::invalid_argument{"numeric argument must be positive"};
     }
-    return static_cast<std::size_t>(value);
+    return value;
 }
 
 [[nodiscard]] auto parse_options(const int argc, char** argv) -> Options {

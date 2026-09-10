@@ -269,6 +269,69 @@ if(GLYPHASTORE_BUILD_BENCHMARKS)
             PASS_REGULAR_EXPRESSION "latency_samples=64"
         )
         add_test(
+            NAME glyphastore_benchmark_rejects_invalid_numeric_option
+            COMMAND glyphastore_benchmarks --ops not-a-number
+        )
+        set_tests_properties(glyphastore_benchmark_rejects_invalid_numeric_option PROPERTIES
+            WILL_FAIL TRUE
+        )
+        add_test(
+            NAME glyphastore_benchmark_rejects_numeric_suffix
+            COMMAND glyphastore_benchmarks --ops 1junk
+        )
+        set_tests_properties(glyphastore_benchmark_rejects_numeric_suffix PROPERTIES
+            WILL_FAIL TRUE
+        )
+        add_test(
+            NAME glyphastore_compaction_benchmark_rejects_numeric_suffix
+            COMMAND glyphastore_compaction_benchmark --repeats 1junk
+        )
+        set_tests_properties(glyphastore_compaction_benchmark_rejects_numeric_suffix PROPERTIES
+            WILL_FAIL TRUE
+        )
+        add_test(
+            NAME glyphastore_generation_shell_benchmark_rejects_numeric_suffix
+            COMMAND glyphastore_generation_shell_benchmark --ops 1junk
+        )
+        set_tests_properties(glyphastore_generation_shell_benchmark_rejects_numeric_suffix PROPERTIES
+            WILL_FAIL TRUE
+        )
+        add_test(
+            NAME glyphastore_generation_publication_benchmark_rejects_numeric_suffix
+            COMMAND glyphastore_generation_publication_benchmark --ops 1junk
+        )
+        set_tests_properties(glyphastore_generation_publication_benchmark_rejects_numeric_suffix PROPERTIES
+            WILL_FAIL TRUE
+        )
+        add_test(
+            NAME glyphastore_maintenance_benchmark_rejects_numeric_suffix
+            COMMAND glyphastore_maintenance_benchmark --operations 1junk
+        )
+        set_tests_properties(glyphastore_maintenance_benchmark_rejects_numeric_suffix PROPERTIES
+            WILL_FAIL TRUE
+        )
+        add_test(
+            NAME glyphastore_memory_census_benchmark_rejects_numeric_suffix
+            COMMAND glyphastore_memory_census_benchmark --entries 1junk
+        )
+        set_tests_properties(glyphastore_memory_census_benchmark_rejects_numeric_suffix PROPERTIES
+            WILL_FAIL TRUE
+        )
+        add_test(
+            NAME glyphastore_paired_benchmark_rejects_numeric_suffix
+            COMMAND glyphastore_paired_benchmark --ops 1junk
+        )
+        set_tests_properties(glyphastore_paired_benchmark_rejects_numeric_suffix PROPERTIES
+            WILL_FAIL TRUE
+        )
+        add_test(
+            NAME glyphastore_paired_reactor_benchmark_rejects_numeric_suffix
+            COMMAND glyphastore_paired_reactor_benchmark --ops 1junk
+        )
+        set_tests_properties(glyphastore_paired_reactor_benchmark_rejects_numeric_suffix PROPERTIES
+            WILL_FAIL TRUE
+        )
+        add_test(
             NAME glyphastore_benchmark_maintenance_smoke
             COMMAND glyphastore_maintenance_benchmark
                 --operations 128

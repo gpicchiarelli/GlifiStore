@@ -4,6 +4,7 @@
 #include "glyphastore/store/store.hpp"
 
 #include <algorithm>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
@@ -11,11 +12,11 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
-#include <limits>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -58,15 +59,19 @@ struct Measurement final {
     std::uint64_t checksum{};
 };
 
-[[nodiscard]] auto parse_size(const char* text, const std::string_view flag) -> std::size_t {
+[[nodiscard]] auto parse_size(const char* text, const std::string_view flag, const bool allow_zero = false)
+    -> std::size_t {
     if (text == nullptr) {
         throw std::invalid_argument{"missing value for " + std::string{flag}};
     }
-    const auto value = std::stoull(text);
-    if (value == 0 || value > std::numeric_limits<std::size_t>::max()) {
+    const std::string_view input{text};
+    std::size_t value{};
+    const auto converted = std::from_chars(input.data(), input.data() + input.size(), value);
+    if (converted.ec != std::errc{} || converted.ptr != input.data() + input.size() ||
+        (!allow_zero && value == 0)) {
         throw std::invalid_argument{"invalid value for " + std::string{flag}};
     }
-    return static_cast<std::size_t>(value);
+    return value;
 }
 
 [[nodiscard]] auto parse_options(const int argc, char** argv) -> Options {
@@ -91,16 +96,16 @@ struct Measurement final {
         } else if (argument == "--repeats") {
             options.repeats = parse_size(argv[++index], argument);
         } else if (argument == "--warmup") {
-            options.warmup = static_cast<std::size_t>(std::stoull(argv[++index]));
+            options.warmup = parse_size(argv[++index], argument, true);
         } else if (argument == "--batch-records") {
             options.batch_records = parse_size(argv[++index], argument);
         } else if (argument == "--batch-wait-us") {
-            options.batch_wait_us = static_cast<std::size_t>(std::stoull(argv[++index]));
+            options.batch_wait_us = parse_size(argv[++index], argument, true);
         } else {
             throw std::invalid_argument{"unknown argument: " + std::string{argument}};
         }
     }
-    if (options.keys > options.operations || options.value_bytes > 256U * 1024U ||
+    if (options.keys > options.operations || options.value_bytes > std::size_t{256} * 1024U ||
         options.batch_records > 32 || options.batch_wait_us > 1'000) {
         throw std::invalid_argument{
             "keys must not exceed ops; value-bytes maximum is 256 KiB; invalid batch limits"};
@@ -383,7 +388,8 @@ void print_summaries(const std::vector<Measurement>& measurements) {
                 p999.push_back(sample.p999_ns);
             }
         }
-        std::cout << "summary," << implementation << ',' << workload << ',' << throughput.size() << ','
+        const auto sample_count = throughput.size();
+        std::cout << "summary," << implementation << ',' << workload << ',' << sample_count << ','
                   << std::fixed << std::setprecision(3) << percentile(std::move(throughput), 0.50) << ','
                   << percentile(std::move(p99), 0.50) << ',' << percentile(std::move(p999), 0.50) << '\n';
     }

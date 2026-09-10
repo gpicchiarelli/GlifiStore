@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <exception>
 #include <filesystem>
 #include <iostream>
 #include <iterator>
@@ -25,6 +26,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <sys/socket.h>
@@ -70,7 +72,7 @@ struct Options {
     std::uint32_t maintenance_max_latency_deferral_ms{30'000};
     std::size_t maintenance_overlap_seed_operations{};
     std::size_t maintenance_overlap_seed_keys{128};
-    std::size_t maintenance_overlap_seed_value_bytes{256U * 1024U};
+    std::size_t maintenance_overlap_seed_value_bytes{std::size_t{256} * 1024U};
     std::uint32_t maintenance_overlap_eval_ms{250};
     std::uint32_t maintenance_overlap_release_ms{500};
 };
@@ -356,7 +358,7 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
     }
     auto config = store_config(options, directory);
     config.maintenance.mode = glyphastore::MaintenanceMode::disabled;
-    auto opened = glyphastore::Store::open(std::move(config));
+    auto opened = glyphastore::Store::open(config);
     if (!opened) {
         return false;
     }
@@ -768,7 +770,7 @@ class BufferedResponseReader final {
                 buffer_.erase(buffer_.begin(), buffer_.begin() + static_cast<std::ptrdiff_t>(offset_));
                 offset_ = 0;
             }
-            std::array<std::byte, 64U * 1024U> chunk;
+            std::array<std::byte, std::size_t{64} * 1024U> chunk;
             const auto count = ::recv(descriptor, chunk.data(), chunk.size(), 0);
             if (count > 0) {
                 buffer_.insert(buffer_.end(), chunk.begin(),
@@ -943,7 +945,7 @@ class BufferedResponseReader final {
     // Seed traffic is outside the timed region, but it still crosses the real bounded Reactor.
     // Bound both record count and bytes so large-value GET workloads do not manufacture a
     // multi-megabyte input burst unrelated to the measured pipeline.
-    constexpr std::size_t maximum_seed_batch_bytes = 2U * 1024U * 1024U;
+    constexpr std::size_t maximum_seed_batch_bytes = std::size_t{2} * 1024U * 1024U;
     for (std::size_t client = 0; client < descriptors.size(); ++client) {
         BufferedResponseReader responses{seed_pipeline * glyphastore::server::kResponseHeaderBytes};
         std::vector<std::byte> batch;
@@ -1397,18 +1399,26 @@ struct LatencyExtras {
     double max_put_latency_ns{};
 };
 
-void fill_latency_percentiles(std::vector<double> samples, std::size_t& count, double& p50, double& p95,
-                              double& p99, double& p999, double& maximum) {
+struct LatencyPercentiles {
+    std::size_t samples{};
+    double p50{};
+    double p95{};
+    double p99{};
+    double p999{};
+    double maximum{};
+};
+
+[[nodiscard]] auto latency_percentiles(std::vector<double> samples) -> LatencyPercentiles {
     if (samples.empty()) {
-        return;
+        return {};
     }
     std::ranges::sort(samples);
-    count = samples.size();
-    p50 = percentile(samples, 0.50);
-    p95 = percentile(samples, 0.95);
-    p99 = percentile(samples, 0.99);
-    p999 = percentile(samples, 0.999);
-    maximum = samples.back();
+    return {.samples = samples.size(),
+            .p50 = percentile(samples, 0.50),
+            .p95 = percentile(samples, 0.95),
+            .p99 = percentile(samples, 0.99),
+            .p999 = percentile(samples, 0.999),
+            .maximum = samples.back()};
 }
 
 [[nodiscard]] auto run_benchmark(const Options& options) -> std::pair<Result, LatencyExtras> {
@@ -1480,14 +1490,20 @@ void fill_latency_percentiles(std::vector<double> samples, std::size_t& count, d
         extras.max_latency_ns = latency_ns.back();
     }
     if (options.latency_split) {
-        fill_latency_percentiles(std::move(get_latency_ns), extras.get_latency_samples,
-                                 extras.p50_get_latency_ns, extras.p95_get_latency_ns,
-                                 extras.p99_get_latency_ns, extras.p999_get_latency_ns,
-                                 extras.max_get_latency_ns);
-        fill_latency_percentiles(std::move(put_latency_ns), extras.put_latency_samples,
-                                 extras.p50_put_latency_ns, extras.p95_put_latency_ns,
-                                 extras.p99_put_latency_ns, extras.p999_put_latency_ns,
-                                 extras.max_put_latency_ns);
+        const auto get = latency_percentiles(std::move(get_latency_ns));
+        extras.get_latency_samples = get.samples;
+        extras.p50_get_latency_ns = get.p50;
+        extras.p95_get_latency_ns = get.p95;
+        extras.p99_get_latency_ns = get.p99;
+        extras.p999_get_latency_ns = get.p999;
+        extras.max_get_latency_ns = get.maximum;
+        const auto put = latency_percentiles(std::move(put_latency_ns));
+        extras.put_latency_samples = put.samples;
+        extras.p50_put_latency_ns = put.p50;
+        extras.p95_put_latency_ns = put.p95;
+        extras.p99_put_latency_ns = put.p99;
+        extras.p999_put_latency_ns = put.p999;
+        extras.max_put_latency_ns = put.maximum;
     }
     const auto median_profile = [&](auto member) {
         std::vector<double> values;
@@ -1618,7 +1634,7 @@ void fill_latency_percentiles(std::vector<double> samples, std::size_t& count, d
 
 } // namespace
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) try {
     const auto parsed = options(argc, argv);
     if (!glyphastore::bench::validate_run_settings(parsed.settings, parsed.config) || parsed.pipeline == 0 ||
         (parsed.client_api && parsed.workload != Workload::read_after_write) ||
@@ -1716,4 +1732,10 @@ int main(int argc, char** argv) {
         std::cout << '\n';
     }
     return 0;
+} catch (const std::exception& exception) {
+    std::cerr << "benchmark error: " << exception.what() << '\n';
+    return 1;
+} catch (...) {
+    std::cerr << "benchmark error: unknown exception\n";
+    return 1;
 }

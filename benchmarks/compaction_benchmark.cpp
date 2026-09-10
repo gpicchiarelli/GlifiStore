@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <charconv>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -37,7 +38,7 @@ constexpr std::uint64_t kExpireAtNs{200};
 struct Options {
     std::size_t warmups{1};
     std::size_t repeats{3};
-    std::size_t value_bytes{256U * 1024U};
+    std::size_t value_bytes{std::size_t{256} * 1024U};
     std::optional<std::string> scenario;
 };
 
@@ -118,7 +119,13 @@ class TemporaryDirectory final {
     if (value == nullptr) {
         throw std::runtime_error("missing value for " + std::string{flag});
     }
-    return static_cast<std::size_t>(std::stoull(value));
+    const std::string_view text{value};
+    std::size_t parsed{};
+    const auto converted = std::from_chars(text.data(), text.data() + text.size(), parsed);
+    if (converted.ec != std::errc{} || converted.ptr != text.data() + text.size()) {
+        throw std::runtime_error("invalid value for " + std::string{flag} + ": " + std::string{text});
+    }
+    return parsed;
 }
 
 [[nodiscard]] auto parse_options(int argc, char** argv) -> Options {

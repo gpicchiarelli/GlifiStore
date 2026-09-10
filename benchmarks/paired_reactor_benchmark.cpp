@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <atomic>
 #include <barrier>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
@@ -13,12 +14,12 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
-#include <limits>
 #include <memory>
 #include <span>
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -56,15 +57,19 @@ struct Measurement final {
     std::uint64_t checksum{};
 };
 
-[[nodiscard]] auto parse_positive(const char* value, const std::string_view flag) -> std::size_t {
+[[nodiscard]] auto parse_size(const char* value, const std::string_view flag, const bool allow_zero = false)
+    -> std::size_t {
     if (value == nullptr) {
         throw std::invalid_argument{"missing " + std::string{flag}};
     }
-    const auto parsed = std::stoull(value);
-    if (parsed == 0 || parsed > std::numeric_limits<std::size_t>::max()) {
+    const std::string_view input{value};
+    std::size_t parsed{};
+    const auto converted = std::from_chars(input.data(), input.data() + input.size(), parsed);
+    if (converted.ec != std::errc{} || converted.ptr != input.data() + input.size() ||
+        (!allow_zero && parsed == 0)) {
         throw std::invalid_argument{"invalid " + std::string{flag}};
     }
-    return static_cast<std::size_t>(parsed);
+    return parsed;
 }
 
 [[nodiscard]] auto parse_options(const int argc, char** argv) -> Options {
@@ -81,29 +86,30 @@ struct Measurement final {
             throw std::invalid_argument{"missing option value"};
         }
         if (argument == "--ops") {
-            options.operations = parse_positive(argv[++index], argument);
+            options.operations = parse_size(argv[++index], argument);
         } else if (argument == "--keys") {
-            options.keys = parse_positive(argv[++index], argument);
+            options.keys = parse_size(argv[++index], argument);
         } else if (argument == "--value-bytes") {
-            options.value_bytes = parse_positive(argv[++index], argument);
+            options.value_bytes = parse_size(argv[++index], argument);
         } else if (argument == "--pipeline") {
-            options.pipeline = parse_positive(argv[++index], argument);
+            options.pipeline = parse_size(argv[++index], argument);
         } else if (argument == "--clients") {
-            options.clients = parse_positive(argv[++index], argument);
+            options.clients = parse_size(argv[++index], argument);
         } else if (argument == "--put-percent") {
-            options.put_percent = static_cast<std::size_t>(std::stoull(argv[++index]));
+            options.put_percent = parse_size(argv[++index], argument, true);
         } else if (argument == "--repeats") {
-            options.repeats = parse_positive(argv[++index], argument);
+            options.repeats = parse_size(argv[++index], argument);
         } else if (argument == "--warmup") {
-            options.warmup = static_cast<std::size_t>(std::stoull(argv[++index]));
+            options.warmup = parse_size(argv[++index], argument, true);
         } else if (argument == "--batch-wait-us") {
-            options.batch_wait_us = static_cast<std::size_t>(std::stoull(argv[++index]));
+            options.batch_wait_us = parse_size(argv[++index], argument, true);
         } else {
             throw std::invalid_argument{"unknown option: " + std::string{argument}};
         }
     }
-    if (options.keys > options.operations || options.value_bytes > 256U * 1024U || options.pipeline > 128 ||
-        options.clients > 16 || options.put_percent > 100 || options.batch_wait_us > 1'000) {
+    if (options.keys > options.operations || options.value_bytes > std::size_t{256} * 1024U ||
+        options.pipeline > 128 || options.clients > 16 || options.put_percent > 100 ||
+        options.batch_wait_us > 1'000) {
         throw std::invalid_argument{"paired Reactor benchmark limits are invalid"};
     }
     return options;
@@ -145,12 +151,13 @@ struct Measurement final {
 class CurrentServer final {
   public:
     explicit CurrentServer(const std::size_t clients) {
-        auto created = glyphastore::server::Server::create({.port = 0,
-                                                            .maximum_connections = clients + 2U,
-                                                            .worker_count = 1,
-                                                            .maximum_input_bytes = 4U * 1024U * 1024U,
-                                                            .maximum_output_bytes = 4U * 1024U * 1024U},
-                                                           {.worker_config = {.explicit_count = 1}});
+        auto created =
+            glyphastore::server::Server::create({.port = 0,
+                                                 .maximum_connections = clients + 2U,
+                                                 .worker_count = 1,
+                                                 .maximum_input_bytes = std::size_t{4} * 1024U * 1024U,
+                                                 .maximum_output_bytes = std::size_t{4} * 1024U * 1024U},
+                                                {.worker_config = {.explicit_count = 1}});
         if (!created || !(*created)->start()) {
             throw std::runtime_error{"cannot start current TCP baseline"};
         }
@@ -220,11 +227,12 @@ class PairedServer final {
 };
 
 [[nodiscard]] auto connect(const std::uint16_t port) -> glyphastore::client::Client {
-    auto client = glyphastore::client::Client::connect({.host = "127.0.0.1",
-                                                        .port = port,
-                                                        .request_timeout_ms = 30'000,
-                                                        .maximum_pipeline_requests = 256,
-                                                        .maximum_pipeline_bytes = 4U * 1024U * 1024U});
+    auto client =
+        glyphastore::client::Client::connect({.host = "127.0.0.1",
+                                              .port = port,
+                                              .request_timeout_ms = 30'000,
+                                              .maximum_pipeline_requests = 256,
+                                              .maximum_pipeline_bytes = std::size_t{4} * 1024U * 1024U});
     if (!client) {
         throw std::runtime_error{client.error().message};
     }

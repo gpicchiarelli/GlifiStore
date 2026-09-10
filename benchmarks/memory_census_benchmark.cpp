@@ -4,6 +4,7 @@
 #include "store/store_internal.hpp"
 
 #include <algorithm>
+#include <charconv>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -14,6 +15,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <thread>
 #include <vector>
 
@@ -32,11 +34,13 @@ struct Options final {
     if (text == nullptr) {
         throw std::invalid_argument{"missing numeric argument"};
     }
-    const auto value = std::stoull(text);
-    if (value == 0 || value > std::numeric_limits<std::size_t>::max()) {
+    const std::string_view input{text};
+    std::size_t value{};
+    const auto converted = std::from_chars(input.data(), input.data() + input.size(), value);
+    if (converted.ec != std::errc{} || converted.ptr != input.data() + input.size() || value == 0) {
         throw std::invalid_argument{"numeric argument is outside size_t"};
     }
-    return static_cast<std::size_t>(value);
+    return value;
 }
 
 [[nodiscard]] auto parse_options(const int argc, char** argv) -> Options {
@@ -299,7 +303,7 @@ int main(const int argc, char** argv) try {
               << " process_compressed_bytes=" << process.compressed_bytes
               << " unattributed_rss_bytes=" << unattributed_rss_bytes << '\n';
     if (options.hold_ms != 0) {
-        std::cout << "# holding_process_for_vm_inspection_ms=" << options.hold_ms << std::endl;
+        std::cout << "# holding_process_for_vm_inspection_ms=" << options.hold_ms << '\n' << std::flush;
         std::this_thread::sleep_for(std::chrono::milliseconds{options.hold_ms});
     }
     if (!store.close()) {

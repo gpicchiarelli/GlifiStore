@@ -3,6 +3,7 @@
 #include "glyphastore/store/paired/read_generation.hpp"
 
 #include <array>
+#include <charconv>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -14,6 +15,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <vector>
 
 namespace {
@@ -34,15 +36,18 @@ struct Options final {
     std::size_t repeats{7};
 };
 
-[[nodiscard]] auto parse_size(const char* text) -> std::size_t {
+[[nodiscard]] auto parse_size(const char* text, const bool allow_zero = false) -> std::size_t {
     if (text == nullptr) {
         throw std::invalid_argument{"missing numeric argument"};
     }
-    const auto value = std::stoull(text);
-    if (value == 0 || value > Generation::kMaximumIncrementalDeltaEntries) {
+    const std::string_view input{text};
+    std::size_t value{};
+    const auto converted = std::from_chars(input.data(), input.data() + input.size(), value);
+    if (converted.ec != std::errc{} || converted.ptr != input.data() + input.size() ||
+        (!allow_zero && value == 0) || value > Generation::kMaximumIncrementalDeltaEntries) {
         throw std::invalid_argument{"operation count is outside the incremental delta bound"};
     }
-    return static_cast<std::size_t>(value);
+    return value;
 }
 
 [[nodiscard]] auto parse_options(const int argc, char** argv) -> Options {
@@ -60,7 +65,7 @@ struct Options final {
         if (argument == "--ops") {
             options.operations = parse_size(argv[++index]);
         } else if (argument == "--warmup") {
-            options.warmup = static_cast<std::size_t>(std::stoull(argv[++index]));
+            options.warmup = parse_size(argv[++index], true);
         } else if (argument == "--repeats") {
             options.repeats = parse_size(argv[++index]);
         } else {

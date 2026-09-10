@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
@@ -58,8 +59,8 @@ struct Options {
     std::size_t operations{15'360};
     std::size_t threads{4};
     std::size_t keys{128};
-    std::size_t value_bytes{64U * 1024U};
-    std::size_t reclaim_value_bytes{256U * 1024U};
+    std::size_t value_bytes{std::size_t{64} * 1024U};
+    std::size_t reclaim_value_bytes{std::size_t{256} * 1024U};
     std::size_t put_percent{5};
     std::size_t maintenance_interval_ms{10};
     std::size_t maintenance_copy_bytes_per_sec{};
@@ -337,7 +338,13 @@ class TemporaryDirectory final {
     if (value == nullptr) {
         throw std::runtime_error("missing value for " + std::string{flag});
     }
-    return static_cast<std::size_t>(std::stoull(value));
+    const std::string_view text{value};
+    std::size_t parsed{};
+    const auto converted = std::from_chars(text.data(), text.data() + text.size(), parsed);
+    if (converted.ec != std::errc{} || converted.ptr != text.data() + text.size()) {
+        throw std::runtime_error("invalid value for " + std::string{flag} + ": " + std::string{text});
+    }
+    return parsed;
 }
 
 [[nodiscard]] auto parse_options(int argc, char** argv) -> Options {
@@ -403,7 +410,7 @@ class TemporaryDirectory final {
             options.operations = 8'192;
         }
         if (!options.value_bytes_set) {
-            options.value_bytes = 32U * 1024U;
+            options.value_bytes = std::size_t{32} * 1024U;
         }
         if (!options.put_percent_set) {
             options.put_percent = 100;
