@@ -101,7 +101,7 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("(bounded, required)", workflow)
         self.assertIn('timeout 480 "./engineering/formal/${{ matrix.model }}/run-tlc.sh"', workflow)
         self.assertIn(
-            "eefe1ed75d091b3b0263af53add21265546895d12e43dfd68abb9517b7811006",
+            "957b23b2bb31d08f19346e105e23585f93fea9a139a712b0ac347eedaf26afea",
             workflow,
         )
         self.assertIn("sha256sum -c -", workflow)
