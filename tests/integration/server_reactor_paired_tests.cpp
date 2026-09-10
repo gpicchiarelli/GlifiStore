@@ -444,14 +444,20 @@ GLYPHA_TEST("paired Writer feeds one bounded maintenance latency window") {
     auto& store = **opened;
     auto* maintenance = glyphastore::detail::StoreAccess::maintenance_controller(store);
     GLYPHA_REQUIRE(maintenance != nullptr);
-    const auto initial_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
-    while ((store.maintenance_snapshot().evaluation_cycles == 0 ||
-            store.maintenance_snapshot().state != glyphastore::MaintenanceState::idle) &&
-           std::chrono::steady_clock::now() < initial_deadline) {
-        std::this_thread::sleep_for(std::chrono::milliseconds{1});
-    }
-    const auto initial_cycles = store.maintenance_snapshot().evaluation_cycles;
-    GLYPHA_REQUIRE(initial_cycles > 0);
+    const auto wait_for_idle_cycle_after = [&](const std::uint64_t previous_cycles) {
+        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
+        auto snapshot = store.maintenance_snapshot();
+        while ((snapshot.evaluation_cycles <= previous_cycles ||
+                snapshot.state != glyphastore::MaintenanceState::idle) &&
+               std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds{1});
+            snapshot = store.maintenance_snapshot();
+        }
+        return snapshot;
+    };
+    const auto initial_snapshot = wait_for_idle_cycle_after(0);
+    GLYPHA_REQUIRE(initial_snapshot.evaluation_cycles > 0);
+    GLYPHA_REQUIRE(initial_snapshot.state == glyphastore::MaintenanceState::idle);
 
     glyphastore::server::BoundedSpscQueue<glyphastore::server::MutationCompletion> completions{2};
     auto wakeup = glyphastore::server::Wakeup::create();
@@ -486,20 +492,11 @@ GLYPHA_TEST("paired Writer feeds one bounded maintenance latency window") {
     GLYPHA_REQUIRE((*executor)->release_payload(0, completion->payload_slot));
     GLYPHA_REQUIRE(!completion->error.has_value());
 
-    auto snapshot = store.maintenance_snapshot();
-    const bool feedback_already_consumed =
-        snapshot.evaluation_cycles > initial_cycles && snapshot.foreground_latency_samples == 1;
-    if (!feedback_already_consumed) {
-        const auto cycle_before_request = snapshot.evaluation_cycles;
-        maintenance->request_evaluate();
-        const auto feedback_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
-        while (store.maintenance_snapshot().evaluation_cycles == cycle_before_request &&
-               std::chrono::steady_clock::now() < feedback_deadline) {
-            std::this_thread::sleep_for(std::chrono::milliseconds{1});
-        }
-        snapshot = store.maintenance_snapshot();
-    }
-    GLYPHA_REQUIRE(snapshot.evaluation_cycles > initial_cycles);
+    const auto cycle_before_request = store.maintenance_snapshot().evaluation_cycles;
+    maintenance->request_evaluate();
+    const auto snapshot = wait_for_idle_cycle_after(cycle_before_request);
+    GLYPHA_REQUIRE(snapshot.evaluation_cycles > cycle_before_request);
+    GLYPHA_REQUIRE(snapshot.state == glyphastore::MaintenanceState::idle);
     GLYPHA_REQUIRE(snapshot.foreground_latency_samples == 1);
     GLYPHA_REQUIRE(snapshot.last_foreground_p99_ns >= 1'000'000ULL);
 
