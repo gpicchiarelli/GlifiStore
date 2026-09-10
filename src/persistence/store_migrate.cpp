@@ -1,13 +1,18 @@
 #include "glyphastore/persistence/store_migrate.hpp"
 
+#include "glyphastore/core/types.hpp"
 #include "glyphastore/core/worker_routing.hpp"
 #include "glyphastore/persistence/filesystem_hooks.hpp"
 #include "glyphastore/store/store.hpp"
 #include "store/store_internal.hpp"
 
+#include <algorithm>
 #include <charconv>
 #include <fstream>
+#include <limits>
 #include <optional>
+#include <span>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -18,6 +23,8 @@ namespace glyphastore {
 namespace {
 
 constexpr std::string_view kCheckpointMagic = "GlyphaStore/migrate-state/1";
+constexpr std::size_t kCheckpointMetadataAllowance = 1U << 10U;
+constexpr std::size_t kMaximumCheckpointBytes = 2U * kMaxNormalRecordSize + kCheckpointMetadataAllowance;
 
 [[nodiscard]] auto to_hex(const StoreId& store_id) -> std::string {
     static constexpr char kDigits[] = "0123456789abcdef";
@@ -70,18 +77,73 @@ constexpr std::string_view kCheckpointMagic = "GlyphaStore/migrate-state/1";
     return key;
 }
 
-[[nodiscard]] auto parse_u64_field(const std::string_view text, const std::string_view field)
-    -> Result<std::uint64_t> {
-    if (text.empty()) {
+struct CheckpointField {
+    std::string_view name;
+    std::string_view value;
+};
+
+[[nodiscard]] auto parse_u64_field(const CheckpointField field) -> Result<std::uint64_t> {
+    if (field.value.empty()) {
         return fail(ErrorCode::invalid_argument, "migrate checkpoint numeric field is empty");
     }
     std::uint64_t value{};
-    const auto parsed = std::from_chars(text.data(), text.data() + text.size(), value);
-    if (parsed.ec != std::errc{} || parsed.ptr != text.data() + text.size()) {
+    const auto parsed = std::from_chars(field.value.data(), field.value.data() + field.value.size(), value);
+    if (parsed.ec != std::errc{} || parsed.ptr != field.value.data() + field.value.size()) {
         return fail(ErrorCode::invalid_argument,
-                    std::string{"migrate checkpoint field is not an integer: "} + std::string{field});
+                    std::string{"migrate checkpoint field is not an integer: "} + std::string{field.name});
     }
     return value;
+}
+
+[[nodiscard]] auto parse_worker_count_field(const CheckpointField field) -> Result<std::size_t> {
+    auto parsed = parse_u64_field(field);
+    if (!parsed) {
+        return unexpected(parsed.error());
+    }
+    if (*parsed == 0 || *parsed > kMaximumWorkerCount) {
+        return fail(ErrorCode::invalid_argument,
+                    std::string{"migrate checkpoint Worker count is out of range: "} +
+                        std::string{field.name});
+    }
+    return static_cast<std::size_t>(*parsed);
+}
+
+[[nodiscard]] auto valid_store_id_hex(const std::string_view value) noexcept -> bool {
+    if (value.size() != StoreId{}.size() * 2U) {
+        return false;
+    }
+    for (const auto character : value) {
+        if (!((character >= '0' && character <= '9') || (character >= 'a' && character <= 'f'))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+[[nodiscard]] auto read_checkpoint_text(const std::filesystem::path& path) -> Result<std::string> {
+    std::error_code size_error;
+    const auto file_bytes = std::filesystem::file_size(path, size_error);
+    if (size_error) {
+        return fail(ErrorCode::io_error, "unable to inspect migrate checkpoint size");
+    }
+    if (file_bytes > kMaximumCheckpointBytes) {
+        return fail(ErrorCode::invalid_argument, "migrate checkpoint exceeds its bounded size");
+    }
+
+    std::ifstream input{path, std::ios::binary};
+    if (!input) {
+        return fail(ErrorCode::io_error, "unable to read migrate checkpoint");
+    }
+    const auto expected = static_cast<std::streamsize>(file_bytes);
+    std::string contents(static_cast<std::size_t>(file_bytes), '\0');
+    input.read(contents.data(), expected);
+    if (input.gcount() != expected || input.bad()) {
+        return fail(ErrorCode::io_error, "unable to read complete migrate checkpoint");
+    }
+    if (input.peek() != std::char_traits<char>::eof()) {
+        return fail(ErrorCode::invalid_argument, "migrate checkpoint changed while being read");
+    }
+    return contents;
 }
 
 struct MigrateCheckpoint {
@@ -93,19 +155,44 @@ struct MigrateCheckpoint {
     bool has_last_key{};
 };
 
-[[nodiscard]] auto parse_checkpoint(const std::filesystem::path& path) -> Result<MigrateCheckpoint> {
-    std::ifstream input{path};
-    if (!input) {
-        return fail(ErrorCode::io_error, "unable to read migrate checkpoint");
+struct CheckpointFieldsSeen {
+    bool source_store_id{};
+    bool source_worker_count{};
+    bool target_worker_count{};
+    bool keys_copied{};
+    bool last_key_hex{};
+    bool phase{};
+
+    [[nodiscard]] auto complete() const noexcept -> bool {
+        return source_store_id && source_worker_count && target_worker_count && keys_copied && last_key_hex &&
+               phase;
     }
+};
+
+[[nodiscard]] auto mark_checkpoint_field(bool& seen, const std::string_view field) -> Status {
+    if (seen) {
+        return fail(ErrorCode::invalid_argument,
+                    std::string{"migrate checkpoint field is duplicated: "} + std::string{field});
+    }
+    seen = true;
+    return {};
+}
+
+[[nodiscard]] auto parse_checkpoint(const std::filesystem::path& path) -> Result<MigrateCheckpoint> {
+    auto contents = read_checkpoint_text(path);
+    if (!contents) {
+        return unexpected(contents.error());
+    }
+    std::istringstream input{std::move(*contents)};
     std::string line;
     if (!std::getline(input, line) || line != kCheckpointMagic) {
         return fail(ErrorCode::invalid_argument, "migrate checkpoint magic is unsupported");
     }
     MigrateCheckpoint checkpoint{};
+    CheckpointFieldsSeen seen{};
     while (std::getline(input, line)) {
         if (line.empty()) {
-            continue;
+            return fail(ErrorCode::invalid_argument, "migrate checkpoint contains an empty line");
         }
         const auto separator = line.find('=');
         if (separator == std::string::npos) {
@@ -114,26 +201,45 @@ struct MigrateCheckpoint {
         const auto key = line.substr(0, separator);
         const auto value = std::string_view{line}.substr(separator + 1);
         if (key == "source_store_id") {
+            if (auto marked = mark_checkpoint_field(seen.source_store_id, key); !marked) {
+                return unexpected(marked.error());
+            }
+            if (!valid_store_id_hex(value)) {
+                return fail(ErrorCode::invalid_argument,
+                            "migrate checkpoint source_store_id is not canonical lowercase hex");
+            }
             checkpoint.source_store_id_hex = std::string{value};
         } else if (key == "source_worker_count") {
-            auto parsed = parse_u64_field(value, key);
+            if (auto marked = mark_checkpoint_field(seen.source_worker_count, key); !marked) {
+                return unexpected(marked.error());
+            }
+            auto parsed = parse_worker_count_field({.name = key, .value = value});
             if (!parsed) {
                 return unexpected(parsed.error());
             }
-            checkpoint.source_worker_count = static_cast<std::size_t>(*parsed);
+            checkpoint.source_worker_count = *parsed;
         } else if (key == "target_worker_count") {
-            auto parsed = parse_u64_field(value, key);
+            if (auto marked = mark_checkpoint_field(seen.target_worker_count, key); !marked) {
+                return unexpected(marked.error());
+            }
+            auto parsed = parse_worker_count_field({.name = key, .value = value});
             if (!parsed) {
                 return unexpected(parsed.error());
             }
-            checkpoint.target_worker_count = static_cast<std::size_t>(*parsed);
+            checkpoint.target_worker_count = *parsed;
         } else if (key == "keys_copied") {
-            auto parsed = parse_u64_field(value, key);
+            if (auto marked = mark_checkpoint_field(seen.keys_copied, key); !marked) {
+                return unexpected(marked.error());
+            }
+            auto parsed = parse_u64_field({.name = key, .value = value});
             if (!parsed) {
                 return unexpected(parsed.error());
             }
             checkpoint.keys_copied = *parsed;
         } else if (key == "last_key_hex") {
+            if (auto marked = mark_checkpoint_field(seen.last_key_hex, key); !marked) {
+                return unexpected(marked.error());
+            }
             auto decoded = hex_to_key(value);
             if (!decoded) {
                 return unexpected(decoded.error());
@@ -141,12 +247,17 @@ struct MigrateCheckpoint {
             checkpoint.last_key = std::move(*decoded);
             checkpoint.has_last_key = true;
         } else if (key == "phase") {
+            if (auto marked = mark_checkpoint_field(seen.phase, key); !marked) {
+                return unexpected(marked.error());
+            }
+            if (value != "copying") {
+                return fail(ErrorCode::invalid_argument, "migrate checkpoint phase is unsupported");
+            }
         } else {
             return fail(ErrorCode::invalid_argument, "migrate checkpoint contains an unknown field");
         }
     }
-    if (checkpoint.source_store_id_hex.empty() || checkpoint.source_worker_count == 0 ||
-        checkpoint.target_worker_count == 0) {
+    if (!seen.complete()) {
         return fail(ErrorCode::invalid_argument, "migrate checkpoint is incomplete");
     }
     return checkpoint;
@@ -194,6 +305,60 @@ struct MigrateCheckpoint {
         return true;
     }
     return iterator != std::filesystem::directory_iterator{};
+}
+
+[[nodiscard]] auto validate_resume_prefix(Store& source, Store& destination,
+                                          const std::span<const std::string> source_keys,
+                                          const std::string_view last_key) -> Result<std::uint64_t> {
+    auto destination_keys = detail::StoreAccess::snapshot_live_keys(destination);
+    if (!destination_keys) {
+        return unexpected(destination_keys.error());
+    }
+    if (!std::ranges::includes(source_keys, *destination_keys)) {
+        return fail(ErrorCode::invalid_argument,
+                    "migrate checkpoint destination contains a key absent from the source");
+    }
+
+    std::uint64_t skipped{};
+    for (const auto& key : source_keys) {
+        if (key >= last_key) {
+            break;
+        }
+        auto source_value = source.get(key);
+        if (!source_value) {
+            if (source_value.error().code == ErrorCode::not_found) {
+                ++skipped;
+                continue;
+            }
+            return unexpected(source_value.error());
+        }
+        auto destination_value = destination.get(key);
+        if (!destination_value && destination_value.error().code == ErrorCode::not_found) {
+            auto source_retry = source.get(key);
+            if (!source_retry && source_retry.error().code == ErrorCode::not_found) {
+                ++skipped;
+                continue;
+            }
+            if (!source_retry) {
+                return unexpected(source_retry.error());
+            }
+            source_value = std::move(source_retry);
+        }
+        if (!destination_value) {
+            if (destination_value.error().code != ErrorCode::not_found) {
+                return unexpected(destination_value.error());
+            }
+            return fail(ErrorCode::invalid_argument,
+                        "migrate checkpoint skips a source key absent from the destination");
+        }
+        if (source_value->expire_at_ns != destination_value->expire_at_ns ||
+            !std::ranges::equal(source_value->view(), destination_value->view())) {
+            return fail(ErrorCode::invalid_argument,
+                        "migrate checkpoint destination value disagrees with the source");
+        }
+        ++skipped;
+    }
+    return skipped;
 }
 
 } // namespace
@@ -297,13 +462,26 @@ auto migrate_durable_store(const std::filesystem::path& source, const std::files
     }
 
     const std::string* resume_last = (resume && resume->has_last_key) ? &resume->last_key : nullptr;
+    if (resume_last != nullptr) {
+        auto validated = validate_resume_prefix(**source_store, **destination_store, *keys, *resume_last);
+        if (!validated) {
+            (void)(*destination_store)->close();
+            (void)(*source_store)->close();
+            return unexpected(validated.error());
+        }
+        report.keys_skipped = *validated;
+    }
 
     for (const auto& key : *keys) {
         if (resume_last != nullptr && key < *resume_last) {
-            ++report.keys_skipped;
             continue;
         }
         const bool rewriting_checkpoint_key = resume_last != nullptr && key == *resume_last;
+        if (!rewriting_checkpoint_key && report.keys_copied == std::numeric_limits<std::uint64_t>::max()) {
+            (void)(*destination_store)->close();
+            (void)(*source_store)->close();
+            return fail(ErrorCode::arithmetic_overflow, "migrate checkpoint keys_copied would overflow");
+        }
 
         auto value = (*source_store)->get(key);
         if (!value) {

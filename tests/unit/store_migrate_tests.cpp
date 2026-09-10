@@ -1,4 +1,5 @@
 #include "glyphastore/core/key_hash.hpp"
+#include "glyphastore/core/types.hpp"
 #include "glyphastore/persistence/filesystem_hooks.hpp"
 #include "glyphastore/persistence/store_migrate.hpp"
 #include "glyphastore/persistence/store_verify.hpp"
@@ -338,7 +339,7 @@ GLYPHA_TEST("migrate_durable_store resumes after an injected mid-copy interrupt"
     GLYPHA_REQUIRE(value_string(*(*reopened)->get("c")) == "3");
 }
 
-GLYPHA_TEST("migrate_durable_store refuses corrupt or mismatched checkpoints") {
+GLYPHA_TEST("migrate_durable_store refuses corrupt mismatched or noncanonical checkpoints") {
     MigrateTemporaryDirectory root;
     const auto source = root.path() / "source";
     const auto destination = root.path() / "destination";
@@ -353,6 +354,7 @@ GLYPHA_TEST("migrate_durable_store refuses corrupt or mismatched checkpoints") {
         });
         GLYPHA_REQUIRE(opened.has_value());
         GLYPHA_REQUIRE((*opened)->put("k", bytes("v")).has_value());
+        GLYPHA_REQUIRE((*opened)->put("m", bytes("source-only")).has_value());
         GLYPHA_REQUIRE((*opened)->close().has_value());
     }
 
@@ -420,4 +422,84 @@ GLYPHA_TEST("migrate_durable_store refuses corrupt or mismatched checkpoints") {
     const auto wrong_source = glyphastore::migrate_durable_store(source, destination, 2);
     GLYPHA_REQUIRE(!wrong_source.has_value());
     GLYPHA_REQUIRE(wrong_source.error().code == glyphastore::ErrorCode::invalid_argument);
+
+    const auto valid_source_id = source_store_id_hex(source);
+    const auto expect_invalid_checkpoint = [&](const std::string_view body) {
+        {
+            std::ofstream out{checkpoint, std::ios::trunc | std::ios::binary};
+            GLYPHA_REQUIRE(static_cast<bool>(out));
+            out << "GlyphaStore/migrate-state/1\n" << body;
+            GLYPHA_REQUIRE(static_cast<bool>(out));
+        }
+        const auto result = glyphastore::migrate_durable_store(source, destination, 2);
+        GLYPHA_REQUIRE(!result.has_value());
+        GLYPHA_REQUIRE(result.error().code == glyphastore::ErrorCode::invalid_argument);
+    };
+
+    expect_invalid_checkpoint("source_store_id=" + valid_source_id + "\nsource_store_id=" + valid_source_id +
+                              "\nsource_worker_count=1\ntarget_worker_count=2\nkeys_copied=1\n"
+                              "last_key_hex=6b\nphase=copying\n");
+    expect_invalid_checkpoint("source_store_id=" + valid_source_id +
+                              "\nsource_worker_count=1\ntarget_worker_count=2\n"
+                              "last_key_hex=6b\nphase=copying\n");
+    expect_invalid_checkpoint("source_store_id=" + valid_source_id +
+                              "\nsource_worker_count=1\ntarget_worker_count=2\nkeys_copied=1\n"
+                              "last_key_hex=6b\nphase=complete\n");
+    expect_invalid_checkpoint("source_store_id=" + valid_source_id +
+                              "\nsource_worker_count=1\ntarget_worker_count=2\nkeys_copied=1\n"
+                              "phase=copying\n");
+
+    auto oversized = "source_store_id=" + valid_source_id +
+                     "\nsource_worker_count=1\ntarget_worker_count=2\nkeys_copied=1\n"
+                     "last_key_hex=6b\nphase=copying\n";
+    oversized.append(std::size_t{2} * glyphastore::kMaxNormalRecordSize + std::size_t{2} * 1024U, '\n');
+    expect_invalid_checkpoint(oversized);
+
+    expect_invalid_checkpoint("source_store_id=" + valid_source_id +
+                              "\nsource_worker_count=1\ntarget_worker_count=2\nkeys_copied=1\n"
+                              "last_key_hex=ff\nphase=copying\n");
+
+    {
+        std::ofstream out{checkpoint, std::ios::trunc | std::ios::binary};
+        GLYPHA_REQUIRE(static_cast<bool>(out));
+        out << "GlyphaStore/migrate-state/1\n"
+            << "source_store_id=" << valid_source_id
+            << "\nsource_worker_count=1\ntarget_worker_count=2\nkeys_copied=18446744073709551615\n"
+               "last_key_hex=6b\nphase=copying\n";
+        GLYPHA_REQUIRE(static_cast<bool>(out));
+    }
+    const auto overflowing_count = glyphastore::migrate_durable_store(source, destination, 2);
+    GLYPHA_REQUIRE(!overflowing_count.has_value());
+    GLYPHA_REQUIRE(overflowing_count.error().code == glyphastore::ErrorCode::arithmetic_overflow);
+
+    {
+        auto contaminated = glyphastore::Store::open({
+            .worker_config = {.explicit_count = 2},
+            .storage_mode = glyphastore::StorageMode::durable_sync,
+            .data_directory = destination,
+            .durable_open_mode = glyphastore::DurableOpenMode::open_existing,
+        });
+        GLYPHA_REQUIRE(contaminated.has_value());
+        GLYPHA_REQUIRE((*contaminated)->put("k", bytes("wrong-value")).has_value());
+        GLYPHA_REQUIRE((*contaminated)->close().has_value());
+    }
+    expect_invalid_checkpoint("source_store_id=" + valid_source_id +
+                              "\nsource_worker_count=1\ntarget_worker_count=2\nkeys_copied=1\n"
+                              "last_key_hex=6d\nphase=copying\n");
+
+    {
+        auto contaminated = glyphastore::Store::open({
+            .worker_config = {.explicit_count = 2},
+            .storage_mode = glyphastore::StorageMode::durable_sync,
+            .data_directory = destination,
+            .durable_open_mode = glyphastore::DurableOpenMode::open_existing,
+        });
+        GLYPHA_REQUIRE(contaminated.has_value());
+        GLYPHA_REQUIRE((*contaminated)->put("k", bytes("v")).has_value());
+        GLYPHA_REQUIRE((*contaminated)->put("extra", bytes("not-from-source")).has_value());
+        GLYPHA_REQUIRE((*contaminated)->close().has_value());
+    }
+    expect_invalid_checkpoint("source_store_id=" + valid_source_id +
+                              "\nsource_worker_count=1\ntarget_worker_count=2\nkeys_copied=1\n"
+                              "last_key_hex=6b\nphase=copying\n");
 }

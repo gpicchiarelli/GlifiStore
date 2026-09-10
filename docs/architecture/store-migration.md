@@ -3,7 +3,7 @@
 Status: implemented for stopped Stores (logical live-key copy)
 Applies to: durable persistence v1
 Owner: persistence maintainers
-Last reviewed: 2026-07-23
+Last reviewed: 2026-09-11
 
 ## Contract
 
@@ -33,10 +33,19 @@ Live/hot migration and online resharding are unsupported ([ADR 0024](../adr/0024
 ```
 
 Resume requires the checkpoint's `source_store_id`, `source_worker_count`, and
-`target_worker_count` to match the current invocation. Keys before `last_key` are skipped; the last
-key may be rewritten idempotently.
+`target_worker_count` to match the current invocation. Keys before `last_key_hex` are skipped only
+after their destination values and expiries have been matched against the source; the last key may
+be rewritten idempotently. Existing destination keys must be a subset of the source snapshot, so a
+matching checkpoint cannot authorize unrelated destination contents.
 
-A destination directory without a matching checkpoint is refused (fail closed).
+The version-1 checkpoint schema is strict: `source_store_id`, `source_worker_count`,
+`target_worker_count`, `keys_copied`, `last_key_hex`, and `phase=copying` must each occur exactly
+once. Store IDs use canonical lowercase hexadecimal, Worker counts must be within the supported
+range, unknown or empty lines are rejected, and the complete file is bounded to twice the maximum
+record size plus 1 KiB of metadata. Missing, duplicated, malformed, oversized, or mismatched
+checkpoint state is refused before the destination Store is opened.
+
+A destination directory without a matching checkpoint is also refused (fail closed).
 
 ## What is and is not preserved
 

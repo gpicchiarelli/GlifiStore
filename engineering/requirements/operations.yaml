@@ -149,8 +149,10 @@ requirements:
   stato: implementato
   descrizione: Offline migrate_durable_store / glyphastore_migrate_store copies live keys into a new
     Store with target Worker count, checkpoints after each put, and resumes from a matching sibling
-    checkpoint. Corrupt or mismatched checkpoints fail closed; source is never mutated. Live/hot
-    migrate remains unsupported (ADR 0024).
+    checkpoint. Checkpoints use a bounded strict schema; existing destination keys must be a subset
+    of the source and every still-live skipped prefix value/expiry must match before resume. Corrupt or
+    mismatched checkpoints fail closed; source is never mutated. Live/hot migrate remains
+    unsupported (ADR 0024).
   autorita:
   - docs/adr/0024-offline-worker-migration.md
   - docs/architecture/store-migration.md
