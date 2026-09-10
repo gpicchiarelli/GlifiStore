@@ -55,7 +55,7 @@ if grep -qi clang <<<"$compiler_version"; then
 fi
 
 lcov --capture --directory "$builddir" --output-file "$outdir/coverage.raw.lcov" \
-  "${gcov_args[@]}" --ignore-errors mismatch,unused
+  "${gcov_args[@]}" --ignore-errors mismatch,inconsistent,unused
 lcov --remove "$outdir/coverage.raw.lcov" \
   '/usr/*' '*/tests/*' '*/_deps/*' \
   --output-file "$outdir/coverage.lcov" \

@@ -207,6 +207,8 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn('cmake --build "$builddir" --target glyphastore_tests', script)
         self.assertIn("--tests-regex '^glyphastore_tests$'", script)
         self.assertIn('--gcov-tool "$root/scripts/llvm-gcov.sh"', script)
+        self.assertIn("--ignore-errors mismatch,inconsistent,unused", script)
+        self.assertNotIn("--ignore-errors mismatch,gcov", script)
         self.assertIn('command -v "llvm-cov-$clang_major"', script)
         self.assertIn('-s "$outdir/coverage-report.txt"', script)
         self.assertIn("grep -q '^SF:'", script)
