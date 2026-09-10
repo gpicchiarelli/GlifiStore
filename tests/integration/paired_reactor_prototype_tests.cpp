@@ -129,8 +129,10 @@ GLYPHA_TEST("paired experimental Reactor pins a generation only across slow sock
     const std::string key{"slow-output-key"};
     std::vector<std::byte> value(value_bytes, std::byte{0x5A});
     GLYPHA_REQUIRE(client.put(bytes(key), value).committed());
-    const auto found = client.get(key);
-    GLYPHA_REQUIRE(found.has_value());
+    const auto found = client.get(key, {.timeout = std::chrono::milliseconds{15'000}});
+    if (!found) {
+        throw std::runtime_error{"slow-output GET failed: " + found.error().message};
+    }
     GLYPHA_REQUIRE(*found == value);
     GLYPHA_REQUIRE(!running.failed());
     const auto reactor = running.reactor().stats();
