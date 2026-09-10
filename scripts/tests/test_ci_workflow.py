@@ -101,7 +101,7 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("(bounded, required)", workflow)
         self.assertIn('timeout 480 "./engineering/formal/${{ matrix.model }}/run-tlc.sh"', workflow)
         self.assertIn(
-            "eabd140a70f49eb9305a3bd3f3df944eddf87e5a90d329789085f8953a80533a",
+            "eefe1ed75d091b3b0263af53add21265546895d12e43dfd68abb9517b7811006",
             workflow,
         )
         self.assertIn("sha256sum -c -", workflow)
@@ -170,6 +170,11 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn('reset_confirmed_global="yes"', script)
         self.assertNotIn('reset_confirmed="$(perform_reset', script)
         self.assertIn('work_root="$work_parent/glyphastore-e3-work-$$"', script)
+        self.assertIn('[[ "$candidate" != "$mount_point"/store-?* ]]', script)
+        self.assertIn('rm -rf -- "$candidate"', script)
+        self.assertGreaterEqual(
+            script.count('cleanup_case_or_abort "$data_dir" "$case_log"'), 7
+        )
         self.assertIn('dmsetup suspend --noflush "$mapper_name"', script)
         self.assertIn(
             'dmsetup create "$mapper_name" --table "0 $sectors linear $loop_device 0"',
@@ -195,6 +200,20 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertNotIn('echo "repeat=${{ inputs.e3_repeat }}', workflow)
         self.assertIn('"$repeat" -le 1000', script)
         self.assertIn("e3_certified=no", script)
+
+    def test_diagnostic_coverage_runs_only_the_built_test_target(self) -> None:
+        script = (ROOT / "scripts/ci-coverage.sh").read_text(encoding="utf-8")
+        self.assertIn('cmake --build "$builddir" --target glyphastore_tests', script)
+        self.assertIn("--tests-regex '^glyphastore_tests$'", script)
+
+    def test_clang_pgo_keeps_partial_profile_diagnostics_non_fatal(self) -> None:
+        optimizations = (ROOT / "cmake/ToolchainOptimizations.cmake").read_text(
+            encoding="utf-8"
+        )
+        use_mode = optimizations.split(
+            'if(GLYPHASTORE_PGO STREQUAL "USE")', 1
+        )[1].split('message(FATAL_ERROR "GLYPHASTORE_PGO must', 1)[0]
+        self.assertIn("-Wno-error=profile-instr-unprofiled", use_mode)
 
     def test_e3_artifact_validator_rejects_unconfirmed_pass(self) -> None:
         validator = ROOT / "scripts/assert-e3-rehearsal-honesty.sh"

@@ -28,7 +28,7 @@ cmake -S "$root" -B "$builddir" -G Ninja \
   -DBUILD_TESTING=ON
 
 cmake --build "$builddir" --target glyphastore_tests
-ctest --test-dir "$builddir" --output-on-failure
+ctest --test-dir "$builddir" --output-on-failure --tests-regex '^glyphastore_tests$'
 
 if command -v lcov >/dev/null 2>&1; then
   lcov --capture --directory "$builddir" --output-file "$outdir/coverage.raw.lcov" \

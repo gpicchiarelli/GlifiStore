@@ -282,6 +282,26 @@ terminate_worker_hard() {
   worker_pid=""
 }
 
+cleanup_case_or_abort() {
+  local candidate="$1"
+  local log_file="$2"
+  if [[ "$mounted" != "yes" ]]; then
+    printf 'harness_cleanup=skipped-unmounted\n' >>"$log_file"
+    return 0
+  fi
+  if [[ "$candidate" != "$mount_point"/store-?* ]]; then
+    printf 'harness_cleanup=refused-unsafe-path\n' >>"$log_file"
+    echo "error: refusing unsafe E3 case cleanup path: $candidate" >&2
+    exit 1
+  fi
+  if ! rm -rf -- "$candidate"; then
+    printf 'harness_cleanup=failed\n' >>"$log_file"
+    echo "error: failed to reclaim E3 case data: $candidate" >&2
+    exit 1
+  fi
+  printf 'harness_cleanup=complete\n' >>"$log_file"
+}
+
 cleanup() {
   local rc=$?
   terminate_worker_hard
@@ -683,6 +703,7 @@ while [[ "$iteration" -le "$repeat" ]]; do
         "n/a" "mount-unavailable" "INCONCLUSIVE" >>"$results"
       inconclusive=$((inconclusive + 1))
       printf 'outcome=INCONCLUSIVE reason=mount-unavailable\n' >>"$case_log"
+      cleanup_case_or_abort "$data_dir" "$case_log"
       continue
     fi
 
@@ -698,6 +719,7 @@ while [[ "$iteration" -le "$repeat" ]]; do
         "seed-failed" "FAIL" >>"$results"
       failed=$((failed + 1))
       printf 'outcome=FAIL reason=seed-failed\n' >>"$case_log"
+      cleanup_case_or_abort "$data_dir" "$case_log"
       continue
     fi
 
@@ -722,6 +744,7 @@ while [[ "$iteration" -le "$repeat" ]]; do
         "checkpoint-timeout" "INCONCLUSIVE" >>"$results"
       inconclusive=$((inconclusive + 1))
       printf 'outcome=INCONCLUSIVE reason=checkpoint-timeout\n' >>"$case_log"
+      cleanup_case_or_abort "$data_dir" "$case_log"
       continue
     fi
 
@@ -748,6 +771,7 @@ while [[ "$iteration" -le "$repeat" ]]; do
         "worker-stop-unconfirmed" "INCONCLUSIVE" >>"$results"
       inconclusive=$((inconclusive + 1))
       printf 'outcome=INCONCLUSIVE reason=worker-stop-unconfirmed\n' >>"$case_log"
+      cleanup_case_or_abort "$data_dir" "$case_log"
       continue
     fi
     printf 'worker_stop_confirmed=yes\n' >>"$case_log"
@@ -768,6 +792,7 @@ while [[ "$iteration" -le "$repeat" ]]; do
       printf 'outcome=INCONCLUSIVE reason=reset-unconfirmed\n' >>"$case_log"
       # Best-effort remount so later cases can proceed.
       if [[ "$platform" == "linux-ext4" ]]; then remount_linux || true; else remount_macos || true; fi
+      cleanup_case_or_abort "$data_dir" "$case_log"
       continue
     fi
 
@@ -792,6 +817,7 @@ while [[ "$iteration" -le "$repeat" ]]; do
         "$dm_fault_mode" "$reset_confirmed" "$fsck_status" "remount-failed" "INCONCLUSIVE" >>"$results"
       inconclusive=$((inconclusive + 1))
       printf 'fsck_status=%s\noutcome=INCONCLUSIVE reason=remount-failed\n' "$fsck_status" >>"$case_log"
+      cleanup_case_or_abort "$data_dir" "$case_log"
       continue
     fi
 
@@ -823,6 +849,10 @@ while [[ "$iteration" -le "$repeat" ]]; do
       printf 'outcome=%s\n' "$outcome"
       printf 'finished_utc=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
     } >>"$case_log"
+    # Case stores contain preallocated 64 MiB Segments. Reclaim them only after
+    # the recovery outcome is recorded so repetitions stay bounded by one case
+    # instead of exhausting the disposable filesystem row cumulatively.
+    cleanup_case_or_abort "$data_dir" "$case_log"
   done <<<"$case_list"
   iteration=$((iteration + 1))
 done

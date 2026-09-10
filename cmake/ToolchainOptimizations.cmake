@@ -1,5 +1,6 @@
 include_guard(GLOBAL)
 
+include(CheckCXXCompilerFlag)
 include(CheckIPOSupported)
 
 function(glyphastore_apply_toolchain_optimizations target)
@@ -43,6 +44,14 @@ function(glyphastore_apply_toolchain_optimizations target)
                     "Build with macos-pgo-generate, run ./scripts/pgo-train.sh, then configure macos-pgo-use.")
             endif()
             target_compile_options(${target} INTERFACE "-fprofile-instr-use=${GLYPHASTORE_PGO_PROFILE_FILE}")
+            check_cxx_compiler_flag("-Wno-error=profile-instr-unprofiled"
+                GLYPHASTORE_HAS_PROFILE_INSTR_UNPROFILED_WARNING)
+            if(GLYPHASTORE_HAS_PROFILE_INSTR_UNPROFILED_WARNING)
+                # A training workload need not link or execute every translation unit in a
+                # static library. Retain the diagnostic without allowing the global -Werror
+                # policy to reject otherwise valid, partially exercised PGO profiles.
+                target_compile_options(${target} INTERFACE "-Wno-error=profile-instr-unprofiled")
+            endif()
             target_link_options(${target} INTERFACE "-fprofile-instr-use=${GLYPHASTORE_PGO_PROFILE_FILE}")
         else()
             if(NOT IS_DIRECTORY "${GLYPHASTORE_PGO_PROFILE_DIR}")
