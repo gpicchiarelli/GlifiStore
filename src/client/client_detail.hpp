@@ -367,7 +367,6 @@ struct WorkerConnection {
     case ErrorCode::corrupted_data:
         return "protocol";
     case ErrorCode::internal_error:
-        return "internal";
     default:
         return "internal";
     }

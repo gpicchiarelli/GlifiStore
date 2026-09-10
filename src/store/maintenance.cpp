@@ -86,7 +86,7 @@ auto validate_maintenance_config(const MaintenanceConfig& config) -> Status {
     return {};
 }
 
-MaintenanceController::MaintenanceController(MaintenanceConfig config) : config_(std::move(config)) {}
+MaintenanceController::MaintenanceController(MaintenanceConfig config) : config_(config) {}
 
 MaintenanceController::~MaintenanceController() {
     stop();

@@ -26,7 +26,7 @@ namespace glyphastore::store::paired {
 ShardPairRuntime::ShardPairRuntime(Store& store, PairedConcurrencyConfig config,
                                    std::vector<std::shared_ptr<const PairReadGeneration>> initial_generations,
                                    std::vector<std::uint64_t> initial_catalog_revisions)
-    : store_(store), config_(std::move(config)),
+    : store_(store), config_(config),
       maximum_queue_wait_(std::chrono::milliseconds{config_.async_queue_wait_ms}) {
     const auto shard_count = initial_generations.size();
     if (initial_catalog_revisions.size() != shard_count) {
@@ -266,7 +266,7 @@ auto ShardPairRuntime::try_submit(const AsyncMutationRequest& request) noexcept
     const auto next_bytes =
         lane.async.queued_bytes.fetch_add(*admission_bytes, std::memory_order_relaxed) + *admission_bytes;
     GS_FAULT_SITE(enqueue);
-    if (!lane.queue.try_push(std::move(task))) {
+    if (!lane.queue.try_push(task)) {
         lane.async.queued_bytes.fetch_sub(*admission_bytes, std::memory_order_relaxed);
         if (!lane.payloads.rollback(*acquired.lease)) {
             std::terminate();

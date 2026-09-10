@@ -204,7 +204,7 @@ auto DurableSegmentFile::flush_pending_commit(const SegmentCommitSync sync) -> S
 
 auto DurableSegmentFile::append(const std::span<const std::byte> encoded_record, const SegmentCommitSync sync)
     -> SegmentCommitResult {
-    const auto appended = append_record(encoded_record);
+    auto appended = append_record(encoded_record);
     if (!appended.committed()) {
         return appended;
     }

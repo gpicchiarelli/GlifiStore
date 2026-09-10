@@ -294,7 +294,8 @@ class Client::Impl final {
             return unexpected(connected.error());
         }
 
-        const auto mark_unresolved = [&](const std::size_t first, Error error, const std::size_t bytes_sent) {
+        const auto mark_unresolved = [&](const std::size_t first, const Error& error,
+                                         const std::size_t bytes_sent) {
             for (std::size_t index = first; index < requests.size(); ++index) {
                 const auto mutation_may_have_arrived =
                     is_mutation(requests[index].opcode) && bytes_sent > metadata[index].begin;

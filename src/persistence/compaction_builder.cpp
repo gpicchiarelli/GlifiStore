@@ -53,8 +53,7 @@ auto verify_indexed_put(void* opaque, const RecordView& record) -> Status {
 
 auto build_failure(const DurableCompactionBuildOutcome outcome, Error error,
                    DurableCompactionCopyStats stats = {}) -> DurableCompactionBuildResult {
-    return {
-        .outcome = outcome, .prepared = std::nullopt, .stats = std::move(stats), .error = std::move(error)};
+    return {.outcome = outcome, .prepared = std::nullopt, .stats = stats, .error = std::move(error)};
 }
 
 auto checked_add(const std::uint64_t left, const std::uint64_t right, const char* description)

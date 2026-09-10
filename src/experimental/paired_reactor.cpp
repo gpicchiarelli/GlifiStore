@@ -100,10 +100,9 @@ struct PairedReactorPrototype::Impl final {
 
     Impl(PairedReactorPrototypeConfig reactor_config, server::TcpListener bound_listener,
          server::Poller event_poller, server::Wakeup completion_wakeup)
-        : config(std::move(reactor_config)), listener(std::move(bound_listener)),
-          poller(std::move(event_poller)), wakeup(std::move(completion_wakeup)),
-          connections(config.maximum_connections), events(config.event_batch_size),
-          init_identity(encode_init_identity_value({})) {
+        : config(reactor_config), listener(std::move(bound_listener)), poller(std::move(event_poller)),
+          wakeup(std::move(completion_wakeup)), connections(config.maximum_connections),
+          events(config.event_batch_size), init_identity(encode_init_identity_value({})) {
         free_slots.reserve(config.maximum_connections);
         for (std::size_t index = config.maximum_connections; index > 0; --index) {
             free_slots.push_back(static_cast<std::uint32_t>(index - 1U));
@@ -551,7 +550,7 @@ struct PairedReactorPrototype::Impl final {
             if (!completion) {
                 break;
             }
-            completed[count++] = std::move(*completion);
+            completed[count++] = *completion;
         }
         if (count == 0) {
             return {};
@@ -764,8 +763,8 @@ auto PairedReactorPrototype::create(PairedReactorPrototypeConfig config)
         return unexpected(wakeup.error());
     }
     try {
-        auto impl = std::make_unique<Impl>(std::move(config), std::move(*listener), std::move(*poller),
-                                           std::move(*wakeup));
+        auto impl =
+            std::make_unique<Impl>(config, std::move(*listener), std::move(*poller), std::move(*wakeup));
         if (auto added = impl->poller.add(impl->listener.descriptor(), kListenerToken, IoInterest::read);
             !added) {
             return unexpected(added.error());

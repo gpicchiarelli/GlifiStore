@@ -27,8 +27,6 @@ void notify_wakeup(void* wakeup) noexcept {
 
 PairWriterPool::PairWriterPool(store::paired::ShardPairRuntime& runtime) noexcept : runtime_(runtime) {}
 
-PairWriterPool::~PairWriterPool() = default;
-
 auto PairWriterPool::create(Store& store, const std::size_t worker_count,
                             const std::size_t capacity_per_worker, const std::size_t payload_bytes_per_worker,
                             const std::chrono::milliseconds maximum_queue_wait,

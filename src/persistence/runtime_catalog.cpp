@@ -272,7 +272,7 @@ DurableRuntimeCatalog::DurableRuntimeCatalog(DataDirectory directory, DurableRec
             [this](const bool force_all) -> Status {
                 try {
                     if (force_all) {
-                        const auto flushed = flush_pending_batches(SegmentCommitSync::immediate);
+                        auto flushed = flush_pending_batches(SegmentCommitSync::immediate);
                         if (!flushed) {
                             return flushed;
                         }
@@ -281,8 +281,8 @@ DurableRuntimeCatalog::DurableRuntimeCatalog(DataDirectory directory, DurableRec
                     if (options_.strict_ack) {
                         return flush_due_batches(SegmentCommitSync::immediate);
                     }
-                    const auto flushed = options_.batch ? flush_due_batches(SegmentCommitSync::deferred)
-                                                        : flush_pending_batches(SegmentCommitSync::deferred);
+                    auto flushed = options_.batch ? flush_due_batches(SegmentCommitSync::deferred)
+                                                  : flush_pending_batches(SegmentCommitSync::deferred);
                     if (!flushed) {
                         return flushed;
                     }

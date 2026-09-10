@@ -22,7 +22,7 @@ class ReactorFactory final {
     [[nodiscard]] static auto create_all(const ReactorConfig& config, Store& store,
                                          ConnectionHandoffMesh& mesh, DiskReadExecutor& disk_reads,
                                          PairWriterPool& pair_writers, ServerLifecycleProbes lifecycle_probes,
-                                         std::shared_ptr<TlsContext> tls_context,
+                                         const std::shared_ptr<TlsContext>& tls_context,
                                          std::shared_ptr<AbuseController> abuse = {},
                                          std::shared_ptr<SecurityAudit> security_audit = {})
         -> Result<std::vector<std::unique_ptr<Reactor>>>;

@@ -150,7 +150,7 @@ namespace {
             verified.scanned_records = verified.selected.commit.record_count;
         }
         report.scanned_records += verified.scanned_records;
-        report.segments.push_back(std::move(verified));
+        report.segments.push_back(verified);
     }
     return report;
 }

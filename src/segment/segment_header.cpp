@@ -217,7 +217,7 @@ auto decode_segment_header(const std::span<const std::byte> bytes) -> Result<Dec
         if (!slot) {
             return unexpected(slot.error());
         }
-        header.slots[index] = std::move(*slot);
+        header.slots[index] = *slot;
     }
     return header;
 }

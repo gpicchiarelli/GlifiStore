@@ -37,7 +37,7 @@
 
 namespace glyphastore {
 
-[[nodiscard]] auto start_paired_runtime(Store& store, StoreConfig config) -> Status {
+[[nodiscard]] auto start_paired_runtime(Store& store, const StoreConfig& config) -> Status {
     return detail::StoreAccess::attach_paired_runtime(store, config);
 }
 
@@ -371,7 +371,7 @@ auto Store::put_batch(const std::span<const PutItem> items) -> std::vector<Statu
         } else if (entry.shard != first_shard) {
             single_shard = false;
         }
-        prepared.push_back(std::move(entry));
+        prepared.push_back(entry);
     }
 
     if (!impl_->pair_runtime) {
@@ -641,7 +641,7 @@ auto Store::compact_for_maintenance(const std::optional<std::size_t> preferred_w
             }
             auto& compacted = result.value();
             if (compacted) {
-                return store_detail::public_compaction_result(worker_index, std::move(compacted).value());
+                return store_detail::public_compaction_result(worker_index, compacted.value());
             }
         }
         return CompactionResult{};

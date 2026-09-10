@@ -389,7 +389,7 @@ void ShardPairRuntime::run(const std::size_t shard) noexcept try {
         }
 
         batch.clear();
-        batch.push_back(std::move(*task));
+        batch.push_back(*task);
         WriterAsyncBatchEnv async_env{
             .lane = lane,
             .shard = shard,

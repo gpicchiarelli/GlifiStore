@@ -33,7 +33,7 @@ struct RecoveredWorkers final {
         recovered.stats.rebuild.records_scanned += scan->stats.records_scanned;
         recovered.stats.segments_scanned += scan->segments.size();
         for (auto& segment : scan->segments) {
-            recovered.segments[segment.catalog_index] = std::move(segment.state);
+            recovered.segments[segment.catalog_index] = segment.state;
         }
         auto worker = recovery::RecoveryIndexBuilder::build(
             worker_id, worker_index, catalog.manifest.worker_count, catalog.manifest.worker_routing(), limits,

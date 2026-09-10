@@ -744,12 +744,10 @@ auto Reactor::run_once(const int timeout_ms) -> Status {
         // discard decided bytes left after a partial writable flush (EAGAIN).
         if (auto* current = connection(token); current != nullptr && has_flag(event.flags, IoFlags::hangup)) {
             current->peer_read_closed = true;
-            if (reactor_detail::connection_action_for(
-                    current->peer_read_closed, current->close_after_flush, current->request_in_flight,
-                    has_pending_output(*current),
-                    current->input_offset < current->input.size()) == ConnectionAction::close_now) {
-                close_connection(token);
-            } else if (auto drained = write_ready(token); !drained) {
+            const auto action = reactor_detail::connection_action_for(
+                current->peer_read_closed, current->close_after_flush, current->request_in_flight,
+                has_pending_output(*current), current->input_offset < current->input.size());
+            if (action == ConnectionAction::close_now || !write_ready(token)) {
                 close_connection(token);
             }
             continue;
@@ -806,13 +804,14 @@ void Reactor::enforce_timeouts(const std::chrono::steady_clock::time_point now) 
         bool request_timeout = false;
         if (request_ms != 0) {
             const auto budget = std::chrono::milliseconds{request_ms};
-            if (candidate.partial_request_since.time_since_epoch().count() != 0 &&
-                now - candidate.partial_request_since >= budget) {
-                timed_out = true;
-                request_timeout = true;
-            } else if (candidate.request_in_flight &&
-                       candidate.in_flight_since.time_since_epoch().count() != 0 &&
-                       now - candidate.in_flight_since >= budget) {
+            const bool partial_request_timed_out =
+                candidate.partial_request_since.time_since_epoch().count() != 0 &&
+                now - candidate.partial_request_since >= budget;
+            const bool in_flight_request_timed_out =
+                !partial_request_timed_out && candidate.request_in_flight &&
+                candidate.in_flight_since.time_since_epoch().count() != 0 &&
+                now - candidate.in_flight_since >= budget;
+            if (partial_request_timed_out || in_flight_request_timed_out) {
                 timed_out = true;
                 request_timeout = true;
             }

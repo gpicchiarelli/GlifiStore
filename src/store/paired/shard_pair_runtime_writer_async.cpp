@@ -113,11 +113,11 @@ void ShardPairRuntime::run_writer_async_batch(WriterAsyncBatchEnv& env) noexcept
         empty_polls = 0;
         if (batch_bytes >= env.maximum_batch_bytes ||
             next->admission_bytes > env.maximum_batch_bytes - batch_bytes) {
-            env.carried_task = std::move(*next);
+            env.carried_task = *next;
             break;
         }
         batch_bytes += next->admission_bytes;
-        env.batch.push_back(std::move(*next));
+        env.batch.push_back(*next);
     }
     GS_PHASE_FINISH(batch_collect_phase);
     const auto writer_batch_wait_ns =

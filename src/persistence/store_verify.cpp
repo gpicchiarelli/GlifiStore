@@ -93,7 +93,7 @@ auto verify_durable_store(DataDirectory& directory, const bool scan_records,
         if (active_requires_rotation) {
             ++report.active_requires_rotation_count;
         }
-        report.segments.push_back(std::move(verified));
+        report.segments.push_back(verified);
     }
     return report;
 }

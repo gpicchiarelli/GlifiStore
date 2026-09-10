@@ -140,7 +140,7 @@ class PairWriterPool final {
                                      std::chrono::milliseconds maximum_queue_wait,
                                      PairReadMergeConfig read_merge = {})
         -> Result<std::unique_ptr<PairWriterPool>>;
-    ~PairWriterPool();
+    ~PairWriterPool() = default;
 
     PairWriterPool(const PairWriterPool&) = delete;
     auto operator=(const PairWriterPool&) -> PairWriterPool& = delete;

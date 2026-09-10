@@ -53,7 +53,7 @@ auto Reactor::process_frames(const ConnectionToken token, const std::uint32_t ne
             if (!parsed) {
                 return unexpected(parsed.error());
             }
-            decoded = std::move(*parsed);
+            decoded = *parsed;
         }
         if (!decoded.complete) {
             if (current->partial_request_since.time_since_epoch().count() == 0) {

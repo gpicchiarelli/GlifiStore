@@ -74,7 +74,7 @@ auto ServerBuilder::build() -> Result<ServerRuntime> {
         // Generation-only ordinary reads for the daemon paired path.
         store_config_.durable_limits.hot_cache_enabled = false;
     }
-    auto store = Store::open(std::move(store_config_));
+    auto store = Store::open(store_config_);
     if (!store) {
         return unexpected(store.error());
     }

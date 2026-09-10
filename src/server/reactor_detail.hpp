@@ -60,11 +60,10 @@ inline constexpr std::size_t kMinimumPipelinedScatterValueBytes = std::size_t{16
         // attempt. Must not map to INTERNAL_ERROR (reconcile_first / indeterminate).
         return ResponseStatus::overloaded;
     case ErrorCode::unavailable:
-        // Store/Writer use unavailable for fail-closed and post-commit sticky paths where
-        // the mutation may already have linearized. Wire OVERLOADED means known-not-committed
-        // (client semantics); INTERNAL_ERROR forces reconcile_first instead.
-        return ResponseStatus::internal_error;
     default:
+        // Store/Writer use unavailable for fail-closed and post-commit sticky paths where
+        // the mutation may already have linearized. Wire OVERLOADED means known-not-committed;
+        // INTERNAL_ERROR also remains the fail-closed fallback for unmapped internal errors.
         return ResponseStatus::internal_error;
     }
 }

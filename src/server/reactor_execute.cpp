@@ -80,8 +80,8 @@ auto Reactor::execute_local(const ConnectionToken token, const RequestView& requ
             response.status = reactor_detail::response_status(published.error());
             break;
         }
-        auto record = detail::StoreAccess::prepare_published_durable_get(
-            store_, executor_id_, std::move(*published), cached_now_ns);
+        auto record = detail::StoreAccess::prepare_published_durable_get(store_, executor_id_, *published,
+                                                                         cached_now_ns);
         if (!record) {
             response.status = reactor_detail::response_status(record.error());
         } else {

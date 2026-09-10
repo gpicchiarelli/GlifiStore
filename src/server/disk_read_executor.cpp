@@ -11,9 +11,8 @@ namespace glyphastore::server {
 namespace {
 
 void set_error_code_without_allocation(std::optional<Error>& destination, const ErrorCode code) noexcept {
-    static_assert(std::is_nothrow_default_constructible_v<Error>);
-    destination.emplace();
-    destination->code = code;
+    static_assert(std::is_nothrow_move_constructible_v<Error>);
+    destination.emplace(Error{code, {}});
 }
 
 } // namespace
