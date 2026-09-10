@@ -203,8 +203,19 @@ class CiWorkflowTests(unittest.TestCase):
 
     def test_diagnostic_coverage_runs_only_the_built_test_target(self) -> None:
         script = (ROOT / "scripts/ci-coverage.sh").read_text(encoding="utf-8")
+        workflow = (ROOT / ".github/workflows/coverage.yml").read_text(encoding="utf-8")
         self.assertIn('cmake --build "$builddir" --target glyphastore_tests', script)
         self.assertIn("--tests-regex '^glyphastore_tests$'", script)
+        self.assertIn('--gcov-tool "$root/scripts/llvm-gcov.sh"', script)
+        self.assertIn('command -v "llvm-cov-$clang_major"', script)
+        self.assertIn('-s "$outdir/coverage-report.txt"', script)
+        self.assertIn("grep -q '^SF:'", script)
+        self.assertIn("grep -q '^DA:'", script)
+        self.assertNotIn("Always succeed", script)
+        self.assertIn("if-no-files-found: error", workflow)
+
+        wrapper = (ROOT / "scripts/llvm-gcov.sh").read_text(encoding="utf-8")
+        self.assertIn('exec "${LLVM_COV:-llvm-cov}" gcov "$@"', wrapper)
 
     def test_clang_pgo_keeps_partial_profile_diagnostics_non_fatal(self) -> None:
         optimizations = (ROOT / "cmake/ToolchainOptimizations.cmake").read_text(

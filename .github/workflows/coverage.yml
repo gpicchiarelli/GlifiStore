@@ -39,5 +39,5 @@ jobs:
         with:
           name: coverage-lcov-${{ github.sha }}
           path: build/coverage/
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 14

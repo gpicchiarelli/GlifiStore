@@ -30,23 +30,43 @@ cmake -S "$root" -B "$builddir" -G Ninja \
 cmake --build "$builddir" --target glyphastore_tests
 ctest --test-dir "$builddir" --output-on-failure --tests-regex '^glyphastore_tests$'
 
-if command -v lcov >/dev/null 2>&1; then
-  lcov --capture --directory "$builddir" --output-file "$outdir/coverage.raw.lcov" \
-    --ignore-errors mismatch,gcov,unused || \
-    lcov --capture --directory "$builddir" --output-file "$outdir/coverage.raw.lcov" || true
-  if [[ -f "$outdir/coverage.raw.lcov" ]]; then
-    lcov --remove "$outdir/coverage.raw.lcov" \
-      '/usr/*' '*/tests/*' '*/_deps/*' \
-      --output-file "$outdir/coverage.lcov" \
-      --ignore-errors unused || cp "$outdir/coverage.raw.lcov" "$outdir/coverage.lcov"
-    lcov --list "$outdir/coverage.lcov" >"$outdir/coverage-report.txt" || true
-  fi
-elif command -v llvm-cov >/dev/null 2>&1; then
-  echo "lcov not found; writing note for llvm-cov-only hosts" >"$outdir/coverage-report.txt"
-  find "$builddir" -name '*.gcda' | head >"$outdir/gcda-files.txt" || true
+if ! command -v lcov >/dev/null 2>&1; then
+  echo "lcov is required to generate the diagnostic coverage report" >&2
+  exit 1
 fi
 
+gcov_args=()
+compiler_version="$("$CXX" --version 2>/dev/null || true)"
+if grep -qi clang <<<"$compiler_version"; then
+  coverage_llvm_cov="${LLVM_COV:-}"
+  if [[ -z "$coverage_llvm_cov" ]]; then
+    coverage_llvm_cov="$(command -v llvm-cov || true)"
+  fi
+  if [[ -z "$coverage_llvm_cov" ]]; then
+    clang_major="$("$CXX" -dumpversion | cut -d. -f1)"
+    coverage_llvm_cov="$(command -v "llvm-cov-$clang_major" || true)"
+  fi
+  if [[ -z "$coverage_llvm_cov" ]]; then
+    echo "llvm-cov is required to decode Clang coverage data" >&2
+    exit 1
+  fi
+  export LLVM_COV="$coverage_llvm_cov"
+  gcov_args=(--gcov-tool "$root/scripts/llvm-gcov.sh")
+fi
+
+lcov --capture --directory "$builddir" --output-file "$outdir/coverage.raw.lcov" \
+  "${gcov_args[@]}" --ignore-errors mismatch,unused
+lcov --remove "$outdir/coverage.raw.lcov" \
+  '/usr/*' '*/tests/*' '*/_deps/*' \
+  --output-file "$outdir/coverage.lcov" \
+  --ignore-errors unused
+lcov --list "$outdir/coverage.lcov" | tee "$outdir/coverage-report.txt"
+[[ -s "$outdir/coverage.raw.lcov" && -s "$outdir/coverage.lcov" &&
+   -s "$outdir/coverage-report.txt" ]]
+grep -q '^SF:' "$outdir/coverage.raw.lcov"
+grep -q '^DA:' "$outdir/coverage.raw.lcov"
+grep -q '^SF:' "$outdir/coverage.lcov"
+grep -q '^DA:' "$outdir/coverage.lcov"
+
 echo "Coverage artifacts under $outdir (diagnostic only; not an acceptance gate)."
-ls -la "$outdir" || true
-# Always succeed: coverage is diagnostic, never a merge gate.
-exit 0
+ls -la "$outdir"
