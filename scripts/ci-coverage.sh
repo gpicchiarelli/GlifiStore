@@ -59,7 +59,7 @@ lcov --capture --directory "$builddir" --output-file "$outdir/coverage.raw.lcov"
 lcov --remove "$outdir/coverage.raw.lcov" \
   '/usr/*' '*/tests/*' '*/_deps/*' \
   --output-file "$outdir/coverage.lcov" \
-  --ignore-errors unused
+  --ignore-errors inconsistent,unused
 lcov --list "$outdir/coverage.lcov" | tee "$outdir/coverage-report.txt"
 [[ -s "$outdir/coverage.raw.lcov" && -s "$outdir/coverage.lcov" &&
    -s "$outdir/coverage-report.txt" ]]

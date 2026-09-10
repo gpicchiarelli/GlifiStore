@@ -208,6 +208,7 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("--tests-regex '^glyphastore_tests$'", script)
         self.assertIn('--gcov-tool "$root/scripts/llvm-gcov.sh"', script)
         self.assertIn("--ignore-errors mismatch,inconsistent,unused", script)
+        self.assertIn("--ignore-errors inconsistent,unused", script)
         self.assertNotIn("--ignore-errors mismatch,gcov", script)
         self.assertIn('command -v "llvm-cov-$clang_major"', script)
         self.assertIn('-s "$outdir/coverage-report.txt"', script)
