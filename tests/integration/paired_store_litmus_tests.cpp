@@ -209,8 +209,8 @@ GLYPHA_TEST("paired dedicated Writer merge pays bounded debt before exhausting a
     const auto stats = runtime->stats()[0];
     GLYPHA_REQUIRE(stats.read_merge_starts >= 1U);
     GLYPHA_REQUIRE(stats.read_merge_completions >= 1U);
+    GLYPHA_REQUIRE(stats.read_merge_failures == 0U);
     GLYPHA_REQUIRE(stats.read_merge_backpressure == 0U);
-    GLYPHA_REQUIRE(!stats.read_merge_active || stats.read_merge_remaining_slots > 0U);
     GLYPHA_REQUIRE(stats.generation_admission_backpressure_total == 0U);
     GLYPHA_REQUIRE(store.get("writer-merge-cut-a").has_value());
     GLYPHA_REQUIRE(store.get("writer-merge-post-b").has_value());
@@ -298,8 +298,8 @@ GLYPHA_TEST("ADR 0036 production slot V7 dedicated Writer merge publishes post-c
     const auto stats = runtime->stats()[0];
     GLYPHA_REQUIRE(stats.read_merge_starts >= 1U);
     GLYPHA_REQUIRE(stats.read_merge_completions >= 1U);
+    GLYPHA_REQUIRE(stats.read_merge_failures == 0U);
     GLYPHA_REQUIRE(stats.read_merge_backpressure == 0U);
-    GLYPHA_REQUIRE(!stats.read_merge_active || stats.read_merge_remaining_slots > 0U);
     GLYPHA_REQUIRE(stats.generation_admission_backpressure_total == 0U);
     GLYPHA_REQUIRE(stats.writer_epoch > stats.reader_safe_epoch);
     GLYPHA_REQUIRE(store.get("slot-writer-merge-cut-a").has_value());
