@@ -60,7 +60,8 @@ lcov --remove "$outdir/coverage.raw.lcov" \
   '/usr/*' '*/tests/*' '*/_deps/*' \
   --output-file "$outdir/coverage.lcov" \
   --ignore-errors inconsistent,unused
-lcov --list "$outdir/coverage.lcov" | tee "$outdir/coverage-report.txt"
+lcov --list "$outdir/coverage.lcov" --ignore-errors inconsistent \
+  | tee "$outdir/coverage-report.txt"
 [[ -s "$outdir/coverage.raw.lcov" && -s "$outdir/coverage.lcov" &&
    -s "$outdir/coverage-report.txt" ]]
 grep -q '^SF:' "$outdir/coverage.raw.lcov"
