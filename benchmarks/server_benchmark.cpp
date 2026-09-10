@@ -5,13 +5,13 @@
 #include "glyphastore/server/protocol.hpp"
 #include "glyphastore/server/server.hpp"
 #include "harness.hpp"
+#include "parse.hpp"
 
 #include <algorithm>
 #include <arpa/inet.h>
 #include <array>
 #include <atomic>
 #include <cerrno>
-#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
@@ -156,13 +156,12 @@ struct ClientResult {
 };
 
 [[nodiscard]] auto parse_size(const std::string_view value, const char* flag) -> std::size_t {
-    std::size_t parsed{};
-    const auto converted = std::from_chars(value.data(), value.data() + value.size(), parsed);
-    if (converted.ec != std::errc{} || converted.ptr != value.data() + value.size()) {
+    const auto parsed = glyphastore::bench::parse_decimal_size(value);
+    if (!parsed) {
         std::cerr << "invalid value for " << flag << ": " << value << '\n';
         std::exit(2);
     }
-    return parsed;
+    return *parsed;
 }
 
 [[nodiscard]] auto parse_u32(const std::string_view value, const char* flag) -> std::uint32_t {

@@ -177,6 +177,7 @@ if(BUILD_TESTING)
         ${CMAKE_SOURCE_DIR}/tests/unit/client_tests.cpp
         ${CMAKE_SOURCE_DIR}/tests/unit/client_error_taxonomy_tests.cpp
         ${CMAKE_SOURCE_DIR}/tests/unit/client_tls_tests.cpp
+        ${CMAKE_SOURCE_DIR}/tests/unit/benchmark_parse_tests.cpp
         ${CMAKE_SOURCE_DIR}/tests/unit/durable_flush_coordinator_tests.cpp
         ${CMAKE_SOURCE_DIR}/tests/unit/latency_histogram_tests.cpp
         ${CMAKE_SOURCE_DIR}/tests/unit/result_tests.cpp
@@ -224,6 +225,7 @@ if(BUILD_TESTING)
         target_link_libraries(glyphastore_tests PRIVATE GlyphaStore::tls)
     endif()
     target_include_directories(glyphastore_tests PRIVATE
+        "${CMAKE_SOURCE_DIR}/benchmarks"
         "${CMAKE_SOURCE_DIR}/src"
         "${CMAKE_SOURCE_DIR}/tests"
     )

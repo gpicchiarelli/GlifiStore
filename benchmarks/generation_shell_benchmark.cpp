@@ -1,9 +1,9 @@
 #include "benchmark_metadata.hpp"
 #include "experimental/pair_read_generation_shell.hpp"
 #include "glyphastore/store/paired/read_generation.hpp"
+#include "parse.hpp"
 
 #include <array>
-#include <charconv>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -15,7 +15,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <vector>
 
 namespace {
@@ -41,13 +40,11 @@ struct Options final {
         throw std::invalid_argument{"missing numeric argument"};
     }
     const std::string_view input{text};
-    std::size_t value{};
-    const auto converted = std::from_chars(input.data(), input.data() + input.size(), value);
-    if (converted.ec != std::errc{} || converted.ptr != input.data() + input.size() ||
-        (!allow_zero && value == 0) || value > Generation::kMaximumIncrementalDeltaEntries) {
+    const auto value = glyphastore::bench::parse_decimal_size(input);
+    if (!value || (!allow_zero && *value == 0) || *value > Generation::kMaximumIncrementalDeltaEntries) {
         throw std::invalid_argument{"operation count is outside the incremental delta bound"};
     }
-    return value;
+    return *value;
 }
 
 [[nodiscard]] auto parse_options(const int argc, char** argv) -> Options {

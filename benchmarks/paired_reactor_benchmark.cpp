@@ -2,11 +2,11 @@
 #include "experimental/paired_reactor.hpp"
 #include "glyphastore/client/client.hpp"
 #include "glyphastore/server/server.hpp"
+#include "parse.hpp"
 
 #include <algorithm>
 #include <atomic>
 #include <barrier>
-#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
@@ -19,7 +19,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -63,13 +62,11 @@ struct Measurement final {
         throw std::invalid_argument{"missing " + std::string{flag}};
     }
     const std::string_view input{value};
-    std::size_t parsed{};
-    const auto converted = std::from_chars(input.data(), input.data() + input.size(), parsed);
-    if (converted.ec != std::errc{} || converted.ptr != input.data() + input.size() ||
-        (!allow_zero && parsed == 0)) {
+    const auto parsed = glyphastore::bench::parse_decimal_size(input);
+    if (!parsed || (!allow_zero && *parsed == 0)) {
         throw std::invalid_argument{"invalid " + std::string{flag}};
     }
-    return parsed;
+    return *parsed;
 }
 
 [[nodiscard]] auto parse_options(const int argc, char** argv) -> Options {

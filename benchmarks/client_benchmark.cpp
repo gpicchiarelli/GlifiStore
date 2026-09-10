@@ -1,9 +1,9 @@
 #include "glyphastore/client/client.hpp"
+#include "parse.hpp"
 
 #include <algorithm>
 #include <atomic>
 #include <barrier>
-#include <charconv>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -13,7 +13,6 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <thread>
 #include <vector>
 
@@ -49,12 +48,11 @@ struct Workload {
 }
 
 [[nodiscard]] auto parse_size(const std::string_view text, const std::string_view option) -> std::size_t {
-    std::size_t value{};
-    const auto [end, error] = std::from_chars(text.data(), text.data() + text.size(), value);
-    if (error != std::errc{} || end != text.data() + text.size() || value == 0) {
+    const auto value = glyphastore::bench::parse_decimal_size(text);
+    if (!value || *value == 0) {
         fail(std::string{option} + " must be a positive integer");
     }
-    return value;
+    return *value;
 }
 
 [[nodiscard]] auto parse_options(const int argc, char** argv) -> Options {

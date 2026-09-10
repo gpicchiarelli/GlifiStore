@@ -2,9 +2,9 @@
 #include "experimental/paired_shard.hpp"
 #include "glyphastore/store/config.hpp"
 #include "glyphastore/store/store.hpp"
+#include "parse.hpp"
 
 #include <algorithm>
-#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
@@ -16,7 +16,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -65,13 +64,11 @@ struct Measurement final {
         throw std::invalid_argument{"missing value for " + std::string{flag}};
     }
     const std::string_view input{text};
-    std::size_t value{};
-    const auto converted = std::from_chars(input.data(), input.data() + input.size(), value);
-    if (converted.ec != std::errc{} || converted.ptr != input.data() + input.size() ||
-        (!allow_zero && value == 0)) {
+    const auto value = glyphastore::bench::parse_decimal_size(input);
+    if (!value || (!allow_zero && *value == 0)) {
         throw std::invalid_argument{"invalid value for " + std::string{flag}};
     }
-    return value;
+    return *value;
 }
 
 [[nodiscard]] auto parse_options(const int argc, char** argv) -> Options {

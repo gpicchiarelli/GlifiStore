@@ -3,12 +3,12 @@
 #include "experimental/pair_read_generation_shell.hpp"
 #include "glyphastore/server/thread_affinity.hpp"
 #include "glyphastore/store/paired/read_generation.hpp"
+#include "parse.hpp"
 
 #include <algorithm>
 #include <array>
 #include <atomic>
 #include <barrier>
-#include <charconv>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -20,7 +20,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <thread>
 #include <vector>
 
@@ -46,12 +45,11 @@ struct Options final {
         throw std::invalid_argument{"missing numeric argument"};
     }
     const std::string_view input{text};
-    std::size_t value{};
-    const auto converted = std::from_chars(input.data(), input.data() + input.size(), value);
-    if (converted.ec != std::errc{} || converted.ptr != input.data() + input.size() || value == 0U) {
+    const auto value = glyphastore::bench::parse_decimal_size(input);
+    if (!value || *value == 0U) {
         throw std::invalid_argument{"numeric argument must be positive"};
     }
-    return value;
+    return *value;
 }
 
 [[nodiscard]] auto parse_options(const int argc, char** argv) -> Options {

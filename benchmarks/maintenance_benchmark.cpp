@@ -6,11 +6,11 @@
 #include "glyphastore/segment/record.hpp"
 #include "glyphastore/store/config.hpp"
 #include "glyphastore/store/store.hpp"
+#include "parse.hpp"
 
 #include <algorithm>
 #include <array>
 #include <atomic>
-#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
@@ -339,12 +339,11 @@ class TemporaryDirectory final {
         throw std::runtime_error("missing value for " + std::string{flag});
     }
     const std::string_view text{value};
-    std::size_t parsed{};
-    const auto converted = std::from_chars(text.data(), text.data() + text.size(), parsed);
-    if (converted.ec != std::errc{} || converted.ptr != text.data() + text.size()) {
+    const auto parsed = glyphastore::bench::parse_decimal_size(text);
+    if (!parsed) {
         throw std::runtime_error("invalid value for " + std::string{flag} + ": " + std::string{text});
     }
-    return parsed;
+    return *parsed;
 }
 
 [[nodiscard]] auto parse_options(int argc, char** argv) -> Options {

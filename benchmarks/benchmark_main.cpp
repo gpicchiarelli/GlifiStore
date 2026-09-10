@@ -1,7 +1,7 @@
 #include "harness.hpp"
+#include "parse.hpp"
 #include "suite.hpp"
 
-#include <charconv>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -9,7 +9,6 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
-#include <system_error>
 #include <vector>
 
 namespace {
@@ -33,12 +32,11 @@ struct Options {
         std::exit(2);
     }
     const std::string_view text{value};
-    std::size_t parsed{};
-    const auto converted = std::from_chars(text.data(), text.data() + text.size(), parsed);
-    if (converted.ec != std::errc{} || converted.ptr != text.data() + text.size()) {
+    const auto parsed = glyphastore::bench::parse_decimal_size(text);
+    if (!parsed) {
         throw std::invalid_argument{"invalid value for " + std::string{flag} + ": " + std::string{text}};
     }
-    return parsed;
+    return *parsed;
 }
 
 [[nodiscard]] auto parse_options(int argc, char** argv) -> Options {
