@@ -353,10 +353,50 @@ jobs:
             --expect-commit "$GITHUB_SHA" \
             --require-ci \
             --output build/package-ci-closure.json --replace
+      - name: Download the sealed release candidate for admission
+        if: inputs.candidate-artifact != ''
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: ${{ inputs.candidate-artifact }}
+          path: dist/release-candidate
+      - name: Bind package evidence to the sealed candidate (Wave F)
+        if: inputs.candidate-artifact != ''
+        env:
+          CANDIDATE_SEAL_SHA256: ${{ inputs.candidate-seal-sha256 }}
+          PROFILE: ${{ needs.plan.outputs.profile }}
+        run: |
+          set -euo pipefail
+          test -n "$CANDIDATE_SEAL_SHA256"
+          # Fail-closed for tool execution: the orchestrator must always retain a
+          # schema-valid report. Known residual blockers (cross-SDK NOT_RUN, missing
+          # N-1 upgrade rows) stay visible inside package-admission.json instead of
+          # being rounded up; --allow-blocking keeps those residuals from inventing a
+          # green admission while still refusing a missing or malformed report.
+          python engineering/tools/run_package_admission.py \
+            --profile "$PROFILE" \
+            --candidate dist/release-candidate \
+            --evidence-root build/package-evidence \
+            --artifact-root build/package-evidence \
+            --candidate-seal-sha256 "$CANDIDATE_SEAL_SHA256" \
+            --output-dir build/package-admission \
+            --allow-blocking \
+            --replace
+          test -f build/package-admission/package-admission.json
+          test -f build/package-admission/upgrade-baseline.json
+          test -f build/package-admission/artifact-manifest.json
+          test -f build/package-admission/installed-sdk-matrix.json
       - name: Retain the closure record
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: package-ci-closure-${{ needs.plan.outputs.profile }}-${{ github.sha }}
           path: build/package-ci-closure.json
+          if-no-files-found: error
+          retention-days: ${{ needs.plan.outputs.retention-days }}
+      - name: Retain the package admission report
+        if: inputs.candidate-artifact != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: package-admission-${{ needs.plan.outputs.profile }}-${{ github.sha }}
+          path: build/package-admission/
           if-no-files-found: error
           retention-days: ${{ needs.plan.outputs.retention-days }}

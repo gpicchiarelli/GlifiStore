@@ -167,27 +167,38 @@ then lets packaging run:
   a release artifact.
 - Publication never rebuilds, never clobbers an asset and refuses an existing tag.
 
-Three admission tools exist and are covered by tests, but **no workflow calls them yet**, so
-package admission is a local, manual step today and proves nothing about a published release:
+Three admission tools plus the CI orchestrator are covered by tests and **wired fail-closed**:
+
+- [`package-ci.yml`](../../.github/workflows/package-ci.yml) closure runs
+  [`run_package_admission.py`](../../engineering/tools/run_package_admission.py) whenever a sealed
+  candidate is supplied (the release-profile `workflow_call`).
+- [`release.yml`](../../.github/workflows/release.yml) runs a dedicated `package-admission` job for
+  FreeBSD/OpenBSD `release_evidence` (adapted without inventing package-matrix PASS rows).
+
+Both retain `package-admission.json`, `upgrade-baseline.json`, `artifact-manifest.json` and
+`installed-sdk-matrix.json`. `--allow-blocking` keeps known residual blockers visible inside the
+report without inventing `admitted: true`; the job fails only when the orchestrator cannot produce a
+schema-valid report. Local reproduction:
 
 ```bash
-python3 engineering/tools/generate_artifact_manifest.py create ...   # artifact identity graph
-python3 engineering/tools/upgrade_baseline.py resolve ...            # SemVer-aware sealed N-1
-python3 engineering/tools/validate_package_admission.py ...          # bind evidence to exact bytes
+python3 engineering/tools/run_package_admission.py \
+  --profile release --candidate dist/release-candidate \
+  --evidence-root build/package-evidence --allow-blocking --replace \
+  --output-dir build/package-admission
 ```
 
 ## What this pipeline does not prove
 
-- No annotated release tag exists, so no packaging evidence has ever been retained from a release.
-- The `deb`/`rpm` container lifecycle has never run in a retained CI run; its first execution may
-  legitimately report `FAIL` rather than the `BLOCKED` rows a host without a container runtime
-  produces.
+- The `deb`/`rpm` container lifecycle has retained nightly evidence at `FUNCTIONALLY_VERIFIED`
+  (see [wave5-l7-residuals.md](wave5-l7-residuals.md)); `service-lifecycle` stays `BLOCKED` without
+  systemd as PID 1.
 - MacPorts and Homebrew have no hosted runner allowed to install into the host package manager, and
   neither installs a startup item that a retained run has ever started, so `service-lifecycle` is an
   open gate for both.
 - `package-upgrade` has never run positively anywhere: it is `NOT_APPLICABLE_INITIAL_BASELINE`
   until a predecessor exists, then `NOT_RUN` until a sealed N−1 package is admitted.
-- The cross-SDK post-install matrix against a package-installed daemon is `NOT_RUN`.
+- The cross-SDK post-install matrix against a package-installed daemon is `NOT_RUN`, so Wave F
+  admission reports stay `admitted: false` by construction even though the tools now run in CI.
 - In-repo packaging is the project's own pipeline. It is not a Debian, Fedora, MacPorts, Homebrew,
   FreeBSD or OpenBSD acceptance, and nothing here may be described as one.
 

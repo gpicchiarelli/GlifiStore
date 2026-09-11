@@ -203,8 +203,8 @@ The volatile engine under `src/experimental/` is lab-only.
 - [ ] **GATE-PACKAGE-ADMISSION** — Package upgrade baselines and package artifacts are admitted by exact sealed bytes
   State: `IMPLEMENTATA` · Release target: `rc`
   Requirements: `GS-RELEASE-UPGRADE-001`, `GS-RELEASE-ARTIFACT-001`
-  Residual risk: No workflow calls upgrade_baseline.py, generate_artifact_manifest.py or validate_package_admission.py, so admission is a local manual step today; no annotated release exists so package-upgrade has never run positively; the cross-SDK post-install matrix against a package-installed daemon is NOT_RUN and blocks admission by construction
-  The baseline resolver orders annotated published releases by SemVer precedence, keeps only complete sealed ABI-compatible candidates, and separates NOT_APPLICABLE_INITIAL_BASELINE, BLOCKED and NOT_RUN; admission binds the artifact manifest to the sealed source digest and every evidence subject to the exact bytes, reporting blockers instead of promoting anything. Wiring into the release graph is the open part.
+  Residual risk: Admission is wired fail-closed for tool execution and retains blockers, but admitted stays false until a package-installed cross-SDK matrix PASSes and package-upgrade is exercised against a sealed SemVer N-1 predecessor; FreeBSD/OpenBSD still adapt release_evidence without package-matrix upgrade rows; no annotated release has retained a positive admission yet
+  The baseline resolver orders annotated published releases by SemVer precedence, keeps only complete sealed ABI-compatible candidates, and separates NOT_APPLICABLE_INITIAL_BASELINE, BLOCKED and NOT_RUN; admission binds the artifact manifest to the sealed source digest and every evidence subject to the exact bytes, reporting blockers instead of promoting anything. package-ci.yml and release.yml now invoke run_package_admission.py and retain the report; positive admission remains open until the cross-SDK and N-1 residuals close.
 
 - [ ] **GATE-PACKAGE-LIFECYCLE** — Package backends declare and prove their lifecycle through honest evidence
   State: `IMPLEMENTATA` · Release target: `rc`

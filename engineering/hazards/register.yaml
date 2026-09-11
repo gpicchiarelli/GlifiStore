@@ -895,12 +895,14 @@ hazards:
   - scripts/tests/test_package_ci_plan.py
   - scripts/tests/test_package_status_docs.py
   - scripts/tests/test_package_admission.py
+  - scripts/tests/test_package_admission_orchestrator.py
   - scripts/tests/test_package_upgrade_baseline.py
   - engineering/tools/validate_package_evidence.py
+  - engineering/tools/run_package_admission.py
   - engineering/tools/generate_package_status.py
-  rischio_residuo: I lifecycle container e nativi non sono mai stati eseguiti in un run trattenuto e
-    nessun workflow invoca ancora i tool di ammissione, quindi la difesa e provata solo sui casi
-    negativi locali
+  rischio_residuo: I lifecycle nativi MacPorts/Homebrew e la matrice cross-SDK package-installed
+    restano non eseguiti positivamente; l'ammissione e collegata in CI ma admitted resta false finche
+    quei residual non chiudono, quindi la difesa positiva non e ancora completa
   stato: mitigato
   accettazione_rischio: Accettato finche il claim resta architectural prototype e nessun gate di
     packaging e chiuso; la prima esecuzione trattenuta puo legittimamente riportare FAIL

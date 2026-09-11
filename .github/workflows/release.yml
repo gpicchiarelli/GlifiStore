@@ -676,13 +676,75 @@ jobs:
     #
     # freebsd and openbsd are absent here on purpose: they are required_for_release
     # and keep their native jobs above, which produce the artifacts the release policy
-    # demands.
+    # demands. The release-profile call also runs Wave F package admission in
+    # package-ci.yml closure against the optional packages.
     uses: ./.github/workflows/package-ci.yml
     with:
       profile: release
       backends: optional
       candidate-artifact: ${{ needs.candidate.outputs.artifact-name }}
       candidate-seal-sha256: ${{ needs.candidate.outputs.candidate-seal-sha256 }}
+
+  package-admission:
+    name: Admit required package bytes against the sealed candidate
+    needs: [candidate, freebsd-package-evidence, openbsd-package-evidence]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    # Wave F: resolve the SemVer N-1 baseline, bind the artifact identity graph to
+    # the sealed source digest, adapt FreeBSD/OpenBSD release_evidence without
+    # inventing package-matrix PASS rows, and retain package-admission.json.
+    # Deliberately absent from verify's needs: blockers such as the cross-SDK
+    # package-installed matrix (NOT_RUN) and unset package-upgrade stay visible in
+    # the report via --allow-blocking; this job fails only when the orchestrator
+    # cannot produce a schema-valid report. It never writes into release-input-*.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.13"
+      - name: Install framework dependencies
+        run: python -m pip install --disable-pip-version-check PyYAML jsonschema
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: ${{ needs.candidate.outputs.artifact-name }}
+          path: dist/release-candidate
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: release-input-${{ github.sha }}-*-package
+          path: build/package-evidence
+          merge-multiple: false
+      - name: Run Wave F package admission fail-closed
+        env:
+          CANDIDATE_SEAL_SHA256: ${{ needs.candidate.outputs.candidate-seal-sha256 }}
+        run: |
+          set -euo pipefail
+          test -n "$CANDIDATE_SEAL_SHA256"
+          python engineering/tools/run_package_admission.py \
+            --profile release \
+            --candidate dist/release-candidate \
+            --evidence-root build/package-evidence \
+            --artifact-root build/package-evidence \
+            --candidate-seal-sha256 "$CANDIDATE_SEAL_SHA256" \
+            --output-dir build/package-admission \
+            --allow-blocking \
+            --replace
+          test -f build/package-admission/package-admission.json
+          test -f build/package-admission/upgrade-baseline.json
+          test -f build/package-admission/artifact-manifest.json
+          test -f build/package-admission/installed-sdk-matrix.json
+      - name: Retain the package admission report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: package-admission-release-${{ github.sha }}
+          path: build/package-admission/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
 
   security-sanitizers:
     name: Security sanitizer / ${{ matrix.name }}

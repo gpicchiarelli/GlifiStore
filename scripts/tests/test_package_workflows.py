@@ -89,7 +89,7 @@ class PackageWorkflowTests(unittest.TestCase):
         self.assertIn("package_ci_plan.py close", self.workflow)
         self.assertIn("--expect-commit \"$GITHUB_SHA\"", self.workflow)
         self.assertEqual(
-            self.workflow.count("retention-days: ${{ needs.plan.outputs.retention-days }}"), 3
+            self.workflow.count("retention-days: ${{ needs.plan.outputs.retention-days }}"), 4
         )
         self.assertIn("retention-days: ${{ steps.plan.outputs.retention-days }}", self.workflow)
         self.assertEqual(
@@ -98,6 +98,12 @@ class PackageWorkflowTests(unittest.TestCase):
         )
         # A cache is a toolchain convenience and is never an artifact store.
         self.assertNotIn("actions/cache", self.workflow)
+
+    def test_wave_f_admission_runs_when_a_sealed_candidate_is_supplied(self) -> None:
+        self.assertIn("engineering/tools/run_package_admission.py", self.workflow)
+        self.assertIn("package-admission-${{ needs.plan.outputs.profile }}-${{ github.sha }}", self.workflow)
+        self.assertIn("if: inputs.candidate-artifact != ''", self.workflow)
+        self.assertIn("--allow-blocking", self.workflow)
 
     def test_nothing_is_allowed_to_fail_softly(self) -> None:
         for forbidden in ("continue-on-error", "|| true", "set +e", "if: always() || "):
@@ -150,6 +156,18 @@ class ReleaseIntegrationTests(unittest.TestCase):
             backend["id"] for backend in matrix["backends"] if backend["required_for_release"]
         }
         self.assertEqual(required, {"freebsd", "openbsd"})
+
+    def test_wave_f_admission_is_wired_for_required_packages(self) -> None:
+        self.assertIn("  package-admission:", self.release)
+        job = self.release[self.release.index("  package-admission:") :]
+        job = job[: job.index("\n  security-sanitizers:")]
+        self.assertIn("engineering/tools/run_package_admission.py", job)
+        self.assertIn("--profile release", job)
+        self.assertIn("--allow-blocking", job)
+        self.assertIn("package-admission-release-${{ github.sha }}", job)
+        verify = self.release[self.release.index("  verify:") :]
+        needs = verify[: verify.index("\n    runs-on:")]
+        self.assertNotIn("package-admission", needs)
 
 
 class ContainerEvidenceIdentityTests(unittest.TestCase):

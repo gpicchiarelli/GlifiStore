@@ -93,8 +93,8 @@ Declarative status is generated into [package-status.md](package-status.md); the
 | MacPorts / Homebrew native rows | Opt-in only (`--allow-native`); no hosted runner may install into the host package manager | A disposable macOS host or an accepted runner policy, with retained logs |
 | `external-consumer` on BSD | Unbuilt, so both BSD backends cap at `FUNCTIONALLY_VERIFIED` | Building an external consumer against the installed package prefix in the native scripts |
 | `package-upgrade` anywhere | Never positively run: `NOT_APPLICABLE_INITIAL_BASELINE` today, `NOT_RUN` once a predecessor exists | A sealed N−1 package artifact admitted through `upgrade_baseline.py admit` |
-| Wave F admission tools | `upgrade_baseline.py`, `generate_artifact_manifest.py` and `validate_package_admission.py` exist with negative tests, but **no workflow calls them**; admission is a local manual step | Wiring them into the release graph fail-closed, with retained reports |
-| Cross-SDK post-install matrix | `NOT_RUN`; the admission report blocks on its absence by construction | Running every SDK against a package-installed daemon and retaining the report |
+| Wave F admission tools | `run_package_admission.py` is wired into `package-ci.yml` (sealed candidate) and `release.yml` (`package-admission` job); reports are retained with honest blockers | A positive `admitted: true` after cross-SDK PASS and sealed N−1 `package-upgrade` |
+| Cross-SDK post-install matrix | `NOT_RUN`; admission reports block on it by construction | Running every SDK against a package-installed daemon and retaining the report |
 | Optional backends | `deb`, `rpm`, `macports`, `homebrew` are `required_for_release: false` and cannot admit a release artifact | Retained `LIFECYCLE_VERIFIED` evidence, a release-policy artifact, an ADR and a gate update |
 | Upstream acceptance | `OPEN_GATE` for FreeBSD, OpenBSD, MacPorts and Homebrew; in-repo packaging is the project pipeline only | Actual acceptance by the upstream ports tree or tap |
 | Apple `.pkg` | Deliberately out of scope; refused by the matrix validator | An accepted ADR, an Apple signing/notarization identity and an update model |

@@ -37,7 +37,7 @@ boxes as production readiness.
 | `tools/generate_package_matrix.py` | Package matrix validation and profile expansion |
 | `tools/generate_package_status.py` | Generator for the derived `docs/distribution/package-status.md` view |
 | `tools/validate_package_evidence.py` | Fail-closed package evidence: a result never exceeds its checks |
-| `tools/upgrade_baseline.py` / `validate_package_admission.py` | SemVer-aware sealed N-1 selection and exact-byte package admission (not wired into any workflow yet) |
+| `tools/upgrade_baseline.py` / `validate_package_admission.py` / `run_package_admission.py` | SemVer-aware sealed N-1 selection and exact-byte package admission (wired in package-ci.yml / release.yml; positive admission still residual) |
 | `formal/shard_pair/` | Reduced TLA+ ShardPair model + TLC helper |
 | `formal/persistence/` | Abstract write/sync/commit-slot/Manifest/recovery TLA+ model |
 

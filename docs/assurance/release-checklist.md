@@ -57,7 +57,7 @@ ceiling above *architectural prototype*. Authority for gates:
 - [ ] Optional package backends (`deb`, `rpm`, `macports`, `homebrew`) ran the `release` profile from
       the sealed candidate; their evidence stays diagnostic and admits no release artifact
       ([package CI](../distribution/package-ci.md))
-- [ ] Any package admission was produced by `upgrade_baseline.py` / `validate_package_admission.py`
+- [ ] Any package admission was produced by `run_package_admission.py` (or the baseline/manifest/admission tools it orchestrates) and retained as an artifact
       against retained CI evidence; a locally produced report is not admissible
 - [ ] Reproducibility evidence rebuilt the closed four-archive set on a distinct runner, matched
       every size and SHA-256, and kept rebuilt bytes outside candidate import and promotion

@@ -313,6 +313,7 @@ requirements:
   - engineering/tools/upgrade_baseline.py
   - engineering/tools/generate_artifact_manifest.py
   - engineering/tools/validate_package_admission.py
+  - engineering/tools/run_package_admission.py
   - engineering/schemas/upgrade-baseline.schema.json
   - engineering/schemas/upgrade-baseline-admission.schema.json
   - engineering/schemas/package-admission.schema.json
@@ -321,6 +322,7 @@ requirements:
   prove:
   - scripts/tests/test_package_upgrade_baseline.py
   - scripts/tests/test_package_admission.py
+  - scripts/tests/test_package_admission_orchestrator.py
   - scripts/tests/test_artifact_manifest.py
   - scripts/tests/test_package_installed_sdk_matrix.py
   - scripts/tests/test_semver_policy.py
@@ -331,17 +333,18 @@ requirements:
   - openbsd
   claim_massimo: architectural-prototype
   evidenze:
-  - workflow: assurance.yml
-    note: Solo le suite negative locali; nessun workflow invoca ancora upgrade_baseline.py,
-      generate_artifact_manifest.py o validate_package_admission.py
+  - workflow: package-ci.yml
+    note: Closure invoca run_package_admission.py quando e presente un candidate sigillato
+  - workflow: release.yml
+    note: Job package-admission lega release_evidence FreeBSD/OpenBSD al candidate sigillato
   rischio_residuo:
   - >-
-    Nessun workflow chiama ancora i tool di baseline, manifest e ammissione, quindi oggi
-    l'ammissione e un passo locale e manuale che non prova nulla su una release pubblicata
-  - Nessun tag annotato esiste, quindi package-upgrade non e mai stato eseguito positivamente e
-    resta NOT_APPLICABLE_INITIAL_BASELINE su ogni backend
-  - La matrice cross-SDK post-install contro un daemon installato da pacchetto resta NOT_RUN, e la
-    sua assenza blocca l'ammissione per costruzione
+    L'ammissione e collegata fail-closed per l'esecuzione dei tool e trattiene i blocker, ma
+    admitted resta false finche la matrice cross-SDK package-installed non passa e
+    package-upgrade non esercita un predecessore SemVer N-1 sigillato
+  - FreeBSD/OpenBSD adattano ancora release_evidence senza righe package-matrix per
+    package-upgrade
+  - Nessun tag annotato ha ancora trattenuto un'ammissione positiva
   - I backend macOS e Linux non selezionano ancora il pacchetto N-1 sigillato nel proprio lifecycle
   hazards:
   - HAZ-030

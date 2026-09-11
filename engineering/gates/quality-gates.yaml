@@ -828,12 +828,14 @@ gates:
   - engineering/tools/upgrade_baseline.py
   - engineering/tools/generate_artifact_manifest.py
   - engineering/tools/validate_package_admission.py
+  - engineering/tools/run_package_admission.py
   - engineering/schemas/upgrade-baseline.schema.json
   - engineering/schemas/package-admission.schema.json
   - engineering/schemas/artifact-manifest.schema.json
   - engineering/schemas/installed-sdk-matrix.schema.json
   - scripts/tests/test_package_upgrade_baseline.py
   - scripts/tests/test_package_admission.py
+  - scripts/tests/test_package_admission_orchestrator.py
   - scripts/tests/test_artifact_manifest.py
   - scripts/tests/test_package_installed_sdk_matrix.py
   piattaforme:
@@ -842,20 +844,28 @@ gates:
   - freebsd
   - openbsd
   evidenze:
-  - workflow: assurance.yml
-    note: Local negative suites only; no workflow invokes the baseline, manifest or admission tools
+  - workflow: package-ci.yml
+    note: Closure runs run_package_admission.py whenever a sealed candidate is supplied
+      (release-profile workflow_call); retains package-admission.json, upgrade-baseline.json,
+      artifact-manifest.json and installed-sdk-matrix.json
+  - workflow: release.yml
+    note: package-admission job binds FreeBSD/OpenBSD release_evidence to the sealed candidate;
+      deliberately outside verify needs so residual blockers stay visible without inventing PASS
   stato: IMPLEMENTATA
-  rischio_residuo: No workflow calls upgrade_baseline.py, generate_artifact_manifest.py or
-    validate_package_admission.py, so admission is a local manual step today; no annotated release
-    exists so package-upgrade has never run positively; the cross-SDK post-install matrix against a
-    package-installed daemon is NOT_RUN and blocks admission by construction
+  rischio_residuo: Admission is wired fail-closed for tool execution and retains blockers, but
+    admitted stays false until a package-installed cross-SDK matrix PASSes and package-upgrade
+    is exercised against a sealed SemVer N-1 predecessor; FreeBSD/OpenBSD still adapt
+    release_evidence without package-matrix upgrade rows; no annotated release has retained a
+    positive admission yet
   riapertura:
   - Selecting an N-1 baseline by arithmetic instead of SemVer precedence over sealed releases
   - Rebuilding an N-1 package from HEAD or admitting a draft/incomplete predecessor
   - Claiming an initial baseline while a published predecessor exists
   - Admitting package bytes that the artifact manifest does not record with the same digest
+  - Rounding a BLOCKED admission report up to a publishable PASS without residual closure
   narrative: The baseline resolver orders annotated published releases by SemVer precedence, keeps only
     complete sealed ABI-compatible candidates, and separates NOT_APPLICABLE_INITIAL_BASELINE, BLOCKED
     and NOT_RUN; admission binds the artifact manifest to the sealed source digest and every evidence
-    subject to the exact bytes, reporting blockers instead of promoting anything. Wiring into the
-    release graph is the open part.
+    subject to the exact bytes, reporting blockers instead of promoting anything. package-ci.yml and
+    release.yml now invoke run_package_admission.py and retain the report; positive admission remains
+    open until the cross-SDK and N-1 residuals close.
