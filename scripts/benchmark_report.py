@@ -789,6 +789,30 @@ def baseline_diagnostics(
     return indexed
 
 
+def comparable_revision(value: Any) -> str | None:
+    if (
+        not isinstance(value, str)
+        or not value
+        or value == "unknown"
+        or value.endswith("-dirty")
+    ):
+        return None
+    return value
+
+
+def revision_by_source(report: dict[str, Any]) -> dict[str, str]:
+    revisions: dict[str, str] = {}
+    for run in report.get("runs", []):
+        source = run.get("source")
+        metadata = run.get("metadata", {})
+        revision = comparable_revision(
+            metadata.get("git_sha") if isinstance(metadata, dict) else None
+        )
+        if isinstance(source, str) and source and revision is not None:
+            revisions[source] = revision
+    return revisions
+
+
 def classify_rate_ranges(current: dict[str, Any], prior: dict[str, Any]) -> str:
     current_min = number(current.get("min_ops_per_second", 0))
     current_max = number(current.get("max_ops_per_second", 0))
@@ -840,8 +864,17 @@ def add_comparisons(runs: list[dict[str, Any]], baseline: dict[str, Any] | None)
     if baseline is None:
         return 0
     previous = baseline_results(baseline)
+    previous_revisions = revision_by_source(baseline)
     matched = 0
     for run in runs:
+        metadata = run.get("metadata", {})
+        current_revision = comparable_revision(
+            metadata.get("git_sha") if isinstance(metadata, dict) else None
+        )
+        same_revision = (
+            current_revision is not None
+            and previous_revisions.get(run["source"]) == current_revision
+        )
         for result in run["results"]:
             prior = previous.get(result_key(run["source"], result))
             prior_rate = number(prior.get("median_ops_per_second", 0)) if prior else 0.0
@@ -859,7 +892,12 @@ def add_comparisons(runs: list[dict[str, Any]], baseline: dict[str, Any] | None)
                 "median_ops_per_second_delta_percent": (current_rate - prior_rate)
                 / prior_rate
                 * 100,
-                "interpretation": classify_rate_ranges(result, prior),
+                "same_revision": same_revision,
+                "interpretation": (
+                    "same-revision-variance"
+                    if same_revision
+                    else classify_rate_ranges(result, prior)
+                ),
             }
             matched += 1
     return matched
@@ -871,8 +909,17 @@ def add_diagnostic_comparisons(
     if baseline is None:
         return 0
     previous = baseline_diagnostics(baseline)
+    previous_revisions = revision_by_source(baseline)
     matched = 0
     for run in runs:
+        metadata = run.get("metadata", {})
+        current_revision = comparable_revision(
+            metadata.get("git_sha") if isinstance(metadata, dict) else None
+        )
+        same_revision = (
+            current_revision is not None
+            and previous_revisions.get(run["source"]) == current_revision
+        )
         for diagnostic in run.get("diagnostics", []):
             prior = previous.get(diagnostic_key(run["source"], diagnostic))
             prior_median = number(prior.get("median", -1)) if prior else -1.0
@@ -890,7 +937,12 @@ def add_diagnostic_comparisons(
                 "median_delta_percent": (current_median - prior_median)
                 / prior_median
                 * 100,
-                "interpretation": classify_diagnostic_ranges(diagnostic, prior),
+                "same_revision": same_revision,
+                "interpretation": (
+                    "same-revision-variance"
+                    if same_revision
+                    else classify_diagnostic_ranges(diagnostic, prior)
+                ),
             }
             matched += 1
     return matched
@@ -922,6 +974,7 @@ def comparison_signal(result: dict[str, Any]) -> str:
         "inconclusive-overlap": "inconclusive (ranges overlap)",
         "regression-candidate": "regression candidate",
         "improvement-candidate": "improvement candidate",
+        "same-revision-variance": "same-revision repeat variance",
         "median-only": "median only",
         "inconclusive-invalid-ranges": "inconclusive (invalid ranges)",
     }
@@ -1194,6 +1247,27 @@ def render_markdown(
                     "",
                 ]
             )
+    result_comparisons = [
+        comparison
+        for run in runs
+        for result in run.get("results", [])
+        if isinstance((comparison := result.get("comparison")), dict)
+    ]
+    diagnostic_comparisons = [
+        comparison
+        for run in runs
+        for diagnostic in run.get("diagnostics", [])
+        if isinstance((comparison := diagnostic.get("comparison")), dict)
+    ]
+    comparisons = result_comparisons + diagnostic_comparisons
+    if comparisons and all(comparison.get("same_revision") is True for comparison in comparisons):
+        lines.extend(
+            [
+                "Baseline and current samples use the same Git revision; deltas describe "
+                "repeat variance, not code regression or improvement candidates.",
+                "",
+            ]
+        )
     if result_count == 0 and diagnostic_count == 0:
         lines.extend(["No benchmark results were produced.", ""])
         return "\n".join(lines)
@@ -1548,7 +1622,7 @@ def main() -> int:
     generated_at = dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat()
     baseline_generated_at = baseline.get("generated_at") if baseline else None
     report = {
-        "schema_version": 8,
+        "schema_version": 9,
         "generated_at": generated_at,
         "baseline_generated_at": baseline_generated_at,
         "environment": environment,

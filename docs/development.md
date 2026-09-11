@@ -36,6 +36,9 @@ same identity includes the SHA-256 digest of the hosted matrix contract; individ
 operation count, warmup, and measured repeats.
 For compatible environments, the report classifies overlapping min/max throughput ranges as
 inconclusive. Only disjoint ranges become improvement or regression candidates.
+When the retained baseline and current sample use the same Git revision, the report keeps the
+numeric delta but classifies it as repeat variance. It cannot label same-revision noise as a code
+regression or improvement candidate, even when the observed ranges are disjoint.
 The JSON and Markdown reports also derive the highest observed median pipeline for each 1/2/4
 Worker row, its gain over pipeline depth 1, speedup against the one-Worker cell at the same depth,
 and scaling efficiency. These are descriptive scheduling signals, not capacity claims.

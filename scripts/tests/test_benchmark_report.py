@@ -208,7 +208,7 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
             ):
                 benchmark_report_main()
 
-    def test_main_emits_schema_eight_with_specialized_match_count(self) -> None:
+    def test_main_emits_schema_nine_with_specialized_match_count(self) -> None:
         content = (
             "# git_sha=abc123\n"
             "# arch=x86_64\n"
@@ -238,7 +238,7 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
                 self.assertEqual(benchmark_report_main(), 0)
             report = json.loads(json_path.read_text(encoding="utf-8"))
             markdown = markdown_path.read_text(encoding="utf-8")
-        self.assertEqual(report["schema_version"], 8)
+        self.assertEqual(report["schema_version"], 9)
         self.assertEqual(report["matched_baseline_diagnostics"], 0)
         self.assertIn("1 specialized diagnostic(s)", markdown)
 
@@ -406,6 +406,20 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
             0,
         )
 
+        same_current = diagnostic_run(20, False)
+        same_prior = diagnostic_run(10, False)
+        same_current[0]["metadata"] = {"git_sha": "abc123"}
+        same_prior[0]["metadata"] = {"git_sha": "abc123"}
+        add_diagnostic_comparisons(same_current, {"runs": same_prior})
+        self.assertEqual(
+            same_current[0]["diagnostics"][0]["comparison"]["interpretation"],
+            "same-revision-variance",
+        )
+        markdown = render_markdown(
+            same_current, "now", "before", {"status": "compatible"}
+        )
+        self.assertIn("same Git revision", markdown)
+
     def test_environment_file_and_identity_are_deterministic(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "environment.txt"
@@ -506,6 +520,40 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
             current_runs[0]["results"][0]["comparison"]["interpretation"],
             "improvement-candidate",
         )
+
+    def test_same_revision_delta_is_repeat_variance(self) -> None:
+        current_runs = strict_runs()
+        current = current_runs[0]["results"][0]
+        current.update(
+            {
+                "median_ops_per_second": 70.0,
+                "min_ops_per_second": 65.0,
+                "max_ops_per_second": 75.0,
+            }
+        )
+        prior_runs = strict_runs()
+        matched = add_comparisons(current_runs, {"runs": prior_runs})
+        self.assertEqual(matched, 1)
+        comparison = current["comparison"]
+        self.assertTrue(comparison["same_revision"])
+        self.assertEqual(comparison["interpretation"], "same-revision-variance")
+        self.assertEqual(regressions_over_threshold(current_runs, 10.0), [])
+
+        markdown = render_markdown(
+            current_runs, "now", "before", {"status": "compatible"}
+        )
+        self.assertIn("same Git revision", markdown)
+        self.assertIn("same-revision repeat variance", markdown)
+
+    def test_dirty_revision_is_not_treated_as_same_source(self) -> None:
+        current_runs = runs(70.0, 65.0, 75.0)
+        prior_runs = runs(100.0, 95.0, 105.0)
+        current_runs[0]["metadata"] = {"git_sha": "abc123-dirty"}
+        prior_runs[0]["metadata"] = {"git_sha": "abc123-dirty"}
+        add_comparisons(current_runs, {"runs": prior_runs})
+        comparison = current_runs[0]["results"][0]["comparison"]
+        self.assertFalse(comparison["same_revision"])
+        self.assertEqual(comparison["interpretation"], "regression-candidate")
 
     def test_strict_report_accepts_complete_results(self) -> None:
         validate_runs(strict_runs())

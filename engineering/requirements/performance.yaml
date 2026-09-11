@@ -9,8 +9,10 @@ requirements:
     warmup, and repeat counts. Hosted results and the 10% review threshold are advisory
     regression signals; overlapping min/max ranges remain inconclusive, not a hard release gate or
     absolute product claim. Retained CI reports fail closed on incomplete or internally inconsistent
-    benchmark output and on sampling weaker than the fixed source contract. Complete TCP matrices
-    validate filename/runtime coordinates and derive per-depth Worker speedup, scaling efficiency,
+    benchmark output and on sampling weaker than the fixed source contract. Same-revision deltas
+    are preserved as repeat-variance evidence and cannot be classified as code regression or
+    improvement candidates. Complete TCP matrices validate filename/runtime coordinates and derive
+    per-depth Worker speedup, scaling efficiency,
     and the highest observed median pipeline. The hosted contract also requires ordered Reactor
     input/output-buffer compaction and copied-byte profiles, normalized per timed operation in the report.
     It derives the smallest measured pipeline retaining at least 95% of the best same-Worker median,

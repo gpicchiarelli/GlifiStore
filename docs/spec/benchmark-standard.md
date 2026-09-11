@@ -153,6 +153,9 @@ Result matching must include operations, warmups, and measured repeats. Interlea
 practical to reduce drift. Report absolute medians and ratios, not only percentages.
 
 A change is a plausible regression only when it repeats across runs and exceeds normal spread.
+Two runs of the same Git revision contain no code change to classify: their delta must be labeled
+as repeat variance, never as a regression or improvement candidate. Same-revision variance remains
+visible and should be used to assess whether the hosted environment is sufficiently stable.
 Automated reports must classify overlapping current/baseline min/max throughput ranges as
 inconclusive; only disjoint ranges may be labeled improvement or regression candidates. Stronger
 paired/statistical evidence may supersede this conservative classification. Optimize a named
