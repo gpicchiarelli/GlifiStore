@@ -14,6 +14,10 @@ usage: package-ci.sh --profile {pr|main|nightly|release}
                      [--backend NAME]... [--all]
                      [--stage {metadata|build|inspect|install|verify|upgrade|remove|full}]
                      [--package-revision N] [--output-dir DIR] [--release-context FILE]
+                     [--candidate DIR]
+
+--candidate is the sealed release-candidate directory; native package lifecycles
+admit it through CANDIDATE_SEAL_SHA256 and refuse to build without it.
 
 Exit status is non-zero when a backend reports FAIL or when any tool refuses.
 USAGE
@@ -27,6 +31,7 @@ stage="full"
 package_revision=0
 output_dir=""
 release_context=""
+candidate_dir=""
 all_backends=0
 backends=()
 
@@ -39,6 +44,7 @@ while [[ $# -gt 0 ]]; do
     --package-revision) [[ $# -ge 2 ]] || usage; package_revision="$2"; shift 2 ;;
     --output-dir) [[ $# -ge 2 ]] || usage; output_dir="$2"; shift 2 ;;
     --release-context) [[ $# -ge 2 ]] || usage; release_context="$2"; shift 2 ;;
+    --candidate) [[ $# -ge 2 ]] || usage; candidate_dir="$2"; shift 2 ;;
     -h|--help) usage ;;
     *) echo "error: unknown argument: $1" >&2; usage ;;
   esac
@@ -62,6 +68,10 @@ if (( all_backends == 0 )) && (( ${#backends[@]} == 0 )); then
   exit 2
 fi
 command -v python3 >/dev/null 2>&1 || { echo "error: python3 is required" >&2; exit 1; }
+if [[ -n "$candidate_dir" ]]; then
+  [[ -d "$candidate_dir" ]] || { echo "error: candidate directory is missing: $candidate_dir" >&2; exit 2; }
+  candidate_dir="$(cd "$candidate_dir" && pwd -P)"
+fi
 
 version="$(<"$root/VERSION")"
 commit="$(git -C "$root" rev-parse --short=12 HEAD)"
@@ -107,9 +117,9 @@ for backend in "${backends[@]}"; do
   fi
 done
 
-# Structural adapter for backends whose packaging lands in a later wave. It runs the
-# checks that genuinely can run here and reports every other check as NOT_RUN, or as
-# BLOCKED when the host cannot possibly run it.
+# Resolves the structural metadata every backend owes, then dispatches: backends with
+# a module (scripts/lib/package-backend-*.sh) own their own rows, and backends whose
+# packaging lands in a later wave report every remaining check as NOT_RUN.
 run_backend() {
   local backend="$1"
   local directory="$output_dir/$backend/$stage"
@@ -122,7 +132,6 @@ run_backend() {
   local result="OPEN_GATE"
   local lifecycle_state="STRUCTURAL"
   local limitations=()
-  local host; host="$(uname -s)"
 
   {
     echo "backend=$backend profile=$profile stage=$stage"
@@ -137,32 +146,12 @@ run_backend() {
 
   case "$backend" in
     freebsd|openbsd)
-      local port_log="reference-port-structure.log"
-      local port_status="PASS"
-      if ! python3 "$tools/validate_bsd_packaging.py" --root "$root" \
-        >"$directory/$port_log" 2>&1; then
-        port_status="FAIL"
-      fi
-      plan_arguments+=(--status "reference-port-structure=$port_status"
-        --evidence-ref "reference-port-structure=$port_log")
-      if [[ "$port_status" == "FAIL" ]]; then
-        result="FAIL"
-        lifecycle_state="NONE"
-      fi
-      # The native lifecycle needs the matching operating system; say so instead of
-      # reporting NOT_RUN on a host that could never run it.
-      local expected_host="FreeBSD"
-      [[ "$backend" == "openbsd" ]] && expected_host="OpenBSD"
-      if [[ "$host" != "$expected_host" ]]; then
-        local blocked
-        for blocked in package-build package-inspect package-install external-consumer \
-          service-lifecycle put-get-erase restart-recovery package-upgrade package-remove; do
-          plan_arguments+=(--status "$blocked=BLOCKED"
-            --detail "$blocked=requires a native $expected_host host; this runner is $host")
-        done
-      fi
-      limitations+=("The native $expected_host package and service lifecycle still runs in scripts/test-$backend-package-lifecycle.sh; Wave D folds it into package-ci.sh.")
-      limitations+=("PORTS_ACCOUNT_REGISTERED is an upstream allocation and is never created by this script.")
+      # The BSD module owns the structural, native-build, package, service and
+      # upstream-acceptance rows and the hand-off to the native lifecycle script.
+      # shellcheck source=lib/package-backend-bsd.sh
+      . "$root/scripts/lib/package-backend-bsd.sh"
+      bsd_backend_run "$backend" "$directory" "$plan" "$evidence"
+      return
       ;;
     deb|rpm|macports|homebrew)
       limitations+=("No packaging implementation exists for $backend yet; only structural metadata was resolved.")

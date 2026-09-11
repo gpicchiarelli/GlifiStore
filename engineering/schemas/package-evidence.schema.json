@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://glyphastore.dev/schemas/package-evidence-v1.json",
   "title": "GlyphaStore package backend evidence",
-  "description": "Per-backend, per-profile packaging evidence. A non-PASS result is a first-class outcome: NOT_RUN, BLOCKED and OPEN_GATE must be recorded honestly instead of being reported as PASS. Produced and validated by engineering/tools/validate_package_evidence.py.",
+  "description": "Per-backend, per-profile packaging evidence. A non-PASS result is a first-class outcome: NOT_RUN, BLOCKED and OPEN_GATE must be recorded honestly instead of being reported as PASS. Each check may carry the category the package matrix declares for it (structural, native-build, package, service, upstream-accepted) so a structural pass is never read as a package, service or upstream-acceptance proof. Produced and validated by engineering/tools/validate_package_evidence.py.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "backend", "profile", "stage", "result", "lifecycle_state", "git_sha", "product_version", "package_version", "package_revision", "generated_at", "producer", "subject", "checks", "limitations", "residuals"],
@@ -57,6 +57,7 @@
           "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]*$"},
           "status": {"$ref": "#/$defs/status"},
           "command": {"type": "string", "minLength": 1},
+          "category": {"enum": ["structural", "native-build", "package", "service", "upstream-accepted", null]},
           "evidence_ref": {"type": ["string", "null"], "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]*$"},
           "detail": {"type": ["string", "null"], "minLength": 1}
         }

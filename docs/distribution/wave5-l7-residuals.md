@@ -50,9 +50,21 @@ Fail-closed producers refuse same-build substitutes. Documented in
 | `packaging/{freebsd,openbsd}/` | Structural reference ports | Official ports acceptance or package bytes |
 | `scripts/test-freebsd-package-lifecycle.sh` | Same-run producer (blocked on account markers) | Retained tagged package evidence |
 | `scripts/test-openbsd-package-lifecycle.sh` | Same-run producer (blocked on account markers) | Retained tagged package evidence |
+| `package-ci.sh --backend freebsd\|openbsd` | Structural rows plus a fail-closed hand-off to the native producers | Any native build, package, service or upstream row on a non-BSD runner |
 
 `PORTS_ACCOUNT_REGISTERED` markers are deliberately absent until upstream ports allocation exists.
 Do not commit circular `distinfo` into the source archive.
+
+BSD package evidence separates `structural`, `native-build`, `package`, `service` and
+`upstream-accepted` rows ([bsd-packaging.md](bsd-packaging.md)). Open by construction:
+
+- `upstream-ports-acceptance` stays an open gate, so neither BSD backend can ever report `PASS`.
+- `package-upgrade` is `NOT_APPLICABLE_INITIAL_BASELINE` (no prior annotated release) and becomes
+  `NOT_RUN` — never `PASS` — until a sealed N−1 package artifact is admitted.
+- `external-consumer` against the installed package prefix is unbuilt, capping the BSD lifecycle
+  state at `FUNCTIONALLY_VERIFIED`.
+- The packaging workflows and gate rows for `package-ci.sh` land in later waves; today only the
+  release workflow VM runs the native producers.
 
 ## Supply chain and sealed publish
 

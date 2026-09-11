@@ -13,4 +13,9 @@ outside the source archive from its already sealed bytes; committing that self-d
 circular. Retain native-VM evidence for fake installation, plist/shared-symbol checks, package
 install, `rcctl` lifecycle, PUT/GET/ERASE/recovery, upgrade, and deinstall.
 
+`scripts/package-ci.sh --backend openbsd` reports this tree as `structural` evidence and keeps the
+`native-build`, `package`, `service` and `upstream-accepted` rows honest: without a native host, the
+marker above and an admitted sealed candidate they stay `BLOCKED`
+([bsd-packaging.md](../../docs/distribution/bsd-packaging.md)).
+
 Cross-compilation or structural validation is not package evidence.

@@ -42,42 +42,80 @@ lifecycle_states:
 
 # Shared check vocabulary. Evidence may only use these ids (plus the backend extras
 # declared in backends[].checks), so a backend cannot invent a favourable check name.
+#
+# category separates what a row may ever be read as (Wave D):
+#   structural       - repository-side structure and metadata only
+#   native-build     - the package was actually built from sealed sources
+#   package          - the package manager installed, inspected or removed it
+#   service          - the packaged service ran and answered the protocol
+#   upstream-accepted- an upstream distribution actually accepted the packaging
+# A category is optional while a backend is PLANNED and mandatory as soon as the
+# backend declares any real status, so a structural PASS can never be read as a
+# package, service or upstream-acceptance proof.
 lifecycle_checks:
   - id: structural-metadata
     stage: metadata
+    category: structural
     description: load the release context and package matrix and refuse an unknown backend
   - id: reference-port-structure
     stage: metadata
+    category: structural
     description: validate the in-repo reference port against VERSION, ABI_VERSION and service policy
+  - id: ports-account-registration
+    stage: metadata
+    category: upstream-accepted
+    description: read the upstream service-account allocation marker without ever creating it
+  - id: upstream-ports-acceptance
+    stage: metadata
+    category: upstream-accepted
+    description: record whether an upstream ports tree or tap accepted the packaging
   - id: package-metadata-render
     stage: metadata
+    category: structural
     description: render backend packaging metadata from the release context without a hard-coded version
+  - id: sealed-source-admission
+    stage: build
+    category: native-build
+    description: admit the sealed candidate source archive by seal digest before any package build
   - id: package-build
     stage: build
+    category: native-build
     description: build the native package from the sealed source archive
   - id: package-inspect
     stage: inspect
+    category: package
     description: inspect package metadata, dependencies and binary hardening before installation
   - id: package-install
     stage: install
+    category: package
     description: install the package on a clean target and prove the declared file inventory
   - id: external-consumer
     stage: verify
+    category: package
     description: build an external consumer against the installed prefix without the source tree
   - id: service-lifecycle
     stage: verify
+    category: service
     description: start, health-check and stop the packaged service through the platform init system
   - id: put-get-erase
     stage: verify
+    category: service
     description: protocol-v2 PUT, exact GET, ERASE and NOT_FOUND through the packaged service
   - id: restart-recovery
     stage: verify
+    category: service
     description: restart the packaged service and recover the exact durable value
   - id: package-upgrade
     stage: upgrade
+    category: package
     description: upgrade from the sealed N-1 package and prove dataset continuity
+  - id: config-preservation
+    stage: remove
+    category: package
+    description: reinstall over an operator-modified configuration and prove it survives
   - id: package-remove
     stage: remove
+    category: package
     description: remove the package under the config-vs-data retention policy
     # policy: packaging/common/config-data-policy.md
 
@@ -292,6 +330,9 @@ backends:
     checks:
       - structural-metadata
       - reference-port-structure
+      - ports-account-registration
+      - upstream-ports-acceptance
+      - sealed-source-admission
       - package-build
       - package-inspect
       - package-install
@@ -300,17 +341,28 @@ backends:
       - put-get-erase
       - restart-recovery
       - package-upgrade
+      - config-preservation
       - package-remove
     required_checks:
-      pr: [structural-metadata, reference-port-structure]
-      main: [structural-metadata, reference-port-structure]
-      nightly: [structural-metadata, reference-port-structure]
-      release: [structural-metadata, reference-port-structure]
+      pr: [structural-metadata, reference-port-structure, ports-account-registration,
+        upstream-ports-acceptance]
+      main: [structural-metadata, reference-port-structure, ports-account-registration,
+        upstream-ports-acceptance]
+      nightly: [structural-metadata, reference-port-structure, ports-account-registration,
+        upstream-ports-acceptance, package-upgrade]
+      release: [structural-metadata, reference-port-structure, ports-account-registration,
+        upstream-ports-acceptance, sealed-source-admission, package-build, package-inspect,
+        package-install, service-lifecycle, put-get-erase, restart-recovery, package-upgrade,
+        config-preservation, package-remove]
     limitations:
       - >-
-        The native package/service lifecycle currently runs in scripts/test-freebsd-package-lifecycle.sh
-        inside the release workflow VM, not through scripts/package-ci.sh; Wave D folds it in.
+        scripts/package-ci.sh --backend freebsd runs the native package/service lifecycle
+        (scripts/test-freebsd-package-lifecycle.sh) only on a native FreeBSD host with the sealed
+        candidate; every other host reports the native rows as BLOCKED.
       - PORTS_ACCOUNT_REGISTERED is a real upstream UID/GID allocation and is never synthesised by CI.
+      - >-
+        An in-repo reference port is the project packaging pipeline, not a FreeBSD ports-tree
+        acceptance; upstream-ports-acceptance stays an open gate until upstream accepts it.
 
   - id: openbsd
     display_name: OpenBSD reference port and .tgz
@@ -331,6 +383,9 @@ backends:
     checks:
       - structural-metadata
       - reference-port-structure
+      - ports-account-registration
+      - upstream-ports-acceptance
+      - sealed-source-admission
       - package-build
       - package-inspect
       - package-install
@@ -339,15 +394,26 @@ backends:
       - put-get-erase
       - restart-recovery
       - package-upgrade
+      - config-preservation
       - package-remove
     required_checks:
-      pr: [structural-metadata, reference-port-structure]
-      main: [structural-metadata, reference-port-structure]
-      nightly: [structural-metadata, reference-port-structure]
-      release: [structural-metadata, reference-port-structure]
+      pr: [structural-metadata, reference-port-structure, ports-account-registration,
+        upstream-ports-acceptance]
+      main: [structural-metadata, reference-port-structure, ports-account-registration,
+        upstream-ports-acceptance]
+      nightly: [structural-metadata, reference-port-structure, ports-account-registration,
+        upstream-ports-acceptance, package-upgrade]
+      release: [structural-metadata, reference-port-structure, ports-account-registration,
+        upstream-ports-acceptance, sealed-source-admission, package-build, package-inspect,
+        package-install, service-lifecycle, put-get-erase, restart-recovery, package-upgrade,
+        config-preservation, package-remove]
     limitations:
       - >-
-        The native package/service lifecycle currently runs in scripts/test-openbsd-package-lifecycle.sh
-        inside the release workflow VM, not through scripts/package-ci.sh; Wave D folds it in.
+        scripts/package-ci.sh --backend openbsd runs the native package/service lifecycle
+        (scripts/test-openbsd-package-lifecycle.sh) only on a native OpenBSD host with the sealed
+        candidate; every other host reports the native rows as BLOCKED.
       - LibreSSL from base remains the only supported TLS backend on OpenBSD.
       - PORTS_ACCOUNT_REGISTERED is a real upstream UID/GID allocation and is never synthesised by CI.
+      - >-
+        An in-repo reference port is the project packaging pipeline, not an OpenBSD ports-tree
+        acceptance; upstream-ports-acceptance stays an open gate until upstream accepts it.

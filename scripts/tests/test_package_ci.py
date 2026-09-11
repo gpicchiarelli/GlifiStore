@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import platform
 import subprocess
 import tempfile
 import unittest
@@ -90,8 +89,9 @@ class PackageCiTests(unittest.TestCase):
         statuses = {check["id"]: check["status"] for check in evidence["checks"]}
         self.assertEqual(statuses["reference-port-structure"], "PASS")
         self.assertEqual(evidence["result"], "OPEN_GATE")
-        expected = "NOT_RUN" if platform.system() == "FreeBSD" else "BLOCKED"
-        self.assertEqual(statuses["package-install"], expected)
+        # The native rows stay BLOCKED until a native host, the upstream account
+        # marker and a sealed candidate hold together (scripts/lib/package-backend-bsd.sh).
+        self.assertEqual(statuses["package-install"], "BLOCKED")
         self.assertTrue(
             any("PORTS_ACCOUNT_REGISTERED" in item for item in evidence["limitations"])
         )

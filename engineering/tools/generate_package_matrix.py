@@ -36,6 +36,7 @@ from engineering.tools.package_framework import (
 
 ARCHITECTURES = ("amd64", "arm64", "noarch")
 BACKEND_STATUSES = ("PLANNED", "STRUCTURAL", "IMPLEMENTED")
+CHECK_CATEGORIES = ("structural", "native-build", "package", "service", "upstream-accepted")
 OUT_OF_SCOPE_REQUIRED = ("apple-pkg", "windows")
 RELEASE_POLICY_ARTIFACTS = (
     "abi_consumer",
@@ -66,14 +67,25 @@ def _string_list(value: Any, context: str) -> list[str]:
     return value
 
 
-def _validate_checks(matrix: dict[str, Any]) -> dict[str, dict[str, str]]:
-    checks: dict[str, dict[str, str]] = {}
+def _validate_checks(matrix: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    checks: dict[str, dict[str, Any]] = {}
     entries = matrix.get("lifecycle_checks")
     if not isinstance(entries, list) or not entries:
         raise PackageMatrixError("matrix declares no lifecycle checks")
     for entry in entries:
         check = _mapping(entry, "lifecycle check")
-        require_exact_keys(check, {"id", "stage", "description"}, "lifecycle check")
+        keys = set(check)
+        if not {"id", "stage", "description"} <= keys or not keys <= {
+            "id",
+            "stage",
+            "description",
+            "category",
+        }:
+            raise PackageMatrixError(
+                "lifecycle check fields differ: missing="
+                f"{sorted({'id', 'stage', 'description'} - keys)}, "
+                f"unexpected={sorted(keys - {'id', 'stage', 'description', 'category'})}"
+            )
         identifier = check["id"]
         if not isinstance(identifier, str) or SAFE_NAME.fullmatch(identifier) is None:
             raise PackageMatrixError(f"unsafe lifecycle check id: {identifier!r}")
@@ -83,7 +95,16 @@ def _validate_checks(matrix: dict[str, Any]) -> dict[str, dict[str, str]]:
             raise PackageMatrixError(f"unsupported stage for {identifier}: {check['stage']}")
         if not isinstance(check["description"], str) or not check["description"].strip():
             raise PackageMatrixError(f"lifecycle check {identifier} has no description")
-        checks[identifier] = {"stage": check["stage"], "description": check["description"].strip()}
+        category = check.get("category")
+        if category is not None and category not in CHECK_CATEGORIES:
+            raise PackageMatrixError(
+                f"lifecycle check {identifier} has an unsupported category: {category!r}"
+            )
+        checks[identifier] = {
+            "stage": check["stage"],
+            "description": check["description"].strip(),
+            "category": category,
+        }
     return checks
 
 
@@ -128,7 +149,7 @@ def _validate_target(target: Any, backend_profiles: list[str], status: str) -> d
 
 
 def _validate_backend(
-    backend: Any, checks: dict[str, dict[str, str]], release_artifacts: set[str]
+    backend: Any, checks: dict[str, dict[str, Any]], release_artifacts: set[str]
 ) -> dict[str, Any]:
     value = _mapping(backend, "backend")
     require_exact_keys(
@@ -181,6 +202,13 @@ def _validate_backend(
         raise PackageMatrixError(
             f"backend {identifier} declares checks outside the vocabulary: {unknown_checks}"
         )
+    if value["status"] != "PLANNED":
+        uncategorised = sorted(check for check in declared if checks[check]["category"] is None)
+        if uncategorised:
+            raise PackageMatrixError(
+                f"backend {identifier} runs real checks and must categorise every check it "
+                f"declares: {uncategorised}"
+            )
 
     required = _mapping(value["required_checks"], f"backend {identifier} required_checks")
     if sorted(required) != sorted(profiles):
@@ -313,6 +341,18 @@ def backend(matrix: dict[str, Any], identifier: str) -> dict[str, Any]:
     raise PackageMatrixError(f"unknown packaging backend: {identifier}")
 
 
+def check_vocabulary(matrix: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Declared stage, description and category for every check id in the matrix."""
+    return {
+        check["id"]: {
+            "stage": check["stage"],
+            "description": check["description"],
+            "category": check.get("category"),
+        }
+        for check in matrix["lifecycle_checks"]
+    }
+
+
 def required_checks(matrix: dict[str, Any], identifier: str, profile: str) -> list[str]:
     entry = backend(matrix, identifier)
     if profile not in entry["required_checks"]:
@@ -406,12 +446,13 @@ def check_plan(
     for status in (default_status, *statuses.values()):
         if status not in RESULTS:
             raise PackageMatrixError(f"unsupported check status: {status}")
-    descriptions = {check["id"]: check["description"] for check in matrix["lifecycle_checks"]}
+    vocabulary = check_vocabulary(matrix)
     return [
         {
             "id": check,
             "status": statuses.get(check, default_status),
-            "command": descriptions[check],
+            "command": vocabulary[check]["description"],
+            "category": vocabulary[check]["category"],
             "evidence_ref": evidence_refs.get(check),
             "detail": details.get(check),
         }

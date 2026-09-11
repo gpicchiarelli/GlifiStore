@@ -13,4 +13,9 @@ source archive from its already sealed bytes; committing that self-digest here w
 After the service account is registered, retain evidence for `make stage`, `check-plist`,
 `package`, clean-host install, service PUT/GET/ERASE/recovery, upgrade, and deinstall.
 
+`scripts/package-ci.sh --backend freebsd` reports this tree as `structural` evidence and keeps the
+`native-build`, `package`, `service` and `upstream-accepted` rows honest: without a native host, the
+marker above and an admitted sealed candidate they stay `BLOCKED`
+([bsd-packaging.md](../../docs/distribution/bsd-packaging.md)).
+
 Do not set a release gate to accepted merely because this reference tree parses.

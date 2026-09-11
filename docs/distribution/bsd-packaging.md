@@ -38,6 +38,43 @@ native service lifecycle (`rc.subr` / `rcctl`). They are implementation, not pro
 markers and retained tagged runs are still absent. Honest Wave 5 residuals live in
 [`wave5-l7-residuals.md`](wave5-l7-residuals.md).
 
+## Running the BSD backends through package-ci
+
+`scripts/package-ci.sh --profile {pr|main|nightly|release} --backend freebsd|openbsd` is the single
+entry point. It resolves the release context from `VERSION`, validates the reference port, reads the
+account marker, admits an optional `--candidate` sealed directory, and hands those observations to
+`engineering/tools/bsd_package_lifecycle.py`, which owns every status decision;
+`scripts/lib/package-backend-bsd.sh` is the backend module that probes the host. The native
+lifecycle script above is invoked unchanged, and only when a native host, the account marker, an
+admitted sealed candidate, a complete ports tree, root privileges and the `full` stage hold
+together. Every blocker is retained in `native-prerequisites.log`, and on any other host the native
+rows are `BLOCKED` rather than silently missing.
+
+Evidence rows are separated by category so one signal can never be read as another:
+
+| Category | Rows | What a pass means |
+| --- | --- | --- |
+| `structural` | `structural-metadata`, `reference-port-structure` | the in-repo port matches `VERSION`, `ABI_VERSION` and the service policy |
+| `native-build` | `sealed-source-admission`, `package-build` | the sealed candidate was admitted and the ports framework built a package from it |
+| `package` | `package-inspect`, `package-install`, `external-consumer`, `package-upgrade`, `config-preservation`, `package-remove` | `pkg`/`pkg_add` installed, inspected, reinstalled or removed the package |
+| `service` | `service-lifecycle`, `put-get-erase`, `restart-recovery` | the packaged daemon ran under `rc.subr`/`rcctl` and answered protocol v2 |
+| `upstream-accepted` | `ports-account-registration`, `upstream-ports-acceptance` | an upstream project actually allocated the account or accepted the port |
+
+Consequences that hold by construction:
+
+- `upstream-ports-acceptance` is an `OPEN_GATE` until an upstream ports tree accepts the packaging,
+  so the backend result is never `PASS`, however far the native lifecycle got. The proven depth is
+  carried by `lifecycle_state` instead.
+- `ports-account-registration` reads `packaging/{freebsd,openbsd}/PORTS_ACCOUNT_REGISTERED` and
+  never writes it. Without the marker the native lifecycle stays `BLOCKED`.
+- A native log without its own `PASSED` marker is a `FAIL`, never an inferred pass; after the first
+  unproven row the remaining rows are `NOT_RUN`.
+- `package-upgrade` is `NOT_APPLICABLE_INITIAL_BASELINE` while no annotated release precedes the
+  current one, and `NOT_RUN` once one exists, until a sealed N−1 package artifact is admitted.
+  Upgrade continuity is never inferred from a rebuild.
+- `LIFECYCLE_VERIFIED` additionally owes an external consumer built against the installed package
+  prefix, which the native scripts do not build yet, so the ceiling is `FUNCTIONALLY_VERIFIED`.
+
 Before either artifact enters a manifest, retain native evidence for build/fake or stage,
 packing-list and shared-symbol checks, package creation, install, service start/stop, protocol
 PUT/GET/ERASE, durable restart/recovery, upgrade/reinstall, deinstall, configuration preservation,

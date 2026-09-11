@@ -22,6 +22,7 @@ if __package__ in (None, ""):  # direct script execution
 
 from engineering.tools.generate_package_matrix import (
     PackageMatrixError,
+    check_vocabulary,
     load_matrix,
     required_checks,
 )
@@ -48,6 +49,9 @@ from engineering.tools.package_framework import (
 
 SCHEMA_NAME = "package-evidence.schema.json"
 CHECK_FIELDS = {"id", "status", "command", "evidence_ref", "detail"}
+# Optional so a backend whose matrix rows are not categorised yet still emits a
+# valid plan; validate_evidence refuses any category that disagrees with the matrix.
+OPTIONAL_CHECK_FIELDS = {"category"}
 
 
 class PackageEvidenceError(RuntimeError):
@@ -64,17 +68,24 @@ def _read_check_plan(path: Path) -> list[dict[str, Any]]:
     value = _read_json_array(path)
     checks: list[dict[str, Any]] = []
     for entry in value:
-        if not isinstance(entry, dict) or set(entry) != CHECK_FIELDS:
-            raise PackageEvidenceError(f"check plan entries require exactly {sorted(CHECK_FIELDS)}")
-        checks.append(
-            {
-                "id": entry["id"],
-                "status": entry["status"],
-                "command": entry["command"],
-                "evidence_ref": entry["evidence_ref"],
-                "detail": entry["detail"],
-            }
-        )
+        keys = set(entry) if isinstance(entry, dict) else set()
+        if not isinstance(entry, dict) or not CHECK_FIELDS <= keys <= (
+            CHECK_FIELDS | OPTIONAL_CHECK_FIELDS
+        ):
+            raise PackageEvidenceError(
+                f"check plan entries require exactly {sorted(CHECK_FIELDS)} "
+                f"plus optionally {sorted(OPTIONAL_CHECK_FIELDS)}"
+            )
+        check = {
+            "id": entry["id"],
+            "status": entry["status"],
+            "command": entry["command"],
+            "evidence_ref": entry["evidence_ref"],
+            "detail": entry["detail"],
+        }
+        if "category" in entry:
+            check["category"] = entry["category"]
+        checks.append(check)
     return checks
 
 
@@ -156,11 +167,19 @@ def validate_evidence(
         try:
             declared = set(matrix_checks(matrix, backend))
             owed = required_checks(matrix, backend, profile)
+            vocabulary = check_vocabulary(matrix)
         except PackageMatrixError as error:
             raise PackageEvidenceError(str(error)) from error
         unknown = sorted(set(statuses) - declared)
         if unknown:
             raise PackageEvidenceError(f"evidence reports undeclared checks: {unknown}")
+        for check in checks:
+            expected_category = vocabulary[check["id"]]["category"]
+            if check.get("category") != expected_category:
+                raise PackageEvidenceError(
+                    f"check {check['id']} reports category {check.get('category')!r} while the "
+                    f"matrix declares {expected_category!r}"
+                )
         missing = sorted(set(owed) - set(statuses))
         if missing:
             raise PackageEvidenceError(f"evidence misses required checks for {profile}: {missing}")
