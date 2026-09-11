@@ -117,7 +117,9 @@ The OpenBSD correctness workflow runs the same registered cases in two determini
 the native virtualization gate inside its time budget. Sharding is fail-closed: count and zero-based
 index must be supplied together, malformed or empty configurations are rejected, and a stable hash
 of each test name partitions the registry without overlap or omission across independently built CI
-jobs. Direct executions remain unsharded by default.
+jobs. Direct executions remain unsharded by default. The native gate uses verbose CTest output and a
+15-minute target timeout; the harness flushes a `[RUN]` marker before every case so a stall remains
+attributable in the retained log.
 
 `fuzz-run` expects a prior `fuzz-build` (or an equivalent `unix-fuzz` / `macos-fuzz` build) and
 defaults to 60s per target via `scripts/run-fuzzers.sh`. Override with

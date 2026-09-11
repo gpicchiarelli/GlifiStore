@@ -72,11 +72,12 @@ if ! "$daemon" --help 2>&1 | grep -q -- '--tls-cert'; then
   exit 1
 fi
 
-echo "== ctest (built targets only) =="
+echo "== ctest (built targets only; verbose, 15-minute per-target timeout) =="
 # This gate builds glyphastored + glyphastore_tests (+ Go interop smoke). Offline CLI
 # tools, crash harnesses, and benchmarks are not built here; match only binaries that
-# exist so missing executables are not counted as failures.
-ctest --preset "$preset" --output-on-failure -R '^(glyphastore_tests|glyphastore_cli_daemon_)'
+# exist so missing executables are not counted as failures. Verbose mode streams each
+# test-harness [RUN] marker, preserving the exact stalled case if the monolith times out.
+ctest --preset "$preset" --verbose --timeout 900 -R '^(glyphastore_tests|glyphastore_cli_daemon_)'
 
 echo "== installed C ABI consumer =="
 install_root="$(mktemp -d /tmp/glyphastore-openbsd-install.XXXXXX)"

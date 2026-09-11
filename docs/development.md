@@ -126,7 +126,9 @@ OpenBSD / LibreSSL correctness gate (not a throughput bench):
 registered `glyphastore_tests` cases by a stable test-name hash across two independent VM jobs; their
 union is the complete suite, while both jobs retain native logs and one also performs the Go TLS
 PUT→GET smoke. A native developer run remains unsharded unless
-`GLYPHASTORE_TEST_SHARD_COUNT` and the zero-based `GLYPHASTORE_TEST_SHARD_INDEX` are both set.
+`GLYPHASTORE_TEST_SHARD_COUNT` and the zero-based `GLYPHASTORE_TEST_SHARD_INDEX` are both set. The
+CI invocation streams each `[RUN]` marker and limits every CTest target to 15 minutes, so a stalled
+case fails with an attributable name instead of consuming the two-hour VM budget.
 
 FreeBSD native build/test gate (portability signal; not UFS/ZFS durability certification):
 `bash scripts/ci-freebsd.sh` on FreeBSD, or the

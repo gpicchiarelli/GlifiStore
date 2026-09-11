@@ -100,6 +100,7 @@ int main(int argc, char** argv) {
             continue;
         }
         ++ran;
+        std::cout << "[RUN] " << test.name << '\n' << std::flush;
         try {
             test.function();
             std::cout << "[PASS] " << test.name << '\n';

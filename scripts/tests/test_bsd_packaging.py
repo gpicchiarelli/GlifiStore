@@ -56,6 +56,7 @@ class BsdPackagingTests(unittest.TestCase):
         self.assertIn("openbsd-${{ matrix.shard_label }}.log", openbsd_workflow)
         self.assertIn("GLYPHASTORE_TEST_SHARD_COUNT", openbsd_script)
         self.assertIn("GLYPHASTORE_TEST_SHARD_INDEX", openbsd_script)
+        self.assertIn('ctest --preset "$preset" --verbose --timeout 900', openbsd_script)
 
     def test_abi_drift_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory(prefix="glyphastore-bsd-port-test-") as temporary:
