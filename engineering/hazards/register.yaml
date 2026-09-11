@@ -862,3 +862,49 @@ hazards:
   - GS-OPS-CONFIG-001
   - GS-OPS-DEBT-001
   - GS-PERSIST-AMP-001
+- id: HAZ-034
+  evento_pericoloso: Pacchetto dichiarato provato oltre le prove effettivamente eseguite
+  cause:
+  - Riga structural letta come prova di build, installazione, servizio o accettazione upstream
+  - Check saltato riportato come PASS invece di NOT_RUN, BLOCKED o OPEN_GATE
+  - Tabella di stato scritta a mano che diverge dalla matrice machine-readable
+  - Marker di account upstream o accettazione ports sintetizzato dalla CI
+  - Backend promosso a required_for_release senza evidence trattenuta e senza ADR
+  - Upgrade dichiarato initial baseline mentre esiste una release precedente pubblicata
+  conseguenze:
+  - Operatori che installano un pacchetto mai installato ne avviato in alcun run
+  - Claim di distribuzione o di accettazione upstream falsi nella documentazione pubblica
+  - Release policy indebolita da artifact opzionali trattati come richiesti
+  severita: alta
+  probabilita: media
+  rilevabilita: alta
+  prevenzione:
+  - Matrice unica con vocabolario di check, categoria per check e limitazioni obbligatorie
+  - Schema package-evidence chiuso in cui il risultato non puo superare i propri check e un PASS
+    deve citare un log trattenuto
+  - docs/distribution/package-status.md generato dalla matrice e verificato in unittest
+  - PORTS_ACCOUNT_REGISTERED e upstream-ports-acceptance solo in lettura, mai scritti dalla CI
+  - required_for_release limitato agli artifact gia richiesti da validate_release_policy
+  contenimento:
+  - Rifiutare la chiusura del profilo quando una riga pianificata non ha evidence valida
+  - Riportare il gate a IMPLEMENTATA e ripristinare i residual finche l'esecuzione non esiste
+  prove:
+  - scripts/tests/test_package_matrix.py
+  - scripts/tests/test_package_evidence.py
+  - scripts/tests/test_package_ci.py
+  - scripts/tests/test_package_ci_plan.py
+  - scripts/tests/test_package_status_docs.py
+  - scripts/tests/test_package_admission.py
+  - scripts/tests/test_package_upgrade_baseline.py
+  - engineering/tools/validate_package_evidence.py
+  - engineering/tools/generate_package_status.py
+  rischio_residuo: I lifecycle container e nativi non sono mai stati eseguiti in un run trattenuto e
+    nessun workflow invoca ancora i tool di ammissione, quindi la difesa e provata solo sui casi
+    negativi locali
+  stato: mitigato
+  accettazione_rischio: Accettato finche il claim resta architectural prototype e nessun gate di
+    packaging e chiuso; la prima esecuzione trattenuta puo legittimamente riportare FAIL
+  requisiti:
+  - GS-RELEASE-PACKAGE-001
+  - GS-RELEASE-UPGRADE-001
+  - GS-RELEASE-ARTIFACT-001

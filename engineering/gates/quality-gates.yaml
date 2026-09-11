@@ -767,3 +767,95 @@ gates:
   riapertura:
   - Lifecycle policy change without ADR
   narrative: 0.x / persistence v1 policies + N↔N-1 matrix published; formal windows later.
+- id: GATE-PACKAGE-LIFECYCLE
+  titolo: Package backends declare and prove their lifecycle through honest evidence
+  sezione: distribution_lifecycle
+  livello_rilascio: rc
+  requisiti:
+  - GS-RELEASE-PACKAGE-001
+  - GS-RELEASE-ARTIFACT-001
+  prove:
+  - engineering/distribution/package-matrix.yaml
+  - engineering/schemas/package-evidence.schema.json
+  - engineering/tools/generate_package_matrix.py
+  - engineering/tools/generate_package_status.py
+  - engineering/tools/validate_package_evidence.py
+  - engineering/tools/package_ci_plan.py
+  - scripts/package-ci.sh
+  - scripts/tests/test_package_matrix.py
+  - scripts/tests/test_package_ci.py
+  - scripts/tests/test_package_ci_plan.py
+  - scripts/tests/test_package_evidence.py
+  - scripts/tests/test_package_status_docs.py
+  - scripts/tests/test_linux_packaging.py
+  - scripts/tests/test_macos_packaging.py
+  - scripts/tests/test_bsd_package_ci.py
+  piattaforme:
+  - linux-x86_64
+  - macos-arm64
+  - freebsd
+  - openbsd
+  evidenze:
+  - workflow: package-ci.yml
+    note: Plan, per-row package evidence and closure are retained per profile; no tagged run and no
+      container or native lifecycle execution has been retained yet
+  - workflow: assurance.yml
+    note: Framework negative suites plus the generated package-status freshness check
+  stato: IMPLEMENTATA
+  rischio_residuo: No retained run has executed the deb/rpm container or the MacPorts/Homebrew native
+    lifecycle; MacPorts/Homebrew service rows and every upstream acceptance stay OPEN_GATE; BSD
+    external-consumer is unbuilt so BSD cannot exceed FUNCTIONALLY_VERIFIED; deb, rpm, macports and
+    homebrew remain required_for_release false
+  riapertura:
+  - Promoting a backend to required_for_release without retained LIFECYCLE_VERIFIED evidence and an ADR
+  - Reporting a structural row as a package, service or upstream-acceptance proof
+  - Adding a backend, target or out-of-scope exception outside the package matrix
+  - Restating a version, backend, runner, retention or timeout inside a workflow
+  narrative: One matrix owns backends, targets, profiles and the check vocabulary; scripts/package-ci.sh
+    and its backend modules own every status; evidence is schema-bound to commit, version and artifact
+    digest and may report NOT_RUN, BLOCKED or OPEN_GATE but never a result better than its checks;
+    docs/distribution/package-status.md is generated from the matrix so no hand table can diverge.
+    Execution depth is the open part - the packaging lifecycle beyond structural rows is unproven in CI.
+- id: GATE-PACKAGE-ADMISSION
+  titolo: Package upgrade baselines and package artifacts are admitted by exact sealed bytes
+  sezione: distribution_lifecycle
+  livello_rilascio: rc
+  requisiti:
+  - GS-RELEASE-UPGRADE-001
+  - GS-RELEASE-ARTIFACT-001
+  prove:
+  - engineering/tools/semver_policy.py
+  - engineering/tools/upgrade_baseline.py
+  - engineering/tools/generate_artifact_manifest.py
+  - engineering/tools/validate_package_admission.py
+  - engineering/schemas/upgrade-baseline.schema.json
+  - engineering/schemas/package-admission.schema.json
+  - engineering/schemas/artifact-manifest.schema.json
+  - engineering/schemas/installed-sdk-matrix.schema.json
+  - scripts/tests/test_package_upgrade_baseline.py
+  - scripts/tests/test_package_admission.py
+  - scripts/tests/test_artifact_manifest.py
+  - scripts/tests/test_package_installed_sdk_matrix.py
+  piattaforme:
+  - linux-x86_64
+  - macos-arm64
+  - freebsd
+  - openbsd
+  evidenze:
+  - workflow: assurance.yml
+    note: Local negative suites only; no workflow invokes the baseline, manifest or admission tools
+  stato: IMPLEMENTATA
+  rischio_residuo: No workflow calls upgrade_baseline.py, generate_artifact_manifest.py or
+    validate_package_admission.py, so admission is a local manual step today; no annotated release
+    exists so package-upgrade has never run positively; the cross-SDK post-install matrix against a
+    package-installed daemon is NOT_RUN and blocks admission by construction
+  riapertura:
+  - Selecting an N-1 baseline by arithmetic instead of SemVer precedence over sealed releases
+  - Rebuilding an N-1 package from HEAD or admitting a draft/incomplete predecessor
+  - Claiming an initial baseline while a published predecessor exists
+  - Admitting package bytes that the artifact manifest does not record with the same digest
+  narrative: The baseline resolver orders annotated published releases by SemVer precedence, keeps only
+    complete sealed ABI-compatible candidates, and separates NOT_APPLICABLE_INITIAL_BASELINE, BLOCKED
+    and NOT_RUN; admission binds the artifact manifest to the sealed source digest and every evidence
+    subject to the exact bytes, reporting blockers instead of promoting anything. Wiring into the
+    release graph is the open part.

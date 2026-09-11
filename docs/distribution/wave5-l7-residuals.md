@@ -1,9 +1,10 @@
 # Wave 5 (L7) — release, portability, supply-chain residuals
 
 Status: living honesty ledger (not a gate closure)
-Applies to: C ABI cross-release, wire/disk N↔N−1, BSD packages, signing/SLSA/SBOM, sealed publish
+Applies to: C ABI cross-release, wire/disk N↔N−1, BSD packages, the multi-backend packaging
+framework, signing/SLSA/SBOM, sealed publish
 Owner: L7 / release maintainers
-Last reviewed: 2026-08-27
+Last reviewed: 2026-09-11
 
 Claim ceiling remains **architectural prototype**. Producers and validators may exist without
 retained tagged evidence; absence of evidence is a hard residual, not a waiver.
@@ -64,13 +65,40 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
 - `external-consumer` against the installed package prefix is unbuilt, capping the BSD lifecycle
   state at `FUNCTIONALLY_VERIFIED`.
 - `package-ci.yml` retains the structural BSD rows per profile, but the native producers still run
-  only in the release workflow VM; the gate rows that would cite any of this retained evidence land
-  in a later wave.
+  only in the release workflow VM. `GATE-PACKAGE-LIFECYCLE` now cites that workflow and stays
+  `IMPLEMENTATA`: citing a retention path is not the same as having retained a run.
 - The Linux container lifecycle (`deb`, `rpm`) is enabled from the `main`, `nightly` and `release`
   profiles and has never been executed in a retained run, so its first CI execution may legitimately
   report `FAIL` rather than the `BLOCKED` rows produced on a host without a container runtime.
 - MacPorts and Homebrew have no hosted runner that may install into the host package manager, so
   their native rows stay opt-in (`--allow-native`, never on by default) and unproven.
+
+## Packaging framework (Waves A–G)
+
+Declarative status is generated into [package-status.md](package-status.md); the operator path is
+[package-ci.md](package-ci.md). Gates: `GATE-PACKAGE-LIFECYCLE` and `GATE-PACKAGE-ADMISSION`, both
+`IMPLEMENTATA`. Requirements: `GS-RELEASE-PACKAGE-001`, `GS-RELEASE-UPGRADE-001`. Hazard: `HAZ-034`.
+
+| Residual | State today | What would close it |
+| --- | --- | --- |
+| deb / rpm container lifecycle | Never executed in a retained CI run; every local run reports `BLOCKED` | A retained `main`/`nightly` run with `GLYPHASTORE_PACKAGE_CI_CONTAINER=1` whose rows are not `BLOCKED` |
+| MacPorts `launchd` startup item | Not installed by the port, so `service-lifecycle` is `OPEN_GATE` | A packaged startup item plus a retained run that starts and stops it |
+| Homebrew `brew services` | Declared in the formula, never started or stopped in a retained run (`OPEN_GATE`) | A retained native run that exercises the services block |
+| MacPorts / Homebrew native rows | Opt-in only (`--allow-native`); no hosted runner may install into the host package manager | A disposable macOS host or an accepted runner policy, with retained logs |
+| `external-consumer` on BSD | Unbuilt, so both BSD backends cap at `FUNCTIONALLY_VERIFIED` | Building an external consumer against the installed package prefix in the native scripts |
+| `package-upgrade` anywhere | Never positively run: `NOT_APPLICABLE_INITIAL_BASELINE` today, `NOT_RUN` once a predecessor exists | A sealed N−1 package artifact admitted through `upgrade_baseline.py admit` |
+| Wave F admission tools | `upgrade_baseline.py`, `generate_artifact_manifest.py` and `validate_package_admission.py` exist with negative tests, but **no workflow calls them**; admission is a local manual step | Wiring them into the release graph fail-closed, with retained reports |
+| Cross-SDK post-install matrix | `NOT_RUN`; the admission report blocks on its absence by construction | Running every SDK against a package-installed daemon and retaining the report |
+| Optional backends | `deb`, `rpm`, `macports`, `homebrew` are `required_for_release: false` and cannot admit a release artifact | Retained `LIFECYCLE_VERIFIED` evidence, a release-policy artifact, an ADR and a gate update |
+| Upstream acceptance | `OPEN_GATE` for FreeBSD, OpenBSD, MacPorts and Homebrew; in-repo packaging is the project pipeline only | Actual acceptance by the upstream ports tree or tap |
+| Apple `.pkg` | Deliberately out of scope; refused by the matrix validator | An accepted ADR, an Apple signing/notarization identity and an update model |
+| Windows / MSI | Out of scope; refused by the matrix validator | An accepted ADR plus platform durability evidence rows |
+| Package evidence retention | No annotated tag exists, so no packaging evidence has ever been retained from a release | The first complete tagged release run |
+
+Empty by design until real runs exist: [`engineering/evidence/release/`](../../engineering/evidence/release/README.md)
+and the per-filesystem trees under
+[`engineering/evidence/platform-durability/`](../../engineering/evidence/platform-durability/README.md)
+carry READMEs only. An empty fixture directory is a residual, never an implicit pass.
 
 ## Supply chain and sealed publish
 
@@ -84,6 +112,15 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
 - Overlapping PR vs tag scans (Trivy/gitleaks in `supply-chain-scan.yml` and tag
   `security-supply-chain`) are intentional: PR regression gate ≠ tag-retained matrix evidence.
   Do not prune the tag path while `security-matrix-evidence` requires those logs.
+
+## Candidate build profile
+
+The release candidate is built with `-DGLYPHASTORE_ENABLE_TLS=OFF` and records `--tls-backend none`
+in its build metadata ([`release-candidate.yml`](../../.github/workflows/release-candidate.yml)).
+Every artifact derived from that candidate — source archive, Linux prefix, ABI and wire fixtures,
+and any package built from the sealed source — is therefore a TLS-less build. No release artifact
+or package may be described as providing transport security, and a future TLS-enabled candidate is
+a different artifact set, not a relabelling of this one.
 
 ## Signing / SLSA / SBOM
 
@@ -104,5 +141,7 @@ not reopen Wave 5 sealing residuals, and Wave 5 must not absorb absolute perf cl
 
 - [Release checklist](../assurance/release-checklist.md)
 - [Artifact delivery](artifact-delivery.md)
+- [Package CI operator guide](package-ci.md)
+- [Package backend status](package-status.md)
 - [BSD packaging](bsd-packaging.md)
 - [Debt remediation lanes](../assurance/debt-remediation-lanes.md)

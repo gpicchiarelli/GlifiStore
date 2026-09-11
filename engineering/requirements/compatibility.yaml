@@ -200,3 +200,151 @@ requirements:
   - GATE-ARTIFACT-DELIVERY
   - GATE-RELEASE-MATRIX
   - GATE-REPRO-SBOM
+- id: GS-RELEASE-PACKAGE-001
+  titolo: Version-agnostic multi-backend package lifecycle with fail-closed evidence
+  categoria: compatibility
+  criticita: alta
+  stato: implementato
+  descrizione: >
+    Ogni backend di packaging (deb, rpm, MacPorts, Homebrew, FreeBSD, OpenBSD) e dichiarato in
+    un'unica matrice machine-readable che possiede target, profili CI, vocabolario dei check e
+    limitazioni. Nessuna versione compare nella matrice o nei workflow: deriva da VERSION tramite
+    il release context, con package revision separata. Ogni check riporta esattamente uno stato fra
+    PASS, FAIL, NOT_RUN, NOT_APPLICABLE, NOT_APPLICABLE_INITIAL_BASELINE, BLOCKED e OPEN_GATE, il
+    risultato del backend non puo essere migliore dei suoi check, e la categoria del check impedisce
+    che una riga structural venga letta come prova package, service o upstream. I backend non gia
+    richiesti da validate_release_policy restano required_for_release false. Windows e Apple .pkg
+    sono rifiutati dal validatore della matrice, non semplicemente non implementati.
+  autorita:
+  - docs/distribution/package-ci.md
+  - docs/distribution/package-status.md
+  - docs/distribution/bsd-packaging.md
+  - engineering/distribution/package-matrix.yaml
+  implementazione:
+  - engineering/distribution/package-matrix.yaml
+  - engineering/schemas/package-evidence.schema.json
+  - engineering/schemas/release-context.schema.json
+  - engineering/tools/package_framework.py
+  - engineering/tools/generate_release_context.py
+  - engineering/tools/generate_package_matrix.py
+  - engineering/tools/generate_package_status.py
+  - engineering/tools/validate_package_evidence.py
+  - engineering/tools/package_ci_plan.py
+  - engineering/tools/render_package_metadata.py
+  - engineering/tools/render_macos_packaging.py
+  - engineering/tools/run_linux_package_backend.py
+  - engineering/tools/run_macos_package_backend.py
+  - engineering/tools/bsd_package_lifecycle.py
+  - engineering/tools/verify_package_payload.py
+  - scripts/package-ci.sh
+  - scripts/lib/package-backend-linux.sh
+  - scripts/lib/package-backend-macos.sh
+  - scripts/lib/package-backend-bsd.sh
+  - packaging/common
+  - packaging/debian
+  - packaging/rpm
+  - packaging/macports
+  - packaging/homebrew
+  - packaging/freebsd
+  - packaging/openbsd
+  - .github/workflows/package-ci.yml
+  prove:
+  - scripts/tests/test_package_matrix.py
+  - scripts/tests/test_package_ci.py
+  - scripts/tests/test_package_ci_plan.py
+  - scripts/tests/test_package_evidence.py
+  - scripts/tests/test_package_status_docs.py
+  - scripts/tests/test_package_workflows.py
+  - scripts/tests/test_linux_packaging.py
+  - scripts/tests/test_macos_packaging.py
+  - scripts/tests/test_bsd_package_ci.py
+  - scripts/tests/test_release_context.py
+  - scripts/tests/test_semver_policy.py
+  piattaforme:
+  - linux-x86_64
+  - macos-arm64
+  - freebsd
+  - openbsd
+  claim_massimo: architectural-prototype
+  evidenze:
+  - workflow: package-ci.yml
+    note: Il workflow trattiene plan, evidence e closure per profilo; nessuna esecuzione taggata e
+      stata conservata e il lifecycle container/native non e mai stato eseguito in un run trattenuto
+  - workflow: assurance.yml
+    note: Le suite negative del framework e la freschezza di docs/distribution/package-status.md
+      girano in unittest discover -s scripts/tests
+  rischio_residuo:
+  - Il lifecycle deb/rpm in container e quello nativo MacPorts/Homebrew non sono mai stati eseguiti
+    in un run CI trattenuto; la prima esecuzione puo legittimamente riportare FAIL
+  - MacPorts non installa startup item e il blocco brew services non e mai stato avviato in un run
+    trattenuto, quindi service-lifecycle resta OPEN_GATE per entrambi
+  - upstream-ports-acceptance resta OPEN_GATE per FreeBSD, OpenBSD, MacPorts e Homebrew; il
+    packaging in-repo e la pipeline del progetto, non un'accettazione upstream
+  - external-consumer contro il prefix installato non e costruito sui backend BSD, quindi il loro
+    lifecycle_state resta limitato a FUNCTIONALLY_VERIFIED
+  - deb, rpm, macports e homebrew restano required_for_release false finche un gate non li promuove
+  hazards:
+  - HAZ-030
+  - HAZ-034
+  gates:
+  - GATE-PACKAGE-LIFECYCLE
+- id: GS-RELEASE-UPGRADE-001
+  titolo: SemVer-aware sealed N-1 package baseline and exact-artifact package admission
+  categoria: compatibility
+  criticita: alta
+  stato: implementato
+  descrizione: >
+    La baseline di upgrade e la release precedente scelta per precedenza SemVer fra i tag annotati
+    pubblicati, completi, sigillati e ABI-compatibili, mai "versione corrente meno uno": una release
+    draft, prerelease o priva di manifest non puo diventare baseline. I tre stati pre-upgrade restano
+    distinti (NOT_APPLICABLE_INITIAL_BASELINE quando nulla precede, BLOCKED quando qualcosa precede ma
+    nessuna release e ammissibile, NOT_RUN quando la baseline esiste e il run non l'ha esercitata).
+    L'ammissione lega il manifest degli artifact al digest dell'archivio sorgente sigillato e ogni
+    evidence al SHA-256 dei byte esatti, cosi un pacchetto ricostruito fra verify e publish emerge
+    come byte drift; N-1 non viene mai ricostruito da HEAD. Il report di ammissione registra i
+    blocchi e non promuove alcun gate.
+  autorita:
+  - docs/distribution/package-ci.md
+  - docs/distribution/artifact-delivery.md
+  - docs/architecture/n-n1-compatibility.md
+  implementazione:
+  - engineering/tools/semver_policy.py
+  - engineering/tools/prior_release.py
+  - engineering/tools/upgrade_baseline.py
+  - engineering/tools/generate_artifact_manifest.py
+  - engineering/tools/validate_package_admission.py
+  - engineering/schemas/upgrade-baseline.schema.json
+  - engineering/schemas/upgrade-baseline-admission.schema.json
+  - engineering/schemas/package-admission.schema.json
+  - engineering/schemas/artifact-manifest.schema.json
+  - engineering/schemas/installed-sdk-matrix.schema.json
+  prove:
+  - scripts/tests/test_package_upgrade_baseline.py
+  - scripts/tests/test_package_admission.py
+  - scripts/tests/test_artifact_manifest.py
+  - scripts/tests/test_package_installed_sdk_matrix.py
+  - scripts/tests/test_semver_policy.py
+  piattaforme:
+  - linux-x86_64
+  - macos-arm64
+  - freebsd
+  - openbsd
+  claim_massimo: architectural-prototype
+  evidenze:
+  - workflow: assurance.yml
+    note: Solo le suite negative locali; nessun workflow invoca ancora upgrade_baseline.py,
+      generate_artifact_manifest.py o validate_package_admission.py
+  rischio_residuo:
+  - >-
+    Nessun workflow chiama ancora i tool di baseline, manifest e ammissione, quindi oggi
+    l'ammissione e un passo locale e manuale che non prova nulla su una release pubblicata
+  - Nessun tag annotato esiste, quindi package-upgrade non e mai stato eseguito positivamente e
+    resta NOT_APPLICABLE_INITIAL_BASELINE su ogni backend
+  - La matrice cross-SDK post-install contro un daemon installato da pacchetto resta NOT_RUN, e la
+    sua assenza blocca l'ammissione per costruzione
+  - I backend macOS e Linux non selezionano ancora il pacchetto N-1 sigillato nel proprio lifecycle
+  hazards:
+  - HAZ-030
+  - HAZ-034
+  gates:
+  - GATE-PACKAGE-ADMISSION

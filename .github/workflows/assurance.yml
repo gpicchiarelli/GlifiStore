@@ -38,6 +38,10 @@ jobs:
         run: python engineering/tools/validate_actions_pins.py
       - name: Validate N/N-1 compatibility matrix
         run: python engineering/tools/validate_compat_matrix.py
+      - name: Validate the package backend matrix
+        run: python engineering/tools/generate_package_matrix.py validate
+      - name: Validate generated package status view
+        run: python engineering/tools/generate_package_status.py
       - name: Validate release claims
         run: python engineering/tools/validate_claims.py
       - name: Validate performance / soak budgets

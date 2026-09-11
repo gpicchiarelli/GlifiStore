@@ -40,3 +40,4 @@ accepted residual risks do not imply production readiness.
 | `HAZ-031` | Amplificazione memoria o alta marea RSS non attribuita nel runtime paired | alta | alta | media | aperto | `GS-CONCUR-PAIR-001` |
 | `HAZ-032` | Debito di merge paired concentrato in una pausa terminale o overload spurio | alta | media | alta | mitigato | `GS-CONCUR-PAIR-001`, `GS-CONCUR-COMBINE-001` |
 | `HAZ-033` | Compaction I/O causa jitter foreground o il rate gate affama candidati grandi | alta | alta | alta | mitigato | `GS-OPS-CONFIG-001`, `GS-OPS-DEBT-001`, `GS-PERSIST-AMP-001` |
+| `HAZ-034` | Pacchetto dichiarato provato oltre le prove effettivamente eseguite | alta | media | alta | mitigato | `GS-RELEASE-PACKAGE-001`, `GS-RELEASE-UPGRADE-001`, `GS-RELEASE-ARTIFACT-001` |

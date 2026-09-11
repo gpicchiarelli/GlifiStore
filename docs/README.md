@@ -127,6 +127,8 @@ source package documents its language-specific API and concurrency contract:
 - [Version lifecycle and compatibility](architecture/version-lifecycle.md) — 0.x upgrade/downgrade, ABI, Worker migrate
 - [Artifact delivery](distribution/artifact-delivery.md) — build-once Candidate → Verify → Publish contract
 - [Retained release evidence](distribution/release-evidence.md) — artifact-bound proof records and mandatory matrices
+- [Package CI operator guide](distribution/package-ci.md) — run a backend locally, read evidence, add a backend
+- [Package backend status](distribution/package-status.md) — generated view of the package matrix
 - [BSD reference packaging](distribution/bsd-packaging.md) — FreeBSD/OpenBSD ports and native-proof boundary
 - [Release verification](distribution/verify-release.md) — checksums, seals, manifest and provenance
 - [ADR index and lifecycle](adr/README.md)

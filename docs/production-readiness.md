@@ -200,6 +200,18 @@ The volatile engine under `src/experimental/` is lab-only.
   Residual risk: Same-SHA install-consumer scaffold (symbols + layout probe) is in ci.yml; cross-release old-binary × new-library remains open
   Install-consumer job builds supported C++ targets and the pure-C ABI target, then runs check_abi_symbols and c_abi_layout_probe against the installed prefix; cross-release proof remains open (wave5-l7-residuals.md).
 
+- [ ] **GATE-PACKAGE-ADMISSION** — Package upgrade baselines and package artifacts are admitted by exact sealed bytes
+  State: `IMPLEMENTATA` · Release target: `rc`
+  Requirements: `GS-RELEASE-UPGRADE-001`, `GS-RELEASE-ARTIFACT-001`
+  Residual risk: No workflow calls upgrade_baseline.py, generate_artifact_manifest.py or validate_package_admission.py, so admission is a local manual step today; no annotated release exists so package-upgrade has never run positively; the cross-SDK post-install matrix against a package-installed daemon is NOT_RUN and blocks admission by construction
+  The baseline resolver orders annotated published releases by SemVer precedence, keeps only complete sealed ABI-compatible candidates, and separates NOT_APPLICABLE_INITIAL_BASELINE, BLOCKED and NOT_RUN; admission binds the artifact manifest to the sealed source digest and every evidence subject to the exact bytes, reporting blockers instead of promoting anything. Wiring into the release graph is the open part.
+
+- [ ] **GATE-PACKAGE-LIFECYCLE** — Package backends declare and prove their lifecycle through honest evidence
+  State: `IMPLEMENTATA` · Release target: `rc`
+  Requirements: `GS-RELEASE-PACKAGE-001`, `GS-RELEASE-ARTIFACT-001`
+  Residual risk: No retained run has executed the deb/rpm container or the MacPorts/Homebrew native lifecycle; MacPorts/Homebrew service rows and every upstream acceptance stay OPEN_GATE; BSD external-consumer is unbuilt so BSD cannot exceed FUNCTIONALLY_VERIFIED; deb, rpm, macports and homebrew remain required_for_release false
+  One matrix owns backends, targets, profiles and the check vocabulary; scripts/package-ci.sh and its backend modules own every status; evidence is schema-bound to commit, version and artifact digest and may report NOT_RUN, BLOCKED or OPEN_GATE but never a result better than its checks; docs/distribution/package-status.md is generated from the matrix so no hand table can diverge. Execution depth is the open part - the packaging lifecycle beyond structural rows is unproven in CI.
+
 - [ ] **GATE-RELEASE-MATRIX** — Release CI covers supported compilers OS arch optimized builds
   State: `IMPLEMENTATA` · Release target: `rc`
   Requirements: `GS-COMPAT-FIXTURE-001`, `GS-RELEASE-ARTIFACT-001`

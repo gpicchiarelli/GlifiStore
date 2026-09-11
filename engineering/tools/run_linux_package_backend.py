@@ -1598,12 +1598,13 @@ def execute(
             "required_for_release stays false for both backends."
         )
     recorder.limitations.append(
-        ".github/workflows/package-ci.yml retains this evidence per profile, but no gate cites "
-        "it yet, so it proves only what its own checks say."
+        ".github/workflows/package-ci.yml retains this evidence per profile and "
+        "GATE-PACKAGE-LIFECYCLE cites that workflow, but the gate is open, so this document "
+        "proves only what its own checks say."
     )
     recorder.residuals.append(
-        "linux-package-ci-gate=No gate or requirement cites the retained deb or rpm evidence"
-        "|the assurance rows of a later wave"
+        "linux-package-ci-gate=GATE-PACKAGE-LIFECYCLE stays IMPLEMENTATA for deb and rpm"
+        "|no retained run has executed the container lifecycle"
     )
 
     plan = check_plan(

@@ -54,6 +54,11 @@ ceiling above *architectural prototype*. Authority for gates:
 - [ ] OpenBSD evidence generated `distinfo` from the sealed source, built and installed the native
       package, exercised `rcctl` and durable recovery under `/var/glyphastore`, then proved
       config/data preservation
+- [ ] Optional package backends (`deb`, `rpm`, `macports`, `homebrew`) ran the `release` profile from
+      the sealed candidate; their evidence stays diagnostic and admits no release artifact
+      ([package CI](../distribution/package-ci.md))
+- [ ] Any package admission was produced by `upgrade_baseline.py` / `validate_package_admission.py`
+      against retained CI evidence; a locally produced report is not admissible
 - [ ] Reproducibility evidence rebuilt the closed four-archive set on a distinct runner, matched
       every size and SHA-256, and kept rebuilt bytes outside candidate import and promotion
 - [ ] Verify consumes those exact bytes, tests the installed archive, emits manifest/checksums and
@@ -81,6 +86,8 @@ ceiling above *architectural prototype*. Authority for gates:
 ## Related
 
 - [Compatibility and migration manual](../operations/compatibility-and-migration.md)
+- [Package CI operator guide](../distribution/package-ci.md)
+- [Package backend status (generated)](../distribution/package-status.md)
 - [GitHub branch-protection checklist](github-branch-protection.md)
 - [Final engineering report](final-engineering-report.md)
 - [Production readiness (generated)](../production-readiness.md)

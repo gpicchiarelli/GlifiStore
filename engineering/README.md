@@ -18,6 +18,7 @@ boxes as production readiness.
 | `waivers/` | Time-bounded waivers (CI rejects expired) |
 | `build/` | CMake dependency matrix + structure debt thresholds |
 | `compatibility/` | N↔N-1 matrix |
+| `distribution/` | Package backend matrix (backends, targets, CI profiles, check vocabulary) |
 | `performance/` | Hosted vs hardware budgets + soak/overload linkage |
 | `claims/` / `evidence/` | Release claims and retained evidence pointers |
 | `tools/validate_assurance.py` | Validator + Markdown generator |
@@ -33,6 +34,10 @@ boxes as production readiness.
 | `tools/prior_release.py` / fixture validators | Fail-closed prior ABI/wire release selection and retained consumer extraction |
 | `tools/compare_release_rebuild.py` | Closed-set independent release archive and build-authority comparison |
 | `tools/validate_bsd_packaging.py` | Reference-port invariants and native release prerequisites |
+| `tools/generate_package_matrix.py` | Package matrix validation and profile expansion |
+| `tools/generate_package_status.py` | Generator for the derived `docs/distribution/package-status.md` view |
+| `tools/validate_package_evidence.py` | Fail-closed package evidence: a result never exceeds its checks |
+| `tools/upgrade_baseline.py` / `validate_package_admission.py` | SemVer-aware sealed N-1 selection and exact-byte package admission (not wired into any workflow yet) |
 | `formal/shard_pair/` | Reduced TLA+ ShardPair model + TLC helper |
 | `formal/persistence/` | Abstract write/sync/commit-slot/Manifest/recovery TLA+ model |
 
@@ -51,6 +56,9 @@ python3 engineering/tools/validate_compat_matrix.py
 python3 engineering/tools/validate_claims.py
 python3 engineering/tools/validate_perf_budgets.py
 python3 engineering/tools/validate_bsd_packaging.py
+python3 engineering/tools/generate_package_matrix.py validate
+python3 engineering/tools/generate_package_status.py
+python3 engineering/tools/generate_package_status.py --write-generated
 python3 -m unittest scripts.tests.test_release_artifacts scripts.tests.test_bsd_packaging \
   scripts.tests.test_artifact_release_workflow
 ```

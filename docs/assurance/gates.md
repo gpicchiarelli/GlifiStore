@@ -23,6 +23,8 @@ Generated from `engineering/gates/`. See also the derived
 | `GATE-FUZZ-CI` | verification | `PROVATA_IN_CI` | `alpha` | `GS-RECOVERY-FAILCLOSED-001` |
 | `GATE-INSTALL-CONSUMER` | distribution_lifecycle | `PROVATA_LOCALMENTE` | `alpha` | `GS-CORE-API-001`, `GS-COMPAT-CABI-001` |
 | `GATE-OPS-RUNBOOKS` | operations_security | `PROVATA_IN_CI` | `alpha` | `GS-OPS-BACKUP-001`, `GS-OPS-CONFIG-001`, `GS-OPS-SOAK-001`, `GS-OPS-DEBT-001` |
+| `GATE-PACKAGE-ADMISSION` | distribution_lifecycle | `IMPLEMENTATA` | `rc` | `GS-RELEASE-UPGRADE-001`, `GS-RELEASE-ARTIFACT-001` |
+| `GATE-PACKAGE-LIFECYCLE` | distribution_lifecycle | `IMPLEMENTATA` | `rc` | `GS-RELEASE-PACKAGE-001`, `GS-RELEASE-ARTIFACT-001` |
 | `GATE-PERFORMANCE` | verification | `PROVATA_IN_CI` | `beta` | `GS-PERF-REGRESSION-001`, `GS-PERF-BUDGET-001` |
 | `GATE-PUBLIC-API-OWNERSHIP` | public_contract | `PROVATA_IN_CI` | `alpha` | `GS-CORE-API-001` |
 | `GATE-RECOVERY-DETERMINISTIC` | durability_recovery | `PROVATA_IN_CI` | `beta` | `GS-RECOVERY-DET-001` |

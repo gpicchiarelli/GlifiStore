@@ -224,8 +224,9 @@ backends:
         (GLYPHASTORE_PACKAGE_CI_CONTAINER=1) or on a disposable root host
         (GLYPHASTORE_PACKAGE_CI_NATIVE=1). Every other environment reports them BLOCKED.
       - >-
-        .github/workflows/package-ci.yml retains this backend's evidence per profile, but no
-        gate cites it yet and required_for_release stays false.
+        .github/workflows/package-ci.yml retains this backend's evidence per profile and
+        GATE-PACKAGE-LIFECYCLE cites that workflow, but the gate is open (IMPLEMENTATA), no
+        retained run has executed the container lifecycle, and required_for_release stays false.
       - >-
         The library package is not Multi-Arch: same and installs into a non-multiarch libdir,
         because the installed glyphastore-abi.pc derives its prefix two levels above itself.
@@ -277,8 +278,9 @@ backends:
         (GLYPHASTORE_PACKAGE_CI_CONTAINER=1) or on a disposable root host
         (GLYPHASTORE_PACKAGE_CI_NATIVE=1). Every other environment reports them BLOCKED.
       - >-
-        .github/workflows/package-ci.yml retains this backend's evidence per profile, but no
-        gate cites it yet and required_for_release stays false.
+        .github/workflows/package-ci.yml retains this backend's evidence per profile and
+        GATE-PACKAGE-LIFECYCLE cites that workflow, but the gate is open (IMPLEMENTATA), no
+        retained run has executed the container lifecycle, and required_for_release stays false.
       - >-
         RPM has no purge action, so erase is the terminal state for the configuration: the
         operator edit survives as the file itself or as a .rpmsave sibling.
