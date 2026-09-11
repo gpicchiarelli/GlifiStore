@@ -33,7 +33,11 @@ from engineering.tools.render_package_metadata import (
     resolve_layout,
     substitute,
 )
-from engineering.tools.run_linux_package_backend import lifecycle_state, overall_result
+from engineering.tools.run_linux_package_backend import (
+    container_run_arguments,
+    lifecycle_state,
+    overall_result,
+)
 from engineering.tools.verify_package_payload import (
     PayloadError,
     component,
@@ -366,6 +370,41 @@ class MatrixAgreementTests(unittest.TestCase):
                     self.assertIn("package-metadata-render", required)
                     self.assertNotIn("package-build", required)
                     self.assertNotIn("package-install", required)
+
+
+class ContainerDispatchTests(unittest.TestCase):
+    def test_the_container_run_forwards_host_uid_gid_for_out_chown(self) -> None:
+        argv = container_run_arguments(
+            runtime="docker",
+            image="debian:bookworm-slim@sha256:deadbeef",
+            root=Path("/repo"),
+            output=Path("/tmp/out"),
+            release_context=Path("/tmp/release-context.json"),
+            backend="deb",
+            profile="nightly",
+            stage="full",
+            host_uid=1001,
+            host_gid=1002,
+            seal="abc",
+            ci_identity={"GITHUB_RUN_ID": "42"},
+        )
+        joined = " ".join(argv)
+        self.assertIn("HOST_UID=1001", joined)
+        self.assertIn("HOST_GID=1002", joined)
+        self.assertIn("GITHUB_RUN_ID=42", joined)
+        self.assertIn("/src/scripts/packaging/linux-container-entry.sh", joined)
+
+    def test_the_container_entry_restores_host_ownership_before_exit(self) -> None:
+        # The outer runner is not root: root-owned evidence under /out becomes a
+        # Permission denied that was previously reported as packaging FAIL.
+        text = (Path(__file__).resolve().parents[2] / "scripts/packaging/linux-container-entry.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("HOST_UID", text)
+        self.assertIn("HOST_GID", text)
+        self.assertIn("chown -R", text)
+        self.assertIn("trap restore_out_ownership EXIT", text)
+        self.assertNotIn("exec python3", text)
 
 
 if __name__ == "__main__":

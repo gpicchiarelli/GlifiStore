@@ -12,6 +12,9 @@
 #   /out                   evidence directory, writable
 #   /release-context.json  release context, read-only
 #   /candidate             sealed release candidate, read-only (optional)
+#   HOST_UID / HOST_GID    host identities used to chown /out before exit so the
+#                          outer (non-root) runner can read evidence and write
+#                          fallback check plans after the container returns.
 set -eu
 
 backend=""
@@ -36,6 +39,16 @@ esac
 [ -d /out ] || { echo "error: the evidence directory is not mounted at /out" >&2; exit 2; }
 [ -f /release-context.json ] || { echo "error: /release-context.json is not mounted" >&2; exit 2; }
 
+# Restore host ownership even when the driver fails or is killed: without this,
+# root-owned files under /out become Permission denied on the outer runner and
+# turn into a false packaging FAIL.
+restore_out_ownership() {
+    if [ -n "${HOST_UID:-}" ] && [ -n "${HOST_GID:-}" ]; then
+        chown -R "${HOST_UID}:${HOST_GID}" /out 2>/dev/null || true
+    fi
+}
+trap restore_out_ownership EXIT
+
 # Only Python itself is bootstrapped here. The driver installs the packaging
 # toolchain, because it has to report a failure to do so as BLOCKED evidence
 # rather than as a container that died without saying anything.
@@ -49,7 +62,10 @@ if ! command -v python3 >/dev/null 2>&1; then
     fi
 fi
 
-exec python3 /src/engineering/tools/run_linux_package_backend.py \
+status=0
+python3 /src/engineering/tools/run_linux_package_backend.py \
     --backend "$backend" --profile "$profile" --stage "$stage" \
     --root /src --release-context /release-context.json \
-    --output-dir /out --work-dir /glyphastore-work --inner
+    --output-dir /out --work-dir /glyphastore-work --inner \
+    || status=$?
+exit "$status"

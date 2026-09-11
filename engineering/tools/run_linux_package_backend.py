@@ -525,6 +525,65 @@ def bootstrap_dependencies(backend: str, *, log: Path) -> bool:
     )
 
 
+def container_run_arguments(
+    *,
+    runtime: str,
+    image: str,
+    root: Path,
+    output: Path,
+    release_context: Path,
+    backend: str,
+    profile: str,
+    stage: str,
+    candidate: str = "",
+    host_uid: int | None = None,
+    host_gid: int | None = None,
+    seal: str = "",
+    ci_identity: dict[str, str] | None = None,
+) -> list[str]:
+    """Build the `docker`/`podman run` argv for the packaging lifecycle container.
+
+    Host uid/gid are forwarded so the entry script can chown /out before exit:
+    the outer runner is not root and cannot reclaim root-owned evidence itself.
+    """
+    mounts = [
+        "-v",
+        f"{root}:/src:ro",
+        "-v",
+        f"{output}:/out",
+        "-v",
+        f"{release_context}:/release-context.json:ro",
+    ]
+    environment = ["-e", f"{SEAL_ENVIRONMENT}={seal}"]
+    for name, value in (ci_identity or {}).items():
+        if value:
+            environment += ["-e", f"{name}={value}"]
+    uid = os.getuid() if host_uid is None else host_uid
+    gid = os.getgid() if host_gid is None else host_gid
+    environment += ["-e", f"HOST_UID={uid}", "-e", f"HOST_GID={gid}"]
+    if candidate:
+        mounts += ["-v", f"{candidate}:/candidate:ro"]
+        environment += ["-e", f"{CANDIDATE_ENVIRONMENT}=/candidate"]
+    return [
+        runtime,
+        "run",
+        "--rm",
+        "--workdir",
+        "/out",
+        *mounts,
+        *environment,
+        image,
+        "/bin/sh",
+        "/src/scripts/packaging/linux-container-entry.sh",
+        "--backend",
+        backend,
+        "--profile",
+        profile,
+        "--stage",
+        stage,
+    ]
+
+
 def dispatch_container(
     recorder: Recorder,
     *,
@@ -540,45 +599,25 @@ def dispatch_container(
     log = recorder.directory / "container-dispatch.log"
     image = f"{target.image}@{target.image_digest}"
     candidate = os.environ.get(CANDIDATE_ENVIRONMENT, "").strip()
-    mounts = [
-        "-v",
-        f"{root}:/src:ro",
-        "-v",
-        f"{recorder.directory}:/out",
-        "-v",
-        f"{release_context}:/release-context.json:ro",
-    ]
-    environment = ["-e", f"{SEAL_ENVIRONMENT}={os.environ.get(SEAL_ENVIRONMENT, '')}"]
-    # The inner run emits the evidence, so it has to inherit the identity of this CI
-    # run: without these, retained container evidence would claim to be
-    # local-unattested and every profile that requires CI evidence would refuse it.
-    for name in CI_IDENTITY_ENVIRONMENT:
-        value = os.environ.get(name, "").strip()
-        if value:
-            environment += ["-e", f"{name}={value}"]
-    if candidate:
-        mounts += ["-v", f"{candidate}:/candidate:ro"]
-        environment += ["-e", f"{CANDIDATE_ENVIRONMENT}=/candidate"]
+    ci_identity = {
+        name: os.environ.get(name, "").strip() for name in CI_IDENTITY_ENVIRONMENT
+    }
     _note(log, f"target={target.identifier} runtime={runtime} image={image}")
+    _note(log, f"host_uid={os.getuid()} host_gid={os.getgid()}")
     return _run(
-        [
-            runtime,
-            "run",
-            "--rm",
-            "--workdir",
-            "/out",
-            *mounts,
-            *environment,
-            image,
-            "/bin/sh",
-            "/src/scripts/packaging/linux-container-entry.sh",
-            "--backend",
-            backend,
-            "--profile",
-            profile,
-            "--stage",
-            stage,
-        ],
+        container_run_arguments(
+            runtime=runtime,
+            image=image,
+            root=root,
+            output=recorder.directory,
+            release_context=release_context,
+            backend=backend,
+            profile=profile,
+            stage=stage,
+            candidate=candidate,
+            seal=os.environ.get(SEAL_ENVIRONMENT, ""),
+            ci_identity=ci_identity,
+        ),
         log=log,
         timeout=CONTAINER_TIMEOUT,
     )

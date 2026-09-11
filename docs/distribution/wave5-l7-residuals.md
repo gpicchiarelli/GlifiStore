@@ -82,7 +82,7 @@ Declarative status is generated into [package-status.md](package-status.md); the
 
 | Residual | State today | What would close it |
 | --- | --- | --- |
-| deb / rpm container lifecycle | Never executed in a retained CI run; `main` stays structural; nightly/release opt in | A retained `nightly` run with `GLYPHASTORE_PACKAGE_CI_CONTAINER=1` whose rows are not `BLOCKED`/`NOT_RUN` |
+| deb / rpm container lifecycle | Never executed in a retained CI run; `main` stays structural; nightly/release opt in; `/out` is chown'd back to the host uid before the container exits | A retained `nightly` run with `GLYPHASTORE_PACKAGE_CI_CONTAINER=1` whose rows are not `BLOCKED`/`NOT_RUN` |
 | MacPorts `launchd` startup item | Not installed by the port, so `service-lifecycle` is `OPEN_GATE` | A packaged startup item plus a retained run that starts and stops it |
 | Homebrew `brew services` | Declared in the formula, never started or stopped in a retained run (`OPEN_GATE`) | A retained native run that exercises the services block |
 | MacPorts / Homebrew native rows | Opt-in only (`--allow-native`); no hosted runner may install into the host package manager | A disposable macOS host or an accepted runner policy, with retained logs |
