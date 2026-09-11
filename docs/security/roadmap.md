@@ -126,7 +126,7 @@ Phase 2 outer-transport TLS is complete; Phases 3–4 (mTLS principal + capabili
 | 2.3 | Official SDKs: TLS connect options (CA, cert, hostname verify on by default in secure profile) | **done** for C++ / Python / Perl / Go / Erlang / Ruby — opt-in TLS 1.3 (`tls`/`Enable`, `ca_file`/`tls_ca`, `cert_file`/`key_file`, `server_name`, insecure lab escape); fail closed; no silent cleartext fallback |
 | 2.4 | Interop matrix: every SDK PUT→GET over TLS | **done** — `test-sdk-interop.sh` cleartext + TLS matrices (ephemeral certs; Erlang included when OTP available; Perl TLS soft-excluded when `IO::Socket::SSL` is missing) |
 | 2.5 | Perf note: TLS tax measured on same harness as Go/TCP benches | **done** (2026-07-20) — `scripts/benchmark_tls_tax.sh` + [tls-performance.md](tls-performance.md); Go bench gained `--tls` flags |
-| 2.6 | OpenBSD CI: native LibreSSL build + TLS smoke | **done** (2026-07-20) — `.github/workflows/openbsd-libressl.yml` via `vmactions/openbsd-vm` + `scripts/ci-openbsd-libressl.sh` (LibreSSL-only configure, full ctest, Go TLS PUT→GET) |
+| 2.6 | OpenBSD CI: native LibreSSL build + TLS smoke | **done** (2026-07-20) — `.github/workflows/openbsd-libressl.yml` via `vmactions/openbsd-vm` + `scripts/ci-openbsd-libressl.sh` (LibreSSL-only configure, complete registered suite partitioned across two deterministic shards, Go TLS PUT→GET) |
 
 **Daemon usage (when built with TLS):**
 

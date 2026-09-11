@@ -113,6 +113,12 @@ ctest --preset macos-debug -R '^glyphastore_tests$' --output-on-failure
 On Linux CI presets use the matching configure preset (`unix-debug`, `unix-asan`, …). No separate
 legacy-only binary is required; those tests open Stores with the deprecated flag explicitly.
 
+The OpenBSD correctness workflow runs the same registered cases in two deterministic shards to keep
+the native virtualization gate inside its time budget. Sharding is fail-closed: count and zero-based
+index must be supplied together, malformed or empty configurations are rejected, and a stable hash
+of each test name partitions the registry without overlap or omission across independently built CI
+jobs. Direct executions remain unsharded by default.
+
 `fuzz-run` expects a prior `fuzz-build` (or an equivalent `unix-fuzz` / `macos-fuzz` build) and
 defaults to 60s per target via `scripts/run-fuzzers.sh`. Override with
 `GLYPHASTORE_FUZZ_SECONDS`.

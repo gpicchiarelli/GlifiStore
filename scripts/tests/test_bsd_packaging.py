@@ -49,6 +49,13 @@ class BsdPackagingTests(unittest.TestCase):
             self.assertIn("copyback: true", workflow)
             self.assertIn("actions/upload-artifact@", workflow)
             self.assertIn("engineering/evidence/native-ci", workflow)
+        self.assertIn("fail-fast: false", openbsd_workflow)
+        self.assertEqual(openbsd_workflow.count("shard_index:"), 2)
+        self.assertIn("GLYPHASTORE_TEST_SHARD_COUNT=2", openbsd_workflow)
+        self.assertIn("GLYPHASTORE_TEST_SHARD_INDEX=${{ matrix.shard_index }}", openbsd_workflow)
+        self.assertIn("openbsd-${{ matrix.shard_label }}.log", openbsd_workflow)
+        self.assertIn("GLYPHASTORE_TEST_SHARD_COUNT", openbsd_script)
+        self.assertIn("GLYPHASTORE_TEST_SHARD_INDEX", openbsd_script)
 
     def test_abi_drift_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory(prefix="glyphastore-bsd-port-test-") as temporary:

@@ -11,6 +11,8 @@
 #
 # Environment:
 #   GLYPHASTORE_OPENBSD_PRESET   cmake preset (default: unix-release)
+#   GLYPHASTORE_TEST_SHARD_COUNT number of deterministic test shards (optional)
+#   GLYPHASTORE_TEST_SHARD_INDEX zero-based shard index (set with shard count)
 #   GLYPHASTORE_SKIP_GO_SMOKE    set to 1 to skip Go TLS smoke
 #   CC / CXX                     optional compiler overrides
 set -euo pipefail

@@ -237,6 +237,50 @@ if(BUILD_TESTING)
     glyphastore_enable_ipo(glyphastore_tests)
     add_test(NAME glyphastore_tests COMMAND glyphastore_tests)
     add_test(
+        NAME glyphastore_test_harness_rejects_partial_shard
+        COMMAND "${CMAKE_COMMAND}"
+                -DGLYPHASTORE_TEST_EXECUTABLE=$<TARGET_FILE:glyphastore_tests>
+                -DSHARD_COUNT=2
+                "-DEXPECTED_DIAGNOSTIC=must be set together"
+                -P "${CMAKE_SOURCE_DIR}/tests/cmake/test_shard_failure.cmake"
+    )
+    add_test(
+        NAME glyphastore_test_harness_rejects_zero_shards
+        COMMAND "${CMAKE_COMMAND}"
+                -DGLYPHASTORE_TEST_EXECUTABLE=$<TARGET_FILE:glyphastore_tests>
+                -DSHARD_COUNT=0
+                -DSHARD_INDEX=0
+                "-DEXPECTED_DIAGNOSTIC=must be greater than zero"
+                -P "${CMAKE_SOURCE_DIR}/tests/cmake/test_shard_failure.cmake"
+    )
+    add_test(
+        NAME glyphastore_test_harness_rejects_malformed_shards
+        COMMAND "${CMAKE_COMMAND}"
+                -DGLYPHASTORE_TEST_EXECUTABLE=$<TARGET_FILE:glyphastore_tests>
+                -DSHARD_COUNT=2x
+                -DSHARD_INDEX=0
+                "-DEXPECTED_DIAGNOSTIC=expected an unsigned decimal integer"
+                -P "${CMAKE_SOURCE_DIR}/tests/cmake/test_shard_failure.cmake"
+    )
+    add_test(
+        NAME glyphastore_test_harness_rejects_excessive_shards
+        COMMAND "${CMAKE_COMMAND}"
+                -DGLYPHASTORE_TEST_EXECUTABLE=$<TARGET_FILE:glyphastore_tests>
+                -DSHARD_COUNT=999999
+                -DSHARD_INDEX=0
+                "-DEXPECTED_DIAGNOSTIC=must not exceed the registered test count"
+                -P "${CMAKE_SOURCE_DIR}/tests/cmake/test_shard_failure.cmake"
+    )
+    add_test(
+        NAME glyphastore_test_harness_rejects_out_of_range_shard
+        COMMAND "${CMAKE_COMMAND}"
+                -DGLYPHASTORE_TEST_EXECUTABLE=$<TARGET_FILE:glyphastore_tests>
+                -DSHARD_COUNT=2
+                -DSHARD_INDEX=2
+                "-DEXPECTED_DIAGNOSTIC=must be less than GLYPHASTORE_TEST_SHARD_COUNT"
+                -P "${CMAKE_SOURCE_DIR}/tests/cmake/test_shard_failure.cmake"
+    )
+    add_test(
         NAME glyphastore_released_artifact_compat
         COMMAND glyphastore_tests "released artifact harness"
     )

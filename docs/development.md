@@ -122,7 +122,11 @@ Cleartext vs TLS 1.3 tax on the Go pipeline harness:
 
 OpenBSD / LibreSSL correctness gate (not a throughput bench):
 `bash scripts/ci-openbsd-libressl.sh` on OpenBSD, or the
-[OpenBSD LibreSSL](../.github/workflows/openbsd-libressl.yml) workflow.
+[OpenBSD LibreSSL](../.github/workflows/openbsd-libressl.yml) workflow. The workflow partitions the
+registered `glyphastore_tests` cases by a stable test-name hash across two independent VM jobs; their
+union is the complete suite, while both jobs retain native logs and one also performs the Go TLS
+PUT→GET smoke. A native developer run remains unsharded unless
+`GLYPHASTORE_TEST_SHARD_COUNT` and the zero-based `GLYPHASTORE_TEST_SHARD_INDEX` are both set.
 
 FreeBSD native build/test gate (portability signal; not UFS/ZFS durability certification):
 `bash scripts/ci-freebsd.sh` on FreeBSD, or the
