@@ -47,6 +47,7 @@ class BsdPackagingTests(unittest.TestCase):
         )
         for workflow in (freebsd_workflow, openbsd_workflow):
             self.assertIn("copyback: true", workflow)
+            self.assertIn("        if: always()\n        uses: actions/upload-artifact@", workflow)
             self.assertIn("actions/upload-artifact@", workflow)
             self.assertIn("engineering/evidence/native-ci", workflow)
         self.assertIn("fail-fast: false", openbsd_workflow)

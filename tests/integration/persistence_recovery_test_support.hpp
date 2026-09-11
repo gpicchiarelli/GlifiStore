@@ -136,9 +136,10 @@ class BlockingFilesystemOperation final {
         force_record_full_ = true;
     }
 
-    [[nodiscard]] auto wait_until_blocked() -> bool {
+    [[nodiscard]] auto wait_until_blocked(const std::chrono::milliseconds timeout = std::chrono::seconds{2})
+        -> bool {
         std::unique_lock lock{mutex_};
-        return condition_.wait_for(lock, std::chrono::seconds{2}, [&] { return blocked_; });
+        return condition_.wait_for(lock, timeout, [&] { return blocked_; });
     }
 
     void release() {

@@ -180,7 +180,15 @@ GLYPHA_TEST("blocked pre-intent compaction copy lets an unrelated rotation commi
 
     glyphastore::DurableCompactionResult compaction;
     std::thread compactor{[&] { compaction = (*runtime)->compact_worker(0, 0); }};
-    GLYPHA_REQUIRE(blocked_copy.wait_until_blocked());
+    constexpr auto slow_native_deadline = std::chrono::seconds{30};
+    const bool copy_blocked = blocked_copy.wait_until_blocked(slow_native_deadline);
+    if (!copy_blocked) {
+        // Do not unwind through a joinable thread: release a late hook and
+        // preserve the actual failed requirement for the test runner.
+        blocked_copy.release();
+        compactor.join();
+    }
+    GLYPHA_REQUIRE(copy_blocked);
     blocked_copy.force_next_record_write_full();
 
     glyphastore::DurableMutationResult rotation;
@@ -200,26 +208,23 @@ GLYPHA_TEST("blocked pre-intent compaction copy lets an unrelated rotation commi
     {
         std::unique_lock lock{completion_mutex};
         rotation_completed_during_copy =
-            completion.wait_for(lock, std::chrono::seconds{2}, [&] { return rotation_finished; });
+            completion.wait_for(lock, slow_native_deadline, [&] { return rotation_finished; });
     }
 
-    auto in_flight_rotation_stats = (*runtime)->rotation_stats();
-    const auto stats_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
-    while (in_flight_rotation_stats.attempts == 0 && std::chrono::steady_clock::now() < stats_deadline) {
-        std::this_thread::sleep_for(std::chrono::milliseconds{1});
-        in_flight_rotation_stats = (*runtime)->rotation_stats();
-    }
-    GLYPHA_REQUIRE(in_flight_rotation_stats.attempts == 1);
-    GLYPHA_REQUIRE(in_flight_rotation_stats.committed == 1);
-    GLYPHA_REQUIRE(in_flight_rotation_stats.compaction_waits == 0);
-    GLYPHA_REQUIRE(in_flight_rotation_stats.final_record_commit_attempts == 1);
-    GLYPHA_REQUIRE(in_flight_rotation_stats.last_total_duration_ns > 0);
-
+    // A completed put has already published rotation telemetry. Snapshot it
+    // before releasing compaction, then clean up both threads before asserting
+    // so a timeout is reported as a normal test failure rather than terminate.
+    const auto in_flight_rotation_stats = (*runtime)->rotation_stats();
     blocked_copy.release();
     writer.join();
     compactor.join();
 
     GLYPHA_REQUIRE(rotation_completed_during_copy);
+    GLYPHA_REQUIRE(in_flight_rotation_stats.attempts == 1);
+    GLYPHA_REQUIRE(in_flight_rotation_stats.committed == 1);
+    GLYPHA_REQUIRE(in_flight_rotation_stats.compaction_waits == 0);
+    GLYPHA_REQUIRE(in_flight_rotation_stats.final_record_commit_attempts == 1);
+    GLYPHA_REQUIRE(in_flight_rotation_stats.last_total_duration_ns > 0);
     GLYPHA_REQUIRE(rotation.committed());
     GLYPHA_REQUIRE(compaction.outcome == glyphastore::DurableCompactionOutcome::not_compacted);
     GLYPHA_REQUIRE(compaction.error.has_value());
