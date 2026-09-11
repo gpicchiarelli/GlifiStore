@@ -1,0 +1,353 @@
+# GlyphaStore package backend matrix (Wave A framework).
+#
+# Authority for which packaging backends exist, which CI profile exercises them,
+# which lifecycle checks each backend owes, and which artifacts the release policy
+# already requires. Version numbers never appear here: VERSION is the single source
+# of truth and engineering/tools/generate_release_context.py derives every package
+# version from it.
+#
+# Validator / expander: engineering/tools/generate_package_matrix.py
+# Consumer: scripts/package-ci.sh (and, from Wave E, the packaging workflows)
+#
+# status values:
+#   PLANNED    - no packaging implementation exists yet; CI may only emit honest non-PASS evidence
+#   STRUCTURAL - repository-side structure is validated, native lifecycle is not wired here yet
+#   IMPLEMENTED- the full lifecycle runs in CI and retains evidence
+version: 1
+
+profiles:
+  pr:
+    description: Fast subset on pull requests; metadata and structure before any long lifecycle.
+    requires_sealed_artifacts: false
+  main:
+    description: Full available matrix on main with retained intermediate evidence.
+    requires_sealed_artifacts: false
+  nightly:
+    description: Upgrade loops and negative cases where a runner exists.
+    requires_sealed_artifacts: false
+  release:
+    description: Exact sealed artifacts only; no rebuild between verify and publish.
+    requires_sealed_artifacts: true
+
+# Formal lifecycle chain that evidence lifecycle_state values must belong to.
+lifecycle_states:
+  - NONE
+  - STRUCTURAL
+  - BUILT
+  - INSTALLED
+  - FUNCTIONALLY_VERIFIED
+  - LIFECYCLE_VERIFIED
+  - UPGRADE_VERIFIED
+  - RELEASE_ADMITTED
+
+# Shared check vocabulary. Evidence may only use these ids (plus the backend extras
+# declared in backends[].checks), so a backend cannot invent a favourable check name.
+lifecycle_checks:
+  - id: structural-metadata
+    stage: metadata
+    description: load the release context and package matrix and refuse an unknown backend
+  - id: reference-port-structure
+    stage: metadata
+    description: validate the in-repo reference port against VERSION, ABI_VERSION and service policy
+  - id: package-metadata-render
+    stage: metadata
+    description: render backend packaging metadata from the release context without a hard-coded version
+  - id: package-build
+    stage: build
+    description: build the native package from the sealed source archive
+  - id: package-inspect
+    stage: inspect
+    description: inspect package metadata, dependencies and binary hardening before installation
+  - id: package-install
+    stage: install
+    description: install the package on a clean target and prove the declared file inventory
+  - id: external-consumer
+    stage: verify
+    description: build an external consumer against the installed prefix without the source tree
+  - id: service-lifecycle
+    stage: verify
+    description: start, health-check and stop the packaged service through the platform init system
+  - id: put-get-erase
+    stage: verify
+    description: protocol-v2 PUT, exact GET, ERASE and NOT_FOUND through the packaged service
+  - id: restart-recovery
+    stage: verify
+    description: restart the packaged service and recover the exact durable value
+  - id: package-upgrade
+    stage: upgrade
+    description: upgrade from the sealed N-1 package and prove dataset continuity
+  - id: package-remove
+    stage: remove
+    description: remove the package under the config-vs-data retention policy
+    # policy: packaging/common/config-data-policy.md
+
+# Explicitly out of scope. Listed so the matrix expander can refuse them instead of
+# silently accepting a new target later.
+out_of_scope:
+  - id: windows
+    reason: Windows is not a supported GlyphaStore platform; no runtime, durability or service model exists.
+    required_before_scope: accepted ADR plus platform durability evidence rows
+  - id: apple-pkg
+    reason: >-
+      Apple .pkg installers are deliberately not part of this architecture: no ADR, no Apple
+      signing/notarization identity and no update model. macOS is served by MacPorts and Homebrew.
+    required_before_scope: accepted ADR, signing identity and an update model
+  - id: msi
+    reason: Windows installer format; follows the Windows out-of-scope decision.
+    required_before_scope: accepted ADR plus platform durability evidence rows
+
+# Artifacts that engineering/tools/release_bundle.py::validate_release_policy already
+# requires for every release. This list is the reason required_for_release starts true
+# only for freebsd and openbsd; new backends stay false until a gate promotes them.
+release_policy_artifacts:
+  - id: source
+    description: sealed source archive GlyphaStore-<version>.tar.xz
+    required_for_release: true
+  - id: linux
+    description: Linux install prefix archive
+    required_for_release: true
+  - id: abi_consumer
+    description: ABI consumer fixture archive
+    required_for_release: true
+  - id: wire_client
+    description: wire client fixture archive
+    required_for_release: true
+  - id: freebsd
+    description: native FreeBSD .pkg
+    required_for_release: true
+  - id: openbsd
+    description: native OpenBSD .tgz
+    required_for_release: true
+
+backends:
+  - id: deb
+    display_name: Debian / Ubuntu .deb
+    package_kind: deb
+    status: PLANNED
+    lifecycle_state: NONE
+    required_for_release: false
+    wave: B
+    profiles: [pr, main, nightly, release]
+    targets:
+      - id: deb-debian-12-amd64
+        platform: debian-12
+        arch: amd64
+        runner: ubuntu-24.04
+        container: docker.io/library/debian:12
+        container_digest: null
+        profiles: [pr, main, nightly, release]
+      - id: deb-ubuntu-24.04-amd64
+        platform: ubuntu-24.04
+        arch: amd64
+        runner: ubuntu-24.04
+        container: docker.io/library/ubuntu:24.04
+        container_digest: null
+        profiles: [main, nightly, release]
+    checks:
+      - structural-metadata
+      - package-metadata-render
+      - package-build
+      - package-inspect
+      - package-install
+      - external-consumer
+      - service-lifecycle
+      - put-get-erase
+      - restart-recovery
+      - package-upgrade
+      - package-remove
+    required_checks:
+      pr: [structural-metadata]
+      main: [structural-metadata]
+      nightly: [structural-metadata]
+      release: [structural-metadata]
+    limitations:
+      - No packaging/debian sources exist yet; Wave A only proves that the backend is declared.
+      - Container images are not digest-pinned yet; Wave B must pin them before any build claim.
+
+  - id: rpm
+    display_name: Fedora / RPM
+    package_kind: rpm
+    status: PLANNED
+    lifecycle_state: NONE
+    required_for_release: false
+    wave: B
+    profiles: [main, nightly, release]
+    targets:
+      - id: rpm-fedora-41-amd64
+        platform: fedora-41
+        arch: amd64
+        runner: ubuntu-24.04
+        container: quay.io/fedora/fedora:41
+        container_digest: null
+        profiles: [main, nightly, release]
+    checks:
+      - structural-metadata
+      - package-metadata-render
+      - package-build
+      - package-inspect
+      - package-install
+      - external-consumer
+      - service-lifecycle
+      - put-get-erase
+      - restart-recovery
+      - package-upgrade
+      - package-remove
+    required_checks:
+      main: [structural-metadata]
+      nightly: [structural-metadata]
+      release: [structural-metadata]
+    limitations:
+      - No packaging/rpm spec exists yet.
+      - Rocky, Alma and RHEL are not claimed; only the executed Fedora row may ever be reported.
+
+  - id: macports
+    display_name: MacPorts Portfile
+    package_kind: macports_port
+    status: PLANNED
+    lifecycle_state: NONE
+    required_for_release: false
+    wave: C
+    profiles: [pr, main, nightly, release]
+    targets:
+      - id: macports-macos-14-arm64
+        platform: macos-14
+        arch: arm64
+        runner: macos-14
+        container: null
+        container_digest: null
+        profiles: [pr, main, nightly, release]
+    checks:
+      - structural-metadata
+      - package-metadata-render
+      - package-build
+      - package-inspect
+      - package-install
+      - external-consumer
+      - service-lifecycle
+      - put-get-erase
+      - restart-recovery
+      - package-upgrade
+      - package-remove
+    required_checks:
+      pr: [structural-metadata]
+      main: [structural-metadata]
+      nightly: [structural-metadata]
+      release: [structural-metadata]
+    limitations:
+      - No packaging/macports Portfile exists yet.
+      - In-repo packaging is the project pipeline; it is not an upstream ports-tree acceptance claim.
+
+  - id: homebrew
+    display_name: Homebrew Formula
+    package_kind: homebrew_formula
+    status: PLANNED
+    lifecycle_state: NONE
+    required_for_release: false
+    wave: C
+    profiles: [main, nightly, release]
+    targets:
+      - id: homebrew-macos-14-arm64
+        platform: macos-14
+        arch: arm64
+        runner: macos-14
+        container: null
+        container_digest: null
+        profiles: [main, nightly, release]
+    checks:
+      - structural-metadata
+      - package-metadata-render
+      - package-build
+      - package-inspect
+      - package-install
+      - external-consumer
+      - service-lifecycle
+      - put-get-erase
+      - restart-recovery
+      - package-upgrade
+      - package-remove
+    limitations:
+      - No packaging/homebrew Formula exists yet.
+      - In-repo packaging is the project pipeline; it is not an official tap acceptance claim.
+    required_checks:
+      main: [structural-metadata]
+      nightly: [structural-metadata]
+      release: [structural-metadata]
+
+  - id: freebsd
+    display_name: FreeBSD reference port and .pkg
+    package_kind: freebsd_pkg
+    status: STRUCTURAL
+    lifecycle_state: STRUCTURAL
+    required_for_release: true
+    wave: D
+    profiles: [pr, main, nightly, release]
+    targets:
+      - id: freebsd-14-amd64
+        platform: freebsd-14
+        arch: amd64
+        runner: ubuntu-latest
+        container: null
+        container_digest: null
+        profiles: [pr, main, nightly, release]
+    checks:
+      - structural-metadata
+      - reference-port-structure
+      - package-build
+      - package-inspect
+      - package-install
+      - external-consumer
+      - service-lifecycle
+      - put-get-erase
+      - restart-recovery
+      - package-upgrade
+      - package-remove
+    required_checks:
+      pr: [structural-metadata, reference-port-structure]
+      main: [structural-metadata, reference-port-structure]
+      nightly: [structural-metadata, reference-port-structure]
+      release: [structural-metadata, reference-port-structure]
+    limitations:
+      - >-
+        The native package/service lifecycle currently runs in scripts/test-freebsd-package-lifecycle.sh
+        inside the release workflow VM, not through scripts/package-ci.sh; Wave D folds it in.
+      - PORTS_ACCOUNT_REGISTERED is a real upstream UID/GID allocation and is never synthesised by CI.
+
+  - id: openbsd
+    display_name: OpenBSD reference port and .tgz
+    package_kind: openbsd_tgz
+    status: STRUCTURAL
+    lifecycle_state: STRUCTURAL
+    required_for_release: true
+    wave: D
+    profiles: [pr, main, nightly, release]
+    targets:
+      - id: openbsd-7-amd64
+        platform: openbsd-7
+        arch: amd64
+        runner: ubuntu-latest
+        container: null
+        container_digest: null
+        profiles: [pr, main, nightly, release]
+    checks:
+      - structural-metadata
+      - reference-port-structure
+      - package-build
+      - package-inspect
+      - package-install
+      - external-consumer
+      - service-lifecycle
+      - put-get-erase
+      - restart-recovery
+      - package-upgrade
+      - package-remove
+    required_checks:
+      pr: [structural-metadata, reference-port-structure]
+      main: [structural-metadata, reference-port-structure]
+      nightly: [structural-metadata, reference-port-structure]
+      release: [structural-metadata, reference-port-structure]
+    limitations:
+      - >-
+        The native package/service lifecycle currently runs in scripts/test-openbsd-package-lifecycle.sh
+        inside the release workflow VM, not through scripts/package-ci.sh; Wave D folds it in.
+      - LibreSSL from base remains the only supported TLS backend on OpenBSD.
+      - PORTS_ACCOUNT_REGISTERED is a real upstream UID/GID allocation and is never synthesised by CI.
