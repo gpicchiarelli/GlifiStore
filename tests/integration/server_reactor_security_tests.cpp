@@ -779,8 +779,11 @@ GLYPHA_TEST("bound Reactor redirects wrong owners without forwarding") {
 }
 
 GLYPHA_TEST("multi-Reactor executors distribute connections and share one Store") {
+    // The test creates 32 short-lived connections. Keep admission independent
+    // from how quickly a platform's reactor observes peer close and reclaims a
+    // slot; connection-limit recycling has its own focused test below.
     auto opened = glyphastore::server::Server::create(
-        {.port = 0, .maximum_connections = 16, .worker_count = 2, .executor_affinity = true});
+        {.port = 0, .maximum_connections = 32, .worker_count = 2, .executor_affinity = true});
     GLYPHA_REQUIRE(opened.has_value());
     auto& server = **opened;
     GLYPHA_REQUIRE(server.executor_count() == 2);

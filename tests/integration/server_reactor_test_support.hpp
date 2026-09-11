@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <arpa/inet.h>
 #include <array>
+#include <cerrno>
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
@@ -19,6 +20,7 @@
 #include <mutex>
 #include <netinet/in.h>
 #include <optional>
+#include <poll.h>
 #include <span>
 #include <string_view>
 #include <sys/socket.h>
@@ -111,15 +113,41 @@ open_paired_store_for_writer(std::size_t worker_count, std::size_t async_capacit
     if (socket < 0) {
         return -1;
     }
-    timeval timeout{.tv_sec = 2, .tv_usec = 0};
-    static_cast<void>(::setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
+    const auto close_with_error = [socket] {
+        static_cast<void>(::close(socket));
+        return -1;
+    };
+    const auto original_flags = ::fcntl(socket, F_GETFL, 0);
+    if (original_flags < 0 || ::fcntl(socket, F_SETFL, original_flags | O_NONBLOCK) != 0) {
+        return close_with_error();
+    }
+
     sockaddr_in endpoint{};
     endpoint.sin_family = AF_INET;
     endpoint.sin_port = htons(port);
     static_cast<void>(::inet_pton(AF_INET, "127.0.0.1", &endpoint.sin_addr));
-    if (::connect(socket, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) != 0) {
-        static_cast<void>(::close(socket));
-        return -1;
+    if (::connect(socket, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) != 0 &&
+        errno != EINPROGRESS) {
+        return close_with_error();
+    }
+
+    pollfd descriptor{.fd = socket, .events = POLLOUT, .revents = 0};
+    const int poll_result = ::poll(&descriptor, 1, 2'000);
+    if (poll_result <= 0) {
+        return close_with_error();
+    }
+
+    int socket_error{};
+    socklen_t socket_error_size = sizeof(socket_error);
+    if (::getsockopt(socket, SOL_SOCKET, SO_ERROR, &socket_error, &socket_error_size) != 0 ||
+        socket_error != 0 || ::fcntl(socket, F_SETFL, original_flags) != 0) {
+        return close_with_error();
+    }
+
+    timeval timeout{.tv_sec = 2, .tv_usec = 0};
+    if (::setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) != 0 ||
+        ::setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) != 0) {
+        return close_with_error();
     }
     return socket;
 }
