@@ -34,6 +34,8 @@ inline constexpr bool kExpectGetPathTiming = false;
 inline constexpr bool kExpectGetPathTiming = true;
 #endif
 
+inline constexpr auto kNativeConcurrencyDeadline = std::chrono::seconds{30};
+
 class RecoveryTemporaryDirectory final {
   public:
     RecoveryTemporaryDirectory() {
@@ -65,9 +67,10 @@ class BlockingRecordRead final {
         armed_ = true;
     }
 
-    [[nodiscard]] auto wait_until_blocked() -> bool {
+    [[nodiscard]] auto
+    wait_until_blocked(const std::chrono::milliseconds timeout = kNativeConcurrencyDeadline) -> bool {
         std::unique_lock lock{mutex_};
-        return condition_.wait_for(lock, std::chrono::seconds{2}, [&] { return blocked_; });
+        return condition_.wait_for(lock, timeout, [&] { return blocked_; });
     }
 
     void release() {
@@ -136,8 +139,8 @@ class BlockingFilesystemOperation final {
         force_record_full_ = true;
     }
 
-    [[nodiscard]] auto wait_until_blocked(const std::chrono::milliseconds timeout = std::chrono::seconds{2})
-        -> bool {
+    [[nodiscard]] auto
+    wait_until_blocked(const std::chrono::milliseconds timeout = kNativeConcurrencyDeadline) -> bool {
         std::unique_lock lock{mutex_};
         return condition_.wait_for(lock, timeout, [&] { return blocked_; });
     }
@@ -194,9 +197,10 @@ class BlockingRotationSeal final {
         force_record_full_ = true;
     }
 
-    [[nodiscard]] auto wait_until_blocked() -> bool {
+    [[nodiscard]] auto
+    wait_until_blocked(const std::chrono::milliseconds timeout = kNativeConcurrencyDeadline) -> bool {
         std::unique_lock lock{mutex_};
-        return condition_.wait_for(lock, std::chrono::seconds{2}, [&] { return blocked_; });
+        return condition_.wait_for(lock, timeout, [&] { return blocked_; });
     }
 
     void release() {
@@ -387,6 +391,7 @@ using persistence_recovery_test_support::create_private_file;
 using persistence_recovery_test_support::create_segment;
 using persistence_recovery_test_support::kExpectGetPathTiming;
 using persistence_recovery_test_support::key_for_worker;
+using persistence_recovery_test_support::kNativeConcurrencyDeadline;
 using persistence_recovery_test_support::NthFilesystemFailure;
 using persistence_recovery_test_support::OneShotFilesystemFailure;
 using persistence_recovery_test_support::owned_text;

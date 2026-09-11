@@ -37,8 +37,11 @@ jobs:
             set -e
             mkdir -p engineering/evidence/native-ci
             chmod +x scripts/ci-freebsd.sh
+            native_status=0
             bash -o pipefail -c \
-              'bash scripts/ci-freebsd.sh 2>&1 | tee engineering/evidence/native-ci/freebsd.log'
+              'bash scripts/ci-freebsd.sh 2>&1 | tee engineering/evidence/native-ci/freebsd.log' \
+              || native_status=$?
+            printf '%s\n' "$native_status" > engineering/evidence/native-ci/freebsd.status
             rm -rf build
       - name: Retain native FreeBSD log
         if: always()
@@ -48,3 +51,21 @@ jobs:
           path: engineering/evidence/native-ci/freebsd.log
           if-no-files-found: error
           retention-days: 14
+      - name: Enforce native FreeBSD result
+        if: always()
+        shell: bash
+        run: |
+          status_file="engineering/evidence/native-ci/freebsd.status"
+          if [[ ! -f "$status_file" ]]; then
+            echo "error: native FreeBSD status was not copied back" >&2
+            exit 1
+          fi
+          native_status="$(<"$status_file")"
+          if [[ ! "$native_status" =~ ^[0-9]+$ ]]; then
+            echo "error: invalid native FreeBSD status '$native_status'" >&2
+            exit 1
+          fi
+          if (( native_status != 0 )); then
+            echo "error: native FreeBSD gate failed with status $native_status" >&2
+            exit "$native_status"
+          fi

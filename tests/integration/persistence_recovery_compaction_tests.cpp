@@ -68,7 +68,12 @@ GLYPHA_TEST("blocked durable compaction build permits same-Worker reads and muta
 
     glyphastore::DurableCompactionResult compaction;
     std::thread compactor{[&] { compaction = (*runtime)->compact_worker(0, 0); }};
-    GLYPHA_REQUIRE(blocked_build.wait_until_blocked());
+    const bool build_blocked = blocked_build.wait_until_blocked();
+    if (!build_blocked) {
+        blocked_build.release();
+        compactor.join();
+    }
+    GLYPHA_REQUIRE(build_blocked);
 
     const std::string key{"changing"};
     const std::string replacement{"new"};
@@ -98,7 +103,7 @@ GLYPHA_TEST("blocked durable compaction build permits same-Worker reads and muta
     {
         std::unique_lock lock{completion_mutex};
         completed_during_build =
-            completion.wait_for(lock, std::chrono::seconds{2}, [&] { return operations_finished; });
+            completion.wait_for(lock, kNativeConcurrencyDeadline, [&] { return operations_finished; });
     }
 
     blocked_build.release();
@@ -180,8 +185,7 @@ GLYPHA_TEST("blocked pre-intent compaction copy lets an unrelated rotation commi
 
     glyphastore::DurableCompactionResult compaction;
     std::thread compactor{[&] { compaction = (*runtime)->compact_worker(0, 0); }};
-    constexpr auto slow_native_deadline = std::chrono::seconds{30};
-    const bool copy_blocked = blocked_copy.wait_until_blocked(slow_native_deadline);
+    const bool copy_blocked = blocked_copy.wait_until_blocked();
     if (!copy_blocked) {
         // Do not unwind through a joinable thread: release a late hook and
         // preserve the actual failed requirement for the test runner.
@@ -208,7 +212,7 @@ GLYPHA_TEST("blocked pre-intent compaction copy lets an unrelated rotation commi
     {
         std::unique_lock lock{completion_mutex};
         rotation_completed_during_copy =
-            completion.wait_for(lock, slow_native_deadline, [&] { return rotation_finished; });
+            completion.wait_for(lock, kNativeConcurrencyDeadline, [&] { return rotation_finished; });
     }
 
     // A completed put has already published rotation telemetry. Snapshot it
@@ -312,7 +316,12 @@ GLYPHA_TEST("rotation waiting on compaction intent does not block its Worker que
 
     glyphastore::DurableCompactionResult compaction;
     std::thread compactor{[&] { compaction = (*runtime)->compact_worker(0, 0); }};
-    GLYPHA_REQUIRE(blocker.wait_until_blocked());
+    const bool intent_blocked = blocker.wait_until_blocked();
+    if (!intent_blocked) {
+        blocker.release();
+        compactor.join();
+    }
+    GLYPHA_REQUIRE(intent_blocked);
 
     blocker.force_next_record_write_full();
     glyphastore::DurableMutationResult rotating;
@@ -321,7 +330,7 @@ GLYPHA_TEST("rotation waiting on compaction intent does not block its Worker que
         rotating = (*runtime)->put(std::as_bytes(std::span{first_key}), std::as_bytes(std::span{value}));
     }};
     auto rotation_stats = (*runtime)->rotation_stats();
-    const auto rotation_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
+    const auto rotation_deadline = std::chrono::steady_clock::now() + kNativeConcurrencyDeadline;
     while (rotation_stats.attempts == 0 && std::chrono::steady_clock::now() < rotation_deadline) {
         std::this_thread::sleep_for(std::chrono::milliseconds{1});
         rotation_stats = (*runtime)->rotation_stats();
@@ -344,7 +353,7 @@ GLYPHA_TEST("rotation waiting on compaction intent does not block its Worker que
     {
         std::unique_lock lock{completion_mutex};
         queue_progressed =
-            completion.wait_for(lock, std::chrono::seconds{2}, [&] { return queued_finished; });
+            completion.wait_for(lock, kNativeConcurrencyDeadline, [&] { return queued_finished; });
     }
 
     blocker.release();
@@ -422,7 +431,12 @@ GLYPHA_TEST("exclusive Writer with flusher does not deadlock rotation on compact
 
     glyphastore::DurableCompactionResult compaction;
     std::thread compactor{[&] { compaction = (*runtime)->compact_worker(0, 0); }};
-    GLYPHA_REQUIRE(blocker.wait_until_blocked());
+    const bool intent_blocked = blocker.wait_until_blocked();
+    if (!intent_blocked) {
+        blocker.release();
+        compactor.join();
+    }
+    GLYPHA_REQUIRE(intent_blocked);
 
     blocker.force_next_record_write_full();
     glyphastore::DurableMutationResult rotating;
@@ -431,13 +445,11 @@ GLYPHA_TEST("exclusive Writer with flusher does not deadlock rotation on compact
         rotating = (*runtime)->put(std::as_bytes(std::span{first_key}), std::as_bytes(std::span{value}));
     }};
     auto rotation_stats = (*runtime)->rotation_stats();
-    const auto rotation_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
+    const auto rotation_deadline = std::chrono::steady_clock::now() + kNativeConcurrencyDeadline;
     while (rotation_stats.attempts == 0 && std::chrono::steady_clock::now() < rotation_deadline) {
         std::this_thread::sleep_for(std::chrono::milliseconds{1});
         rotation_stats = (*runtime)->rotation_stats();
     }
-    GLYPHA_REQUIRE(rotation_stats.attempts == 1);
-
     glyphastore::DurableMutationResult queued;
     std::mutex completion_mutex;
     std::condition_variable completion;
@@ -455,7 +467,7 @@ GLYPHA_TEST("exclusive Writer with flusher does not deadlock rotation on compact
     {
         std::unique_lock lock{completion_mutex};
         queue_progressed =
-            completion.wait_for(lock, std::chrono::seconds{2}, [&] { return queued_finished; });
+            completion.wait_for(lock, kNativeConcurrencyDeadline, [&] { return queued_finished; });
     }
 
     blocker.release();
@@ -464,6 +476,7 @@ GLYPHA_TEST("exclusive Writer with flusher does not deadlock rotation on compact
     rotation.join();
     compactor.join();
 
+    GLYPHA_REQUIRE(rotation_stats.attempts == 1);
     GLYPHA_REQUIRE(queue_progressed);
     GLYPHA_REQUIRE(
         queued.committed() ||
@@ -648,7 +661,7 @@ GLYPHA_TEST("exclusive Writer compact Phase A drains hot_path_depth before Index
 
     glyphastore::DurableMutationResult gated;
     bool saw_snapshot_gate{};
-    const auto gate_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
+    const auto gate_deadline = std::chrono::steady_clock::now() + kNativeConcurrencyDeadline;
     for (std::uint32_t attempt = 0; std::chrono::steady_clock::now() < gate_deadline; ++attempt) {
         const auto key = gated_key + std::to_string(attempt);
         const std::string value{"gated"};
@@ -746,7 +759,7 @@ GLYPHA_TEST("exclusive Writer unread TTL probe drains hot_path_depth before Inde
 
     glyphastore::DurableMutationResult gated;
     bool saw_probe_gate{};
-    const auto gate_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
+    const auto gate_deadline = std::chrono::steady_clock::now() + kNativeConcurrencyDeadline;
     for (std::uint32_t attempt = 0; std::chrono::steady_clock::now() < gate_deadline; ++attempt) {
         const auto key = gated_key + std::to_string(attempt);
         const std::string value{"gated"};
@@ -860,7 +873,7 @@ GLYPHA_TEST("exclusive Writer capture_published_read takes Worker mutex under co
     std::this_thread::sleep_for(std::chrono::milliseconds{20});
 
     bool saw_gate{};
-    const auto gate_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
+    const auto gate_deadline = std::chrono::steady_clock::now() + kNativeConcurrencyDeadline;
     for (std::uint32_t attempt = 0; std::chrono::steady_clock::now() < gate_deadline; ++attempt) {
         const auto key = gated_key + std::to_string(attempt);
         const std::string value{"gated"};
@@ -968,7 +981,7 @@ GLYPHA_TEST("exclusive Writer prepare_get drains hot_path_depth before Index fin
     std::this_thread::sleep_for(std::chrono::milliseconds{50});
 
     bool saw_gate{};
-    const auto gate_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
+    const auto gate_deadline = std::chrono::steady_clock::now() + kNativeConcurrencyDeadline;
     for (std::uint32_t attempt = 0; std::chrono::steady_clock::now() < gate_deadline; ++attempt) {
         const auto key = gated_key + std::to_string(attempt);
         const std::string value{"gated"};
@@ -1059,7 +1072,7 @@ GLYPHA_TEST("exclusive Writer flush drains hot_path_depth before dirty sync") {
     std::this_thread::sleep_for(std::chrono::milliseconds{50});
 
     bool saw_gate{};
-    const auto gate_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
+    const auto gate_deadline = std::chrono::steady_clock::now() + kNativeConcurrencyDeadline;
     for (std::uint32_t attempt = 0; std::chrono::steady_clock::now() < gate_deadline; ++attempt) {
         const auto key = gated_key + std::to_string(attempt);
         const std::string value{"gated"};
@@ -1156,7 +1169,7 @@ GLYPHA_TEST("exclusive Writer with flusher re-locks Worker after rotation I/O") 
     {
         std::unique_lock lock{completion_mutex};
         sibling_progressed =
-            completion.wait_for(lock, std::chrono::seconds{2}, [&] { return sibling_finished; });
+            completion.wait_for(lock, kNativeConcurrencyDeadline, [&] { return sibling_finished; });
     }
     sibling_writer.join();
 
@@ -1248,7 +1261,7 @@ GLYPHA_TEST("compaction manifest sync holds no Worker or catalog mutex") {
     {
         std::unique_lock lock{completion_mutex};
         completed_during_manifest_sync =
-            completion.wait_for(lock, std::chrono::seconds{2}, [&] { return operations_finished; });
+            completion.wait_for(lock, kNativeConcurrencyDeadline, [&] { return operations_finished; });
     }
 
     blocked_sync.release();
