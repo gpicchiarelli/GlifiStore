@@ -18,20 +18,20 @@ from release_bundle import (
     verify_checksums,
     verify_seal,
 )
-
-
-SEMVER = re.compile(r"^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
+from semver_policy import SemverError, Version, select_previous
+from semver_policy import parse as parse_semver
 
 
 class PriorReleaseError(RuntimeError):
     pass
 
 
-def version(value: str) -> tuple[int, int, int]:
-    match = SEMVER.fullmatch(value if value.startswith("v") else f"v{value}")
-    if match is None:
-        raise PriorReleaseError(f"invalid semantic version: {value}")
-    return tuple(int(part) for part in match.groups())  # type: ignore[return-value]
+def version(value: str) -> Version:
+    """SemVer ordering comes from the single policy module, never from a local regex."""
+    try:
+        return parse_semver(value)
+    except SemverError as error:
+        raise PriorReleaseError(f"invalid semantic version: {value}") from error
 
 
 def git(repository: Path, *arguments: str) -> str:
@@ -65,7 +65,14 @@ def tag_identity(repository: Path, tag: str) -> tuple[str, str, str]:
     return commit, product_version, abi_version
 
 
-def select(repository: Path, before_version: str, abi_major: int) -> str:
+def select(
+    repository: Path,
+    before_version: str,
+    abi_major: int,
+    *,
+    include_prereleases: bool = False,
+) -> str:
+    """Greatest annotated ABI-compatible predecessor; never `before_version minus one`."""
     if repository.is_symlink() or not repository.is_dir():
         raise PriorReleaseError("repository must be a regular directory")
     repository = repository.resolve()
@@ -76,24 +83,28 @@ def select(repository: Path, before_version: str, abi_major: int) -> str:
         "--format=%(refname:short) %(objecttype)",
         "refs/tags/v*",
     )
-    candidates: list[tuple[tuple[int, int, int], str]] = []
+    candidates: dict[Version, str] = {}
     for line in listing.splitlines():
         tag, separator, object_type = line.partition(" ")
-        match = SEMVER.fullmatch(tag)
-        if match is None:
+        if object_type != "tag":
             continue
-        parsed = tuple(int(part) for part in match.groups())
-        if parsed >= before or object_type != "tag":
+        try:
+            parsed = parse_semver(tag)
+        except SemverError:
+            continue
+        if parsed >= before:
+            continue
+        if parsed.is_prerelease and not include_prereleases:
             continue
         _, _, abi = tag_identity(repository, tag)
         if int(abi.split(".", 1)[0]) == abi_major:
-            candidates.append((parsed, tag))
-    if not candidates:
+            candidates[parsed] = tag
+    chosen = select_previous(candidates, before, include_prereleases=include_prereleases)
+    if chosen is None:
         raise PriorReleaseError(
             f"no annotated prior release with ABI major {abi_major} exists before {before_version}"
         )
-    candidates.sort()
-    selected = candidates[-1][1]
+    selected = candidates[chosen]
     print(selected)
     return selected
 
@@ -175,6 +186,7 @@ def parser() -> argparse.ArgumentParser:
     selection.add_argument("--repository", type=Path, required=True)
     selection.add_argument("--before-version", required=True)
     selection.add_argument("--abi-major", type=int, required=True)
+    selection.add_argument("--include-prereleases", action="store_true")
     validation = commands.add_parser("validate")
     validation.add_argument("--directory", type=Path, required=True)
     validation.add_argument("--repository", type=Path, required=True)
@@ -191,7 +203,12 @@ def main() -> int:
     args = parser().parse_args()
     try:
         if args.command == "select":
-            select(args.repository, args.before_version, args.abi_major)
+            select(
+                args.repository,
+                args.before_version,
+                args.abi_major,
+                include_prereleases=args.include_prereleases,
+            )
         else:
             validate(
                 args.directory,
@@ -203,7 +220,15 @@ def main() -> int:
                 args.output,
                 args.wire_version,
             )
-    except (BundleError, KeyError, OSError, PriorReleaseError, TypeError, ValueError) as error:
+    except (
+        BundleError,
+        KeyError,
+        OSError,
+        PriorReleaseError,
+        SemverError,
+        TypeError,
+        ValueError,
+    ) as error:
         print(f"prior release FAILED: {error}", file=sys.stderr)
         return 1
     return 0
