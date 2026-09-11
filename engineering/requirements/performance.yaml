@@ -11,7 +11,12 @@ requirements:
     absolute product claim. Retained CI reports fail closed on incomplete or internally inconsistent
     benchmark output and on sampling weaker than the fixed source contract. Same-revision deltas
     are preserved as repeat-variance evidence and cannot be classified as code regression or
-    improvement candidates. Complete TCP matrices validate filename/runtime coordinates and derive
+    improvement candidates. Hosted runs also bind comparisons to recorded CMake and Ninja identities
+    and retain a versioned digest of the invocation workflow plus tracked build, product, and
+    benchmark-source inputs. Identical benchmark subjects across different commits are classified as
+    repeat variance because the measured code/configuration is unchanged; missing or changed subjects
+    do not hide candidates. Complete TCP
+    matrices validate filename/runtime coordinates and derive
     per-depth Worker speedup, scaling efficiency,
     and the highest observed median pipeline. The hosted contract also requires ordered Reactor
     input/output-buffer compaction and copied-byte profiles, normalized per timed operation in the report.
@@ -32,11 +37,13 @@ requirements:
   implementazione:
   - benchmarks
   - engineering/performance/hosted-benchmark-contract.json
+  - engineering/tools/benchmark_subject_digest.py
   - scripts/benchmark_report.py
   - scripts/sdk_benchmark_report.py
   prove:
   - benchmarks
   - scripts/tests/test_benchmark_report.py
+  - scripts/tests/test_benchmark_subject_digest.py
   - scripts/tests/test_benchmark_workflow.py
   - scripts/tests/test_sdk_benchmark_report.py
   piattaforme:

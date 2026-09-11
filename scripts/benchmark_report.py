@@ -28,9 +28,12 @@ ENVIRONMENT_IDENTITY_FIELDS = (
     "logical_cpu_count",
     "physical_cpu_count",
     "compiler_identity",
+    "cmake_identity",
+    "ninja_identity",
     "build_preset",
     "benchmark_contract_sha256",
 )
+BENCHMARK_SUBJECT_FIELD = "benchmark_subject_sha256"
 TCP_SOURCE_PATTERN = re.compile(r"server-tcp-w(?P<workers>\d+)-p(?P<pipeline>\d+)\.txt")
 TCP_NEAR_PEAK_FRACTION = 0.95
 REACTOR_BUFFER_PROFILE_FIELDS = (
@@ -800,6 +803,21 @@ def comparable_revision(value: Any) -> str | None:
     return value
 
 
+def comparable_digest(value: Any) -> str | None:
+    if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value):
+        return value
+    return None
+
+
+def benchmark_subject(report: dict[str, Any] | None) -> str | None:
+    if not isinstance(report, dict):
+        return None
+    environment = report.get("environment")
+    if not isinstance(environment, dict):
+        return None
+    return comparable_digest(environment.get(BENCHMARK_SUBJECT_FIELD))
+
+
 def revision_by_source(report: dict[str, Any]) -> dict[str, str]:
     revisions: dict[str, str] = {}
     for run in report.get("runs", []):
@@ -860,11 +878,19 @@ def classify_diagnostic_ranges(current: dict[str, Any], prior: dict[str, Any]) -
     return "inconclusive-invalid-ranges"
 
 
-def add_comparisons(runs: list[dict[str, Any]], baseline: dict[str, Any] | None) -> int:
+def add_comparisons(
+    runs: list[dict[str, Any]],
+    baseline: dict[str, Any] | None,
+    current_subject_sha256: Any = None,
+) -> int:
     if baseline is None:
         return 0
     previous = baseline_results(baseline)
     previous_revisions = revision_by_source(baseline)
+    current_subject = comparable_digest(current_subject_sha256)
+    same_benchmark_subject = (
+        current_subject is not None and benchmark_subject(baseline) == current_subject
+    )
     matched = 0
     for run in runs:
         metadata = run.get("metadata", {})
@@ -893,9 +919,12 @@ def add_comparisons(runs: list[dict[str, Any]], baseline: dict[str, Any] | None)
                 / prior_rate
                 * 100,
                 "same_revision": same_revision,
+                "same_benchmark_subject": same_benchmark_subject,
                 "interpretation": (
                     "same-revision-variance"
                     if same_revision
+                    else "same-benchmark-subject-variance"
+                    if same_benchmark_subject
                     else classify_rate_ranges(result, prior)
                 ),
             }
@@ -904,12 +933,18 @@ def add_comparisons(runs: list[dict[str, Any]], baseline: dict[str, Any] | None)
 
 
 def add_diagnostic_comparisons(
-    runs: list[dict[str, Any]], baseline: dict[str, Any] | None
+    runs: list[dict[str, Any]],
+    baseline: dict[str, Any] | None,
+    current_subject_sha256: Any = None,
 ) -> int:
     if baseline is None:
         return 0
     previous = baseline_diagnostics(baseline)
     previous_revisions = revision_by_source(baseline)
+    current_subject = comparable_digest(current_subject_sha256)
+    same_benchmark_subject = (
+        current_subject is not None and benchmark_subject(baseline) == current_subject
+    )
     matched = 0
     for run in runs:
         metadata = run.get("metadata", {})
@@ -938,9 +973,12 @@ def add_diagnostic_comparisons(
                 / prior_median
                 * 100,
                 "same_revision": same_revision,
+                "same_benchmark_subject": same_benchmark_subject,
                 "interpretation": (
                     "same-revision-variance"
                     if same_revision
+                    else "same-benchmark-subject-variance"
+                    if same_benchmark_subject
                     else classify_diagnostic_ranges(diagnostic, prior)
                 ),
             }
@@ -954,7 +992,11 @@ def compare_with_baseline(
     environment: dict[str, Any],
 ) -> tuple[dict[str, Any], int]:
     status = comparison_environment_status(environment, baseline)
-    matched = add_comparisons(runs, baseline) if status["status"] == "compatible" else 0
+    matched = (
+        add_comparisons(runs, baseline, environment.get(BENCHMARK_SUBJECT_FIELD))
+        if status["status"] == "compatible"
+        else 0
+    )
     return status, matched
 
 
@@ -975,6 +1017,7 @@ def comparison_signal(result: dict[str, Any]) -> str:
         "regression-candidate": "regression candidate",
         "improvement-candidate": "improvement candidate",
         "same-revision-variance": "same-revision repeat variance",
+        "same-benchmark-subject-variance": "same-subject repeat variance",
         "median-only": "median only",
         "inconclusive-invalid-ranges": "inconclusive (invalid ranges)",
     }
@@ -1265,6 +1308,16 @@ def render_markdown(
             [
                 "Baseline and current samples use the same Git revision; deltas describe "
                 "repeat variance, not code regression or improvement candidates.",
+                "",
+            ]
+        )
+    elif comparisons and all(
+        comparison.get("same_benchmark_subject") is True for comparison in comparisons
+    ):
+        lines.extend(
+            [
+                "Baseline and current samples use the same tracked benchmark subject; deltas "
+                "describe repeat variance, not measured-code regression or improvement candidates.",
                 "",
             ]
         )
@@ -1614,7 +1667,9 @@ def main() -> int:
         runs, baseline, environment
     )
     matched_diagnostics = (
-        add_diagnostic_comparisons(runs, baseline)
+        add_diagnostic_comparisons(
+            runs, baseline, environment.get(BENCHMARK_SUBJECT_FIELD)
+        )
         if comparison_environment["status"] == "compatible"
         else 0
     )
@@ -1622,7 +1677,7 @@ def main() -> int:
     generated_at = dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat()
     baseline_generated_at = baseline.get("generated_at") if baseline else None
     report = {
-        "schema_version": 9,
+        "schema_version": 10,
         "generated_at": generated_at,
         "baseline_generated_at": baseline_generated_at,
         "environment": environment,

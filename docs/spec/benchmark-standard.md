@@ -148,7 +148,8 @@ For scaling tests, reserve CPUs for load generation or run clients in a separate
 
 Use identical hardware, build type, CLI, data placement, and environmental policy. Automated
 revision reports must suppress deltas when their recorded runner OS/architecture, image version,
-kernel, CPU model/count, compiler, build preset, or benchmark-contract digest differ or are absent.
+kernel, CPU model/count, compiler, CMake, Ninja, build preset, or benchmark-contract digest differ or
+are absent.
 Result matching must include operations, warmups, and measured repeats. Interleave old/new runs when
 practical to reduce drift. Report absolute medians and ratios, not only percentages.
 
@@ -156,6 +157,13 @@ A change is a plausible regression only when it repeats across runs and exceeds 
 Two runs of the same Git revision contain no code change to classify: their delta must be labeled
 as repeat variance, never as a regression or improvement candidate. Same-revision variance remains
 visible and should be used to assess whether the hosted environment is sufficiently stable.
+Hosted runs also record a versioned SHA-256 subject over the benchmark invocation workflow, tracked
+CMake configuration, product headers/sources, and benchmark executable sources, excluding retained
+result artifacts. When that subject is identical across different Git revisions, the measured
+code/configuration did not change;
+their delta must likewise be labeled repeat variance rather than a measured-code candidate. Report,
+documentation, assurance, and digest-tool changes do not enter this subject. A missing or changed
+subject never suppresses a legitimate candidate by itself.
 Automated reports must classify overlapping current/baseline min/max throughput ranges as
 inconclusive; only disjoint ranges may be labeled improvement or regression candidates. Stronger
 paired/statistical evidence may supersede this conservative classification. Optimize a named

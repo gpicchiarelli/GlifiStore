@@ -18,6 +18,7 @@ EXPECTED_PUSH_PATHS = (
     "src/**",
     "benchmarks/**",
     "engineering/performance/hosted-benchmark-contract.json",
+    "engineering/tools/benchmark_subject_digest.py",
     "scripts/benchmark_report.py",
 )
 
@@ -101,7 +102,13 @@ class BenchmarkWorkflowTests(unittest.TestCase):
         self.assertIn("for workers in 1 2 4", text)
         self.assertIn("for pipeline in 1 8 32 128", text)
         self.assertIn("benchmark_contract_sha256=$(sha256sum", text)
+        self.assertIn(
+            "benchmark_subject_sha256=$(python engineering/tools/benchmark_subject_digest.py)",
+            text,
+        )
         self.assertIn("physical_cpu_count=$(lscpu -p=CORE,SOCKET", text)
+        self.assertIn('cmake_identity=$(cmake --version | head -1)', text)
+        self.assertIn('ninja_identity=$(ninja --version)', text)
         self.assertIn(
             "--source-contract engineering/performance/hosted-benchmark-contract.json", text
         )

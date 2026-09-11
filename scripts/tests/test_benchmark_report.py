@@ -39,8 +39,11 @@ def environment(**overrides: object) -> dict[str, object]:
         "logical_cpu_count": 4,
         "physical_cpu_count": 2,
         "compiler_identity": "clang version 20.1.0",
+        "cmake_identity": "cmake version 4.1.0",
+        "ninja_identity": "1.13.1",
         "build_preset": "unix-release",
         "benchmark_contract_sha256": "a" * 64,
+        "benchmark_subject_sha256": "b" * 64,
     }
     values.update(overrides)
     return values
@@ -208,7 +211,7 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
             ):
                 benchmark_report_main()
 
-    def test_main_emits_schema_nine_with_specialized_match_count(self) -> None:
+    def test_main_emits_schema_ten_with_specialized_match_count(self) -> None:
         content = (
             "# git_sha=abc123\n"
             "# arch=x86_64\n"
@@ -238,7 +241,7 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
                 self.assertEqual(benchmark_report_main(), 0)
             report = json.loads(json_path.read_text(encoding="utf-8"))
             markdown = markdown_path.read_text(encoding="utf-8")
-        self.assertEqual(report["schema_version"], 9)
+        self.assertEqual(report["schema_version"], 10)
         self.assertEqual(report["matched_baseline_diagnostics"], 0)
         self.assertIn("1 specialized diagnostic(s)", markdown)
 
@@ -420,6 +423,26 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
         )
         self.assertIn("same Git revision", markdown)
 
+        same_subject_current = diagnostic_run(20, False)
+        same_subject_prior = diagnostic_run(10, False)
+        same_subject_current[0]["metadata"] = {"git_sha": "current"}
+        same_subject_prior[0]["metadata"] = {"git_sha": "prior"}
+        subject = "c" * 64
+        add_diagnostic_comparisons(
+            same_subject_current,
+            {
+                "environment": {"benchmark_subject_sha256": subject},
+                "runs": same_subject_prior,
+            },
+            subject,
+        )
+        comparison = same_subject_current[0]["diagnostics"][0]["comparison"]
+        self.assertFalse(comparison["same_revision"])
+        self.assertTrue(comparison["same_benchmark_subject"])
+        self.assertEqual(
+            comparison["interpretation"], "same-benchmark-subject-variance"
+        )
+
     def test_environment_file_and_identity_are_deterministic(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "environment.txt"
@@ -486,11 +509,16 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
         self.assertEqual(status["reason"], "baseline-environment-missing")
 
     def test_every_identity_field_is_required(self) -> None:
-        current = environment()
-        current[ENVIRONMENT_IDENTITY_FIELDS[0]] = "unknown"
-        status = comparison_environment_status(current, {"environment": environment()})
-        self.assertEqual(status["status"], "incompatible")
-        self.assertEqual(status["reason"], "identity-fields-missing")
+        for field in ENVIRONMENT_IDENTITY_FIELDS:
+            with self.subTest(field=field):
+                current = environment()
+                current[field] = "unknown"
+                status = comparison_environment_status(
+                    current, {"environment": environment()}
+                )
+                self.assertEqual(status["status"], "incompatible")
+                self.assertEqual(status["reason"], "identity-fields-missing")
+                self.assertEqual(status["missing_current"], [field])
 
     def test_disjoint_lower_range_is_regression_candidate(self) -> None:
         current_runs = runs(70.0, 65.0, 75.0)
@@ -520,6 +548,50 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
             current_runs[0]["results"][0]["comparison"]["interpretation"],
             "improvement-candidate",
         )
+
+    def test_same_benchmark_subject_across_revisions_is_repeat_variance(self) -> None:
+        subject = "c" * 64
+        current_environment = environment(benchmark_subject_sha256=subject)
+        baseline = {
+            "environment": environment(benchmark_subject_sha256=subject),
+            "runs": runs(100.0, 95.0, 105.0),
+        }
+        current_runs = runs(70.0, 65.0, 75.0)
+        current_runs[0]["metadata"] = {"git_sha": "current123"}
+        baseline["runs"][0]["metadata"] = {"git_sha": "prior456"}
+
+        status, matched = compare_with_baseline(
+            current_runs, baseline, current_environment
+        )
+        self.assertEqual(status["status"], "compatible")
+        self.assertEqual(matched, 1)
+        comparison = current_runs[0]["results"][0]["comparison"]
+        self.assertFalse(comparison["same_revision"])
+        self.assertTrue(comparison["same_benchmark_subject"])
+        self.assertEqual(
+            comparison["interpretation"], "same-benchmark-subject-variance"
+        )
+        self.assertEqual(regressions_over_threshold(current_runs, 10.0), [])
+
+        markdown = render_markdown(current_runs, "now", "before", status)
+        self.assertIn("same tracked benchmark subject", markdown)
+        self.assertIn("same-subject repeat variance", markdown)
+
+    def test_changed_benchmark_subject_keeps_disjoint_candidate(self) -> None:
+        current_environment = environment(benchmark_subject_sha256="c" * 64)
+        baseline = {
+            "environment": environment(benchmark_subject_sha256="d" * 64),
+            "runs": runs(100.0, 95.0, 105.0),
+        }
+        current_runs = runs(70.0, 65.0, 75.0)
+        status, matched = compare_with_baseline(
+            current_runs, baseline, current_environment
+        )
+        self.assertEqual(status["status"], "compatible")
+        self.assertEqual(matched, 1)
+        comparison = current_runs[0]["results"][0]["comparison"]
+        self.assertFalse(comparison["same_benchmark_subject"])
+        self.assertEqual(comparison["interpretation"], "regression-candidate")
 
     def test_same_revision_delta_is_repeat_variance(self) -> None:
         current_runs = strict_runs()
