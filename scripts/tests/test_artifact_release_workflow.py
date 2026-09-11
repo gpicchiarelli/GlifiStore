@@ -335,9 +335,9 @@ class ArtifactReleaseWorkflowTests(unittest.TestCase):
 
     def test_attestation_and_immutability_are_enforced(self) -> None:
         # Every consumer of the candidate carries the external seal anchor, including
-        # the optional package backends, which admit the candidate before they build.
+        # the optional package backends and the Wave F package-admission job.
         self.assertEqual(
-            self.release.count("needs.candidate.outputs.candidate-seal-sha256"), 13
+            self.release.count("needs.candidate.outputs.candidate-seal-sha256"), 14
         )
         self.assertIn("subject-path: dist/release-candidate/verified-seal.json", self.release)
         self.assertIn("--bundle dist/release-provenance/verified-seal.sigstore.json", self.release)
