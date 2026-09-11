@@ -122,6 +122,13 @@ cp "${built_packages[0]}" "$package"
 } 2>&1 | tee "$output/openbsd-file-inventory.log"
 
 {
+  chmod +x "$root/scripts/lib/package-external-consumer.sh"
+  "$root/scripts/lib/package-external-consumer.sh" \
+    "$root" /usr/local "$work"
+  echo "OPENBSD-PACKAGE external-consumer PASSED"
+} 2>&1 | tee "$output/openbsd-external-consumer.log"
+
+{
   rcctl enable glyphastored
   rcctl start glyphastored
   for _ in $(jot 50 1); do
@@ -192,6 +199,7 @@ cat >"$work/checks.json" <<'JSON'
   {"id":"package-build","command":"native OpenBSD ports checksum and package against the sealed source archive","evidence_ref":"openbsd-package-build.log"},
   {"id":"package-install","command":"pkg_add the native package and prove the dedicated service account","evidence_ref":"openbsd-package-install.log"},
   {"id":"file-inventory","command":"pkg inventory plus exact C ABI symbol allowlist","evidence_ref":"openbsd-file-inventory.log"},
+  {"id":"external-consumer","command":"cmake/ctest packaging/common/consumer against /usr/local outside the checkout with isolation refused","evidence_ref":"openbsd-external-consumer.log"},
   {"id":"service-start","command":"enable and start the rc.d service as _glyphastore on loopback","evidence_ref":"openbsd-service-start.log"},
   {"id":"put-get-erase","command":"protocol-v2 PUT, exact GET, ERASE and NOT_FOUND through the packaged service","evidence_ref":"openbsd-put-get-erase.log"},
   {"id":"graceful-shutdown","command":"persist a recovery key, stop through rcctl, prove process exit and verify the Store","evidence_ref":"openbsd-graceful-shutdown.log"},

@@ -280,8 +280,8 @@ requirements:
     trattenuto, quindi service-lifecycle resta OPEN_GATE per entrambi
   - upstream-ports-acceptance resta OPEN_GATE per FreeBSD, OpenBSD, MacPorts e Homebrew; il
     packaging in-repo e la pipeline del progetto, non un'accettazione upstream
-  - external-consumer contro il prefix installato non e costruito sui backend BSD, quindi il loro
-    lifecycle_state resta limitato a FUNCTIONALLY_VERIFIED
+  - external-consumer contro il prefix installato e costruito dai native scripts BSD
+    (`package-external-consumer.sh`); senza un run tag trattenuto il residual resta la retention
   - deb, rpm, macports e homebrew restano required_for_release false finche un gate non li promuove
   hazards:
   - HAZ-030

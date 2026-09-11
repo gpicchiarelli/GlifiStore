@@ -203,6 +203,7 @@ class ArtifactReleaseWorkflowTests(unittest.TestCase):
         self.assertIn('DISTDIR="$work/distfiles" makesum', script)
         self.assertIn("make -C \"$work/port\" DISTDIR=\"$work/distfiles\" check-plist", script)
         self.assertIn("pkg add -y", script)
+        self.assertIn("package-external-consumer.sh", script)
         self.assertIn("service glyphastored start", script)
         self.assertIn("service glyphastored stop", script)
         self.assertIn("glyphastore_verify_store -- /var/db/glyphastore", script)
@@ -211,6 +212,7 @@ class ArtifactReleaseWorkflowTests(unittest.TestCase):
             "package-build",
             "package-install",
             "file-inventory",
+            "external-consumer",
             "service-start",
             "put-get-erase",
             "graceful-shutdown",
@@ -241,6 +243,7 @@ class ArtifactReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("$ports_root/databases/glyphastore", script)
         self.assertIn("PACKAGE_REPOSITORY=", script)
         self.assertIn("pkg_add", script)
+        self.assertIn("package-external-consumer.sh", script)
         self.assertIn("rcctl enable glyphastored", script)
         self.assertIn("rcctl start glyphastored", script)
         self.assertIn("rcctl stop glyphastored", script)
@@ -251,6 +254,7 @@ class ArtifactReleaseWorkflowTests(unittest.TestCase):
             "package-build",
             "package-install",
             "file-inventory",
+            "external-consumer",
             "service-start",
             "put-get-erase",
             "graceful-shutdown",

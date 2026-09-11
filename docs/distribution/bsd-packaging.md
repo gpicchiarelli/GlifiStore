@@ -72,8 +72,10 @@ Consequences that hold by construction:
 - `package-upgrade` is `NOT_APPLICABLE_INITIAL_BASELINE` while no annotated release precedes the
   current one, and `NOT_RUN` once one exists, until a sealed N−1 package artifact is admitted.
   Upgrade continuity is never inferred from a rebuild.
-- `LIFECYCLE_VERIFIED` additionally owes an external consumer built against the installed package
-  prefix, which the native scripts do not build yet, so the ceiling is `FUNCTIONALLY_VERIFIED`.
+- `LIFECYCLE_VERIFIED` requires an external consumer built against the installed package
+  prefix (`scripts/lib/package-external-consumer.sh`); with that step retained, the native
+  ceiling is `LIFECYCLE_VERIFIED` until a sealed N−1 `package-upgrade` PASSes.
+  `upstream-ports-acceptance` keeps the overall result `OPEN_GATE`.
 
 Before either artifact enters a manifest, retain native evidence for build/fake or stage,
 packing-list and shared-symbol checks, package creation, install, service start/stop, protocol

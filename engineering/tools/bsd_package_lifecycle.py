@@ -59,10 +59,6 @@ PORTS_MAKEFILES = {
     "freebsd": "Mk/bsd.port.mk",
     "openbsd": "infrastructure/mk/bsd.port.mk",
 }
-NATIVE_CI_SCRIPTS = {
-    "freebsd": "scripts/ci-freebsd.sh",
-    "openbsd": "scripts/ci-openbsd-libressl.sh",
-}
 
 # Framework check -> the native lifecycle steps that must all have retained their
 # own PASSED marker, in the order the native script executes them.
@@ -70,6 +66,7 @@ NATIVE_STEPS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("package-build", ("package-build",)),
     ("package-install", ("package-install",)),
     ("package-inspect", ("file-inventory",)),
+    ("external-consumer", ("external-consumer",)),
     ("service-lifecycle", ("service-start", "graceful-shutdown")),
     ("put-get-erase", ("put-get-erase",)),
     ("restart-recovery", ("restart-recovery",)),
@@ -348,20 +345,6 @@ def decide(
     details.update(native_details)
     references.update(native_references)
 
-    if native_lifecycle == "skipped":
-        prerequisites = _log(directory, PREREQUISITE_LOG)
-        statuses["external-consumer"] = "BLOCKED"
-        details["external-consumer"] = _blocked_detail(display, prerequisites)
-        if prerequisites is not None:
-            references["external-consumer"] = prerequisites
-    else:
-        statuses["external-consumer"] = "NOT_RUN"
-        details["external-consumer"] = (
-            f"the native {display} package lifecycle builds no external consumer against the "
-            f"installed package prefix; {NATIVE_CI_SCRIPTS[backend]} covers installed-prefix "
-            "consumers outside package-ci"
-        )
-
     previous = context["previous"]
     if previous["available"]:
         statuses["package-upgrade"] = "NOT_RUN"
@@ -421,9 +404,13 @@ def decide(
     residuals = [
         f"upstream-ports-acceptance=No upstream {display} ports tree has accepted the GlyphaStore "
         "packaging|upstream ports review",
-        "external-consumer-installed-prefix=The native package lifecycle builds no external "
-        f"consumer against the installed {display} package prefix|a native package consumer harness",
     ]
+    if statuses.get("external-consumer") != "PASS":
+        residuals.append(
+            "external-consumer-installed-prefix=The native package lifecycle has not proven an "
+            f"external consumer against the installed {display} package prefix|a retained "
+            f"{backend}-external-consumer.log with PASSED"
+        )
     if ports_account != "present":
         residuals.append(
             f"ports-account-registration=The upstream {display} service-account UID/GID "

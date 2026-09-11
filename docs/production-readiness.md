@@ -209,7 +209,7 @@ The volatile engine under `src/experimental/` is lab-only.
 - [ ] **GATE-PACKAGE-LIFECYCLE** — Package backends declare and prove their lifecycle through honest evidence
   State: `IMPLEMENTATA` · Release target: `rc`
   Requirements: `GS-RELEASE-PACKAGE-001`, `GS-RELEASE-ARTIFACT-001`
-  Residual risk: No retained run has executed the deb/rpm container or the MacPorts/Homebrew native lifecycle; MacPorts/Homebrew service rows and every upstream acceptance stay OPEN_GATE; BSD external-consumer is unbuilt so BSD cannot exceed FUNCTIONALLY_VERIFIED; deb, rpm, macports and homebrew remain required_for_release false
+  Residual risk: No retained run has executed the MacPorts/Homebrew native lifecycle; MacPorts/Homebrew service rows and every upstream acceptance stay OPEN_GATE; BSD native scripts now build the installed-prefix external consumer (LIFECYCLE_VERIFIED when retained), but no tagged release has retained that row yet; deb, rpm, macports and homebrew remain required_for_release false
   One matrix owns backends, targets, profiles and the check vocabulary; scripts/package-ci.sh and its backend modules own every status; evidence is schema-bound to commit, version and artifact digest and may report NOT_RUN, BLOCKED or OPEN_GATE but never a result better than its checks; docs/distribution/package-status.md is generated from the matrix so no hand table can diverge. Execution depth is the open part - the packaging lifecycle beyond structural rows is unproven in CI.
 
 - [ ] **GATE-RELEASE-MATRIX** — Release CI covers supported compilers OS arch optimized builds

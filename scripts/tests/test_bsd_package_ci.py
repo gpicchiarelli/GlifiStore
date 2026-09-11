@@ -274,11 +274,10 @@ class NativeMappingTests(BsdPackageCiTestCase):
         statuses = decision["statuses"]
         for check, _ in NATIVE_STEPS:
             self.assertEqual(statuses[check], "PASS", check)
-        # The native script builds no consumer against the installed prefix, so the
-        # proven depth stops below LIFECYCLE_VERIFIED and never reaches upgrade.
-        self.assertEqual(statuses["external-consumer"], "NOT_RUN")
-        self.assertEqual(decision["lifecycle_state"], "FUNCTIONALLY_VERIFIED")
-        # Upstream acceptance is unproven, so a passing lifecycle is not a PASS result.
+        # Upstream acceptance stays OPEN_GATE, so a complete native lifecycle is
+        # LIFECYCLE_VERIFIED (external-consumer included) but never a PASS result.
+        self.assertEqual(statuses["external-consumer"], "PASS")
+        self.assertEqual(decision["lifecycle_state"], "LIFECYCLE_VERIFIED")
         self.assertEqual(decision["result"], "OPEN_GATE")
         self.assertEqual(decision["subject"], str(package))
 
@@ -346,7 +345,8 @@ class NativeMappingTests(BsdPackageCiTestCase):
         decision = self.decide(directory, native_lifecycle="failed")
         statuses = decision["statuses"]
         self.assertEqual(statuses["package-inspect"], "PASS")
-        self.assertEqual(statuses["service-lifecycle"], "FAIL")
+        self.assertEqual(statuses["external-consumer"], "FAIL")
+        self.assertEqual(statuses["service-lifecycle"], "NOT_RUN")
         self.assertEqual(statuses["restart-recovery"], "NOT_RUN")
         self.assertEqual(statuses["package-remove"], "NOT_RUN")
         self.assertEqual(decision["result"], "FAIL")

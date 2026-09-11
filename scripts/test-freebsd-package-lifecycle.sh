@@ -123,6 +123,13 @@ cp "${built_packages[0]}" "$package"
 } 2>&1 | tee "$output/freebsd-file-inventory.log"
 
 {
+  chmod +x "$root/scripts/lib/package-external-consumer.sh"
+  "$root/scripts/lib/package-external-consumer.sh" \
+    "$root" /usr/local "$work"
+  echo "FREEBSD-PACKAGE external-consumer PASSED"
+} 2>&1 | tee "$output/freebsd-external-consumer.log"
+
+{
   sysrc glyphastored_enable=YES
   service glyphastored start
   for _ in $(jot 50 1); do
@@ -193,6 +200,7 @@ cat >"$work/checks.json" <<'JSON'
   {"id":"package-build","command":"native FreeBSD ports checksum, stage, check-plist and package against the sealed source archive","evidence_ref":"freebsd-package-build.log"},
   {"id":"package-install","command":"pkg add the native package and prove the dedicated service account","evidence_ref":"freebsd-package-install.log"},
   {"id":"file-inventory","command":"pkg inventory/checksum closure plus exact C ABI symbol allowlist","evidence_ref":"freebsd-file-inventory.log"},
+  {"id":"external-consumer","command":"cmake/ctest packaging/common/consumer against /usr/local outside the checkout with isolation refused","evidence_ref":"freebsd-external-consumer.log"},
   {"id":"service-start","command":"enable and start the rc.subr service as glyphastore on loopback","evidence_ref":"freebsd-service-start.log"},
   {"id":"put-get-erase","command":"protocol-v2 PUT, exact GET, ERASE and NOT_FOUND through the packaged service","evidence_ref":"freebsd-put-get-erase.log"},
   {"id":"graceful-shutdown","command":"persist a recovery key, stop through rc.subr, prove process exit and verify the Store","evidence_ref":"freebsd-graceful-shutdown.log"},

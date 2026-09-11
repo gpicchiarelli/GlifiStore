@@ -802,10 +802,11 @@ gates:
   - workflow: assurance.yml
     note: Framework negative suites plus the generated package-status freshness check
   stato: IMPLEMENTATA
-  rischio_residuo: No retained run has executed the deb/rpm container or the MacPorts/Homebrew native
-    lifecycle; MacPorts/Homebrew service rows and every upstream acceptance stay OPEN_GATE; BSD
-    external-consumer is unbuilt so BSD cannot exceed FUNCTIONALLY_VERIFIED; deb, rpm, macports and
-    homebrew remain required_for_release false
+  rischio_residuo: No retained run has executed the MacPorts/Homebrew native lifecycle;
+    MacPorts/Homebrew service rows and every upstream acceptance stay OPEN_GATE; BSD native
+    scripts now build the installed-prefix external consumer (LIFECYCLE_VERIFIED when retained),
+    but no tagged release has retained that row yet; deb, rpm, macports and homebrew remain
+    required_for_release false
   riapertura:
   - Promoting a backend to required_for_release without retained LIFECYCLE_VERIFIED evidence and an ADR
   - Reporting a structural row as a package, service or upstream-acceptance proof

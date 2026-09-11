@@ -62,8 +62,10 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
 - `upstream-ports-acceptance` stays an open gate, so neither BSD backend can ever report `PASS`.
 - `package-upgrade` is `NOT_APPLICABLE_INITIAL_BASELINE` (no prior annotated release) and becomes
   `NOT_RUN` — never `PASS` — until a sealed N−1 package artifact is admitted.
-- `external-consumer` against the installed package prefix is unbuilt, capping the BSD lifecycle
-  state at `FUNCTIONALLY_VERIFIED`.
+- `external-consumer` against the installed package prefix is built by
+  `scripts/lib/package-external-consumer.sh` inside the native FreeBSD/OpenBSD lifecycle scripts;
+  a retained PASS lifts the BSD package-ci ceiling to `LIFECYCLE_VERIFIED` (upgrade and upstream
+  acceptance remain open).
 - `package-ci.yml` retains the structural BSD rows per profile, but the native producers still run
   only in the release workflow VM. `GATE-PACKAGE-LIFECYCLE` now cites that workflow and stays
   `IMPLEMENTATA`: citing a retention path is not the same as having retained a run.
@@ -91,7 +93,7 @@ Declarative status is generated into [package-status.md](package-status.md); the
 | MacPorts `launchd` startup item | Not installed by the port, so `service-lifecycle` is `OPEN_GATE` | A packaged startup item plus a retained run that starts and stops it |
 | Homebrew `brew services` | Declared in the formula, never started or stopped in a retained run (`OPEN_GATE`) | A retained native run that exercises the services block |
 | MacPorts / Homebrew native rows | Opt-in only (`--allow-native`); no hosted runner may install into the host package manager | A disposable macOS host or an accepted runner policy, with retained logs |
-| `external-consumer` on BSD | Unbuilt, so both BSD backends cap at `FUNCTIONALLY_VERIFIED` | Building an external consumer against the installed package prefix in the native scripts |
+| `external-consumer` on BSD | Implemented in native lifecycle scripts; maps to package-ci `PASS` → `LIFECYCLE_VERIFIED` when the log is retained | A tagged/native retained run that keeps `*-external-consumer.log` |
 | `package-upgrade` anywhere | Never positively run: `NOT_APPLICABLE_INITIAL_BASELINE` today, `NOT_RUN` once a predecessor exists | A sealed N−1 package artifact admitted through `upgrade_baseline.py admit` |
 | Wave F admission tools | `run_package_admission.py` is wired into `package-ci.yml` (sealed candidate) and `release.yml` (`package-admission` job); reports are retained with honest blockers | A positive `admitted: true` after cross-SDK PASS and sealed N−1 `package-upgrade` |
 | Cross-SDK post-install matrix | `NOT_RUN`; admission reports block on it by construction | Running every SDK against a package-installed daemon and retaining the report |
