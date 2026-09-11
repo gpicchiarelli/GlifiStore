@@ -584,6 +584,22 @@ def container_run_arguments(
     ]
 
 
+def prefer_inner_container_evidence(
+    directory: Path, backend: str, profile: str, stage: str
+) -> tuple[str, Path] | None:
+    """Return the inner container's evidence when it wrote a report.
+
+    The inner driver exits non-zero on FAIL *after* emitting evidence. The outer
+    process must prefer that report over inventing BLOCKED, or a real packaging
+    failure is laundered into a dishonest non-failure.
+    """
+    path = directory / evidence_filename(backend, profile, stage)
+    if not path.is_file():
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return str(payload["result"]), path
+
+
 def dispatch_container(
     recorder: Recorder,
     *,
@@ -1598,32 +1614,35 @@ def execute(
                 "the lifecycle runs inside the digest-pinned container and is opt-in; "
                 f"set {CONTAINER_ENVIRONMENT}=1",
             )
-        elif dispatch_container(
-            recorder,
-            backend=backend,
-            profile=profile,
-            stage=stage,
-            root=root,
-            release_context=release_context,
-            target=target,
-            runtime=runtime,
-        ):
-            # The inner run emitted the evidence into this directory already.
-            inner_evidence = directory / evidence_filename(backend, profile, stage)
-            if inner_evidence.is_file():
-                return json.loads(inner_evidence.read_text(encoding="utf-8"))["result"], inner_evidence
-            recorder.pending(
-                declared,
-                "BLOCKED",
-                "the container run produced no package evidence; see container-dispatch.log",
-            )
         else:
-            recorder.pending(
-                declared,
-                "BLOCKED",
-                f"the {runtime} run of {target.image} did not complete; "
-                "see container-dispatch.log",
+            dispatched = dispatch_container(
+                recorder,
+                backend=backend,
+                profile=profile,
+                stage=stage,
+                root=root,
+                release_context=release_context,
+                target=target,
+                runtime=runtime,
             )
+            # Prefer the inner report whether the container exited 0 or not: a FAIL
+            # after writing evidence must not be rewritten as BLOCKED.
+            preferred = prefer_inner_container_evidence(directory, backend, profile, stage)
+            if preferred is not None:
+                return preferred
+            if dispatched:
+                recorder.pending(
+                    declared,
+                    "BLOCKED",
+                    "the container run produced no package evidence; see container-dispatch.log",
+                )
+            else:
+                recorder.pending(
+                    declared,
+                    "BLOCKED",
+                    f"the {runtime} run of {target.image} did not complete; "
+                    "see container-dispatch.log",
+                )
     else:
         recorder.pending(declared, fallback, reason or "the lifecycle was not reached in this run")
 

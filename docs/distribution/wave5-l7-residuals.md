@@ -70,7 +70,10 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
 - The Linux container lifecycle (`deb`, `rpm`) is enabled from the `nightly` and `release`
   profiles only (`main` stays structural until a retained container run exists) and has never been
   executed in a retained run, so its first CI execution may legitimately report `FAIL` rather than
-  the `BLOCKED`/`NOT_RUN` rows produced without `GLYPHASTORE_PACKAGE_CI_CONTAINER=1`.
+  the `BLOCKED`/`NOT_RUN` rows produced without `GLYPHASTORE_PACKAGE_CI_CONTAINER=1`. When the
+  inner driver writes evidence and exits non-zero, the outer dispatcher prefers that report over
+  inventing `BLOCKED`. Deb rules no longer pass `-GNinja` into a dh/`make` build; the RPM `%cmake`
+  line forces `-DBUILD_SHARED_LIBS=OFF` so the hidden-visibility core links as in official presets.
 - MacPorts and Homebrew have no hosted runner that may install into the host package manager, so
   their native rows stay opt-in (`--allow-native`, never on by default) and unproven.
 
@@ -82,7 +85,7 @@ Declarative status is generated into [package-status.md](package-status.md); the
 
 | Residual | State today | What would close it |
 | --- | --- | --- |
-| deb / rpm container lifecycle | Never executed in a retained CI run; `main` stays structural; nightly/release opt in; `/out` is chown'd back to the host uid before the container exits | A retained `nightly` run with `GLYPHASTORE_PACKAGE_CI_CONTAINER=1` whose rows are not `BLOCKED`/`NOT_RUN` |
+| deb / rpm container lifecycle | Never executed in a retained CI run; `main` stays structural; nightly/release opt in; `/out` is chown'd back to the host uid before the container exits; outer prefers inner FAIL evidence; deb/rpm templates align with static-core/make builds | A retained `nightly` run with `GLYPHASTORE_PACKAGE_CI_CONTAINER=1` whose rows are not `BLOCKED`/`NOT_RUN` |
 | MacPorts `launchd` startup item | Not installed by the port, so `service-lifecycle` is `OPEN_GATE` | A packaged startup item plus a retained run that starts and stops it |
 | Homebrew `brew services` | Declared in the formula, never started or stopped in a retained run (`OPEN_GATE`) | A retained native run that exercises the services block |
 | MacPorts / Homebrew native rows | Opt-in only (`--allow-native`); no hosted runner may install into the host package manager | A disposable macOS host or an accepted runner policy, with retained logs |

@@ -37,6 +37,7 @@ from engineering.tools.run_linux_package_backend import (
     container_run_arguments,
     lifecycle_state,
     overall_result,
+    prefer_inner_container_evidence,
 )
 from engineering.tools.verify_package_payload import (
     PayloadError,
@@ -405,6 +406,45 @@ class ContainerDispatchTests(unittest.TestCase):
         self.assertIn("chown -R", text)
         self.assertIn("trap restore_out_ownership EXIT", text)
         self.assertNotIn("exec python3", text)
+
+    def test_inner_fail_evidence_is_preferred_over_outer_blocked(self) -> None:
+        directory = tempfile.TemporaryDirectory(prefix="glyphastore-inner-evidence-")
+        self.addCleanup(directory.cleanup)
+        root = Path(directory.name)
+        evidence = root / "deb-nightly-full-package-evidence.json"
+        evidence.write_text(
+            encode_json(
+                {
+                    "result": "FAIL",
+                    "backend": "deb",
+                    "profile": "nightly",
+                    "stage": "full",
+                }
+            ),
+            encoding="utf-8",
+        )
+        preferred = prefer_inner_container_evidence(root, "deb", "nightly", "full")
+        self.assertIsNotNone(preferred)
+        assert preferred is not None
+        self.assertEqual(preferred[0], "FAIL")
+        self.assertEqual(preferred[1], evidence)
+        self.assertIsNone(prefer_inner_container_evidence(root, "rpm", "nightly", "full"))
+
+    def test_debian_rules_do_not_mix_ninja_configure_with_make_build(self) -> None:
+        rules = (
+            Path(__file__).resolve().parents[2] / "packaging/debian/templates/rules.in"
+        ).read_text(encoding="utf-8")
+        configure = rules.split("override_dh_auto_configure:", 1)[1].split(
+            "override_dh_auto_test:", 1
+        )[0]
+        self.assertNotIn("-GNinja", configure)
+        self.assertIn("-DBUILD_SHARED_LIBS=OFF", configure)
+
+    def test_rpm_spec_forces_static_core_linkage(self) -> None:
+        spec = (
+            Path(__file__).resolve().parents[2] / "packaging/rpm/templates/glyphastore.spec.in"
+        ).read_text(encoding="utf-8")
+        self.assertIn("-DBUILD_SHARED_LIBS=OFF", spec)
 
 
 if __name__ == "__main__":

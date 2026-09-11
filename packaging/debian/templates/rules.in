@@ -15,15 +15,19 @@ export DEB_CXXFLAGS_MAINT_APPEND = -fno-plt
 
 override_dh_auto_configure:
 	dh_auto_configure -- \
-		-GNinja \
 		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
 		-DCMAKE_INSTALL_LIBDIR=lib \
 		-DBUILD_TESTING=OFF \
+		-DBUILD_SHARED_LIBS=OFF \
 		-DGLYPHASTORE_ENABLE_TLS=ON \
 		-DGLYPHASTORE_BUILD_BENCHMARKS=OFF \
 		-DGLYPHASTORE_BUILD_FUZZERS=OFF \
 		-DGLYPHASTORE_FAULT_INJECTION=OFF \
 		-DGLYPHASTORE_NATIVE_CPU=OFF
+
+# Do not pass a Ninja generator here: dh_auto_configure already selects
+# "Unix Makefiles", and a second generator makes configure emit build.ninja
+# while dh_auto_build still runs make.
 
 # CMAKE_INSTALL_LIBDIR is forced to a non-multiarch lib on purpose: the installed
 # glyphastore-abi.pc computes its prefix as $${pcfiledir}/../.., which a

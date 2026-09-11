@@ -69,12 +69,17 @@ GlyphaStore.
 %cmake \
     -GNinja \
     -DBUILD_TESTING=OFF \
+    -DBUILD_SHARED_LIBS=OFF \
     -DGLYPHASTORE_ENABLE_TLS=ON \
     -DGLYPHASTORE_BUILD_BENCHMARKS=OFF \
     -DGLYPHASTORE_BUILD_FUZZERS=OFF \
     -DGLYPHASTORE_FAULT_INJECTION=OFF \
     -DGLYPHASTORE_NATIVE_CPU=OFF
 %cmake_build
+
+# Fedora's %cmake defaults to BUILD_SHARED_LIBS=ON. GlyphaStore's core library uses
+# hidden C++ visibility and is linked statically into the daemon in the official
+# presets; forcing shared core here leaves unresolved Store symbols at link time.
 
 %install
 %cmake_install
