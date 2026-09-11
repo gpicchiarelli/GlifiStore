@@ -383,7 +383,7 @@ GLYPHA_TEST("normal rate and cpu budgets suspend and pressure bypasses them") {
 
     const auto first_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
     while (std::chrono::steady_clock::now() < first_deadline &&
-           compact_calls->load(std::memory_order_acquire) < 1) {
+           controller.snapshot().rate_window_bytes_copied != 600) {
         std::this_thread::sleep_for(std::chrono::milliseconds{5});
     }
     GLYPHA_REQUIRE(compact_calls->load(std::memory_order_acquire) == 1);
@@ -453,7 +453,7 @@ GLYPHA_TEST("normal rate and cpu budgets suspend and pressure bypasses them") {
     cpu_controller.start();
     const auto cpu_first = std::chrono::steady_clock::now() + std::chrono::seconds{3};
     while (std::chrono::steady_clock::now() < cpu_first &&
-           compact_calls->load(std::memory_order_relaxed) < 1) {
+           cpu_controller.snapshot().rate_window_cpu_ns < 1'000'000ULL) {
         std::this_thread::sleep_for(std::chrono::milliseconds{5});
     }
     GLYPHA_REQUIRE(compact_calls->load(std::memory_order_relaxed) == 1);
