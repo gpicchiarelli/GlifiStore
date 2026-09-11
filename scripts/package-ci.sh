@@ -153,7 +153,15 @@ run_backend() {
       bsd_backend_run "$backend" "$directory" "$plan" "$evidence"
       return
       ;;
-    deb|rpm|macports|homebrew)
+    macports|homebrew)
+      # The macOS module owns the rendered Portfile/formula, the prefix-isolation
+      # rows and the opt-in native lifecycle.
+      # shellcheck source=lib/package-backend-macos.sh
+      . "$root/scripts/lib/package-backend-macos.sh"
+      macos_backend_run "$backend" "$directory"
+      return
+      ;;
+    deb|rpm)
       limitations+=("No packaging implementation exists for $backend yet; only structural metadata was resolved.")
       ;;
     *)

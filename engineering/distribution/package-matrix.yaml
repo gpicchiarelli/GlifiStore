@@ -73,6 +73,10 @@ lifecycle_checks:
     stage: metadata
     category: structural
     description: render backend packaging metadata from the release context without a hard-coded version
+  - id: package-lint
+    stage: metadata
+    category: structural
+    description: run the native packaging linter or auditor over the rendered metadata
   - id: sealed-source-admission
     stage: build
     category: native-build
@@ -85,6 +89,10 @@ lifecycle_checks:
     stage: inspect
     category: package
     description: inspect package metadata, dependencies and binary hardening before installation
+  - id: prefix-isolation
+    stage: inspect
+    category: package
+    description: prove the installed binaries link only inside their own package-manager prefix
   - id: package-install
     stage: install
     category: package
@@ -241,8 +249,8 @@ backends:
   - id: macports
     display_name: MacPorts Portfile
     package_kind: macports_port
-    status: PLANNED
-    lifecycle_state: NONE
+    status: STRUCTURAL
+    lifecycle_state: STRUCTURAL
     required_for_release: false
     wave: C
     profiles: [pr, main, nightly, release]
@@ -257,8 +265,11 @@ backends:
     checks:
       - structural-metadata
       - package-metadata-render
+      - upstream-ports-acceptance
+      - package-lint
       - package-build
       - package-inspect
+      - prefix-isolation
       - package-install
       - external-consumer
       - service-lifecycle
@@ -267,19 +278,25 @@ backends:
       - package-upgrade
       - package-remove
     required_checks:
-      pr: [structural-metadata]
-      main: [structural-metadata]
-      nightly: [structural-metadata]
-      release: [structural-metadata]
+      pr: [structural-metadata, package-metadata-render, upstream-ports-acceptance]
+      main: [structural-metadata, package-metadata-render, upstream-ports-acceptance]
+      nightly: [structural-metadata, package-metadata-render, upstream-ports-acceptance]
+      release: [structural-metadata, package-metadata-render, upstream-ports-acceptance]
     limitations:
-      - No packaging/macports Portfile exists yet.
+      - >-
+        packaging/macports/Portfile.in is rendered by
+        engineering/tools/render_macos_packaging.py; the native port, install and daemon rows
+        only run on a macOS host with MacPorts and GLYPHASTORE_PACKAGE_CI_NATIVE=1.
+      - >-
+        The port installs no launchd startup item, so service-lifecycle is an open gate and this
+        backend can never report PASS today.
       - In-repo packaging is the project pipeline; it is not an upstream ports-tree acceptance claim.
 
   - id: homebrew
     display_name: Homebrew Formula
     package_kind: homebrew_formula
-    status: PLANNED
-    lifecycle_state: NONE
+    status: STRUCTURAL
+    lifecycle_state: STRUCTURAL
     required_for_release: false
     wave: C
     profiles: [main, nightly, release]
@@ -294,8 +311,11 @@ backends:
     checks:
       - structural-metadata
       - package-metadata-render
+      - upstream-ports-acceptance
+      - package-lint
       - package-build
       - package-inspect
+      - prefix-isolation
       - package-install
       - external-consumer
       - service-lifecycle
@@ -304,12 +324,18 @@ backends:
       - package-upgrade
       - package-remove
     limitations:
-      - No packaging/homebrew Formula exists yet.
+      - >-
+        packaging/homebrew/glyphastore.rb.in is rendered by
+        engineering/tools/render_macos_packaging.py; the native audit, build, install and daemon
+        rows only run on a macOS host with Homebrew and GLYPHASTORE_PACKAGE_CI_NATIVE=1.
+      - >-
+        The formula declares a brew services block that no retained run has ever started or
+        stopped, so service-lifecycle is an open gate and this backend can never report PASS today.
       - In-repo packaging is the project pipeline; it is not an official tap acceptance claim.
     required_checks:
-      main: [structural-metadata]
-      nightly: [structural-metadata]
-      release: [structural-metadata]
+      main: [structural-metadata, package-metadata-render, upstream-ports-acceptance]
+      nightly: [structural-metadata, package-metadata-render, upstream-ports-acceptance]
+      release: [structural-metadata, package-metadata-render, upstream-ports-acceptance]
 
   - id: freebsd
     display_name: FreeBSD reference port and .pkg

@@ -56,8 +56,14 @@ class RepositoryMatrixTests(unittest.TestCase):
         for entry in self.matrix["backends"]:
             if entry["id"] in {"deb", "rpm", "macports", "homebrew"}:
                 self.assertFalse(entry["required_for_release"])
+            # Shipping packaging sources never promotes a backend past STRUCTURAL:
+            # IMPLEMENTED means the lifecycle runs in CI and retains evidence.
+            if entry["id"] in {"deb", "rpm"}:
                 self.assertEqual(entry["status"], "PLANNED")
                 self.assertEqual(entry["lifecycle_state"], "NONE")
+            if entry["id"] in {"macports", "homebrew"}:
+                self.assertEqual(entry["status"], "STRUCTURAL")
+                self.assertEqual(entry["lifecycle_state"], "STRUCTURAL")
 
     def test_release_policy_artifacts_mirror_the_release_bundle_authority(self) -> None:
         source = (ROOT / "engineering/tools/release_bundle.py").read_text(encoding="utf-8")

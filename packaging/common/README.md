@@ -17,8 +17,12 @@ it holds policy, not yet artifacts.
 
 - No systemd unit, launchd job or file list exists yet. Nothing in this directory is
   installed by any package, and no packaging check may report PASS on their behalf.
-- The only backends with real in-repo packaging today are the FreeBSD and OpenBSD
-  reference ports under [`../freebsd/`](../freebsd/) and [`../openbsd/`](../openbsd/).
+- The backends with real in-repo packaging today are the FreeBSD and OpenBSD
+  reference ports under [`../freebsd/`](../freebsd/) and [`../openbsd/`](../openbsd/),
+  and the macOS templates under [`../macports/`](../macports/) and
+  [`../homebrew/`](../homebrew/). None of them is accepted by an upstream ports tree
+  or tap, and neither macOS backend ships a proven launchd or `brew services`
+  integration: their `service-lifecycle` check is an open gate.
 - Package versions are never written by hand. They are derived from `VERSION` and the
   package revision by `engineering/tools/semver_policy.py` and recorded in the release
   context; see the mapping table below.

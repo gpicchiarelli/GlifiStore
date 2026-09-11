@@ -1,0 +1,85 @@
+# Rendered by engineering/tools/render_macos_packaging.py from
+# packaging/homebrew/glyphastore.rb.in. VERSION is the single source of truth and
+# the release context supplies the source identity, so version, url and sha256
+# are never written here by hand.
+{{PROVENANCE}}
+class Glyphastore < Formula
+  desc "Paired reader/writer key-value storage prototype"
+  homepage "https://github.com/gpicchiarelli/GlyphaStore"
+  url "{{URL}}"
+  version "{{VERSION}}"
+  sha256 "{{SHA256}}"
+  license "BSD-3-Clause"
+{{REVISION_BLOCK}}
+  depends_on "cmake" => :build
+  depends_on "ninja" => :build
+  depends_on "pkgconf" => :build
+  depends_on "openssl@3"
+
+  def install
+    # A Homebrew build must resolve its dependencies inside the Homebrew prefix.
+    # Reaching into a MacPorts prefix is a packaging defect, so /opt/local is
+    # refused at configure time instead of being noticed after installation.
+    args = %W[
+      -DGLYPHASTORE_ENABLE_TLS=ON
+      -DGLYPHASTORE_BUILD_BENCHMARKS=OFF
+      -DGLYPHASTORE_BUILD_FUZZERS=OFF
+      -DGLYPHASTORE_FAULT_INJECTION=OFF
+      -DGLYPHASTORE_NATIVE_CPU=OFF
+      -DGLYPHASTORE_WARNINGS_AS_ERRORS=ON
+      -DOPENSSL_ROOT_DIR=#{Formula["openssl@3"].opt_prefix}
+      -DCMAKE_IGNORE_PATH=/opt/local;/opt/local/bin;/opt/local/lib
+      -DCMAKE_IGNORE_PREFIX_PATH=/opt/local
+    ]
+
+    system "cmake", "-S", ".", "-B", "build", "-G", "Ninja", *args, *std_cmake_args
+    system "cmake", "--build", "build"
+    system "cmake", "--install", "build"
+
+    # The CMake sample points inside the versioned keg; the packaged daemon must
+    # keep durable data outside the cellar so an upgrade never moves the Store.
+    pkgetc.install "build/glyphastored.conf.sample"
+    inreplace pkgetc/"glyphastored.conf.sample",
+              %r{^data-dir=.*$},
+              "data-dir=#{var}/glyphastore"
+  end
+
+  def post_install
+    (var/"glyphastore").mkpath
+    (var/"log").mkpath
+  end
+
+  service do
+    run [opt_bin/"glyphastored", "--config", etc/"glyphastore/glyphastored.conf"]
+    working_dir var
+    log_path var/"log/glyphastored.log"
+    error_log_path var/"log/glyphastored.log"
+  end
+
+  def caveats
+    <<~EOS
+      GlyphaStore is an architectural prototype, not production storage software.
+
+      Copy the sample configuration before the first start:
+        cp #{etc}/glyphastore/glyphastored.conf.sample #{etc}/glyphastore/glyphastored.conf
+
+      The daemon binds 127.0.0.1:7379 and keeps durable data in
+        #{var}/glyphastore
+      which `brew uninstall` never removes.
+
+      The `brew services` definition is declared but has not been proven by a
+      retained GlyphaStore packaging lifecycle run.
+    EOS
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/glyphastored --version")
+
+    (testpath/"abi.c").write <<~C
+      #include <glyphastore/abi/glyphastore.h>
+      int main(void) { return 0; }
+    C
+    system ENV.cc, "abi.c", "-I#{include}", "-L#{lib}", "-lglyphastore", "-o", "abi"
+    system "./abi"
+  end
+end
