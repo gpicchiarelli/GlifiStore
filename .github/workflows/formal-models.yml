@@ -68,7 +68,7 @@ jobs:
         run: |
           curl -fsSL -o /tmp/tla2tools.jar \
             "https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar"
-          echo "957b23b2bb31d08f19346e105e23585f93fea9a139a712b0ac347eedaf26afea  /tmp/tla2tools.jar" \
+          echo "eab20b266c1dd9cedec13a343c471be75dcced18255d9dd19cbf1a249fb8de31  /tmp/tla2tools.jar" \
             | sha256sum -c -
           echo "TLA2TOOLS_JAR=/tmp/tla2tools.jar" >> "$GITHUB_ENV"
       - name: Run bounded TLC model
