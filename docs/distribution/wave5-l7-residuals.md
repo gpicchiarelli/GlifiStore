@@ -88,7 +88,7 @@ Declarative status is generated into [package-status.md](package-status.md); the
 
 | Residual | State today | What would close it |
 | --- | --- | --- |
-| deb / rpm container lifecycle | Retained nightly on `16e1a0c` reached real builds; deb crashed on empty `service-lifecycle` log + pre-created BACKUP dest; rpm aborted on expanded `%cmake` in a comment. Fixes landed; fresh retained nightly still required | A retained `nightly` run with `GLYPHASTORE_PACKAGE_CI_CONTAINER=1` whose rows are not `BLOCKED`/`NOT_RUN` for the build/install path |
+| deb / rpm container lifecycle | Retained nightly on `a6dfdcc`: deb reaches `FUNCTIONALLY_VERIFIED` (service-lifecycle BLOCKED without systemd PID 1). RPM builds/inspects but `dnf` under container `tsflags=nodocs` omitted manuals so install inventory FAIL; install now clears `tsflags`. Fresh retained nightly still required for rpm parity | A retained `nightly` run whose deb/rpm build/install/protocol rows are not FAIL |
 | MacPorts `launchd` startup item | Not installed by the port, so `service-lifecycle` is `OPEN_GATE` | A packaged startup item plus a retained run that starts and stops it |
 | Homebrew `brew services` | Declared in the formula, never started or stopped in a retained run (`OPEN_GATE`) | A retained native run that exercises the services block |
 | MacPorts / Homebrew native rows | Opt-in only (`--allow-native`); no hosted runner may install into the host package manager | A disposable macOS host or an accepted runner policy, with retained logs |

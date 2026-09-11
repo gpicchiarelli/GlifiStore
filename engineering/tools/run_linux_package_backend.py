@@ -183,7 +183,14 @@ SPECS: dict[str, BackendSpec] = {
             "util-linux",
             "xz",
         ),
-        install_command=("dnf", "install", "-y"),
+        install_command=(
+            "dnf",
+            "install",
+            "-y",
+            # Fedora container images often set tsflags=nodocs. The payload inventory
+            # requires the manuals, so this install must not inherit that exclusion.
+            "--setopt=tsflags=",
+        ),
         refresh_command=("dnf", "makecache"),
     ),
 }

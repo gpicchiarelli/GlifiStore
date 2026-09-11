@@ -440,6 +440,13 @@ class ContainerDispatchTests(unittest.TestCase):
         self.assertNotIn("-GNinja", configure)
         self.assertIn("-DBUILD_SHARED_LIBS=OFF", configure)
 
+    def test_rpm_install_does_not_inherit_container_nodocs(self) -> None:
+        from engineering.tools.run_linux_package_backend import SPECS
+
+        command = " ".join(SPECS["rpm"].install_command)
+        self.assertIn("dnf", command)
+        self.assertIn("--setopt=tsflags=", command)
+
     def test_rpm_spec_forces_static_core_linkage(self) -> None:
         spec = (
             Path(__file__).resolve().parents[2] / "packaging/rpm/templates/glyphastore.spec.in"
