@@ -58,10 +58,7 @@ class RepositoryMatrixTests(unittest.TestCase):
                 self.assertFalse(entry["required_for_release"])
             # Shipping packaging sources never promotes a backend past STRUCTURAL:
             # IMPLEMENTED means the lifecycle runs in CI and retains evidence.
-            if entry["id"] in {"deb", "rpm"}:
-                self.assertEqual(entry["status"], "PLANNED")
-                self.assertEqual(entry["lifecycle_state"], "NONE")
-            if entry["id"] in {"macports", "homebrew"}:
+            if entry["id"] in {"deb", "rpm", "macports", "homebrew"}:
                 self.assertEqual(entry["status"], "STRUCTURAL")
                 self.assertEqual(entry["lifecycle_state"], "STRUCTURAL")
 
@@ -83,7 +80,9 @@ class RepositoryMatrixTests(unittest.TestCase):
         rows = expand(self.matrix, "pr", ["deb"])
         self.assertEqual([row["id"] for row in rows], ["deb-debian-12-amd64"])
         self.assertEqual(rows[0]["profile"], "pr")
-        self.assertEqual(rows[0]["required_checks"], ["structural-metadata"])
+        self.assertEqual(
+            rows[0]["required_checks"], ["structural-metadata", "package-metadata-render"]
+        )
 
     def test_expansion_refuses_a_backend_that_does_not_run_in_the_profile(self) -> None:
         with self.assertRaisesRegex(PackageMatrixError, "no target runs backends"):
@@ -170,6 +169,7 @@ class MatrixValidationTests(unittest.TestCase):
         matrix = self.matrix()
         for entry in matrix["backends"]:
             if entry["id"] == "deb":
+                entry["status"] = "PLANNED"
                 entry["lifecycle_state"] = "LIFECYCLE_VERIFIED"
         with self.assertRaisesRegex(PackageMatrixError, "is PLANNED and cannot claim"):
             validate_matrix(matrix)
@@ -188,6 +188,8 @@ class MatrixValidationTests(unittest.TestCase):
             if entry["id"] == "deb":
                 entry["status"] = "IMPLEMENTED"
                 entry["lifecycle_state"] = "BUILT"
+                for target in entry["targets"]:
+                    target["container_digest"] = None
         with self.assertRaisesRegex(PackageMatrixError, "pin its container digest"):
             validate_matrix(matrix)
 

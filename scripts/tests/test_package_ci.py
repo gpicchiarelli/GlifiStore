@@ -40,22 +40,27 @@ class PackageCiTests(unittest.TestCase):
         self.assertTrue(path.is_file(), f"missing evidence: {path}")
         return json.loads(path.read_text(encoding="utf-8"))
 
-    def test_a_backend_without_packaging_reports_an_open_gate(self) -> None:
+    def test_the_deb_backend_renders_metadata_and_blocks_the_rest(self) -> None:
         directory = self.output_directory()
         completed = run(PACKAGE_CI, "--profile", "pr", "--backend", "deb", "--output-dir", str(directory))
         self.assertEqual(completed.returncode, 0, completed.stderr)
-        self.assertIn("PACKAGE-CI deb pr full OPEN_GATE", completed.stdout)
+        self.assertIn("PACKAGE-CI deb pr full BLOCKED", completed.stdout)
 
         self.assertTrue((directory / "release-context.json").is_file())
         self.assertTrue((directory / "package-matrix.json").is_file())
         evidence = self.evidence(directory, "deb", "pr", "full")
-        self.assertEqual(evidence["result"], "OPEN_GATE")
+        self.assertEqual(evidence["result"], "BLOCKED")
         self.assertEqual(evidence["lifecycle_state"], "STRUCTURAL")
         statuses = {check["id"]: check["status"] for check in evidence["checks"]}
         self.assertEqual(statuses["structural-metadata"], "PASS")
-        self.assertEqual(statuses["package-build"], "NOT_RUN")
-        self.assertEqual(statuses["package-install"], "NOT_RUN")
+        self.assertEqual(statuses["package-metadata-render"], "PASS")
+        # Rendering debian/ is host-independent; building and installing a .deb is not,
+        # and on a non-Linux runner those rows must say so instead of staying silent.
+        self.assertEqual(statuses["package-build"], "BLOCKED")
+        self.assertEqual(statuses["package-install"], "BLOCKED")
+        self.assertEqual(statuses["package-upgrade"], "NOT_APPLICABLE_INITIAL_BASELINE")
         self.assertTrue(evidence["residuals"])
+        self.assertTrue((directory / "deb/full/metadata/debian/control").is_file())
 
     def test_the_release_context_drives_the_package_version(self) -> None:
         directory = self.output_directory()

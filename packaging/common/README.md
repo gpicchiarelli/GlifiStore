@@ -2,30 +2,34 @@
 
 Backend-independent packaging material lives here so that Debian, RPM, MacPorts,
 Homebrew and the BSD reference ports describe the same product instead of drifting
-apart. The directory is scaffolding introduced with the Wave A packaging framework:
-it holds policy, not yet artifacts.
+apart.
 
 ## Current contents
 
 | Path | Role | State |
 | --- | --- | --- |
-| [`config-data-policy.md`](config-data-policy.md) | Normative intent for configuration vs. data retention across install, upgrade and removal | Draft; not proven by any backend yet |
-| [`file-lists/`](file-lists/) | Home for the shared installed-file inventory used by package payload checks | Empty placeholder |
-| [`service/`](service/) | Home for service units (systemd, launchd) | Empty placeholder; no unit exists |
+| [`config-data-policy.md`](config-data-policy.md) | Normative intent for configuration vs. data retention across install, upgrade and removal | Resolved for deb/rpm; intent only for the other backends |
+| [`file-lists/payload.yaml`](file-lists/payload.yaml) | The one installed-file inventory, componentised by retention policy | Used by the deb and rpm payload checks |
+| [`service/`](service/) | systemd unit and service-account snippet, shared by both Linux backends | Rendered and installed; installed disabled, never auto-started |
+| [`consumer/`](consumer/) | External consumer sources that link against the *installed* package | Built outside the checkout by the `external-consumer` check |
 
 ## Honest state
 
-- No systemd unit, launchd job or file list exists yet. Nothing in this directory is
-  installed by any package, and no packaging check may report PASS on their behalf.
-- The backends with real in-repo packaging today are the FreeBSD and OpenBSD
-  reference ports under [`../freebsd/`](../freebsd/) and [`../openbsd/`](../openbsd/),
-  and the macOS templates under [`../macports/`](../macports/) and
-  [`../homebrew/`](../homebrew/). None of them is accepted by an upstream ports tree
-  or tap, and neither macOS backend ships a proven launchd or `brew services`
-  integration: their `service-lifecycle` check is an open gate.
+- The Linux backends render their packaging metadata from the release context and
+  can walk the full lifecycle — build, install, external consumer, service, protocol
+  round trip, restart recovery, configuration preservation, removal — but only
+  inside the digest-pinned container or on a disposable root Linux host. Anywhere
+  else those rows report `BLOCKED` with the reason. No CI workflow retains their
+  evidence yet, so no gate cites them and `required_for_release` is `false`.
+- The macOS templates under [`../macports/`](../macports/) and
+  [`../homebrew/`](../homebrew/) still have no launchd or `brew services`
+  integration: their `service-lifecycle` check is an open gate. The FreeBSD and
+  OpenBSD reference ports under [`../freebsd/`](../freebsd/) and
+  [`../openbsd/`](../openbsd/) are not accepted by an upstream ports tree.
 - Package versions are never written by hand. They are derived from `VERSION` and the
   package revision by `engineering/tools/semver_policy.py` and recorded in the release
-  context; see the mapping table below.
+  context; see the mapping table below. The metadata renderer refuses to read a
+  template that contains a literal product version.
 
 ## Version mapping
 

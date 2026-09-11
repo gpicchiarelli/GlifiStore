@@ -1,0 +1,155 @@
+# GlyphaStore RPM spec.
+#
+# Rendered from packaging/rpm/templates/glyphastore.spec.in by
+# engineering/tools/render_package_metadata.py. Version, Release and the ABI
+# suffix of the library subpackage come from the release context, which derives
+# them from the VERSION and ABI_VERSION authorities plus the packaging-only
+# package_revision. Never edit a rendered spec in place.
+
+%global service_user    @SERVICE_USER@
+%global service_group   @SERVICE_GROUP@
+%global state_dir       @STATEDIR@
+%global config_file     @CONFIG_FILE@
+
+Name:           @RUNTIME_PACKAGE@
+Version:        @RPM_VERSION@
+Release:        @RPM_RELEASE@%{?dist}
+Summary:        Paired reader/writer key-value storage daemon
+
+License:        @LICENSE_ID@
+URL:            @HOMEPAGE@
+Source0:        @SOURCE_ARCHIVE@
+# Rendered from packaging/common/service/glyphastored.service.in alongside this
+# spec, so the Debian and RPM backends install the same unit.
+Source1:        glyphastored.service
+
+BuildRequires:  cmake >= 3.25
+BuildRequires:  gcc-c++
+BuildRequires:  ninja-build
+BuildRequires:  openssl-devel >= 3.0.0
+BuildRequires:  pkgconfig
+BuildRequires:  systemd-rpm-macros
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
+Requires(pre):  shadow-utils
+%{?systemd_requires}
+
+%description
+GlyphaStore is an architectural prototype of a key-value store built on paired
+Reader-Writer shards, partition ownership, immutable read generations and
+fail-closed recovery. It speaks wire protocol v2 and writes persistence
+format v1.
+
+This package installs the glyphastored daemon, the operator tools, the manuals
+and a systemd unit. The unit is installed but neither enabled nor started: the
+shipped configuration binds the loopback interface and every limit has to be
+reviewed before non-loopback use. The project publishes no production-readiness,
+durability-certification or hostile-deployment claim.
+
+%package libs
+Summary:        GlyphaStore C ABI shared library
+
+%description libs
+Runtime shared library exposing the stable GlyphaStore C ABI, versioned by the
+ABI_VERSION authority of the source tree rather than by the product version.
+
+%package devel
+Summary:        GlyphaStore development files
+Requires:       %{name}-libs%{?_isa} = %{version}-%{release}
+Requires:       pkgconfig
+
+%description devel
+Headers, static libraries, the pkg-config file and the CMake package
+configuration needed to build an external consumer against an installed
+GlyphaStore.
+
+%prep
+%autosetup -n @SOURCE_DIRECTORY@
+
+%build
+%cmake \
+    -GNinja \
+    -DBUILD_TESTING=OFF \
+    -DGLYPHASTORE_ENABLE_TLS=ON \
+    -DGLYPHASTORE_BUILD_BENCHMARKS=OFF \
+    -DGLYPHASTORE_BUILD_FUZZERS=OFF \
+    -DGLYPHASTORE_FAULT_INJECTION=OFF \
+    -DGLYPHASTORE_NATIVE_CPU=OFF
+%cmake_build
+
+%install
+%cmake_install
+
+install -D -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/glyphastored.service
+install -D -m 0644 %{buildroot}%{_datadir}/GlyphaStore/examples/glyphastored.conf.sample \
+    %{buildroot}%{config_file}
+install -d -m 0750 %{buildroot}%{state_dir}
+
+%check
+# The upstream test suite covers the build tree. The packaging lifecycle proves
+# the installed artifacts instead, so no build-tree test runs here.
+
+%pre
+@SERVICE_ACCOUNT_SNIPPET@
+
+%post
+%systemd_post glyphastored.service
+
+%preun
+%systemd_preun glyphastored.service
+
+%postun
+%systemd_postun_with_restart glyphastored.service
+
+%ldconfig_scriptlets libs
+
+%files
+%license LICENSE
+%doc NOTICE THIRD_PARTY_NOTICES.md
+%{_bindir}/glyphastored
+%{_bindir}/glyphastore_backup_store
+%{_bindir}/glyphastore_demo
+%{_bindir}/glyphastore_inspect_segment
+%{_bindir}/glyphastore_migrate_store
+%{_bindir}/glyphastore_rebuild_index
+%{_bindir}/glyphastore_repair_store
+%{_bindir}/glyphastore_verify_store
+%{_unitdir}/glyphastored.service
+%dir %{_sysconfdir}/glyphastore
+%config(noreplace) %{config_file}
+%dir %{_datadir}/GlyphaStore
+%dir %{_datadir}/GlyphaStore/examples
+%{_datadir}/GlyphaStore/VERSION
+%{_datadir}/GlyphaStore/ABI_VERSION
+%{_datadir}/GlyphaStore/LICENSE
+%{_datadir}/GlyphaStore/NOTICE
+%{_datadir}/GlyphaStore/THIRD_PARTY_NOTICES.md
+%{_datadir}/GlyphaStore/examples/glyphastored.conf.sample
+%{_mandir}/man1/glyphastore_*.1*
+%{_mandir}/man7/glyphastore.7*
+%{_mandir}/man8/glyphastored.8*
+# Durable Store data. %%dir keeps the directory owned by the package without
+# letting an erase take the contents with it: RPM refuses to remove a
+# non-empty directory, and nothing in this spec removes it explicitly.
+%attr(0750,%{service_user},%{service_group}) %dir %{state_dir}
+
+%files libs
+%license LICENSE
+%{_libdir}/libglyphastore.so.@ABI_MAJOR@
+%{_libdir}/libglyphastore.so.@ABI_VERSION@
+
+%files devel
+%license LICENSE
+%{_includedir}/glyphastore/
+%{_libdir}/libglyphastore.so
+%{_libdir}/libglyphastore_client.a
+%{_libdir}/libglyphastore_core.a
+%{_libdir}/libglyphastore_tls_layer.a
+%{_libdir}/libglyphastore_wire.a
+%{_libdir}/pkgconfig/glyphastore-abi.pc
+%{_libdir}/cmake/GlyphaStore/
+
+%changelog
+* @RPM_CHANGELOG_DATE@ @MAINTAINER@ - @RPM_VERSION@-@RPM_RELEASE@
+- GlyphaStore @PRODUCT_VERSION@ packaged from commit @GIT_COMMIT_SHORT@.
+- Version and release are derived from the VERSION authority and the
+  packaging-only package_revision; this entry is generated, never hand-edited.

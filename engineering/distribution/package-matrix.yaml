@@ -169,52 +169,72 @@ backends:
   - id: deb
     display_name: Debian / Ubuntu .deb
     package_kind: deb
-    status: PLANNED
-    lifecycle_state: NONE
+    status: STRUCTURAL
+    lifecycle_state: STRUCTURAL
     required_for_release: false
     wave: B
     profiles: [pr, main, nightly, release]
+    # Container images are pinned by digest, never by tag: the lifecycle refuses to
+    # build inside an unpinned image, and the validator refuses an IMPLEMENTED
+    # backend whose target has no digest.
     targets:
       - id: deb-debian-12-amd64
         platform: debian-12
         arch: amd64
         runner: ubuntu-24.04
         container: docker.io/library/debian:12
-        container_digest: null
+        container_digest: sha256:6ebd97fa83deb272194a2cf015b3d26a4d538e9ad3a7a79d544c8af5b0a01443
         profiles: [pr, main, nightly, release]
       - id: deb-ubuntu-24.04-amd64
         platform: ubuntu-24.04
         arch: amd64
         runner: ubuntu-24.04
         container: docker.io/library/ubuntu:24.04
-        container_digest: null
+        container_digest: sha256:224a1869083a311ef3f13648a154ba79832fbef6364d31493642ca03082da254
         profiles: [main, nightly, release]
     checks:
       - structural-metadata
       - package-metadata-render
+      - package-lint
+      - sealed-source-admission
       - package-build
       - package-inspect
+      - prefix-isolation
       - package-install
       - external-consumer
       - service-lifecycle
       - put-get-erase
       - restart-recovery
       - package-upgrade
+      - config-preservation
       - package-remove
     required_checks:
-      pr: [structural-metadata]
-      main: [structural-metadata]
-      nightly: [structural-metadata]
-      release: [structural-metadata]
+      pr: [structural-metadata, package-metadata-render]
+      main: [structural-metadata, package-metadata-render]
+      nightly: [structural-metadata, package-metadata-render]
+      release: [structural-metadata, package-metadata-render, sealed-source-admission]
     limitations:
-      - No packaging/debian sources exist yet; Wave A only proves that the backend is declared.
-      - Container images are not digest-pinned yet; Wave B must pin them before any build claim.
+      - >-
+        packaging/debian/templates is rendered by
+        engineering/tools/render_package_metadata.py; the build, install, service and removal
+        rows only run inside the digest-pinned container
+        (GLYPHASTORE_PACKAGE_CI_CONTAINER=1) or on a disposable root host
+        (GLYPHASTORE_PACKAGE_CI_NATIVE=1). Every other environment reports them BLOCKED.
+      - >-
+        No CI workflow retains this backend's evidence yet, so no gate may cite it and
+        required_for_release stays false.
+      - >-
+        The library package is not Multi-Arch: same and installs into a non-multiarch libdir,
+        because the installed glyphastore-abi.pc derives its prefix two levels above itself.
+      - >-
+        Only the executed Debian and Ubuntu rows may ever be reported; no other Debian
+        derivative is claimed.
 
   - id: rpm
     display_name: Fedora / RPM
     package_kind: rpm
-    status: PLANNED
-    lifecycle_state: NONE
+    status: STRUCTURAL
+    lifecycle_state: STRUCTURAL
     required_for_release: false
     wave: B
     profiles: [main, nightly, release]
@@ -224,26 +244,41 @@ backends:
         arch: amd64
         runner: ubuntu-24.04
         container: quay.io/fedora/fedora:41
-        container_digest: null
+        container_digest: sha256:893f7eeffce8e3e2bb2bc62786ba5603fb1e0bd6ba07091acb892266b95bafdf
         profiles: [main, nightly, release]
     checks:
       - structural-metadata
       - package-metadata-render
+      - package-lint
+      - sealed-source-admission
       - package-build
       - package-inspect
+      - prefix-isolation
       - package-install
       - external-consumer
       - service-lifecycle
       - put-get-erase
       - restart-recovery
       - package-upgrade
+      - config-preservation
       - package-remove
     required_checks:
-      main: [structural-metadata]
-      nightly: [structural-metadata]
-      release: [structural-metadata]
+      main: [structural-metadata, package-metadata-render]
+      nightly: [structural-metadata, package-metadata-render]
+      release: [structural-metadata, package-metadata-render, sealed-source-admission]
     limitations:
-      - No packaging/rpm spec exists yet.
+      - >-
+        packaging/rpm/templates/glyphastore.spec.in is rendered by
+        engineering/tools/render_package_metadata.py; the build, install, service and removal
+        rows only run inside the digest-pinned container
+        (GLYPHASTORE_PACKAGE_CI_CONTAINER=1) or on a disposable root host
+        (GLYPHASTORE_PACKAGE_CI_NATIVE=1). Every other environment reports them BLOCKED.
+      - >-
+        No CI workflow retains this backend's evidence yet, so no gate may cite it and
+        required_for_release stays false.
+      - >-
+        RPM has no purge action, so erase is the terminal state for the configuration: the
+        operator edit survives as the file itself or as a .rpmsave sibling.
       - Rocky, Alma and RHEL are not claimed; only the executed Fedora row may ever be reported.
 
   - id: macports

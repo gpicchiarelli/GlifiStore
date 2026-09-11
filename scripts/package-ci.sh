@@ -117,9 +117,9 @@ for backend in "${backends[@]}"; do
   fi
 done
 
-# Resolves the structural metadata every backend owes, then dispatches: backends with
-# a module (scripts/lib/package-backend-*.sh) own their own rows, and backends whose
-# packaging lands in a later wave report every remaining check as NOT_RUN.
+# Resolves the structural metadata every backend owes, then dispatches to the module
+# that owns the backend (scripts/lib/package-backend-*.sh). The module writes its own
+# check plan and evidence, so no status is ever decided here.
 run_backend() {
   local backend="$1"
   local directory="$output_dir/$backend/$stage"
@@ -127,11 +127,6 @@ run_backend() {
 
   local plan="$directory/check-plan.json"
   local evidence="$directory/$backend-$profile-$stage-package-evidence.json"
-  local structural_log="structural-metadata.log"
-  local plan_arguments=(check-plan --backend "$backend" --profile "$profile")
-  local result="OPEN_GATE"
-  local lifecycle_state="STRUCTURAL"
-  local limitations=()
 
   {
     echo "backend=$backend profile=$profile stage=$stage"
@@ -139,10 +134,7 @@ run_backend() {
     echo "package_matrix=$matrix_json"
     echo "product_version=$version package_revision=$package_revision commit=$commit"
     echo "structural metadata resolved without a hard-coded version"
-  } >"$directory/$structural_log"
-
-  plan_arguments+=(--default-status NOT_RUN --status "structural-metadata=PASS"
-    --evidence-ref "structural-metadata=$structural_log")
+  } >"$directory/structural-metadata.log"
 
   case "$backend" in
     freebsd|openbsd)
@@ -162,37 +154,20 @@ run_backend() {
       return
       ;;
     deb|rpm)
-      limitations+=("No packaging implementation exists for $backend yet; only structural metadata was resolved.")
+      # The Linux module owns the rendered debian/ or spec, the container or native
+      # dispatch, and every package, service and removal row.
+      # shellcheck source=lib/package-backend-linux.sh
+      . "$root/scripts/lib/package-backend-linux.sh"
+      linux_backend_run "$backend" "$directory"
+      return
       ;;
     *)
+      # Every declared backend owns a module. A backend without one must refuse
+      # loudly instead of falling through to a generic, evidence-free success.
       echo "error: no adapter for backend '$backend'" >&2
       return 2
       ;;
   esac
-
-  if [[ "$profile" == "release" && "$result" != "FAIL" ]]; then
-    limitations+=("The release profile requires sealed artifacts; this run produced none.")
-  fi
-
-  python3 "$tools/generate_package_matrix.py" "${plan_arguments[@]}" \
-    --output "$plan" --replace >/dev/null
-
-  local emit_arguments=(emit --backend "$backend" --profile "$profile" --stage "$stage"
-    --result "$result" --lifecycle-state "$lifecycle_state"
-    --release-context "$release_context" --check-plan "$plan" --output "$evidence")
-  local limitation
-  for limitation in "${limitations[@]}"; do
-    emit_arguments+=(--limitation "$limitation")
-  done
-  emit_arguments+=(--residual "packaging-not-implemented=Backend $backend has no packaged artifact in Wave A|later packaging waves")
-
-  python3 "$tools/validate_package_evidence.py" "${emit_arguments[@]}" >/dev/null
-  python3 "$tools/validate_package_evidence.py" validate "$evidence" \
-    --release-context "$release_context" --backend "$backend" --profile "$profile" >/dev/null
-
-  echo "PACKAGE-CI $backend $profile $stage $result $evidence"
-  [[ "$result" == "FAIL" ]] && return 1
-  return 0
 }
 
 status=0
