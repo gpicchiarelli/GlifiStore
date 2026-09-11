@@ -366,7 +366,7 @@ GLYPHA_TEST("migrate_durable_store refuses corrupt mismatched or noncanonical ch
             << "source_store_id=" << source_store_id_hex(source) << '\n'
             << "source_worker_count=1\ntarget_worker_count=2\nkeys_copied=0\nphase=copying\n";
     }
-    const auto missing_dest = glyphastore::migrate_durable_store(source, destination, 2);
+    const auto missing_dest = glyphastore::migrate_durable_store(source, destination, 2, false);
     GLYPHA_REQUIRE(!missing_dest.has_value());
     GLYPHA_REQUIRE(missing_dest.error().code == glyphastore::ErrorCode::invalid_argument);
 
@@ -381,7 +381,7 @@ GLYPHA_TEST("migrate_durable_store refuses corrupt mismatched or noncanonical ch
             << "source_store_id=" << source_store_id_hex(source) << '\n'
             << "source_worker_count=1\ntarget_worker_count=2\nkeys_copied=0\n";
     }
-    const auto bad_magic = glyphastore::migrate_durable_store(source, destination, 2);
+    const auto bad_magic = glyphastore::migrate_durable_store(source, destination, 2, false);
     GLYPHA_REQUIRE(!bad_magic.has_value());
     GLYPHA_REQUIRE(bad_magic.error().code == glyphastore::ErrorCode::invalid_argument);
     std::filesystem::remove(checkpoint, ignored);
@@ -406,7 +406,7 @@ GLYPHA_TEST("migrate_durable_store refuses corrupt mismatched or noncanonical ch
             << "source_worker_count=1\ntarget_worker_count=3\nkeys_copied=1\n"
             << "last_key_hex=6b\nphase=copying\n";
     }
-    const auto mismatch = glyphastore::migrate_durable_store(source, destination, 2);
+    const auto mismatch = glyphastore::migrate_durable_store(source, destination, 2, false);
     GLYPHA_REQUIRE(!mismatch.has_value());
     GLYPHA_REQUIRE(mismatch.error().code == glyphastore::ErrorCode::invalid_argument);
 
@@ -419,7 +419,7 @@ GLYPHA_TEST("migrate_durable_store refuses corrupt mismatched or noncanonical ch
             << "source_worker_count=1\ntarget_worker_count=2\nkeys_copied=1\n"
             << "last_key_hex=6b\nphase=copying\n";
     }
-    const auto wrong_source = glyphastore::migrate_durable_store(source, destination, 2);
+    const auto wrong_source = glyphastore::migrate_durable_store(source, destination, 2, false);
     GLYPHA_REQUIRE(!wrong_source.has_value());
     GLYPHA_REQUIRE(wrong_source.error().code == glyphastore::ErrorCode::invalid_argument);
 
@@ -431,7 +431,7 @@ GLYPHA_TEST("migrate_durable_store refuses corrupt mismatched or noncanonical ch
             out << "GlyphaStore/migrate-state/1\n" << body;
             GLYPHA_REQUIRE(static_cast<bool>(out));
         }
-        const auto result = glyphastore::migrate_durable_store(source, destination, 2);
+        const auto result = glyphastore::migrate_durable_store(source, destination, 2, false);
         GLYPHA_REQUIRE(!result.has_value());
         GLYPHA_REQUIRE(result.error().code == glyphastore::ErrorCode::invalid_argument);
     };
@@ -468,7 +468,7 @@ GLYPHA_TEST("migrate_durable_store refuses corrupt mismatched or noncanonical ch
                "last_key_hex=6b\nphase=copying\n";
         GLYPHA_REQUIRE(static_cast<bool>(out));
     }
-    const auto overflowing_count = glyphastore::migrate_durable_store(source, destination, 2);
+    const auto overflowing_count = glyphastore::migrate_durable_store(source, destination, 2, false);
     GLYPHA_REQUIRE(!overflowing_count.has_value());
     GLYPHA_REQUIRE(overflowing_count.error().code == glyphastore::ErrorCode::arithmetic_overflow);
 
