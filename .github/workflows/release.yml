@@ -658,6 +658,32 @@ jobs:
           compression-level: 0
           retention-days: 14
 
+  optional-package-backends:
+    name: Build the optional package backends from candidate bytes
+    needs: candidate
+    permissions:
+      contents: read
+    # Optional by policy, not by rigour. deb, rpm, MacPorts and Homebrew are
+    # required_for_release: false in engineering/distribution/package-matrix.yaml, so
+    # this call is deliberately absent from the verify job's needs: it can neither
+    # admit an artifact nor relax the exact-artifact and no-rebuild rules below. It
+    # never writes into the release-input-* namespace that verify imports, and its
+    # artifacts are diagnostic until a gate promotes those backends.
+    #
+    # It is still fail-closed: the profile builds only from the sealed candidate
+    # source archive (a checkout of HEAD is refused there), and a real packaging
+    # defect fails this job instead of being written off.
+    #
+    # freebsd and openbsd are absent here on purpose: they are required_for_release
+    # and keep their native jobs above, which produce the artifacts the release policy
+    # demands.
+    uses: ./.github/workflows/package-ci.yml
+    with:
+      profile: release
+      backends: optional
+      candidate-artifact: ${{ needs.candidate.outputs.artifact-name }}
+      candidate-seal-sha256: ${{ needs.candidate.outputs.candidate-seal-sha256 }}
+
   security-sanitizers:
     name: Security sanitizer / ${{ matrix.name }}
     runs-on: ubuntu-latest

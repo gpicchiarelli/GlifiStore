@@ -70,6 +70,15 @@ NATIVE_ENVIRONMENT = "GLYPHASTORE_PACKAGE_CI_NATIVE"
 CONTAINER_ENVIRONMENT = "GLYPHASTORE_PACKAGE_CI_CONTAINER"
 CANDIDATE_ENVIRONMENT = "GLYPHASTORE_CANDIDATE_DIR"
 SEAL_ENVIRONMENT = "CANDIDATE_SEAL_SHA256"
+# Forwarded into the container so the evidence it emits carries the producer identity
+# of this run (engineering/tools/package_framework.py::producer_identity).
+CI_IDENTITY_ENVIRONMENT = (
+    "GITHUB_RUN_ATTEMPT",
+    "GITHUB_RUN_ID",
+    "GITHUB_WORKFLOW_REF",
+    "RUNNER_ARCH",
+    "RUNNER_OS",
+)
 
 SHORT_TIMEOUT = 15 * 60
 BUILD_TIMEOUT = 120 * 60
@@ -540,6 +549,13 @@ def dispatch_container(
         f"{release_context}:/release-context.json:ro",
     ]
     environment = ["-e", f"{SEAL_ENVIRONMENT}={os.environ.get(SEAL_ENVIRONMENT, '')}"]
+    # The inner run emits the evidence, so it has to inherit the identity of this CI
+    # run: without these, retained container evidence would claim to be
+    # local-unattested and every profile that requires CI evidence would refuse it.
+    for name in CI_IDENTITY_ENVIRONMENT:
+        value = os.environ.get(name, "").strip()
+        if value:
+            environment += ["-e", f"{name}={value}"]
     if candidate:
         mounts += ["-v", f"{candidate}:/candidate:ro"]
         environment += ["-e", f"{CANDIDATE_ENVIRONMENT}=/candidate"]
@@ -1582,12 +1598,12 @@ def execute(
             "required_for_release stays false for both backends."
         )
     recorder.limitations.append(
-        "scripts/package-ci.sh runs this lifecycle, but no CI workflow retains its evidence "
-        "yet, so no gate may cite it."
+        ".github/workflows/package-ci.yml retains this evidence per profile, but no gate cites "
+        "it yet, so it proves only what its own checks say."
     )
     recorder.residuals.append(
-        "linux-package-ci-retention=No packaging workflow retains deb or rpm evidence"
-        "|the packaging CI profiles of a later wave"
+        "linux-package-ci-gate=No gate or requirement cites the retained deb or rpm evidence"
+        "|the assurance rows of a later wave"
     )
 
     plan = check_plan(

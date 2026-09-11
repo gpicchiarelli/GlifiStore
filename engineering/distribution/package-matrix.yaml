@@ -7,7 +7,10 @@
 # version from it.
 #
 # Validator / expander: engineering/tools/generate_package_matrix.py
-# Consumer: scripts/package-ci.sh (and, from Wave E, the packaging workflows)
+# Consumers: scripts/package-ci.sh locally, and .github/workflows/package-ci.yml through
+#   engineering/tools/package_ci_plan.py, which adds the CI-only policy (profile per event,
+#   change detection, lifecycle depth, timeouts, evidence retention) without restating a
+#   single backend, target or version here.
 #
 # status values:
 #   PLANNED    - no packaging implementation exists yet; CI may only emit honest non-PASS evidence
@@ -221,8 +224,8 @@ backends:
         (GLYPHASTORE_PACKAGE_CI_CONTAINER=1) or on a disposable root host
         (GLYPHASTORE_PACKAGE_CI_NATIVE=1). Every other environment reports them BLOCKED.
       - >-
-        No CI workflow retains this backend's evidence yet, so no gate may cite it and
-        required_for_release stays false.
+        .github/workflows/package-ci.yml retains this backend's evidence per profile, but no
+        gate cites it yet and required_for_release stays false.
       - >-
         The library package is not Multi-Arch: same and installs into a non-multiarch libdir,
         because the installed glyphastore-abi.pc derives its prefix two levels above itself.
@@ -274,8 +277,8 @@ backends:
         (GLYPHASTORE_PACKAGE_CI_CONTAINER=1) or on a disposable root host
         (GLYPHASTORE_PACKAGE_CI_NATIVE=1). Every other environment reports them BLOCKED.
       - >-
-        No CI workflow retains this backend's evidence yet, so no gate may cite it and
-        required_for_release stays false.
+        .github/workflows/package-ci.yml retains this backend's evidence per profile, but no
+        gate cites it yet and required_for_release stays false.
       - >-
         RPM has no purge action, so erase is the terminal state for the configuration: the
         operator edit survives as the file itself or as a .rpmsave sibling.

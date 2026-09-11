@@ -63,8 +63,14 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
   `NOT_RUN` — never `PASS` — until a sealed N−1 package artifact is admitted.
 - `external-consumer` against the installed package prefix is unbuilt, capping the BSD lifecycle
   state at `FUNCTIONALLY_VERIFIED`.
-- The packaging workflows and gate rows for `package-ci.sh` land in later waves; today only the
-  release workflow VM runs the native producers.
+- `package-ci.yml` retains the structural BSD rows per profile, but the native producers still run
+  only in the release workflow VM; the gate rows that would cite any of this retained evidence land
+  in a later wave.
+- The Linux container lifecycle (`deb`, `rpm`) is enabled from the `main`, `nightly` and `release`
+  profiles and has never been executed in a retained run, so its first CI execution may legitimately
+  report `FAIL` rather than the `BLOCKED` rows produced on a host without a container runtime.
+- MacPorts and Homebrew have no hosted runner that may install into the host package manager, so
+  their native rows stay opt-in (`--allow-native`, never on by default) and unproven.
 
 ## Supply chain and sealed publish
 
