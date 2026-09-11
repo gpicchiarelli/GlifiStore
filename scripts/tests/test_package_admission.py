@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -184,17 +186,24 @@ class AdmissionFixture(unittest.TestCase):
             encoding="utf-8",
         )
         output = self.out / f"{backend}-{profile}-{stage}-package-evidence.json"
-        emit_evidence(
-            backend=backend,
-            profile=profile,
-            stage=stage,
-            result=result,
-            lifecycle_state=lifecycle_state,
-            context_path=self.context_path,
-            check_plan=plan,
-            output=output,
-            subject_path=self.out / self.package if subject is None else subject,
-        )
+        # Fixture evidence must stay local-unattested even when Assurance runs under
+        # GITHUB_RUN_ID on Actions; otherwise --require-ci / release-retention checks
+        # cannot observe the local producer path they are meant to refuse.
+        environment = os.environ.copy()
+        for name in ("GITHUB_SHA", "GITHUB_RUN_ID", "GITHUB_WORKFLOW_REF"):
+            environment.pop(name, None)
+        with mock.patch.dict(os.environ, environment, clear=True):
+            emit_evidence(
+                backend=backend,
+                profile=profile,
+                stage=stage,
+                result=result,
+                lifecycle_state=lifecycle_state,
+                context_path=self.context_path,
+                check_plan=plan,
+                output=output,
+                subject_path=self.out / self.package if subject is None else subject,
+            )
         return output
 
     def report(self, **keywords) -> dict:

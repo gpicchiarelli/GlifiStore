@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -126,7 +127,23 @@ class PlanTests(unittest.TestCase):
             self.assertLess(row["step_timeout_minutes"], row["timeout_minutes"])
 
     def test_deeper_profiles_earn_the_container_lifecycle_and_longer_retention(self) -> None:
-        for profile in ("main", "nightly", "release"):
+        # main stays structural until the container lifecycle has retained
+        # evidence; nightly and release are the first profiles that opt in.
+        main = build_plan(
+            event="push",
+            ref="refs/heads/main",
+            profile_input="main",
+            changed_from=None,
+            selection="all",
+            allow_native=False,
+        )
+        main_depth = {
+            row["backend"]: row["container_lifecycle"] for row in main["matrix"]["include"]
+        }
+        self.assertFalse(main_depth["deb"])
+        self.assertFalse(main_depth["rpm"])
+
+        for profile in ("nightly", "release"):
             with self.subTest(profile=profile):
                 plan = build_plan(
                     event="workflow_call",
@@ -225,6 +242,12 @@ class ClosureTests(unittest.TestCase):
         return root / "plan.json"
 
     def produce(self, evidence: Path, row_id: str, backend: str, suffix: str) -> None:
+        # Closure's --require-ci refuses local-unattested producers. Clear the
+        # Actions identity so this helper always stamps local evidence, even when
+        # Assurance itself runs under GITHUB_RUN_ID on a hosted runner.
+        environment = os.environ.copy()
+        for name in ("GITHUB_SHA", "GITHUB_RUN_ID", "GITHUB_WORKFLOW_REF"):
+            environment.pop(name, None)
         completed = subprocess.run(
             [
                 "bash",
@@ -240,6 +263,7 @@ class ClosureTests(unittest.TestCase):
             capture_output=True,
             text=True,
             cwd=ROOT,
+            env=environment,
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
 

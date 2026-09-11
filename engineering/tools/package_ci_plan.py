@@ -57,11 +57,12 @@ CALL_PROFILES = PROFILES
 # and nightly to diagnose a regression, and aligned with release.yml on release.
 RETENTION_DAYS = {"pr": 7, "main": 30, "nightly": 30, "release": 14}
 
-# Lifecycle depth per profile. Pull requests stay structural so a contributor
-# gets metadata and rendering feedback in minutes; the deeper profiles opt into
-# the digest-pinned container, which is the only place a hosted runner may build
-# and install a real package.
-CONTAINER_PROFILES = ("main", "nightly", "release")
+# Lifecycle depth per profile. Pull requests and main stay structural so a
+# contributor (and the push-to-main gate) gets metadata feedback without the
+# first unproven container install failing closed the whole tree. Nightly and
+# release opt into the digest-pinned container — the only place a hosted runner
+# may build and install a real package — once that path is retained as evidence.
+CONTAINER_PROFILES = ("nightly", "release")
 CONTAINER_BACKENDS = ("deb", "rpm")
 # MacPorts and Homebrew need a host that already carries the package manager and
 # accepts installs. No hosted runner is admitted automatically; a maintainer opts

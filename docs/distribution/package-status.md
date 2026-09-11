@@ -108,7 +108,7 @@ depth of its own. The `release` profile is only reachable through a call from
 | Profile | Events | Sealed artifacts required | Evidence retention (days) | Lifecycle depth available |
 | --- | --- | --- | --- | --- |
 | `pr` | `pull_request`, `workflow_dispatch`, `workflow_call` | no | 7 | structural; opt-in native (`--allow-native`) for `macports` |
-| `main` | `push`, `workflow_dispatch`, `workflow_call` | no | 30 | structural; digest-pinned container for `deb`, `rpm`; opt-in native (`--allow-native`) for `homebrew`, `macports` |
+| `main` | `push`, `workflow_dispatch`, `workflow_call` | no | 30 | structural; opt-in native (`--allow-native`) for `homebrew`, `macports` |
 | `nightly` | `schedule`, `workflow_dispatch`, `workflow_call` | no | 30 | structural; digest-pinned container for `deb`, `rpm`; opt-in native (`--allow-native`) for `homebrew`, `macports` |
 | `release` | `workflow_call` | yes | 14 | structural; digest-pinned container for `deb`, `rpm`; opt-in native (`--allow-native`) for `homebrew`, `macports` |
 

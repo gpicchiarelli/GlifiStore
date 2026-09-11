@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import platform
 import subprocess
 import tempfile
 import unittest
@@ -20,12 +22,16 @@ WRAPPERS = (
 
 
 def run(script: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
+    environment = os.environ.copy()
+    for name in ("GITHUB_SHA", "GITHUB_RUN_ID", "GITHUB_WORKFLOW_REF"):
+        environment.pop(name, None)
     return subprocess.run(
         ["bash", str(script), *arguments],
         check=False,
         capture_output=True,
         text=True,
         cwd=ROOT,
+        env=environment,
     )
 
 
@@ -44,20 +50,21 @@ class PackageCiTests(unittest.TestCase):
         directory = self.output_directory()
         completed = run(PACKAGE_CI, "--profile", "pr", "--backend", "deb", "--output-dir", str(directory))
         self.assertEqual(completed.returncode, 0, completed.stderr)
-        self.assertIn("PACKAGE-CI deb pr full BLOCKED", completed.stdout)
+        # Non-Linux hosts cannot build a .deb at all → BLOCKED. Linux hosts can,
+        # but the container/native lifecycle is opt-in → NOT_RUN until the flag is set.
+        expected = "BLOCKED" if platform.system() != "Linux" else "NOT_RUN"
+        self.assertIn(f"PACKAGE-CI deb pr full {expected}", completed.stdout)
 
         self.assertTrue((directory / "release-context.json").is_file())
         self.assertTrue((directory / "package-matrix.json").is_file())
         evidence = self.evidence(directory, "deb", "pr", "full")
-        self.assertEqual(evidence["result"], "BLOCKED")
+        self.assertEqual(evidence["result"], expected)
         self.assertEqual(evidence["lifecycle_state"], "STRUCTURAL")
         statuses = {check["id"]: check["status"] for check in evidence["checks"]}
         self.assertEqual(statuses["structural-metadata"], "PASS")
         self.assertEqual(statuses["package-metadata-render"], "PASS")
-        # Rendering debian/ is host-independent; building and installing a .deb is not,
-        # and on a non-Linux runner those rows must say so instead of staying silent.
-        self.assertEqual(statuses["package-build"], "BLOCKED")
-        self.assertEqual(statuses["package-install"], "BLOCKED")
+        self.assertEqual(statuses["package-build"], expected)
+        self.assertEqual(statuses["package-install"], expected)
         self.assertEqual(statuses["package-upgrade"], "NOT_APPLICABLE_INITIAL_BASELINE")
         self.assertTrue(evidence["residuals"])
         self.assertTrue((directory / "deb/full/metadata/debian/control").is_file())
