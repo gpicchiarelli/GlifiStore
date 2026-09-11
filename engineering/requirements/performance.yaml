@@ -15,6 +15,10 @@ requirements:
     input/output-buffer compaction and copied-byte profiles, normalized per timed operation in the report.
     It derives the smallest measured pipeline retaining at least 95% of the best same-Worker median,
     exposing that economical depth as advice rather than silently changing client behavior.
+    Same-process TCP samples record their client/Reactor/Writer foreground-thread floor, while the
+    retained environment records logical and physical CPU counts. The report labels rows exceeding
+    either capacity as oversubscription sensitivity measurements rather than physical-core scaling
+    evidence.
     Durable profile summaries require explicit durable storage metadata and cannot be inferred from
     shared completion counters alone. First-party specialized CSV/TSV benchmarks emit the common
     evidence metadata and are parsed into direction-aware structured diagnostics with complete

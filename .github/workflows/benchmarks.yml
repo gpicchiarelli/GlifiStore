@@ -54,6 +54,7 @@ jobs:
             echo "kernel_release=$(uname -r)"
             echo "cpu_model=$(lscpu -B | awk -F: '/^Model name:/ {sub(/^[[:space:]]+/, "", $2); print $2; exit}')"
             echo "logical_cpu_count=$(nproc)"
+            echo "physical_cpu_count=$(lscpu -p=CORE,SOCKET | awk -F, '!/^#/ {seen[$1 FS $2] = 1} END {print length(seen)}')"
             echo "compiler_identity=$(clang++ --version | head -1)"
             echo "build_preset=unix-release"
             echo "benchmark_contract_sha256=$(sha256sum engineering/performance/hosted-benchmark-contract.json | awk '{print $1}')"

@@ -26,6 +26,7 @@ ENVIRONMENT_IDENTITY_FIELDS = (
     "kernel_release",
     "cpu_model",
     "logical_cpu_count",
+    "physical_cpu_count",
     "compiler_identity",
     "build_preset",
     "benchmark_contract_sha256",
@@ -522,6 +523,18 @@ def validate_runs(runs: list[dict[str, Any]]) -> None:
             expected_fields = {
                 "metadata.pipeline": (metadata.get("pipeline"), expected_pipeline),
                 "metadata.client_mode": (metadata.get("client_mode"), "raw-wire"),
+                "metadata.execution_scope": (
+                    metadata.get("execution_scope"),
+                    "same-process-loopback",
+                ),
+                "metadata.timed_thread_model": (
+                    metadata.get("timed_thread_model"),
+                    "client-threads+one-reactor+one-writer-per-worker",
+                ),
+                "metadata.timed_foreground_thread_floor": (
+                    metadata.get("timed_foreground_thread_floor"),
+                    expected_workers * 3,
+                ),
                 "metadata.storage_mode": (metadata.get("storage_mode"), "volatile"),
                 "metadata.latency_measurement": (
                     metadata.get("latency_measurement"),
@@ -955,7 +968,18 @@ def regressions_over_threshold(
     return regressions
 
 
-def build_tcp_scaling_analysis(runs: list[dict[str, Any]]) -> dict[str, Any] | None:
+def build_tcp_scaling_analysis(
+    runs: list[dict[str, Any]], environment: dict[str, Any] | None = None
+) -> dict[str, Any] | None:
+    environment = environment or {}
+    physical_cpu_count = environment.get("physical_cpu_count")
+    logical_cpu_count = environment.get("logical_cpu_count")
+    physical_cpu_count = (
+        physical_cpu_count if positive_integer(physical_cpu_count) else None
+    )
+    logical_cpu_count = (
+        logical_cpu_count if positive_integer(logical_cpu_count) else None
+    )
     cells: list[dict[str, Any]] = []
     for run in runs:
         match = TCP_SOURCE_PATTERN.fullmatch(str(run.get("source", "")))
@@ -963,6 +987,7 @@ def build_tcp_scaling_analysis(runs: list[dict[str, Any]]) -> dict[str, Any] | N
         if match is None or not isinstance(results, list) or len(results) != 1:
             continue
         result = results[0]
+        metadata = run.get("metadata", {})
         rate = number(result.get("median_ops_per_second", 0))
         if rate <= 0:
             continue
@@ -977,6 +1002,33 @@ def build_tcp_scaling_analysis(runs: list[dict[str, Any]]) -> dict[str, Any] | N
             }
         )
         cell = cells[-1]
+        foreground_threads = (
+            metadata.get("timed_foreground_thread_floor")
+            if isinstance(metadata, dict)
+            else None
+        )
+        if positive_integer(foreground_threads):
+            cell["timed_foreground_thread_floor"] = foreground_threads
+        workers_exceed_physical = (
+            physical_cpu_count is not None and cell["workers"] > physical_cpu_count
+        )
+        foreground_exceeds_logical = (
+            logical_cpu_count is not None
+            and positive_integer(foreground_threads)
+            and foreground_threads > logical_cpu_count
+        )
+        if physical_cpu_count is None or logical_cpu_count is None or not positive_integer(
+            foreground_threads
+        ):
+            cell["capacity_class"] = "unknown"
+        elif workers_exceed_physical and foreground_exceeds_logical:
+            cell["capacity_class"] = "worker-and-combined-load-oversubscribed"
+        elif workers_exceed_physical:
+            cell["capacity_class"] = "worker-count-exceeds-physical-cores"
+        elif foreground_exceeds_logical:
+            cell["capacity_class"] = "combined-load-oversubscribed"
+        else:
+            cell["capacity_class"] = "within-reported-capacity"
         if "median_reactor_input_buffer_compactions" in result:
             cell["median_input_buffer_compactions"] = number(
                 result.get("median_reactor_input_buffer_compactions", 0)
@@ -1061,6 +1113,8 @@ def build_tcp_scaling_analysis(runs: list[dict[str, Any]]) -> dict[str, Any] | N
             {"workers": workers, "pipeline": pipeline} for workers, pipeline in missing
         ],
         "cells": cells,
+        "reported_physical_cpu_count": physical_cpu_count,
+        "reported_logical_cpu_count": logical_cpu_count,
         "near_peak_fraction": TCP_NEAR_PEAK_FRACTION,
         "highest_observed_median_by_workers": best_by_workers,
         "smallest_near_peak_by_workers": smallest_near_peak_by_workers,
@@ -1245,6 +1299,26 @@ def render_markdown(
     lines.append("")
 
     if tcp_scaling is not None:
+        capacity_labels = {
+            "within-reported-capacity": "within reported capacity",
+            "combined-load-oversubscribed": "combined load > logical CPUs",
+            "worker-count-exceeds-physical-cores": "Workers > physical cores",
+            "worker-and-combined-load-oversubscribed": (
+                "Workers > physical cores; combined load > logical CPUs"
+            ),
+            "unknown": "unknown",
+        }
+        physical_cpu_count = tcp_scaling.get("reported_physical_cpu_count")
+        logical_cpu_count = tcp_scaling.get("reported_logical_cpu_count")
+        if positive_integer(physical_cpu_count) and positive_integer(logical_cpu_count):
+            topology_text = (
+                f"Reported runner capacity: {physical_cpu_count} physical core(s), "
+                f"{logical_cpu_count} logical CPU(s)."
+            )
+        else:
+            topology_text = (
+                "Runner physical/logical CPU capacity is incomplete; capacity context is unknown."
+            )
         lines.extend(
             [
                 "## TCP scaling summary",
@@ -1252,11 +1326,13 @@ def render_markdown(
                 f"Matrix status: **{tcp_scaling['status']}**. Highest observed median per Worker "
                 "count is descriptive; overlapping ranges remain inconclusive.",
                 "",
+                topology_text,
+                "",
                 "The economical pipeline is the smallest measured depth whose median retains at "
                 f"least {tcp_scaling['near_peak_fraction'] * 100:.0f}% of that Worker's observed peak.",
                 "",
-                "| Workers | Peak pipeline | Economical pipeline | Retained peak | Median ops/s | Observed min–max | Gain vs p1 | Speedup vs W1 | Efficiency | Economical input compactions | Input bytes copied/op | Economical output compactions | Output bytes copied/op |",
-                "| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+                "| Workers | Capacity context | Thread floor | Peak pipeline | Economical pipeline | Retained peak | Median ops/s | Observed min–max | Gain vs p1 | Speedup vs W1 | Efficiency | Economical input compactions | Input bytes copied/op | Economical output compactions | Output bytes copied/op |",
+                "| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
             ]
         )
         economical_by_workers = {
@@ -1301,8 +1377,18 @@ def render_markdown(
                 if isinstance(output_copied_per_operation, (int, float))
                 else "—"
             )
+            capacity_text = capacity_labels.get(
+                cell.get("capacity_class", "unknown"), "unknown"
+            )
+            foreground_thread_floor = cell.get("timed_foreground_thread_floor")
+            foreground_thread_text = (
+                f"{foreground_thread_floor:,}"
+                if positive_integer(foreground_thread_floor)
+                else "—"
+            )
             lines.append(
-                f"| {cell['workers']} | {cell['pipeline']} | {economical['pipeline']} | "
+                f"| {cell['workers']} | {capacity_text} | {foreground_thread_text} | "
+                f"{cell['pipeline']} | {economical['pipeline']} | "
                 f"{economical['retained_peak_percent']:.2f}% | "
                 f"{cell['median_ops_per_second']:,.0f} | "
                 f"{cell['min_ops_per_second']:,.0f}–{cell['max_ops_per_second']:,.0f} | "
@@ -1316,6 +1402,9 @@ def render_markdown(
                 "Efficiency is the observed throughput speedup divided by Worker count; it is not "
                 "CPU utilization or a production-capacity claim. Input-copy columns expose the "
                 "sliding Reactor buffer's copy pressure for the selected sample.",
+                "Rows whose capacity context reports oversubscription are sensitivity measurements, "
+                "not evidence of physical-core server scaling. The same-process loopback workload "
+                "has the configured client threads plus one Reactor and one Writer thread per Worker.",
                 "",
             ]
         )
@@ -1455,11 +1544,11 @@ def main() -> int:
         if comparison_environment["status"] == "compatible"
         else 0
     )
-    tcp_scaling = build_tcp_scaling_analysis(runs)
+    tcp_scaling = build_tcp_scaling_analysis(runs, environment)
     generated_at = dt.datetime.now(dt.UTC).replace(microsecond=0).isoformat()
     baseline_generated_at = baseline.get("generated_at") if baseline else None
     report = {
-        "schema_version": 7,
+        "schema_version": 8,
         "generated_at": generated_at,
         "baseline_generated_at": baseline_generated_at,
         "environment": environment,

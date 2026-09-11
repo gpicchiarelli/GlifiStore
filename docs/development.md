@@ -29,7 +29,8 @@ on a weekly schedule, and by manual dispatch. The workflow records the runner en
 uploads raw benchmark output, `results.json`, and the rendered `summary.md` for 90 days. The same
 summary is shown directly on the GitHub Actions run page and includes throughput deltas against
 the latest successful retained run on `main` only when the machine-readable runner identity matches.
-CPU, runner image, kernel, compiler, architecture, logical CPU count, and build-preset changes
+CPU, runner image, kernel, compiler, architecture, logical and physical CPU counts, and build-preset
+changes
 suppress deltas and are listed in the report rather than being mislabeled as code regressions. The
 same identity includes the SHA-256 digest of the hosted matrix contract; individual matches include
 operation count, warmup, and measured repeats.
@@ -38,6 +39,11 @@ inconclusive. Only disjoint ranges become improvement or regression candidates.
 The JSON and Markdown reports also derive the highest observed median pipeline for each 1/2/4
 Worker row, its gain over pipeline depth 1, speedup against the one-Worker cell at the same depth,
 and scaling efficiency. These are descriptive scheduling signals, not capacity claims.
+Each TCP sample also declares that it is same-process loopback and records the minimum timed
+foreground-thread demand: configured client threads plus one Reactor and one Writer per Worker. The
+report compares that demand with the runner's logical CPUs and compares Worker count with physical
+cores. Rows that exceed either capacity are labeled as oversubscription sensitivity measurements,
+so their efficiency is not misreported as physical-core server scaling evidence.
 The report also selects the smallest measured pipeline whose median throughput is at least 95% of
 the best median in the same Worker row. This “economical pipeline” is a reproducible near-peak
 choice that limits in-flight work; it is advisory and does not override an application's latency or

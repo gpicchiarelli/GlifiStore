@@ -1655,6 +1655,10 @@ int main(int argc, char** argv) try {
                   : parsed.client_api         ? "public-cpp-api"
                                               : "raw-wire")
               << '\n';
+    std::cout << "# execution_scope=same-process-loopback\n";
+    std::cout << "# timed_thread_model=client-threads+one-reactor+one-writer-per-worker\n";
+    std::cout << "# timed_foreground_thread_floor=" << parsed.config.threads + parsed.config.workers * 2U
+              << '\n';
     std::cout << "# pipeline="
               << (parsed.client_pipeline != 0 ? parsed.client_pipeline
                   : parsed.client_api         ? 1

@@ -85,6 +85,11 @@ The highest observed median per Worker count is a descriptive matrix summary, no
 optimum: min/max overlap, latency, bandwidth, and resource use still govern interpretation.
 
 TCP reports must state connection count, pipeline depth, request mix, payload sizes, executor affinity, and whether server/client share a process and CPUs. A same-process loopback result must be labeled as such because load generation competes for CPU and caches.
+When a retained same-process report derives Worker scaling, it must also record the minimum timed
+foreground-thread demand and the runner's logical and physical CPU counts. A row whose Worker count
+exceeds physical cores, or whose configured-client + Reactor + Writer demand exceeds logical CPUs,
+is an oversubscription sensitivity measurement. Its numerical efficiency may be shown descriptively
+but must not be presented as physical-core server scaling evidence.
 Canonical TCP matrix filenames, metadata, and result coordinates must agree on Worker/client count
 and pipeline depth; transport mode, routing distribution, storage mode, and latency instrumentation
 are part of the validated workload identity.

@@ -37,6 +37,7 @@ def environment(**overrides: object) -> dict[str, object]:
         "kernel_release": "6.11.0",
         "cpu_model": "Fixture CPU",
         "logical_cpu_count": 4,
+        "physical_cpu_count": 2,
         "compiler_identity": "clang version 20.1.0",
         "build_preset": "unix-release",
         "benchmark_contract_sha256": "a" * 64,
@@ -100,7 +101,12 @@ def tcp_runs() -> list[dict[str, object]]:
     return [
         {
             "source": f"server-tcp-w{workers}-p{pipeline}.txt",
-            "metadata": {"pipeline": pipeline},
+            "metadata": {
+                "pipeline": pipeline,
+                "execution_scope": "same-process-loopback",
+                "timed_thread_model": "client-threads+one-reactor+one-writer-per-worker",
+                "timed_foreground_thread_floor": workers * 3,
+            },
             "results": [
                 {
                     "workers": workers,
@@ -135,6 +141,9 @@ def strict_tcp_run() -> list[dict[str, object]]:
         {
             "pipeline": 32,
             "client_mode": "raw-wire",
+            "execution_scope": "same-process-loopback",
+            "timed_thread_model": "client-threads+one-reactor+one-writer-per-worker",
+            "timed_foreground_thread_floor": 6,
             "storage_mode": "volatile",
             "latency_measurement": "disabled",
         }
@@ -199,7 +208,7 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
             ):
                 benchmark_report_main()
 
-    def test_main_emits_schema_seven_with_specialized_match_count(self) -> None:
+    def test_main_emits_schema_eight_with_specialized_match_count(self) -> None:
         content = (
             "# git_sha=abc123\n"
             "# arch=x86_64\n"
@@ -229,7 +238,7 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
                 self.assertEqual(benchmark_report_main(), 0)
             report = json.loads(json_path.read_text(encoding="utf-8"))
             markdown = markdown_path.read_text(encoding="utf-8")
-        self.assertEqual(report["schema_version"], 7)
+        self.assertEqual(report["schema_version"], 8)
         self.assertEqual(report["matched_baseline_diagnostics"], 0)
         self.assertIn("1 specialized diagnostic(s)", markdown)
 
@@ -526,6 +535,23 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "metadata.pipeline is 8, expected 32"):
             validate_runs(fixture)
 
+    def test_strict_tcp_requires_same_process_thread_profile(self) -> None:
+        fixture = strict_tcp_run()
+        del fixture[0]["metadata"]["execution_scope"]
+        with self.assertRaisesRegex(
+            ValueError,
+            "metadata.execution_scope is None, expected 'same-process-loopback'",
+        ):
+            validate_runs(fixture)
+
+        fixture = strict_tcp_run()
+        fixture[0]["metadata"]["timed_foreground_thread_floor"] = 5
+        with self.assertRaisesRegex(
+            ValueError,
+            "metadata.timed_foreground_thread_floor is 5, expected 6",
+        ):
+            validate_runs(fixture)
+
     def test_strict_tcp_requires_ordered_reactor_input_profile(self) -> None:
         fixture = strict_tcp_run()
         del fixture[0]["results"][0]["median_reactor_input_buffer_bytes_moved"]
@@ -642,7 +668,7 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
             validate_source_contract(strict_runs(), contract)
 
     def test_tcp_scaling_analysis_reports_best_pipeline_and_efficiency(self) -> None:
-        analysis = build_tcp_scaling_analysis(tcp_runs())
+        analysis = build_tcp_scaling_analysis(tcp_runs(), environment())
         self.assertIsNotNone(analysis)
         assert analysis is not None
         self.assertEqual(analysis["status"], "complete")
@@ -654,6 +680,16 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
         self.assertAlmostEqual(best[4]["speedup_vs_one_worker"], 3.2)
         self.assertAlmostEqual(best[4]["scaling_efficiency_percent"], 80.0)
         self.assertAlmostEqual(best[4]["gain_vs_pipeline_one_percent"], 100.0)
+        self.assertEqual(
+            best[1]["capacity_class"], "within-reported-capacity"
+        )
+        self.assertEqual(
+            best[2]["capacity_class"], "combined-load-oversubscribed"
+        )
+        self.assertEqual(
+            best[4]["capacity_class"],
+            "worker-and-combined-load-oversubscribed",
+        )
         self.assertAlmostEqual(
             best[4]["median_input_buffer_bytes_moved_per_operation"], 3.2
         )
@@ -667,10 +703,12 @@ class BenchmarkEnvironmentTests(unittest.TestCase):
             tcp_runs(), "now", None, {"status": "no-baseline"}, analysis
         )
         self.assertIn("## TCP scaling summary", markdown)
+        self.assertIn("Reported runner capacity: 2 physical core(s), 4 logical CPU(s).", markdown)
         self.assertIn(
-            "| 4 | 8 | 8 | 100.00% | 640 | 576–704 | +100.00% | 3.20× | 80.00% | 8 | 3.20 B | 4 | 1.60 B |",
+            "| 4 | Workers > physical cores; combined load > logical CPUs | 12 | 8 | 8 | 100.00% | 640 | 576–704 | +100.00% | 3.20× | 80.00% | 8 | 3.20 B | 4 | 1.60 B |",
             markdown,
         )
+        self.assertIn("oversubscription are sensitivity measurements", markdown)
 
     def test_tcp_scaling_selects_smallest_near_peak_pipeline(self) -> None:
         fixture = tcp_runs()
