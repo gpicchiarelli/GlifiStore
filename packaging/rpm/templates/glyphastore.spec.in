@@ -65,6 +65,12 @@ GlyphaStore.
 %prep
 %autosetup -n @SOURCE_DIRECTORY@
 
+# Fedora %%cmake defaults to BUILD_SHARED_LIBS=ON. GlyphaStore's core library uses
+# hidden C++ visibility and is linked statically into the daemon in the official
+# presets; forcing shared core here leaves unresolved Store symbols at link time.
+# Keep this note outside %%build and spell the macro as %%cmake so rpm does not
+# expand it into the shell script (an expanded comment with unmatched quotes
+# previously aborted %%build after a successful link).
 %build
 %cmake \
     -GNinja \
@@ -76,10 +82,6 @@ GlyphaStore.
     -DGLYPHASTORE_FAULT_INJECTION=OFF \
     -DGLYPHASTORE_NATIVE_CPU=OFF
 %cmake_build
-
-# Fedora's %cmake defaults to BUILD_SHARED_LIBS=ON. GlyphaStore's core library uses
-# hidden C++ visibility and is linked statically into the daemon in the official
-# presets; forcing shared core here leaves unresolved Store symbols at link time.
 
 %install
 %cmake_install

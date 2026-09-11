@@ -30,6 +30,7 @@ import os
 import platform
 import shlex
 import shutil
+import signal
 import socket
 import subprocess
 import sys
@@ -1063,8 +1064,10 @@ class InstalledDaemon:
                 return False
             finally:
                 self.process = None
+            # Python reports death-by-signal as a negative returncode (-SIGTERM == -15).
+            # That is the orderly stop we asked for, not a packaging failure.
             _note(self.log, f"daemon exit status: {status}")
-            stopped = status == 0
+            stopped = status == 0 or status == -signal.SIGTERM
         gone = wait_for_port(self.port, time.monotonic() + DAEMON_READY_TIMEOUT, gone=True)
         _note(self.log, f"port {self.port} released: {gone}")
         return stopped and gone
@@ -1089,10 +1092,14 @@ def run_service_lifecycle(lifecycle: Lifecycle) -> None:
     """Start, health-check and stop the packaged unit through systemd itself."""
     recorder, log = lifecycle.recorder, lifecycle.log("service-lifecycle")
     unit = f"{lifecycle.layout['unitdir']}/glyphastored.service"
+    # Always retain a non-empty log: emit_evidence refuses an empty evidence_ref, and
+    # containers without systemd-analyze previously recorded BLOCKED with a missing file.
+    _note(log, f"unit={unit}")
     if shutil.which("systemd-analyze") is not None:
         _note(log, "unit verification below is syntax only, not a service run")
         _run(["systemd-analyze", "verify", unit], log=log)
     if not systemd_is_pid_one():
+        _note(log, "systemd is not PID 1; the packaged unit cannot be started here")
         recorder.record(
             "service-lifecycle",
             "BLOCKED",
@@ -1147,22 +1154,10 @@ def run_protocol(lifecycle: Lifecycle) -> None:
     # The fenced BACKUP destination has to live under the state directory: that is
     # the only path the packaged unit may write to. It is a test artefact, so it is
     # removed again to leave the durable Store exactly as the protocol left it.
+    # Do not pre-create the destination: Store backup opens it with create_new and
+    # refuses a path that already exists (sequence_conflict → wire INTERNAL_ERROR).
     backup = lifecycle.state_directory / f"backup-{os.getpid()}"
     if exercised:
-        _run(
-            [
-                "install",
-                "-d",
-                "-o",
-                lifecycle.tokens["SERVICE_USER"],
-                "-g",
-                lifecycle.tokens["SERVICE_GROUP"],
-                "-m",
-                "0750",
-                str(backup),
-            ],
-            log=log,
-        )
         exercised = daemon.client("--command", "backup", "--destination", str(backup))
         _note(log, f"backup produced: {sorted(path.name for path in backup.glob('*'))}")
     daemon.stop()

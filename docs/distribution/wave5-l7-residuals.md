@@ -68,12 +68,15 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
   only in the release workflow VM. `GATE-PACKAGE-LIFECYCLE` now cites that workflow and stays
   `IMPLEMENTATA`: citing a retention path is not the same as having retained a run.
 - The Linux container lifecycle (`deb`, `rpm`) is enabled from the `nightly` and `release`
-  profiles only (`main` stays structural until a retained container run exists) and has never been
-  executed in a retained run, so its first CI execution may legitimately report `FAIL` rather than
-  the `BLOCKED`/`NOT_RUN` rows produced without `GLYPHASTORE_PACKAGE_CI_CONTAINER=1`. When the
-  inner driver writes evidence and exits non-zero, the outer dispatcher prefers that report over
-  inventing `BLOCKED`. Deb rules no longer pass `-GNinja` into a dh/`make` build; the RPM `%cmake`
-  line forces `-DBUILD_SHARED_LIBS=OFF` so the hidden-visibility core links as in official presets.
+  profiles only (`main` stays structural until a retained container run exists). A retained
+  `nightly` dispatch on tip `16e1a0c` exercised the containers: deb built and installed packages
+  but crashed before emitting evidence when `service-lifecycle` referenced an empty log and the
+  protocol BACKUP pre-created a destination that `create_new` refuses; rpm linked successfully
+  then aborted `%build` because a `# ... %cmake ...` comment was macro-expanded. Those three
+  defects are corrected in-tree; a fresh retained nightly is still required to close the residual.
+  When the inner driver writes evidence and exits non-zero, the outer dispatcher prefers that
+  report over inventing `BLOCKED`. Deb rules no longer pass a Ninja generator into a dh/`make`
+  build; the RPM `%cmake` line forces `-DBUILD_SHARED_LIBS=OFF`.
 - MacPorts and Homebrew have no hosted runner that may install into the host package manager, so
   their native rows stay opt-in (`--allow-native`, never on by default) and unproven.
 
@@ -85,7 +88,7 @@ Declarative status is generated into [package-status.md](package-status.md); the
 
 | Residual | State today | What would close it |
 | --- | --- | --- |
-| deb / rpm container lifecycle | Never executed in a retained CI run; `main` stays structural; nightly/release opt in; `/out` is chown'd back to the host uid before the container exits; outer prefers inner FAIL evidence; deb/rpm templates align with static-core/make builds | A retained `nightly` run with `GLYPHASTORE_PACKAGE_CI_CONTAINER=1` whose rows are not `BLOCKED`/`NOT_RUN` |
+| deb / rpm container lifecycle | Retained nightly on `16e1a0c` reached real builds; deb crashed on empty `service-lifecycle` log + pre-created BACKUP dest; rpm aborted on expanded `%cmake` in a comment. Fixes landed; fresh retained nightly still required | A retained `nightly` run with `GLYPHASTORE_PACKAGE_CI_CONTAINER=1` whose rows are not `BLOCKED`/`NOT_RUN` for the build/install path |
 | MacPorts `launchd` startup item | Not installed by the port, so `service-lifecycle` is `OPEN_GATE` | A packaged startup item plus a retained run that starts and stops it |
 | Homebrew `brew services` | Declared in the formula, never started or stopped in a retained run (`OPEN_GATE`) | A retained native run that exercises the services block |
 | MacPorts / Homebrew native rows | Opt-in only (`--allow-native`); no hosted runner may install into the host package manager | A disposable macOS host or an accepted runner policy, with retained logs |

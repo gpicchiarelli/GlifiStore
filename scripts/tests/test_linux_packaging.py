@@ -446,6 +446,43 @@ class ContainerDispatchTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("-DBUILD_SHARED_LIBS=OFF", spec)
 
+    def test_rpm_spec_does_not_expand_cmake_inside_a_comment(self) -> None:
+        # A bare %cmake in a # comment inside %build is still macro-expanded by rpm,
+        # and an expanded comment with unmatched quotes aborts the shell script after
+        # a successful link (nightly Fedora 41 retained that failure).
+        spec = (
+            Path(__file__).resolve().parents[2] / "packaging/rpm/templates/glyphastore.spec.in"
+        ).read_text(encoding="utf-8")
+        build = spec.split("%build", 1)[1].split("%install", 1)[0]
+        for line in build.splitlines():
+            stripped = line.lstrip()
+            if stripped.startswith("#"):
+                self.assertNotRegex(stripped, r"(?<!%)%cmake\b")
+
+    def test_protocol_backup_does_not_precreate_the_destination(self) -> None:
+        # Store backup opens the destination with create_new; a pre-existing empty
+        # directory becomes sequence_conflict and the wire maps it to INTERNAL_ERROR.
+        text = (
+            Path(__file__).resolve().parents[2]
+            / "engineering/tools/run_linux_package_backend.py"
+        ).read_text(encoding="utf-8")
+        protocol = text.split("def run_protocol(", 1)[1].split("def run_restart_recovery(", 1)[0]
+        self.assertIn('daemon.client("--command", "backup"', protocol)
+        self.assertNotIn('"install"', protocol)
+        self.assertNotIn("install -d", protocol)
+
+    def test_service_lifecycle_always_writes_a_non_empty_log_before_recording(self) -> None:
+        text = (
+            Path(__file__).resolve().parents[2]
+            / "engineering/tools/run_linux_package_backend.py"
+        ).read_text(encoding="utf-8")
+        body = text.split("def run_service_lifecycle(", 1)[1].split(
+            "def run_protocol(", 1
+        )[0]
+        note_at = body.index("_note(log,")
+        record_at = body.index('recorder.record(\n            "service-lifecycle"')
+        self.assertLess(note_at, record_at)
+
 
 if __name__ == "__main__":
     unittest.main()
