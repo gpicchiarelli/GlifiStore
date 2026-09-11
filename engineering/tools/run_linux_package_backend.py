@@ -12,8 +12,10 @@ Three execution modes, in decreasing order of preference:
 * ``--inner``: this process *is* the disposable target. Used inside the pinned
   container and by a caller who accepts that packages will be installed.
 * container dispatch: re-runs this driver inside the digest-pinned image the
-  package matrix declares for the target, so nothing touches the caller's host.
-  Opt in with ``GLYPHASTORE_PACKAGE_CI_CONTAINER=1``.
+  package matrix declares for the target, with systemd as PID 1 when the host
+  can offer cgroup + privileged (so service-lifecycle can start the unit). Opt
+  in with ``GLYPHASTORE_PACKAGE_CI_CONTAINER=1``. Falls back to a one-shot entry
+  (service-lifecycle BLOCKED) when systemd cannot become PID 1.
 * native dispatch on the caller's host: installs and removes system packages, so
   it needs root and ``GLYPHASTORE_PACKAGE_CI_NATIVE=1``.
 
@@ -145,6 +147,7 @@ SPECS: dict[str, BackendSpec] = {
             "ca-certificates",
             "cmake",
             "cpio",
+            "dbus",
             "debhelper",
             "dpkg-dev",
             "file",
@@ -155,6 +158,8 @@ SPECS: dict[str, BackendSpec] = {
             "python3",
             "python3-jsonschema",
             "python3-yaml",
+            "systemd",
+            "systemd-sysv",
             "util-linux",
             "xz-utils",
         ),
@@ -168,6 +173,7 @@ SPECS: dict[str, BackendSpec] = {
             "binutils",
             "cmake",
             "cpio",
+            "dbus",
             "file",
             "gcc-c++",
             "git",
@@ -178,6 +184,7 @@ SPECS: dict[str, BackendSpec] = {
             "python3-pyyaml",
             "rpm-build",
             "shadow-utils",
+            "systemd",
             "systemd-rpm-macros",
             "tar",
             "util-linux",
@@ -533,6 +540,39 @@ def bootstrap_dependencies(backend: str, *, log: Path) -> bool:
     )
 
 
+def container_mount_and_environment(
+    *,
+    root: Path,
+    output: Path,
+    release_context: Path,
+    candidate: str = "",
+    host_uid: int | None = None,
+    host_gid: int | None = None,
+    seal: str = "",
+    ci_identity: dict[str, str] | None = None,
+) -> tuple[list[str], list[str]]:
+    """Shared bind mounts and environment for packaging containers."""
+    mounts = [
+        "-v",
+        f"{root}:/src:ro",
+        "-v",
+        f"{output}:/out",
+        "-v",
+        f"{release_context}:/release-context.json:ro",
+    ]
+    environment = ["-e", f"{SEAL_ENVIRONMENT}={seal}", "-e", "container=docker"]
+    for name, value in (ci_identity or {}).items():
+        if value:
+            environment += ["-e", f"{name}={value}"]
+    uid = os.getuid() if host_uid is None else host_uid
+    gid = os.getgid() if host_gid is None else host_gid
+    environment += ["-e", f"HOST_UID={uid}", "-e", f"HOST_GID={gid}"]
+    if candidate:
+        mounts += ["-v", f"{candidate}:/candidate:ro"]
+        environment += ["-e", f"{CANDIDATE_ENVIRONMENT}=/candidate"]
+    return mounts, environment
+
+
 def container_run_arguments(
     *,
     runtime: str,
@@ -549,29 +589,21 @@ def container_run_arguments(
     seal: str = "",
     ci_identity: dict[str, str] | None = None,
 ) -> list[str]:
-    """Build the `docker`/`podman run` argv for the packaging lifecycle container.
+    """Fallback one-shot `docker`/`podman run` without systemd as PID 1.
 
-    Host uid/gid are forwarded so the entry script can chown /out before exit:
-    the outer runner is not root and cannot reclaim root-owned evidence itself.
+    Used only when the systemd-as-PID-1 path cannot start. service-lifecycle
+    stays BLOCKED in that mode; nothing claims a systemd service run.
     """
-    mounts = [
-        "-v",
-        f"{root}:/src:ro",
-        "-v",
-        f"{output}:/out",
-        "-v",
-        f"{release_context}:/release-context.json:ro",
-    ]
-    environment = ["-e", f"{SEAL_ENVIRONMENT}={seal}"]
-    for name, value in (ci_identity or {}).items():
-        if value:
-            environment += ["-e", f"{name}={value}"]
-    uid = os.getuid() if host_uid is None else host_uid
-    gid = os.getgid() if host_gid is None else host_gid
-    environment += ["-e", f"HOST_UID={uid}", "-e", f"HOST_GID={gid}"]
-    if candidate:
-        mounts += ["-v", f"{candidate}:/candidate:ro"]
-        environment += ["-e", f"{CANDIDATE_ENVIRONMENT}=/candidate"]
+    mounts, environment = container_mount_and_environment(
+        root=root,
+        output=output,
+        release_context=release_context,
+        candidate=candidate,
+        host_uid=host_uid,
+        host_gid=host_gid,
+        seal=seal,
+        ci_identity=ci_identity,
+    )
     return [
         runtime,
         "run",
@@ -590,6 +622,106 @@ def container_run_arguments(
         "--stage",
         stage,
     ]
+
+
+def container_create_arguments(
+    *,
+    runtime: str,
+    image: str,
+    name: str,
+    root: Path,
+    output: Path,
+    release_context: Path,
+    candidate: str = "",
+    host_uid: int | None = None,
+    host_gid: int | None = None,
+    seal: str = "",
+    ci_identity: dict[str, str] | None = None,
+) -> list[str]:
+    """Detached container whose PID 1 is systemd (required for service-lifecycle)."""
+    mounts, environment = container_mount_and_environment(
+        root=root,
+        output=output,
+        release_context=release_context,
+        candidate=candidate,
+        host_uid=host_uid,
+        host_gid=host_gid,
+        seal=seal,
+        ci_identity=ci_identity,
+    )
+    # cgroup + privileged: stock Debian/Fedora images need a real systemd PID 1
+    # for systemctl enable/start of glyphastored.service. Without them the
+    # dispatcher falls back to the one-shot entry and service-lifecycle stays BLOCKED.
+    return [
+        runtime,
+        "run",
+        "-d",
+        "--name",
+        name,
+        "--privileged",
+        "--cgroupns=host",
+        "-v",
+        "/sys/fs/cgroup:/sys/fs/cgroup:rw",
+        "--tmpfs",
+        "/tmp",
+        "--tmpfs",
+        "/run",
+        "--tmpfs",
+        "/run/lock",
+        "--workdir",
+        "/out",
+        *mounts,
+        *environment,
+        image,
+        "/bin/sh",
+        "/src/scripts/packaging/linux-systemd-pid1.sh",
+    ]
+
+
+def container_exec_arguments(
+    *, runtime: str, name: str, backend: str, profile: str, stage: str
+) -> list[str]:
+    return [
+        runtime,
+        "exec",
+        "--workdir",
+        "/out",
+        name,
+        "/bin/sh",
+        "/src/scripts/packaging/linux-container-entry.sh",
+        "--backend",
+        backend,
+        "--profile",
+        profile,
+        "--stage",
+        stage,
+    ]
+
+
+def wait_for_systemd_pid1(
+    runtime: str, name: str, *, log: Path, timeout: float = 180.0
+) -> bool:
+    """Poll until systemd has created /run/systemd/system inside the container."""
+    deadline = time.monotonic() + timeout
+    probe = [
+        runtime,
+        "exec",
+        name,
+        "/bin/sh",
+        "-c",
+        "test -d /run/systemd/system",
+    ]
+    while time.monotonic() < deadline:
+        if _run(probe, log=log, timeout=30):
+            _note(log, f"systemd is PID 1 in container {name}")
+            return True
+        running = _capture([runtime, "inspect", "-f", "{{.State.Running}}", name], timeout=30)
+        if running != "true":
+            _note(log, f"container {name} is not running while waiting for systemd ({running!r})")
+            return False
+        time.sleep(2)
+    _note(log, f"timed out waiting for systemd PID 1 in container {name}")
+    return False
 
 
 def prefer_inner_container_evidence(
@@ -619,32 +751,85 @@ def dispatch_container(
     target: Target,
     runtime: str,
 ) -> bool:
-    """Re-run this driver inside the digest-pinned image; it emits the evidence itself."""
+    """Re-run this driver inside the digest-pinned image with systemd as PID 1."""
     log = recorder.directory / "container-dispatch.log"
     image = f"{target.image}@{target.image_digest}"
     candidate = os.environ.get(CANDIDATE_ENVIRONMENT, "").strip()
     ci_identity = {
         name: os.environ.get(name, "").strip() for name in CI_IDENTITY_ENVIRONMENT
     }
+    seal = os.environ.get(SEAL_ENVIRONMENT, "")
+    name = f"glyphastore-{backend}-{os.getpid()}-{int(time.time())}"
     _note(log, f"target={target.identifier} runtime={runtime} image={image}")
     _note(log, f"host_uid={os.getuid()} host_gid={os.getgid()}")
-    return _run(
-        container_run_arguments(
+    _note(log, f"systemd container name={name}")
+
+    created = _run(
+        container_create_arguments(
             runtime=runtime,
             image=image,
+            name=name,
             root=root,
             output=recorder.directory,
             release_context=release_context,
-            backend=backend,
-            profile=profile,
-            stage=stage,
             candidate=candidate,
-            seal=os.environ.get(SEAL_ENVIRONMENT, ""),
+            seal=seal,
             ci_identity=ci_identity,
         ),
         log=log,
         timeout=CONTAINER_TIMEOUT,
     )
+    if not created:
+        _note(log, "systemd container create failed; falling back to one-shot entry")
+        _run([runtime, "rm", "-f", name], log=log, timeout=60)
+        return _run(
+            container_run_arguments(
+                runtime=runtime,
+                image=image,
+                root=root,
+                output=recorder.directory,
+                release_context=release_context,
+                backend=backend,
+                profile=profile,
+                stage=stage,
+                candidate=candidate,
+                seal=seal,
+                ci_identity=ci_identity,
+            ),
+            log=log,
+            timeout=CONTAINER_TIMEOUT,
+        )
+
+    try:
+        if not wait_for_systemd_pid1(runtime, name, log=log):
+            _note(log, "systemd never became PID 1; falling back to one-shot entry")
+            _run([runtime, "rm", "-f", name], log=log, timeout=60)
+            return _run(
+                container_run_arguments(
+                    runtime=runtime,
+                    image=image,
+                    root=root,
+                    output=recorder.directory,
+                    release_context=release_context,
+                    backend=backend,
+                    profile=profile,
+                    stage=stage,
+                    candidate=candidate,
+                    seal=seal,
+                    ci_identity=ci_identity,
+                ),
+                log=log,
+                timeout=CONTAINER_TIMEOUT,
+            )
+        return _run(
+            container_exec_arguments(
+                runtime=runtime, name=name, backend=backend, profile=profile, stage=stage
+            ),
+            log=log,
+            timeout=CONTAINER_TIMEOUT,
+        )
+    finally:
+        _run([runtime, "rm", "-f", name], log=log, timeout=60)
 
 
 # --------------------------------------------------------------------------- #

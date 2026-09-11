@@ -190,8 +190,9 @@ python3 engineering/tools/run_package_admission.py \
 ## What this pipeline does not prove
 
 - The `deb`/`rpm` container lifecycle has retained nightly evidence at `FUNCTIONALLY_VERIFIED`
-  (see [wave5-l7-residuals.md](wave5-l7-residuals.md)); `service-lifecycle` stays `BLOCKED` without
-  systemd as PID 1.
+  (see [wave5-l7-residuals.md](wave5-l7-residuals.md)); container dispatch now starts systemd as
+  PID 1 when cgroup/privileged are available so `service-lifecycle` can PASS on the next retained
+  run (otherwise it stays `BLOCKED`).
 - MacPorts and Homebrew have no hosted runner allowed to install into the host package manager, and
   neither installs a startup item that a retained run has ever started, so `service-lifecycle` is an
   open gate for both.

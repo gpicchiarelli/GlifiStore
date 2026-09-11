@@ -395,6 +395,27 @@ class ContainerDispatchTests(unittest.TestCase):
         self.assertIn("GITHUB_RUN_ID=42", joined)
         self.assertIn("/src/scripts/packaging/linux-container-entry.sh", joined)
 
+    def test_the_systemd_container_create_requests_pid1_prerequisites(self) -> None:
+        from engineering.tools.run_linux_package_backend import container_create_arguments
+
+        argv = container_create_arguments(
+            runtime="docker",
+            image="debian:12@sha256:deadbeef",
+            name="glyphastore-deb-test",
+            root=Path("/repo"),
+            output=Path("/tmp/out"),
+            release_context=Path("/tmp/release-context.json"),
+            host_uid=1001,
+            host_gid=1002,
+        )
+        joined = " ".join(argv)
+        self.assertIn("--privileged", joined)
+        self.assertIn("--cgroupns=host", joined)
+        self.assertIn("/sys/fs/cgroup:/sys/fs/cgroup:rw", joined)
+        self.assertIn("linux-systemd-pid1.sh", joined)
+        self.assertIn("-d", argv)
+        self.assertNotIn("--rm", argv)
+
     def test_the_container_entry_restores_host_ownership_before_exit(self) -> None:
         # The outer runner is not root: root-owned evidence under /out becomes a
         # Permission denied that was previously reported as packaging FAIL.

@@ -213,11 +213,18 @@ class ContainerEvidenceIdentityTests(unittest.TestCase):
                     else:
                         driver.os.environ[name] = value
 
-        self.assertEqual(len(captured), 1)
-        command = captured[0]
+        self.assertEqual(len(captured), 4)
+        create, wait_probe, execute, remove = captured[0], captured[1], captured[2], captured[3]
+        create_joined = " ".join(create)
         for name, value in environment.items():
-            self.assertIn(f"{name}={value}", command)
-        self.assertIn("--rm", command)
+            self.assertIn(f"{name}={value}", create)
+        self.assertIn("-d", create)
+        self.assertIn("--privileged", create)
+        self.assertIn("linux-systemd-pid1.sh", create_joined)
+        self.assertIn("test -d /run/systemd/system", " ".join(wait_probe))
+        self.assertIn("linux-container-entry.sh", " ".join(execute))
+        self.assertEqual(execute[:2], ["docker", "exec"])
+        self.assertEqual(remove[:3], ["docker", "rm", "-f"])
 
 
 if __name__ == "__main__":

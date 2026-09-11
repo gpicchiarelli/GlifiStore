@@ -73,10 +73,12 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
   profiles only (`main` stays structural). Retained nightly `34651423676` on tip `0261d65`
   reaches `FUNCTIONALLY_VERIFIED` for both backends: build, install, protocol, restart,
   config preservation and removal PASS; `service-lifecycle` stays `BLOCKED` because the
-  digest-pinned images do not run systemd as PID 1; `sealed-source-admission` is `NOT_RUN`
-  on unsealed nightly checkouts. When the inner driver writes evidence and exits non-zero,
-  the outer dispatcher prefers that report over inventing `BLOCKED`. Deb rules use Unix
-  Makefiles with static core; RPM `%cmake` forces `-DBUILD_SHARED_LIBS=OFF` and install
+  digest-pinned images historically did not run systemd as PID 1; container dispatch now
+  starts `linux-systemd-pid1.sh` with cgroup + privileged so `service-lifecycle` can run
+  through systemd when the host allows it (fallback keeps BLOCKED). `sealed-source-admission`
+  is `NOT_RUN` on unsealed nightly checkouts. When the inner driver writes evidence and exits
+  non-zero, the outer dispatcher prefers that report over inventing `BLOCKED`. Deb rules use
+  Unix Makefiles with static core; RPM `%cmake` forces `-DBUILD_SHARED_LIBS=OFF` and install
   clears container `tsflags=nodocs` so manuals remain in the inventory.
 - MacPorts and Homebrew have no hosted runner that may install into the host package manager, so
   their native rows stay opt-in (`--allow-native`, never on by default) and unproven.
@@ -89,7 +91,7 @@ Declarative status is generated into [package-status.md](package-status.md); the
 
 | Residual | State today | What would close it |
 | --- | --- | --- |
-| deb / rpm container lifecycle | Retained nightly `34651423676` (`0261d65`): both backends `FUNCTIONALLY_VERIFIED`; `service-lifecycle` BLOCKED (no systemd PID 1); sealed-source NOT_RUN on unsealed nightly | A systemd-as-PID-1 packaging target (or accepted residual) plus sealed-candidate nightly/release rows |
+| deb / rpm container lifecycle | Retained nightly `34651423676` (`0261d65`): both backends `FUNCTIONALLY_VERIFIED`; `service-lifecycle` was BLOCKED without systemd PID 1. Tip now dispatches containers with systemd as PID 1 (`linux-systemd-pid1.sh`) | A retained nightly/release run proving `service-lifecycle` PASS (and sealed-candidate rows) |
 | MacPorts `launchd` startup item | Not installed by the port, so `service-lifecycle` is `OPEN_GATE` | A packaged startup item plus a retained run that starts and stops it |
 | Homebrew `brew services` | Declared in the formula, never started or stopped in a retained run (`OPEN_GATE`) | A retained native run that exercises the services block |
 | MacPorts / Homebrew native rows | Opt-in only (`--allow-native`); no hosted runner may install into the host package manager | A disposable macOS host or an accepted runner policy, with retained logs |
