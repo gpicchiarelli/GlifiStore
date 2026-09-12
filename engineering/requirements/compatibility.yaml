@@ -268,14 +268,16 @@ requirements:
   claim_massimo: architectural-prototype
   evidenze:
   - workflow: package-ci.yml
-    note: Il workflow trattiene plan, evidence e closure per profilo; nessuna esecuzione taggata e
-      stata conservata e il lifecycle container/native non e mai stato eseguito in un run trattenuto
+    note: Il workflow trattiene plan, evidence e closure per profilo; il nightly ha trattenuto
+      lifecycle deb/rpm a FUNCTIONALLY_VERIFIED; service-lifecycle richiede systemd PID 1
+      (ora avviato dal dispatch container quando cgroup/privileged lo consentono)
   - workflow: assurance.yml
     note: Le suite negative del framework e la freschezza di docs/distribution/package-status.md
       girano in unittest discover -s scripts/tests
   rischio_residuo:
-  - Il lifecycle deb/rpm in container e quello nativo MacPorts/Homebrew non sono mai stati eseguiti
-    in un run CI trattenuto; la prima esecuzione puo legittimamente riportare FAIL
+  - service-lifecycle Linux attende un run trattenuto PASS con systemd come PID 1 prima di
+    reclamare LIFECYCLE_VERIFIED; il fallback one-shot resta BLOCKED
+  - Il lifecycle nativo MacPorts/Homebrew non e mai stato eseguito in un run CI trattenuto
   - MacPorts non installa startup item e il blocco brew services non e mai stato avviato in un run
     trattenuto, quindi service-lifecycle resta OPEN_GATE per entrambi
   - upstream-ports-acceptance resta OPEN_GATE per FreeBSD, OpenBSD, MacPorts e Homebrew; il
