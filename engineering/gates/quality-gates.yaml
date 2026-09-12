@@ -855,13 +855,11 @@ gates:
     note: package-admission job binds FreeBSD/OpenBSD release_evidence to the sealed candidate;
       deliberately outside verify needs so residual blockers stay visible without inventing PASS
   stato: IMPLEMENTATA
-  rischio_residuo: Admission is wired fail-closed for tool execution and retains blockers, but
-    admitted stays false until a package-installed cross-SDK matrix PASSes and package-upgrade
-    is exercised against a sealed SemVer N-1 predecessor; Linux nightly/release container rows
-    now package language SDK archives on the host and install matrix toolchains in-image so the
-    retained installed-sdk-matrix.json can move past NOT_RUN; FreeBSD/OpenBSD still adapt
-    release_evidence without package-matrix upgrade rows; no annotated release has retained a
-    positive admission yet
+  rischio_residuo: Admission is wired fail-closed for tool execution and retains blockers;
+    Linux nightly 34666166603 retained package-installed cross-SDK PASS for deb and rpm, but
+    admitted stays false until package-upgrade is exercised against a sealed SemVer N-1
+    predecessor on required backends; FreeBSD/OpenBSD still adapt release_evidence without
+    package-matrix upgrade rows; no annotated release has retained a positive admission yet
   riapertura:
   - Selecting an N-1 baseline by arithmetic instead of SemVer precedence over sealed releases
   - Rebuilding an N-1 package from HEAD or admitting a draft/incomplete predecessor

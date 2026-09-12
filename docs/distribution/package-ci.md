@@ -199,9 +199,10 @@ python3 engineering/tools/run_package_admission.py \
   for `service-lifecycle`.
 - `package-upgrade` has never run positively anywhere: it is `NOT_APPLICABLE_INITIAL_BASELINE`
   until a predecessor exists, then `NOT_RUN` until a sealed N−1 package is admitted.
-- The cross-SDK post-install matrix against a package-installed daemon is wired for
-  nightly/release container rows (host-built language SDK archives + in-container toolchains);
-  until a retained PASS exists, Wave F admission stays `admitted: false`.
+- The cross-SDK post-install matrix against a package-installed daemon has retained nightly
+  PASS evidence
+  ([run 34666166603](https://github.com/gpicchiarelli/GlyphaStore/actions/runs/34666166603));
+  Wave F `admitted: true` still waits on sealed N−1 `package-upgrade`.
 - In-repo packaging is the project's own pipeline. It is not a Debian, Fedora, MacPorts, Homebrew,
   FreeBSD or OpenBSD acceptance, and nothing here may be described as one.
 
