@@ -55,6 +55,8 @@ sdk/go/dist/
 sdk/go/bin/
 sdk/ruby/dist/
 sdk/ruby/*.gem
+sdk/erlang/dist/
+sdk/erlang/_build/
 sdk/cpp-dist/
 dist/sdk-artifacts/
 

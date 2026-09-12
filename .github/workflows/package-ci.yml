@@ -197,6 +197,23 @@ jobs:
           fi
           python engineering/tools/release_bundle.py verify-seal \
             --directory dist/release-candidate --seal candidate-seal.json
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        if: matrix.container_lifecycle == true
+        with:
+          go-version: "1.22.x"
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
+        if: matrix.container_lifecycle == true
+        with:
+          ruby-version: "3.3"
+      - name: Install Erlang/rebar3 for sealed language SDK archives
+        if: matrix.container_lifecycle == true
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends erlang rebar3
+      - name: Package sealed language SDK archives for the installed matrix
+        if: matrix.container_lifecycle == true
+        run: ./scripts/package-language-sdk-archives.sh
       - name: Run the packaging lifecycle
         id: lifecycle
         timeout-minutes: ${{ matrix.step_timeout_minutes }}

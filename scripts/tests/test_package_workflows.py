@@ -105,6 +105,16 @@ class PackageWorkflowTests(unittest.TestCase):
         self.assertIn("if: inputs.candidate-artifact != ''", self.workflow)
         self.assertIn("--allow-blocking", self.workflow)
 
+    def test_container_rows_package_language_sdk_archives_for_the_installed_matrix(self) -> None:
+        self.assertIn("package-language-sdk-archives.sh", self.workflow)
+        self.assertIn("matrix.container_lifecycle == true", self.workflow)
+        self.assertIn("actions/setup-go@", self.workflow)
+        self.assertIn("ruby/setup-ruby@", self.workflow)
+        self.assertTrue((ROOT / "scripts/package-language-sdk-archives.sh").is_file())
+        self.assertTrue(
+            (ROOT / "scripts/packaging/ensure-installed-sdk-matrix-tools.sh").is_file()
+        )
+
     def test_nothing_is_allowed_to_fail_softly(self) -> None:
         for forbidden in ("continue-on-error", "|| true", "set +e", "if: always() || "):
             with self.subTest(pattern=forbidden):

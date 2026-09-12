@@ -199,10 +199,9 @@ python3 engineering/tools/run_package_admission.py \
   for `service-lifecycle`.
 - `package-upgrade` has never run positively anywhere: it is `NOT_APPLICABLE_INITIAL_BASELINE`
   until a predecessor exists, then `NOT_RUN` until a sealed N−1 package is admitted.
-- The cross-SDK post-install matrix against a package-installed daemon stays `NOT_RUN` without
-  sealed SDK archives in the packaging target (retained reports now record
-  `package_installed: true` when ownership was proven), so Wave F admission reports stay
-  `admitted: false` by construction.
+- The cross-SDK post-install matrix against a package-installed daemon is wired for
+  nightly/release container rows (host-built language SDK archives + in-container toolchains);
+  until a retained PASS exists, Wave F admission stays `admitted: false`.
 - In-repo packaging is the project's own pipeline. It is not a Debian, Fedora, MacPorts, Homebrew,
   FreeBSD or OpenBSD acceptance, and nothing here may be described as one.
 

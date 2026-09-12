@@ -1205,6 +1205,9 @@ def run_installed_sdk_matrix(lifecycle: Lifecycle) -> None:
     prefix = Path(lifecycle.layout["prefix"])
     if not prefix.is_absolute():
         prefix = Path("/") / prefix
+    tools = lifecycle.root / "scripts/packaging/ensure-installed-sdk-matrix-tools.sh"
+    if not _run(["bash", str(tools)], log=log, timeout=BUILD_TIMEOUT):
+        _note(log, "matrix toolchains were not installed; harness will record the gap")
     report = lifecycle.recorder.directory / "installed-sdk-matrix.json"
     environment = dict(os.environ)
     environment.update(
@@ -1213,6 +1216,7 @@ def run_installed_sdk_matrix(lifecycle: Lifecycle) -> None:
             "GLYPHASTORE_PACKAGE_FILE_LIST": str(inventory),
             "GLYPHASTORE_PACKAGE_PREFIX": str(prefix),
             "INSTALLED_INTEROP_PROFILE": "plain",
+            "PATH": f"/usr/local/go/bin:/usr/local/bin:{environment.get('PATH', '')}",
         }
     )
     _run(

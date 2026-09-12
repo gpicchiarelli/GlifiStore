@@ -79,10 +79,12 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
   systemd-as-PID-1 create variants (`cgroupns=host`, then `private` + `docker.slice`) via
   `linux-systemd-pid1.sh`. After install the lifecycle emits `installed-sdk-matrix.json` for
   Wave F admission (honest `NOT_RUN` / `package_installed: true` when sealed SDK archives are
-  absent). When the inner driver writes evidence and exits non-zero, the outer dispatcher
-  prefers that report over inventing `BLOCKED`. Deb rules use Unix Makefiles with static core;
-  RPM `%cmake` forces `-DBUILD_SHARED_LIBS=OFF` and install clears container `tsflags=nodocs`
-  so manuals remain in the inventory.
+  absent; nightly/release container rows now package language SDK archives on the host and
+  install matrix toolchains inside the image so a PASS is reachable). When the inner driver
+  writes evidence and exits non-zero, the outer dispatcher prefers that report over inventing
+  `BLOCKED`. Deb rules use Unix Makefiles with static core; RPM `%cmake` forces
+  `-DBUILD_SHARED_LIBS=OFF` and install clears container `tsflags=nodocs` so manuals remain
+  in the inventory.
 - MacPorts and Homebrew have no hosted runner that may install into the host package manager, so
   their native rows stay opt-in (`--allow-native`, never on by default) and unproven.
 
@@ -101,7 +103,7 @@ Declarative status is generated into [package-status.md](package-status.md); the
 | `external-consumer` on BSD | Implemented in native lifecycle scripts; maps to package-ci `PASS` → `LIFECYCLE_VERIFIED` when the log is retained | A tagged/native retained run that keeps `*-external-consumer.log` |
 | `package-upgrade` anywhere | Never positively run: `NOT_APPLICABLE_INITIAL_BASELINE` today, `NOT_RUN` once a predecessor exists | A sealed N−1 package artifact admitted through `upgrade_baseline.py admit` |
 | Wave F admission tools | `run_package_admission.py` is wired into `package-ci.yml` (sealed candidate) and `release.yml` (`package-admission` job); reports are retained with honest blockers | A positive `admitted: true` after cross-SDK PASS and sealed N−1 `package-upgrade` |
-| Cross-SDK post-install matrix | Linux lifecycle emits `installed-sdk-matrix.json` after install; still `NOT_RUN` without sealed SDK archives in the packaging target; admission prefers retained reports | Running every SDK against a package-installed daemon and retaining a PASS |
+| Cross-SDK post-install matrix | Host packages language SDK archives before container lifecycle; container installs matrix toolchains and emits `installed-sdk-matrix.json` | A retained PASS against a package-owned daemon |
 | Optional backends | `deb`, `rpm`, `macports`, `homebrew` are `required_for_release: false` and cannot admit a release artifact | Retained `LIFECYCLE_VERIFIED` evidence, a release-policy artifact, an ADR and a gate update |
 | Upstream acceptance | `OPEN_GATE` for FreeBSD, OpenBSD, MacPorts and Homebrew; in-repo packaging is the project pipeline only | Actual acceptance by the upstream ports tree or tap |
 | Apple `.pkg` | Deliberately out of scope; refused by the matrix validator | An accepted ADR, an Apple signing/notarization identity and an update model |
