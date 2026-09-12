@@ -57,6 +57,14 @@ test.target             test
 add_users               glyphastore group=glyphastore \
                         realname=GlyphaStore\ service\ account
 
+# Unprivileged launchd job (MacPorts 2.7+ startupitem.user/group). The daemon is
+# Type=simple / stays in the foreground, which matches startupitem.executable.
+startupitem.create      yes
+startupitem.executable  ${prefix}/bin/glyphastored --config ${prefix}/etc/glyphastore/glyphastored.conf
+startupitem.user        glyphastore
+startupitem.group       glyphastore
+startupitem.netchange   no
+
 set glyphastore_confdir ${prefix}/etc/glyphastore
 set glyphastore_datadir ${prefix}/var/db/glyphastore
 
@@ -77,29 +85,24 @@ post-activate {
     }
     file attributes ${glyphastore_datadir} \
         -owner glyphastore -group glyphastore -permissions 0750
+    if {![file exists ${glyphastore_confdir}/glyphastored.conf]} {
+        xinstall -m 0644 ${glyphastore_confdir}/glyphastored.conf.sample \
+            ${glyphastore_confdir}/glyphastored.conf
+    }
 }
 
-# No startup item is installed on purpose. MacPorts startup items run as root,
-# while GlyphaStore requires the dedicated unprivileged account created above;
-# the supported launchd model is an open packaging gate, not a shipped feature.
 notes "
 GlyphaStore is an architectural prototype. Review every limit in
-${glyphastore_confdir}/glyphastored.conf.sample before exposing the daemon
-beyond loopback.
+${glyphastore_confdir}/glyphastored.conf before exposing the daemon beyond
+loopback.
 
-Copy the sample before the first start:
+The port installs an unprivileged launchd startup item (user/group
+glyphastore). After install, start it with:
 
-    sudo cp ${glyphastore_confdir}/glyphastored.conf.sample \\
-        ${glyphastore_confdir}/glyphastored.conf
-
-This port installs no launchd startup item. Start the daemon under its own
-account, for example:
-
-    sudo -u glyphastore ${prefix}/bin/glyphastored \\
-        --config ${glyphastore_confdir}/glyphastored.conf
+    sudo port load glyphastore
 
 Durable data lives in ${glyphastore_datadir} and is never removed by
-'port uninstall'.
+`port uninstall`.
 "
 
 livecheck.type          regex

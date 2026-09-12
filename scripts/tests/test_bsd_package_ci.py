@@ -432,7 +432,8 @@ class UpgradeHonestyTests(BsdPackageCiTestCase):
             check["detail"] for check in decision["plan"] if check["id"] == "package-upgrade"
         )
         self.assertIn("v0.0.9", detail)
-        self.assertIn("never inferred from a rebuild", detail)
+        self.assertIn("GLYPHASTORE_N1_PACKAGE_DIR", detail)
+        self.assertIn("never rebuilds N-1 from HEAD", detail)
 
     def test_the_upgrade_row_only_reaches_upgrade_verified_through_a_real_pass(self) -> None:
         proven = {

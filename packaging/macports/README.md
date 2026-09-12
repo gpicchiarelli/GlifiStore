@@ -47,13 +47,13 @@ A link into a foreign prefix is a defect. The only way to accept one is to write
 it, with a reason, into `packaging/macports/prefix-exceptions.txt`
 (`<install name> # <reason>`); no such file exists today.
 
-## Service integration: open gate
+## Service integration
 
-The port deliberately installs **no launchd startup item**. MacPorts startup items
-run as root, while GlyphaStore requires the dedicated unprivileged `glyphastore`
-account the port creates with `add_users`. Until a launchd model that keeps the
-daemon unprivileged is designed, reviewed and proven with a retained run, the
-`service-lifecycle` check is `OPEN_GATE` and the backend can never report `PASS`.
+The port installs an unprivileged launchd startup item via MacPorts 2.7+
+`startupitem.user` / `startupitem.group` (`glyphastore`). When
+`GLYPHASTORE_PACKAGE_CI_NATIVE=1`, the packaging lifecycle starts and stops it
+with `port load` / `port unload`. Without a retained native run,
+`service-lifecycle` stays `OPEN_GATE`.
 
 The `put-get-erase` and `restart-recovery` checks, when they run, start the
 installed daemon **directly** under a driver-owned configuration. That is a binary

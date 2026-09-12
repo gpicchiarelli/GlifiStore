@@ -194,11 +194,12 @@ python3 engineering/tools/run_package_admission.py \
   ([run 34662210614](https://github.com/gpicchiarelli/GlyphaStore/actions/runs/34662210614));
   overall result stays `NOT_RUN` without a sealed candidate. See
   [wave5-l7-residuals.md](wave5-l7-residuals.md).
-- MacPorts installs no launchd startup item. Homebrew's formula declares `brew services` and the
-  native lifecycle exercises it when enabled; without a retained native run both stay `OPEN_GATE`
-  for `service-lifecycle`.
-- `package-upgrade` has never run positively anywhere: it is `NOT_APPLICABLE_INITIAL_BASELINE`
-  until a predecessor exists, then `NOT_RUN` until a sealed N−1 package is admitted.
+- MacPorts declares an unprivileged launchd startup item; Homebrew declares `brew services`.
+  Both are exercised when native packaging CI is enabled; without a retained native run they
+  stay `OPEN_GATE` for `service-lifecycle`.
+- `package-upgrade` is `NOT_APPLICABLE_INITIAL_BASELINE` until a predecessor exists, then
+  `NOT_RUN` until sealed N−1 packages are supplied via `GLYPHASTORE_N1_PACKAGE_DIR` (never
+  rebuilt from HEAD).
 - The cross-SDK post-install matrix against a package-installed daemon has retained nightly
   PASS evidence
   ([run 34666166603](https://github.com/gpicchiarelli/GlyphaStore/actions/runs/34666166603));

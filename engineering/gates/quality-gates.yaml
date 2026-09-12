@@ -805,10 +805,11 @@ gates:
   rischio_residuo: Retained nightly Package CI run 34662210614 (tip 58167e8) proved deb and
     rpm LIFECYCLE_VERIFIED with service-lifecycle PASS under systemd PID 1; overall result
     remains NOT_RUN without a sealed candidate, and required_for_release stays false. No
-    retained MacPorts/Homebrew native lifecycle; Homebrew brew services is exercised when
-    native runs, otherwise OPEN_GATE with MacPorts; every upstream acceptance stays OPEN_GATE;
-    BSD external consumer is implemented but unretained on a tagged release; deb, rpm,
-    macports and homebrew remain required_for_release false
+    retained MacPorts/Homebrew native lifecycle; both declare init integrations
+    (unprivileged launchd startupitem.user/group; brew services) exercised when native
+    runs, otherwise OPEN_GATE; every upstream acceptance stays OPEN_GATE; BSD external
+    consumer is implemented but unretained on a tagged release; deb, rpm, macports and
+    homebrew remain required_for_release false
   riapertura:
   - Promoting a backend to required_for_release without retained LIFECYCLE_VERIFIED evidence and an ADR
   - Reporting a structural row as a package, service or upstream-acceptance proof

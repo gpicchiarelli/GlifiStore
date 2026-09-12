@@ -6,10 +6,10 @@ host can actually do it, walks the lifecycle: lint or audit, build, install,
 inspect, prefix isolation, external consumer, daemon exercise, deactivate and
 activate or uninstall, cleanup. Every check that did not run says so.
 
-MacPorts `service-lifecycle` stays an open gate: the port installs no launchd
-startup item. Homebrew's formula declares a `brew services` block; when the
-native lifecycle runs, that block is started, health-checked and stopped. When
-native is skipped, Homebrew reports the same OPEN_GATE residual as MacPorts.
+MacPorts and Homebrew declare init integrations (unprivileged launchd via
+`startupitem.user`/`group`, and `brew services`). When the native lifecycle runs,
+those integrations are started, health-checked and stopped. When native is
+skipped, both report OPEN_GATE until a retained native run exists.
 
 The native lifecycle mutates the host package manager, so it is opt-in:
 set GLYPHASTORE_PACKAGE_CI_NATIVE=1 on a runner that may install packages.
@@ -84,9 +84,9 @@ LIFECYCLE_CHAIN = (
 )
 SERVICE_GATE = {
     "macports": (
-        "The port installs no launchd startup item: MacPorts startup items run as root while "
-        "GlyphaStore requires its dedicated unprivileged account, so the supported launchd model "
-        "is still an open packaging gate."
+        "The port declares an unprivileged launchd startup item "
+        "(startupitem.user/group glyphastore), but this run did not exercise "
+        "`port load/unload glyphastore` (native lifecycle not enabled)."
     ),
     "homebrew": (
         "The formula declares a brew services block, but this run did not exercise "
@@ -543,6 +543,52 @@ def _inventory(
     return satisfied
 
 
+def run_macports_service_lifecycle(recorder: Recorder, *, root: Path, prefix: Path) -> None:
+    """Start, health-check and stop the port through `port load` / `port unload`."""
+    log = recorder.directory / "macports-service-lifecycle.log"
+    sample = prefix / "etc/glyphastore/glyphastored.conf.sample"
+    config = prefix / "etc/glyphastore/glyphastored.conf"
+    if not sample.is_file():
+        recorder.record(
+            "service-lifecycle",
+            "FAIL",
+            log=log.name,
+            detail=f"missing packaged sample configuration: {sample}",
+        )
+        return
+    if not config.exists():
+        shutil.copy2(sample, config)
+        _note(log, f"installed operator configuration from {sample.name}")
+    started = _run(_sudo(["port", "load", "glyphastore"]), log=log)
+    ready = started and wait_for_port(7379, time.monotonic() + DAEMON_READY_TIMEOUT)
+    _note(log, f"port load reached 127.0.0.1:7379: {ready}")
+    healthy = False
+    if ready:
+        command, environment = client_command(
+            root,
+            7379,
+            "put",
+            "--key-hex",
+            b"macports-services".hex(),
+            "--value-hex",
+            b"lifecycle".hex(),
+        )
+        healthy = _run(command, log=log, environment=environment, timeout=300)
+    stopped = _run(_sudo(["port", "unload", "glyphastore"]), log=log)
+    if ready:
+        deadline = time.monotonic() + 30.0
+        while time.monotonic() < deadline:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+                if probe.connect_ex(("127.0.0.1", 7379)) != 0:
+                    break
+            time.sleep(0.25)
+    recorder.record(
+        "service-lifecycle",
+        "PASS" if started and ready and healthy and stopped else "FAIL",
+        log=log.name,
+    )
+
+
 def run_macports_lifecycle(
     recorder: Recorder, *, root: Path, port_directory: Path, work: Path, abi_version: str
 ) -> None:
@@ -586,6 +632,7 @@ def run_macports_lifecycle(
         recorder, backend="macports", root=root, paths=[daemon_binary, library]
     )
     build_external_consumer(recorder, root=root, prefix=prefix, work=work, backend="macports")
+    run_macports_service_lifecycle(recorder, root=root, prefix=prefix)
     exercise_daemon(recorder, root=root, executable=daemon_binary, work=work, backend="macports")
 
     remove = logs / "macports-remove.log"
@@ -763,14 +810,8 @@ def execute(
             "package-metadata-render", "FAIL", log=render_log.name, detail=str(error)
         )
 
-    # MacPorts never installs a launchd item. Homebrew's services block is exercised
-    # only when the native lifecycle actually runs; otherwise it stays OPEN_GATE.
-    if backend == "macports":
-        recorder.record("service-lifecycle", "OPEN_GATE", detail=SERVICE_GATE[backend])
-        recorder.residuals.append(
-            f"{backend}-service-integration={SERVICE_GATE[backend]}"
-            "|a packaged launchd startup item plus a retained start/stop run"
-        )
+    # Service integrations are exercised only when the native lifecycle runs.
+    # Structural/PR hosts keep an honest OPEN_GATE until that retained run exists.
 
     distribution = "the MacPorts ports tree" if backend == "macports" else "an official tap"
     upstream = recorder.write_log(
@@ -796,10 +837,15 @@ def execute(
     )
 
     if context["previous"]["available"]:
+        tag = context["previous"]["tag"]
         recorder.record(
             "package-upgrade",
             "NOT_RUN",
-            detail="upgrade from the sealed N-1 package is wired in a later wave",
+            detail=(
+                f"previous release {tag} is selected; sealed N-1 package artifacts were not "
+                "supplied via GLYPHASTORE_N1_PACKAGE_DIR, so upgrade continuity was not "
+                "exercised. This run never rebuilds N-1 from HEAD."
+            ),
         )
     else:
         recorder.record(
@@ -838,7 +884,7 @@ def execute(
         recorder.record("service-lifecycle", "OPEN_GATE", detail=SERVICE_GATE[backend])
         recorder.residuals.append(
             f"{backend}-service-integration={SERVICE_GATE[backend]}"
-            "|a retained brew services start/health/stop run under GLYPHASTORE_PACKAGE_CI_NATIVE=1"
+            "|a retained native start/health/stop run under GLYPHASTORE_PACKAGE_CI_NATIVE=1"
         )
 
     recorder.pending(declared, fallback, reason or "not reached in this run")

@@ -138,7 +138,7 @@ Copied verbatim from the matrix; each one bounds what the backend may ever claim
 ### `macports` — MacPorts Portfile
 
 - packaging/macports/Portfile.in is rendered by engineering/tools/render_macos_packaging.py; the native port, install and daemon rows only run on a macOS host with MacPorts and GLYPHASTORE_PACKAGE_CI_NATIVE=1.
-- The port installs no launchd startup item, so service-lifecycle is an open gate and this backend can never report PASS today.
+- The port declares an unprivileged launchd startup item (startupitem.user/group glyphastore); the native lifecycle loads and unloads it when GLYPHASTORE_PACKAGE_CI_NATIVE=1. Without a retained native run, service-lifecycle stays an open gate and this backend cannot report PASS.
 - In-repo packaging is the project pipeline; it is not an upstream ports-tree acceptance claim.
 
 ### `openbsd` — OpenBSD reference port and .tgz

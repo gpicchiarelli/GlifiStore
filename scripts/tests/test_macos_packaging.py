@@ -94,6 +94,17 @@ class MacOsPackagingRenderTests(unittest.TestCase):
         )
         self.assertNotIn("{{", rendered)
 
+    def test_the_portfile_declares_an_unprivileged_launchd_startup_item(self) -> None:
+        rendered = render(
+            "macports", self.released_context(), self.sealed(), profile="release", root=ROOT
+        )
+
+        self.assertIn("startupitem.create      yes", rendered)
+        self.assertIn("startupitem.user        glyphastore", rendered)
+        self.assertIn("startupitem.group       glyphastore", rendered)
+        self.assertIn("startupitem.executable  ${prefix}/bin/glyphastored", rendered)
+        self.assertIn("add_users               glyphastore group=glyphastore", rendered)
+
     def test_the_portfile_carries_the_package_revision(self) -> None:
         rendered = render(
             "macports",

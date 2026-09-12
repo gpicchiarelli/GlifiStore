@@ -1652,15 +1652,33 @@ def run_remove(lifecycle: Lifecycle) -> None:
     )
 
 
+N1_PACKAGE_DIR_ENVIRONMENT = "GLYPHASTORE_N1_PACKAGE_DIR"
+
+
 def run_upgrade(recorder: Recorder, context: dict[str, Any]) -> None:
-    """A release-context fact, not an environment one: it is decided on every host."""
+    """Select the SemVer N-1 baseline; exercise needs sealed package bytes separately.
+
+    When a previous release exists, the check stays NOT_RUN until
+    GLYPHASTORE_N1_PACKAGE_DIR supplies the sealed predecessor packages. N-1 is
+    never rebuilt from HEAD. The install/seed/upgrade/verify walk is the next
+    packaging wave once those bytes exist beside a published release.
+    """
     if context["previous"]["available"]:
-        recorder.record(
-            "package-upgrade",
-            "NOT_RUN",
-            detail="the sealed N-1 package is selected and downloaded in a later wave; "
-            "this run never rebuilds N-1 from HEAD",
-        )
+        tag = context["previous"]["tag"]
+        supplied = os.environ.get(N1_PACKAGE_DIR_ENVIRONMENT, "").strip()
+        if supplied:
+            detail = (
+                f"previous release {tag} is selected and {N1_PACKAGE_DIR_ENVIRONMENT}="
+                f"{supplied} was set, but the install→seed→upgrade→verify walk is not "
+                "implemented in this backend yet. This run never rebuilds N-1 from HEAD."
+            )
+        else:
+            detail = (
+                f"previous release {tag} is selected; sealed N-1 package artifacts were not "
+                f"supplied via {N1_PACKAGE_DIR_ENVIRONMENT}, so upgrade continuity was not "
+                "exercised. This run never rebuilds N-1 from HEAD."
+            )
+        recorder.record("package-upgrade", "NOT_RUN", detail=detail)
     else:
         recorder.record(
             "package-upgrade",

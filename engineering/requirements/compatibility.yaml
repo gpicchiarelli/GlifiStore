@@ -341,13 +341,15 @@ requirements:
     note: Job package-admission lega release_evidence FreeBSD/OpenBSD al candidate sigillato
   rischio_residuo:
   - >-
-    L'ammissione e collegata fail-closed per l'esecuzione dei tool e trattiene i blocker, ma
-    admitted resta false finche la matrice cross-SDK package-installed non passa e
-    package-upgrade non esercita un predecessore SemVer N-1 sigillato
+    L'ammissione e collegata fail-closed per l'esecuzione dei tool e trattiene i blocker; la
+    matrice cross-SDK package-installed ha PASS nightly trattenuti per deb/rpm, ma admitted
+    resta false finche package-upgrade non esercita un predecessore SemVer N-1 sigillato
   - FreeBSD/OpenBSD adattano ancora release_evidence senza righe package-matrix per
     package-upgrade
   - Nessun tag annotato ha ancora trattenuto un'ammissione positiva
-  - I backend macOS e Linux non selezionano ancora il pacchetto N-1 sigillato nel proprio lifecycle
+  - I backend selezionano il predecessore SemVer e restano NOT_RUN finche
+    GLYPHASTORE_N1_PACKAGE_DIR non fornisce i pacchetti sigillati; la camminata
+    install→seed→upgrade→verify resta la wave successiva
   hazards:
   - HAZ-030
   - HAZ-034

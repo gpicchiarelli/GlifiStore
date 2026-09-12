@@ -349,8 +349,9 @@ def decide(
     if previous["available"]:
         statuses["package-upgrade"] = "NOT_RUN"
         details["package-upgrade"] = (
-            f"the sealed {display} package of {previous['tag']} is not admitted by package-ci yet; "
-            "upgrade continuity is never inferred from a rebuild"
+            f"previous release {previous['tag']} is selected; sealed N-1 {display} package "
+            "artifacts were not supplied via GLYPHASTORE_N1_PACKAGE_DIR, so upgrade continuity "
+            "was not exercised. This run never rebuilds N-1 from HEAD."
         )
     else:
         statuses["package-upgrade"] = "NOT_APPLICABLE_INITIAL_BASELINE"
@@ -428,8 +429,8 @@ def decide(
         )
     else:
         residuals.append(
-            f"package-upgrade-n1=The sealed prior release {display} package is not admitted by "
-            "package-ci yet|sealed N-1 package artifact admission"
+            f"package-upgrade-n1=Previous release is selected but sealed N-1 {display} packages "
+            "were not supplied via GLYPHASTORE_N1_PACKAGE_DIR|sealed N-1 package artifacts"
         )
 
     plan = check_plan(
