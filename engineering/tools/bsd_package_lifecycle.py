@@ -13,7 +13,8 @@ statuses, the lifecycle state, the result and the emit arguments, so that:
   the native lifecycle BLOCKED;
 * a native log without its own PASSED marker is a FAIL, never an inferred pass;
 * upgrade from N-1 stays NOT_APPLICABLE_INITIAL_BASELINE or NOT_RUN until a
-  sealed prior release package exists;
+  sealed prior release package exists (Linux deb/rpm exercise the walk when
+  GLYPHASTORE_N1_PACKAGE_DIR supplies those bytes);
 * the result stays OPEN_GATE while upstream acceptance is unproven, however far
   the native lifecycle got.
 """
@@ -35,6 +36,11 @@ from engineering.tools.generate_package_matrix import (
     load_matrix,
 )
 from engineering.tools.generate_release_context import ReleaseContextError, load_release_context
+from engineering.tools.n1_package_artifacts import (
+    N1_PACKAGE_DIR_ENVIRONMENT,
+    N1PackageError,
+    supplied_n1_package_dir,
+)
 from engineering.tools.package_framework import (
     MATRIX_PATH,
     PROFILES,
@@ -347,12 +353,27 @@ def decide(
 
     previous = context["previous"]
     if previous["available"]:
-        statuses["package-upgrade"] = "NOT_RUN"
-        details["package-upgrade"] = (
-            f"previous release {previous['tag']} is selected; sealed N-1 {display} package "
-            "artifacts were not supplied via GLYPHASTORE_N1_PACKAGE_DIR, so upgrade continuity "
-            "was not exercised. This run never rebuilds N-1 from HEAD."
-        )
+        try:
+            n1_dir = supplied_n1_package_dir()
+        except N1PackageError as error:
+            statuses["package-upgrade"] = "FAIL"
+            details["package-upgrade"] = str(error)
+        else:
+            if n1_dir is not None:
+                statuses["package-upgrade"] = "NOT_RUN"
+                details["package-upgrade"] = (
+                    f"previous release {previous['tag']} is selected and "
+                    f"{N1_PACKAGE_DIR_ENVIRONMENT}={n1_dir} was set, but the {display} "
+                    "install→seed→upgrade→verify walk is not implemented yet "
+                    "(Linux deb/rpm exercise that path). This run never rebuilds N-1 from HEAD."
+                )
+            else:
+                statuses["package-upgrade"] = "NOT_RUN"
+                details["package-upgrade"] = (
+                    f"previous release {previous['tag']} is selected; sealed N-1 {display} package "
+                    "artifacts were not supplied via GLYPHASTORE_N1_PACKAGE_DIR, so upgrade "
+                    "continuity was not exercised. This run never rebuilds N-1 from HEAD."
+                )
     else:
         statuses["package-upgrade"] = "NOT_APPLICABLE_INITIAL_BASELINE"
         details["package-upgrade"] = (
@@ -426,6 +447,17 @@ def decide(
         residuals.append(
             "package-upgrade-n1=No prior annotated release exists, so N-1 upgrade continuity is "
             "an initial baseline|the first sealed release"
+        )
+    elif statuses["package-upgrade"] == "FAIL":
+        residuals.append(
+            f"package-upgrade-n1=Sealed N-1 {display} package selection or continuity failed|"
+            "valid sealed N-1 packages and a successful upgrade walk"
+        )
+    elif "was set" in details.get("package-upgrade", ""):
+        residuals.append(
+            f"package-upgrade-n1=Sealed N-1 {display} packages were supplied but the "
+            f"{display} install→seed→upgrade→verify walk is not implemented|"
+            f"a retained {backend} upgrade walk"
         )
     else:
         residuals.append(

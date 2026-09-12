@@ -61,7 +61,9 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
 
 - `upstream-ports-acceptance` stays an open gate, so neither BSD backend can ever report `PASS`.
 - `package-upgrade` is `NOT_APPLICABLE_INITIAL_BASELINE` (no prior annotated release) and becomes
-  `NOT_RUN` — never `PASS` — until a sealed N−1 package artifact is admitted.
+  `NOT_RUN` — never `PASS` — until a sealed N−1 package artifact is admitted and the backend's
+  install→seed→upgrade→verify walk succeeds (Linux deb/rpm implement that walk when
+  `GLYPHASTORE_N1_PACKAGE_DIR` is supplied).
 - `external-consumer` against the installed package prefix is built by
   `scripts/lib/package-external-consumer.sh` inside the native FreeBSD/OpenBSD lifecycle scripts;
   a retained PASS lifts the BSD package-ci ceiling to `LIFECYCLE_VERIFIED` (upgrade and upstream
@@ -101,7 +103,7 @@ Declarative status is generated into [package-status.md](package-status.md); the
 | Homebrew `brew services` | Native lifecycle starts/stops the declared block; without a retained native run it stays `OPEN_GATE` | A retained native run that exercises the services block |
 | MacPorts / Homebrew native rows | Opt-in only (`--allow-native`); no hosted runner may install into the host package manager | A disposable macOS host or an accepted runner policy, with retained logs |
 | `external-consumer` on BSD | Implemented in native lifecycle scripts; maps to package-ci `PASS` → `LIFECYCLE_VERIFIED` when the log is retained | A tagged/native retained run that keeps `*-external-consumer.log` |
-| `package-upgrade` anywhere | Selection is wired: `NOT_APPLICABLE_INITIAL_BASELINE` today; once a predecessor exists, `NOT_RUN` until sealed packages are supplied via `GLYPHASTORE_N1_PACKAGE_DIR` (never rebuilt from HEAD) | A sealed N−1 package artifact plus the install→seed→upgrade→verify walk |
+| `package-upgrade` anywhere | Selection is wired: `NOT_APPLICABLE_INITIAL_BASELINE` today; once a predecessor exists, `NOT_RUN` until sealed packages are supplied via `GLYPHASTORE_N1_PACKAGE_DIR` (never rebuilt from HEAD). Linux deb/rpm implement install→seed→upgrade→verify when those bytes are mounted into the native/container lifecycle | A sealed N−1 package artifact retained beside a published release, plus a PASS on the Linux walk (macOS/BSD walks still residual) |
 | Wave F admission tools | `run_package_admission.py` is wired into `package-ci.yml` (sealed candidate) and `release.yml` (`package-admission` job); Linux nightly now retains cross-SDK PASS | A positive `admitted: true` after sealed N−1 `package-upgrade` on required backends |
 | Cross-SDK post-install matrix | Retained nightly [`34666166603`](https://github.com/gpicchiarelli/GlyphaStore/actions/runs/34666166603) (`ebcf1fa`): deb (Debian 12 + Ubuntu 24.04) and rpm (Fedora 41) `installed-sdk-matrix.json` **PASS** against package-owned `/usr/bin/glyphastored` (cpp/python/go/perl/ruby/erlang, plain) | Wire that retained PASS into a sealed-candidate admission report (`admitted: true` still needs N−1 `package-upgrade`) |
 | Optional backends | `deb`, `rpm`, `macports`, `homebrew` are `required_for_release: false` and cannot admit a release artifact | Retained `LIFECYCLE_VERIFIED` evidence, a release-policy artifact, an ADR and a gate update |

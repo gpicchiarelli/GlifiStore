@@ -199,7 +199,9 @@ python3 engineering/tools/run_package_admission.py \
   stay `OPEN_GATE` for `service-lifecycle`.
 - `package-upgrade` is `NOT_APPLICABLE_INITIAL_BASELINE` until a predecessor exists, then
   `NOT_RUN` until sealed N−1 packages are supplied via `GLYPHASTORE_N1_PACKAGE_DIR` (never
-  rebuilt from HEAD).
+  rebuilt from HEAD). Linux deb/rpm run install→seed→upgrade→verify when that directory is
+  available inside the native/container lifecycle; macOS and BSD still report `NOT_RUN` until
+  their walks exist.
 - The cross-SDK post-install matrix against a package-installed daemon has retained nightly
   PASS evidence
   ([run 34666166603](https://github.com/gpicchiarelli/GlyphaStore/actions/runs/34666166603));

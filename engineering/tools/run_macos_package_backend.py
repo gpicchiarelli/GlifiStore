@@ -41,6 +41,11 @@ from engineering.tools.generate_package_matrix import (
 )
 from engineering.tools.generate_release_context import ReleaseContextError, load_release_context
 from engineering.tools.macos_prefix_isolation import PrefixIsolationError, inspect as inspect_links
+from engineering.tools.n1_package_artifacts import (
+    N1_PACKAGE_DIR_ENVIRONMENT,
+    N1PackageError,
+    supplied_n1_package_dir,
+)
 from engineering.tools.package_framework import (
     MATRIX_PATH,
     PROFILES,
@@ -838,15 +843,32 @@ def execute(
 
     if context["previous"]["available"]:
         tag = context["previous"]["tag"]
-        recorder.record(
-            "package-upgrade",
-            "NOT_RUN",
-            detail=(
-                f"previous release {tag} is selected; sealed N-1 package artifacts were not "
-                "supplied via GLYPHASTORE_N1_PACKAGE_DIR, so upgrade continuity was not "
-                "exercised. This run never rebuilds N-1 from HEAD."
-            ),
-        )
+        try:
+            n1_dir = supplied_n1_package_dir()
+        except N1PackageError as error:
+            recorder.record("package-upgrade", "FAIL", detail=str(error))
+        else:
+            if n1_dir is not None:
+                recorder.record(
+                    "package-upgrade",
+                    "NOT_RUN",
+                    detail=(
+                        f"previous release {tag} is selected and {N1_PACKAGE_DIR_ENVIRONMENT}="
+                        f"{n1_dir} was set, but the {backend} install→seed→upgrade→verify walk "
+                        "is not implemented yet (Linux deb/rpm exercise that path). "
+                        "This run never rebuilds N-1 from HEAD."
+                    ),
+                )
+            else:
+                recorder.record(
+                    "package-upgrade",
+                    "NOT_RUN",
+                    detail=(
+                        f"previous release {tag} is selected; sealed N-1 package artifacts were not "
+                        f"supplied via {N1_PACKAGE_DIR_ENVIRONMENT}, so upgrade continuity was not "
+                        "exercised. This run never rebuilds N-1 from HEAD."
+                    ),
+                )
     else:
         recorder.record(
             "package-upgrade",

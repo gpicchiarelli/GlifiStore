@@ -313,6 +313,7 @@ requirements:
   - engineering/tools/semver_policy.py
   - engineering/tools/prior_release.py
   - engineering/tools/upgrade_baseline.py
+  - engineering/tools/n1_package_artifacts.py
   - engineering/tools/generate_artifact_manifest.py
   - engineering/tools/validate_package_admission.py
   - engineering/tools/run_package_admission.py
@@ -323,6 +324,7 @@ requirements:
   - engineering/schemas/installed-sdk-matrix.schema.json
   prove:
   - scripts/tests/test_package_upgrade_baseline.py
+  - scripts/tests/test_n1_package_artifacts.py
   - scripts/tests/test_package_admission.py
   - scripts/tests/test_package_admission_orchestrator.py
   - scripts/tests/test_artifact_manifest.py
@@ -348,8 +350,10 @@ requirements:
     package-upgrade
   - Nessun tag annotato ha ancora trattenuto un'ammissione positiva
   - I backend selezionano il predecessore SemVer e restano NOT_RUN finche
-    GLYPHASTORE_N1_PACKAGE_DIR non fornisce i pacchetti sigillati; la camminata
-    install→seed→upgrade→verify resta la wave successiva
+    GLYPHASTORE_N1_PACKAGE_DIR non fornisce i pacchetti sigillati; Linux deb/rpm
+    eseguono install→seed→upgrade→verify quando quei byte sono montati nel
+    lifecycle nativo/container, ma senza un predecessore pubblicato non esiste
+    ancora un PASS trattenuto; macOS e BSD restano residuali sulla camminata
   hazards:
   - HAZ-030
   - HAZ-034

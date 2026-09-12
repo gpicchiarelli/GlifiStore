@@ -3,9 +3,10 @@
 
 The driver renders the packaging metadata from the release context and, when the
 environment can actually do it, walks the lifecycle: lint, build, inspect,
-prefix isolation, install, external consumer, systemd service, protocol
-exercise, durable restart, configuration preservation and removal. Every check
-that did not run says so, with the reason.
+prefix isolation, install (or sealed N-1 install→seed→upgrade→verify when
+GLYPHASTORE_N1_PACKAGE_DIR supplies predecessor packages), external consumer,
+systemd service, protocol exercise, durable restart, configuration preservation
+and removal. Every check that did not run says so, with the reason.
 
 Three execution modes, in decreasing order of preference:
 
@@ -51,6 +52,14 @@ from engineering.tools.generate_package_matrix import (
     load_matrix,
 )
 from engineering.tools.generate_release_context import ReleaseContextError, load_release_context
+from engineering.tools.n1_package_artifacts import (
+    CONTAINER_N1_MOUNT,
+    N1_PACKAGE_DIR_ENVIRONMENT,
+    N1PackageError,
+    select_linux_n1_packages,
+    supplied_n1_package_dir,
+    upgrade_exercise_requested,
+)
 from engineering.tools.package_framework import (
     MATRIX_PATH,
     PROFILES,
@@ -546,6 +555,7 @@ def container_mount_and_environment(
     output: Path,
     release_context: Path,
     candidate: str = "",
+    n1_packages: str = "",
     host_uid: int | None = None,
     host_gid: int | None = None,
     seal: str = "",
@@ -570,6 +580,9 @@ def container_mount_and_environment(
     if candidate:
         mounts += ["-v", f"{candidate}:/candidate:ro"]
         environment += ["-e", f"{CANDIDATE_ENVIRONMENT}=/candidate"]
+    if n1_packages:
+        mounts += ["-v", f"{n1_packages}:{CONTAINER_N1_MOUNT}:ro"]
+        environment += ["-e", f"{N1_PACKAGE_DIR_ENVIRONMENT}={CONTAINER_N1_MOUNT}"]
     return mounts, environment
 
 
@@ -584,6 +597,7 @@ def container_run_arguments(
     profile: str,
     stage: str,
     candidate: str = "",
+    n1_packages: str = "",
     host_uid: int | None = None,
     host_gid: int | None = None,
     seal: str = "",
@@ -599,6 +613,7 @@ def container_run_arguments(
         output=output,
         release_context=release_context,
         candidate=candidate,
+        n1_packages=n1_packages,
         host_uid=host_uid,
         host_gid=host_gid,
         seal=seal,
@@ -633,6 +648,7 @@ def container_create_arguments(
     output: Path,
     release_context: Path,
     candidate: str = "",
+    n1_packages: str = "",
     host_uid: int | None = None,
     host_gid: int | None = None,
     seal: str = "",
@@ -645,6 +661,7 @@ def container_create_arguments(
         output=output,
         release_context=release_context,
         candidate=candidate,
+        n1_packages=n1_packages,
         host_uid=host_uid,
         host_gid=host_gid,
         seal=seal,
@@ -783,6 +800,7 @@ def dispatch_container(
     log = recorder.directory / "container-dispatch.log"
     image = f"{target.image}@{target.image_digest}"
     candidate = os.environ.get(CANDIDATE_ENVIRONMENT, "").strip()
+    n1_packages = os.environ.get(N1_PACKAGE_DIR_ENVIRONMENT, "").strip()
     ci_identity = {
         name: os.environ.get(name, "").strip() for name in CI_IDENTITY_ENVIRONMENT
     }
@@ -791,6 +809,8 @@ def dispatch_container(
     _note(log, f"target={target.identifier} runtime={runtime} image={image}")
     _note(log, f"host_uid={os.getuid()} host_gid={os.getgid()}")
     _note(log, f"systemd container name={name}")
+    if n1_packages:
+        _note(log, f"{N1_PACKAGE_DIR_ENVIRONMENT}={n1_packages} → {CONTAINER_N1_MOUNT}")
 
     def one_shot() -> bool:
         return _run(
@@ -804,6 +824,7 @@ def dispatch_container(
                 profile=profile,
                 stage=stage,
                 candidate=candidate,
+                n1_packages=n1_packages,
                 seal=seal,
                 ci_identity=ci_identity,
             ),
@@ -823,6 +844,7 @@ def dispatch_container(
                 output=recorder.directory,
                 release_context=release_context,
                 candidate=candidate,
+                n1_packages=n1_packages,
                 seal=seal,
                 ci_identity=ci_identity,
                 variant=variant,
@@ -1135,14 +1157,15 @@ def run_prefix_isolation(lifecycle: Lifecycle) -> None:
     recorder.record("prefix-isolation", "PASS" if ok and isolated else "FAIL", log=log.name)
 
 
-def run_install(lifecycle: Lifecycle) -> None:
-    recorder, log = lifecycle.recorder, lifecycle.log("package-install")
-    packages = [str(package) for package in _primary_packages(lifecycle)]
+def _install_package_files(lifecycle: Lifecycle, packages: Sequence[Path], log: Path) -> bool:
+    """Install the given .deb/.rpm files through the target's package manager."""
+    paths = [str(package) for package in packages]
     spec = SPECS[lifecycle.backend]
     environment = dict(os.environ)
     environment["DEBIAN_FRONTEND"] = "noninteractive"
+    _note(log, f"installing: {[Path(path).name for path in paths]}")
     installed = _run(
-        [*spec.install_command, *packages], log=log, environment=environment, timeout=BUILD_TIMEOUT
+        [*spec.install_command, *paths], log=log, environment=environment, timeout=BUILD_TIMEOUT
     )
     runtime_package = lifecycle.tokens["RUNTIME_PACKAGE"]
     if lifecycle.backend == "deb":
@@ -1162,9 +1185,49 @@ def run_install(lifecycle: Lifecycle) -> None:
         ],
         log=log,
     )
-    recorder.record(
-        "package-install", "PASS" if installed and account and payload else "FAIL", log=log.name
+    return bool(installed and account and payload)
+
+
+def run_install(lifecycle: Lifecycle) -> None:
+    recorder, log = lifecycle.recorder, lifecycle.log("package-install")
+    packages = _primary_packages(lifecycle)
+    ok = _install_package_files(lifecycle, packages, log)
+    recorder.record("package-install", "PASS" if ok else "FAIL", log=log.name)
+
+
+def _build_external_consumer(lifecycle: Lifecycle, log: Path) -> bool:
+    """Build the packaged smoke consumer against the currently installed prefix."""
+    source = lifecycle.work / "external-consumer/src"
+    build = lifecycle.work / "external-consumer/build"
+    shutil.rmtree(lifecycle.work / "external-consumer", ignore_errors=True)
+    shutil.copytree(lifecycle.root / "packaging/common/consumer", source)
+    environment = {
+        key: value
+        for key, value in os.environ.items()
+        if key not in ("GITHUB_WORKSPACE", "CMAKE_PREFIX_PATH", "CPATH", "LIBRARY_PATH")
+    }
+    configured = _run(
+        [
+            "cmake",
+            "-S",
+            str(source),
+            "-B",
+            str(build),
+            "-GNinja",
+            f"-DCMAKE_PREFIX_PATH={lifecycle.layout['prefix']}",
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        ],
+        log=log,
+        environment=environment,
     )
+    compiled = configured and _run(
+        ["cmake", "--build", str(build)], log=log, environment=environment, timeout=BUILD_TIMEOUT
+    )
+    if not compiled:
+        return False
+    lifecycle.consumer_build = build
+    return True
 
 
 def write_package_file_list(lifecycle: Lifecycle) -> Path | None:
@@ -1255,34 +1318,22 @@ def run_installed_sdk_matrix(lifecycle: Lifecycle) -> None:
 def run_external_consumer(lifecycle: Lifecycle) -> None:
     """Build the packaged consumer from outside the checkout, against the install prefix."""
     recorder, log = lifecycle.recorder, lifecycle.log("external-consumer")
-    source = lifecycle.work / "external-consumer/src"
-    build = lifecycle.work / "external-consumer/build"
-    shutil.rmtree(lifecycle.work / "external-consumer", ignore_errors=True)
-    shutil.copytree(lifecycle.root / "packaging/common/consumer", source)
+    if not _build_external_consumer(lifecycle, log):
+        recorder.record(
+            "external-consumer",
+            "FAIL",
+            log=log.name,
+            detail="the external consumer failed to configure or compile",
+        )
+        return
+    build = lifecycle.consumer_build
+    assert build is not None
     environment = {
         key: value
         for key, value in os.environ.items()
         if key not in ("GITHUB_WORKSPACE", "CMAKE_PREFIX_PATH", "CPATH", "LIBRARY_PATH")
     }
-    configured = _run(
-        [
-            "cmake",
-            "-S",
-            str(source),
-            "-B",
-            str(build),
-            "-GNinja",
-            f"-DCMAKE_PREFIX_PATH={lifecycle.layout['prefix']}",
-            "-DCMAKE_BUILD_TYPE=Release",
-            "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
-        ],
-        log=log,
-        environment=environment,
-    )
-    compiled = configured and _run(
-        ["cmake", "--build", str(build)], log=log, environment=environment, timeout=BUILD_TIMEOUT
-    )
-    exercised = compiled and _run(
+    exercised = _run(
         ["ctest", "--output-on-failure"], log=log, cwd=build, environment=environment
     )
     isolated = _run(
@@ -1296,8 +1347,8 @@ def run_external_consumer(lifecycle: Lifecycle) -> None:
         ],
         log=lifecycle.log("consumer-isolation"),
     )
-    if isolated:
-        lifecycle.consumer_build = build
+    if not isolated:
+        lifecycle.consumer_build = None
     recorder.record(
         "external-consumer",
         "PASS" if exercised and isolated else "FAIL",
@@ -1652,42 +1703,168 @@ def run_remove(lifecycle: Lifecycle) -> None:
     )
 
 
-N1_PACKAGE_DIR_ENVIRONMENT = "GLYPHASTORE_N1_PACKAGE_DIR"
+UPGRADE_SEED_KEY = "linux-package-upgrade"
+UPGRADE_SEED_VALUE = "durable-across-n1-upgrade"
 
 
 def run_upgrade(recorder: Recorder, context: dict[str, Any]) -> None:
-    """Select the SemVer N-1 baseline; exercise needs sealed package bytes separately.
+    """Record pre-exercise upgrade status when the install walk will not run here.
 
-    When a previous release exists, the check stays NOT_RUN until
-    GLYPHASTORE_N1_PACKAGE_DIR supplies the sealed predecessor packages. N-1 is
-    never rebuilt from HEAD. The install/seed/upgrade/verify walk is the next
-    packaging wave once those bytes exist beside a published release.
+    When a SemVer predecessor exists and GLYPHASTORE_N1_PACKAGE_DIR supplies sealed
+    packages, recording is deferred to ``run_upgrade_exercise`` inside the native
+    lifecycle. N-1 is never rebuilt from HEAD.
     """
-    if context["previous"]["available"]:
-        tag = context["previous"]["tag"]
-        supplied = os.environ.get(N1_PACKAGE_DIR_ENVIRONMENT, "").strip()
-        if supplied:
-            detail = (
-                f"previous release {tag} is selected and {N1_PACKAGE_DIR_ENVIRONMENT}="
-                f"{supplied} was set, but the install→seed→upgrade→verify walk is not "
-                "implemented in this backend yet. This run never rebuilds N-1 from HEAD."
-            )
-        else:
-            detail = (
-                f"previous release {tag} is selected; sealed N-1 package artifacts were not "
-                f"supplied via {N1_PACKAGE_DIR_ENVIRONMENT}, so upgrade continuity was not "
-                "exercised. This run never rebuilds N-1 from HEAD."
-            )
-        recorder.record("package-upgrade", "NOT_RUN", detail=detail)
-    else:
+    previous = context["previous"]
+    if not previous["available"]:
         recorder.record(
             "package-upgrade",
             "NOT_APPLICABLE_INITIAL_BASELINE",
-            detail=context["previous"]["reason"],
+            detail=previous["reason"],
         )
+        return
+    try:
+        if upgrade_exercise_requested(previous):
+            # Native lifecycle records PASS/FAIL after install→seed→upgrade→verify.
+            return
+    except N1PackageError as error:
+        recorder.record("package-upgrade", "FAIL", detail=str(error))
+        return
+    tag = previous["tag"]
+    recorder.record(
+        "package-upgrade",
+        "NOT_RUN",
+        detail=(
+            f"previous release {tag} is selected; sealed N-1 package artifacts were not "
+            f"supplied via {N1_PACKAGE_DIR_ENVIRONMENT}, so upgrade continuity was not "
+            "exercised. This run never rebuilds N-1 from HEAD."
+        ),
+    )
 
 
-def run_target_lifecycle(lifecycle: Lifecycle, *, source: SourceArchive | None) -> None:
+def finalize_deferred_upgrade(recorder: Recorder, context: dict[str, Any]) -> None:
+    """If sealed N-1 bytes were supplied but the native walk never ran, say so."""
+    if "package-upgrade" in recorder.statuses:
+        return
+    previous = context["previous"]
+    if not previous.get("available"):
+        return
+    try:
+        directory = supplied_n1_package_dir()
+    except N1PackageError as error:
+        recorder.record("package-upgrade", "FAIL", detail=str(error))
+        return
+    if directory is None:
+        return
+    tag = previous["tag"]
+    recorder.record(
+        "package-upgrade",
+        "NOT_RUN",
+        detail=(
+            f"previous release {tag} is selected and {N1_PACKAGE_DIR_ENVIRONMENT}="
+            f"{directory} was set, but the install→seed→upgrade→verify walk did not run "
+            "because the native install lifecycle was not reached in this process. "
+            "This run never rebuilds N-1 from HEAD."
+        ),
+    )
+
+
+def run_upgrade_exercise(lifecycle: Lifecycle, context: dict[str, Any]) -> None:
+    """Install sealed N-1, seed durable data, upgrade to N, verify byte-exact continuity."""
+    recorder = lifecycle.recorder
+    log = lifecycle.log("package-upgrade")
+    install_log = lifecycle.log("package-install")
+    previous = context["previous"]
+    tag = previous["tag"]
+    version = previous["version"]
+    try:
+        n1_dir = supplied_n1_package_dir()
+        if n1_dir is None:
+            raise N1PackageError(
+                f"{N1_PACKAGE_DIR_ENVIRONMENT} was unset while an upgrade exercise was requested"
+            )
+        n1_packages = select_linux_n1_packages(n1_dir, lifecycle.backend, version)
+    except N1PackageError as error:
+        _note(log, f"refused: {error}")
+        recorder.record("package-upgrade", "FAIL", log=log.name, detail=str(error))
+        run_install(lifecycle)
+        return
+
+    _note(log, f"previous release {tag} (version {version})")
+    _note(log, f"{N1_PACKAGE_DIR_ENVIRONMENT}={n1_dir}")
+    _note(log, f"N-1 packages: {[package.name for package in n1_packages]}")
+    _note(install_log, f"upgrade path: installing sealed N-1 from {tag} before N")
+
+    if not _install_package_files(lifecycle, n1_packages, install_log):
+        detail = f"sealed N-1 packages from {tag} failed to install"
+        _note(log, f"refused: {detail}")
+        recorder.record("package-upgrade", "FAIL", log=log.name, detail=detail)
+        recorder.record("package-install", "FAIL", log=install_log.name, detail=detail)
+        return
+
+    if not _build_external_consumer(lifecycle, log):
+        detail = "the smoke consumer could not be built against the installed N-1 prefix"
+        _note(log, f"refused: {detail}")
+        recorder.record("package-upgrade", "FAIL", log=log.name, detail=detail)
+        run_install(lifecycle)
+        return
+
+    daemon = InstalledDaemon(lifecycle, log)
+    seeded = False
+    if daemon.start():
+        seeded = daemon.client(
+            "--command", "put", "--key", UPGRADE_SEED_KEY, "--value", UPGRADE_SEED_VALUE
+        )
+    daemon.stop()
+    if not seeded:
+        detail = "could not seed durable data under the installed N-1 package"
+        _note(log, f"refused: {detail}")
+        recorder.record("package-upgrade", "FAIL", log=log.name, detail=detail)
+        run_install(lifecycle)
+        return
+    _note(log, f"seeded key={UPGRADE_SEED_KEY!r} under N-1")
+
+    n_packages = _primary_packages(lifecycle)
+    _note(log, f"upgrading to N packages: {[package.name for package in n_packages]}")
+    if not _install_package_files(lifecycle, n_packages, install_log):
+        detail = "upgrade from sealed N-1 to the built N packages failed"
+        _note(log, f"refused: {detail}")
+        recorder.record("package-upgrade", "FAIL", log=log.name, detail=detail)
+        recorder.record("package-install", "FAIL", log=install_log.name, detail=detail)
+        return
+    recorder.record("package-install", "PASS", log=install_log.name)
+
+    if not _build_external_consumer(lifecycle, log):
+        detail = "the smoke consumer could not be rebuilt against the upgraded N prefix"
+        _note(log, f"refused: {detail}")
+        recorder.record("package-upgrade", "FAIL", log=log.name, detail=detail)
+        return
+
+    recovered = False
+    if daemon.start():
+        recovered = daemon.client(
+            "--command",
+            "get",
+            "--key",
+            UPGRADE_SEED_KEY,
+            "--expect",
+            UPGRADE_SEED_VALUE,
+        )
+    daemon.stop()
+    if recovered:
+        _note(log, "seeded value recovered byte-exact after upgrade to N")
+        recorder.record("package-upgrade", "PASS", log=log.name)
+    else:
+        detail = (
+            f"value seeded under {tag} was not recovered byte-exact after upgrading to "
+            f"{context['product_version']}"
+        )
+        _note(log, f"refused: {detail}")
+        recorder.record("package-upgrade", "FAIL", log=log.name, detail=detail)
+
+
+def run_target_lifecycle(
+    lifecycle: Lifecycle, *, source: SourceArchive | None, context: dict[str, Any]
+) -> None:
     """Walk the lifecycle in order, blocking a phase whose prerequisite did not pass."""
     recorder = lifecycle.recorder
     run_lint(lifecycle)
@@ -1711,7 +1888,15 @@ def run_target_lifecycle(lifecycle: Lifecycle, *, source: SourceArchive | None) 
         )
 
     if recorder.passed("package-inspect"):
-        run_install(lifecycle)
+        try:
+            exercise = upgrade_exercise_requested(context["previous"])
+        except N1PackageError as error:
+            recorder.record("package-upgrade", "FAIL", detail=str(error))
+            exercise = False
+        if exercise and "package-upgrade" not in recorder.statuses:
+            run_upgrade_exercise(lifecycle, context)
+        else:
+            run_install(lifecycle)
     else:
         recorder.record(
             "package-install", "BLOCKED", detail="the built package did not pass inspection"
@@ -1901,6 +2086,7 @@ def execute(
                     artifacts=directory / "artifacts",
                 ),
                 source=source,
+                context=context,
             )
         else:
             recorder.pending(
@@ -1955,6 +2141,8 @@ def execute(
                 )
     else:
         recorder.pending(declared, fallback, reason or "the lifecycle was not reached in this run")
+
+    finalize_deferred_upgrade(recorder, context)
 
     # Safety net: a check the matrix declares but this driver never reaches must
     # still say so rather than inherit someone else's status.
