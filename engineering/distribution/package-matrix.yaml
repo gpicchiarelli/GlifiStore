@@ -225,10 +225,9 @@ backends:
         (GLYPHASTORE_PACKAGE_CI_NATIVE=1). Every other environment reports them BLOCKED.
       - >-
         .github/workflows/package-ci.yml retains this backend's evidence per profile.
-        Retained nightly container runs reach FUNCTIONALLY_VERIFIED; service-lifecycle needs
-        systemd as PID 1 (container dispatch now starts linux-systemd-pid1.sh with cgroup +
-        privileged, falling back to BLOCKED when the host cannot). required_for_release stays
-        false until a gate promotes this backend.
+        Retained nightly container runs reach LIFECYCLE_VERIFIED with service-lifecycle PASS
+        under systemd as PID 1 (run 34662210614); overall result stays NOT_RUN without a sealed
+        candidate. required_for_release stays false until a gate promotes this backend.
       - >-
         The library package is not Multi-Arch: same and installs into a non-multiarch libdir,
         because the installed glyphastore-abi.pc derives its prefix two levels above itself.
@@ -281,10 +280,9 @@ backends:
         (GLYPHASTORE_PACKAGE_CI_NATIVE=1). Every other environment reports them BLOCKED.
       - >-
         .github/workflows/package-ci.yml retains this backend's evidence per profile.
-        Retained nightly container runs reach FUNCTIONALLY_VERIFIED; service-lifecycle needs
-        systemd as PID 1 (container dispatch now starts linux-systemd-pid1.sh with cgroup +
-        privileged, falling back to BLOCKED when the host cannot). required_for_release stays
-        false until a gate promotes this backend.
+        Retained nightly container runs reach LIFECYCLE_VERIFIED with service-lifecycle PASS
+        under systemd as PID 1 (run 34662210614); overall result stays NOT_RUN without a sealed
+        candidate. required_for_release stays false until a gate promotes this backend.
       - >-
         RPM has no purge action, so erase is the terminal state for the configuration: the
         operator edit survives as the file itself or as a .rpmsave sibling.

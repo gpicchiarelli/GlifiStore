@@ -70,19 +70,19 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
   only in the release workflow VM. `GATE-PACKAGE-LIFECYCLE` now cites that workflow and stays
   `IMPLEMENTATA`: citing a retention path is not the same as having retained a run.
 - The Linux container lifecycle (`deb`, `rpm`) is enabled from the `nightly` and `release`
-  profiles only (`main` stays structural). Retained nightly `34651423676` on tip `0261d65`
-  reaches `FUNCTIONALLY_VERIFIED` for both backends: build, install, protocol, restart,
-  config preservation and removal PASS; `service-lifecycle` stays `BLOCKED` because the
-  digest-pinned images historically did not run systemd as PID 1; container dispatch now
-  tries systemd-as-PID-1 create variants (`cgroupns=host`, then `private` + `docker.slice`)
-  via `linux-systemd-pid1.sh` so `service-lifecycle` can run through systemd when the host
-  allows it (fallback keeps BLOCKED). After install the lifecycle also emits
-  `installed-sdk-matrix.json` for Wave F admission (honest `NOT_RUN` when sealed SDK
-  archives are absent). `sealed-source-admission` is `NOT_RUN` on unsealed nightly
-  checkouts. When the inner driver writes evidence and exits non-zero, the outer
-  dispatcher prefers that report over inventing `BLOCKED`. Deb rules use Unix Makefiles
-  with static core; RPM `%cmake` forces `-DBUILD_SHARED_LIBS=OFF` and install clears
-  container `tsflags=nodocs` so manuals remain in the inventory.
+  profiles only (`main` stays structural). Retained nightly
+  [`34662210614`](https://github.com/gpicchiarelli/GlyphaStore/actions/runs/34662210614) on tip
+  `58167e8` reaches `LIFECYCLE_VERIFIED` for deb (Debian 12) and rpm (Fedora 41):
+  `service-lifecycle` PASS through systemd as PID 1, plus install, protocol, restart, config
+  preservation and removal. Overall result stays `NOT_RUN` on unsealed nightly checkouts because
+  `sealed-source-admission` is `NOT_RUN` (no publishable claim). Container dispatch tries
+  systemd-as-PID-1 create variants (`cgroupns=host`, then `private` + `docker.slice`) via
+  `linux-systemd-pid1.sh`. After install the lifecycle emits `installed-sdk-matrix.json` for
+  Wave F admission (honest `NOT_RUN` / `package_installed: true` when sealed SDK archives are
+  absent). When the inner driver writes evidence and exits non-zero, the outer dispatcher
+  prefers that report over inventing `BLOCKED`. Deb rules use Unix Makefiles with static core;
+  RPM `%cmake` forces `-DBUILD_SHARED_LIBS=OFF` and install clears container `tsflags=nodocs`
+  so manuals remain in the inventory.
 - MacPorts and Homebrew have no hosted runner that may install into the host package manager, so
   their native rows stay opt-in (`--allow-native`, never on by default) and unproven.
 
@@ -94,7 +94,7 @@ Declarative status is generated into [package-status.md](package-status.md); the
 
 | Residual | State today | What would close it |
 | --- | --- | --- |
-| deb / rpm container lifecycle | Retained nightly `34651423676` (`0261d65`): both backends `FUNCTIONALLY_VERIFIED`; `service-lifecycle` was BLOCKED without systemd PID 1. Tip tries systemd create variants (`cgroupns=host`, then private+`docker.slice`) via `linux-systemd-pid1.sh` | A retained nightly/release run proving `service-lifecycle` PASS (and sealed-candidate rows) |
+| deb / rpm container lifecycle | Retained nightly [`34662210614`](https://github.com/gpicchiarelli/GlyphaStore/actions/runs/34662210614) (`58167e8`): deb+rpm `LIFECYCLE_VERIFIED` with `service-lifecycle` PASS under systemd PID 1; overall `NOT_RUN` without a sealed candidate | A sealed-candidate release-profile row that keeps `LIFECYCLE_VERIFIED` and admits publishable bytes |
 | MacPorts `launchd` startup item | Not installed by the port, so `service-lifecycle` is `OPEN_GATE` | A packaged startup item plus a retained run that starts and stops it |
 | Homebrew `brew services` | Native lifecycle starts/stops the declared block; without a retained native run it stays `OPEN_GATE` | A retained native run that exercises the services block |
 | MacPorts / Homebrew native rows | Opt-in only (`--allow-native`); no hosted runner may install into the host package manager | A disposable macOS host or an accepted runner policy, with retained logs |
