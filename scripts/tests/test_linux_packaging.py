@@ -412,6 +412,7 @@ class ContainerDispatchTests(unittest.TestCase):
         self.assertIn("--privileged", joined)
         self.assertIn("--cgroupns=host", joined)
         self.assertIn("/sys/fs/cgroup:/sys/fs/cgroup:rw", joined)
+        self.assertIn("/tmp:rw,exec,nosuid,nodev", joined)
         self.assertIn("linux-systemd-pid1.sh", joined)
         self.assertIn("-d", argv)
         self.assertNotIn("--rm", argv)

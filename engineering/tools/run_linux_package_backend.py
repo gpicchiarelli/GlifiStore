@@ -655,6 +655,8 @@ def container_create_arguments(
     # dispatcher falls back to the one-shot entry and service-lifecycle stays BLOCKED.
     # Two host layouts are tried: cgroupns=host (common on GHA) and private +
     # docker.slice parent (cgroup v2 runners that refuse host namespace).
+    # Docker --tmpfs defaults to noexec; the installed-SDK matrix builds C++ peers
+    # under TMPDIR and needs an executable scratch mount.
     variants = {
         "cgroupns-host": [
             "--privileged",
@@ -662,7 +664,7 @@ def container_create_arguments(
             "-v",
             "/sys/fs/cgroup:/sys/fs/cgroup:rw",
             "--tmpfs",
-            "/tmp",
+            "/tmp:rw,exec,nosuid,nodev",
             "--tmpfs",
             "/run",
             "--tmpfs",
@@ -675,7 +677,7 @@ def container_create_arguments(
             "-v",
             "/sys/fs/cgroup:/sys/fs/cgroup:rw",
             "--tmpfs",
-            "/tmp",
+            "/tmp:rw,exec,nosuid,nodev",
             "--tmpfs",
             "/run",
             "--tmpfs",
@@ -1216,9 +1218,12 @@ def run_installed_sdk_matrix(lifecycle: Lifecycle) -> None:
             "GLYPHASTORE_PACKAGE_FILE_LIST": str(inventory),
             "GLYPHASTORE_PACKAGE_PREFIX": str(prefix),
             "INSTALLED_INTEROP_PROFILE": "plain",
+            # Docker --tmpfs /tmp defaults to noexec; keep scratch under /out.
+            "TMPDIR": str(lifecycle.recorder.directory / "tmp"),
             "PATH": f"/usr/local/go/bin:/usr/local/bin:{environment.get('PATH', '')}",
         }
     )
+    Path(environment["TMPDIR"]).mkdir(parents=True, exist_ok=True)
     _run(
         [
             "bash",
