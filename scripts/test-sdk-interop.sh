@@ -511,7 +511,12 @@ run_matrix_for_workers() {
       return 1
     fi
   else
-    start_server "$workers" "$port_file" "$log_file"
+    if ! start_server "$workers" "$port_file" "$log_file"; then
+      echo "cleartext server start failed; log:" >&2
+      cat "$log_file" >&2 || true
+      rm -rf "$work"
+      return 1
+    fi
   fi
   local port
   port="$(cat "$port_file")"

@@ -1212,6 +1212,19 @@ def run_installed_sdk_matrix(lifecycle: Lifecycle) -> None:
         _note(log, "matrix toolchains were not installed; harness will record the gap")
     report = lifecycle.recorder.directory / "installed-sdk-matrix.json"
     environment = dict(os.environ)
+    libdir = Path(lifecycle.layout["libdir"])
+    if not libdir.is_absolute():
+        libdir = Path("/") / libdir
+    library_path = os.pathsep.join(
+        part
+        for part in (
+            str(libdir),
+            str(prefix / "lib"),
+            str(prefix / "lib64"),
+            environment.get("LD_LIBRARY_PATH", ""),
+        )
+        if part
+    )
     environment.update(
         {
             "GLYPHASTORE_PACKAGE_DAEMON": str(daemon),
@@ -1221,6 +1234,7 @@ def run_installed_sdk_matrix(lifecycle: Lifecycle) -> None:
             # Docker --tmpfs /tmp defaults to noexec; keep scratch under /out.
             "TMPDIR": str(lifecycle.recorder.directory / "tmp"),
             "PATH": f"/usr/local/go/bin:/usr/local/bin:{environment.get('PATH', '')}",
+            "LD_LIBRARY_PATH": library_path,
         }
     )
     Path(environment["TMPDIR"]).mkdir(parents=True, exist_ok=True)

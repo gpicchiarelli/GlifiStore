@@ -87,6 +87,7 @@ if command -v apt-get >/dev/null 2>&1; then
     curl \
     g++ \
     make \
+    lsof \
     perl \
     python3 \
     python3-pip \
@@ -99,6 +100,7 @@ elif command -v dnf >/dev/null 2>&1; then
     curl \
     gcc-c++ \
     make \
+    lsof \
     perl \
     python3 \
     python3-pip \
