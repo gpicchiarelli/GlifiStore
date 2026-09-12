@@ -190,16 +190,18 @@ python3 engineering/tools/run_package_admission.py \
 ## What this pipeline does not prove
 
 - The `deb`/`rpm` container lifecycle has retained nightly evidence at `FUNCTIONALLY_VERIFIED`
-  (see [wave5-l7-residuals.md](wave5-l7-residuals.md)); container dispatch now starts systemd as
-  PID 1 when cgroup/privileged are available so `service-lifecycle` can PASS on the next retained
-  run (otherwise it stays `BLOCKED`).
-- MacPorts and Homebrew have no hosted runner allowed to install into the host package manager, and
-  neither installs a startup item that a retained run has ever started, so `service-lifecycle` is an
-  open gate for both.
+  (see [wave5-l7-residuals.md](wave5-l7-residuals.md)); container dispatch tries systemd-as-PID-1
+  create variants when cgroup/privileged are available so `service-lifecycle` can PASS on the
+  next retained run (otherwise it stays `BLOCKED`).
+- MacPorts installs no launchd startup item. Homebrew's formula declares `brew services` and the
+  native lifecycle exercises it when enabled; without a retained native run both stay `OPEN_GATE`
+  for `service-lifecycle`.
 - `package-upgrade` has never run positively anywhere: it is `NOT_APPLICABLE_INITIAL_BASELINE`
   until a predecessor exists, then `NOT_RUN` until a sealed N−1 package is admitted.
-- The cross-SDK post-install matrix against a package-installed daemon is `NOT_RUN`, so Wave F
-  admission reports stay `admitted: false` by construction even though the tools now run in CI.
+- The cross-SDK post-install matrix against a package-installed daemon stays `NOT_RUN` without
+  sealed SDK archives in the packaging target, so Wave F admission reports stay
+  `admitted: false` by construction even though Linux lifecycle and admission now retain the
+  honest report.
 - In-repo packaging is the project's own pipeline. It is not a Debian, Fedora, MacPorts, Homebrew,
   FreeBSD or OpenBSD acceptance, and nothing here may be described as one.
 

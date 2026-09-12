@@ -2,9 +2,9 @@
 """Orchestrate Wave F package admission for CI (fail-closed, retained reports).
 
 Resolves the SemVer N-1 baseline, builds the artifact identity graph from package
-files found next to the evidence, records an honest cross-SDK matrix report
-(NOT_RUN until a package-installed daemon is exercised), and binds everything
-through validate_package_admission.py.
+files found next to the evidence, prefers a retained cross-SDK matrix report from
+evidence when present (otherwise records an honest NOT_RUN harness result), and
+binds everything through validate_package_admission.py.
 
 Accepts package-CI evidence (`backend-profile-stage-package-evidence.json`).
 Native FreeBSD/OpenBSD release producers still emit release_evidence; those files
@@ -108,6 +108,55 @@ def write_sdk_matrix_not_run(output: Path, *, replace: bool) -> Path:
             "installed SDK matrix harness wrote no report: "
             + (completed.stderr or completed.stdout or f"exit {completed.returncode}")
         )
+    return output
+
+
+SDK_MATRIX_RANK = {"PASS": 4, "FAIL": 3, "BLOCKED": 2, "NOT_RUN": 1}
+
+
+def discover_sdk_matrix_reports(roots: list[Path]) -> list[Path]:
+    found: list[Path] = []
+    seen: set[Path] = set()
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for path in sorted(root.rglob("installed-sdk-matrix.json")):
+            resolved = path.resolve()
+            if path.is_symlink() or not path.is_file() or resolved in seen:
+                continue
+            found.append(path)
+            seen.add(resolved)
+    return found
+
+
+def prefer_or_write_sdk_matrix(
+    *, evidence_roots: list[Path], output: Path, replace: bool
+) -> Path:
+    """Prefer a retained lifecycle report over inventing a bare NOT_RUN."""
+    candidates: list[tuple[dict[str, Any], Path]] = []
+    for path in discover_sdk_matrix_reports(evidence_roots):
+        try:
+            candidates.append((load_sdk_matrix_report(path), path))
+        except (PackageFrameworkError, PackageAdmissionError):
+            continue
+    if not candidates:
+        return write_sdk_matrix_not_run(output, replace=replace)
+
+    def rank(item: tuple[dict[str, Any], Path]) -> tuple[int, int]:
+        report, _ = item
+        return (
+            1 if report.get("package_installed") else 0,
+            SDK_MATRIX_RANK.get(str(report.get("result")), 0),
+        )
+
+    best_report, best_path = max(candidates, key=rank)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    if output.resolve() != best_path.resolve():
+        if output.exists() and not replace:
+            raise PackageAdmissionRunError(
+                f"refusing to replace existing installed SDK matrix report: {output}"
+            )
+        write_json(output, best_report, replace=True)
     return output
 
 
@@ -316,7 +365,9 @@ def run_admission(
     write_json(baseline_path, baseline, replace=replace)
 
     sdk_path = output_dir / "installed-sdk-matrix.json"
-    write_sdk_matrix_not_run(sdk_path, replace=replace)
+    prefer_or_write_sdk_matrix(
+        evidence_roots=evidence_roots, output=sdk_path, replace=replace
+    )
 
     package_ci_paths, release_paths = discover_evidence(evidence_roots, profile, "full")
     if not package_ci_paths and not release_paths:

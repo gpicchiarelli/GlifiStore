@@ -43,13 +43,12 @@ A link into `/opt/local` is a defect. The only way to accept one is to write it,
 with a reason, into `packaging/homebrew/prefix-exceptions.txt`
 (`<install name> # <reason>`); no such file exists today.
 
-## Service integration: open gate
+## Service integration
 
-The formula declares a `service do` block, so `brew services start glyphastore`
-would generate a launchd job running as the invoking user. **No retained run has
-ever exercised it.** The `service-lifecycle` check is therefore `OPEN_GATE` and the
-backend can never report `PASS` today; a declared service block is packaging
-source, not a proof.
+The formula declares a `service do` block. When `GLYPHASTORE_PACKAGE_CI_NATIVE=1`,
+the packaging lifecycle starts, health-checks and stops GlyphaStore through
+`brew services`. Without a retained native run, `service-lifecycle` stays
+`OPEN_GATE` and the backend cannot report `PASS`.
 
 The `put-get-erase` and `restart-recovery` checks, when they run, start the
 installed daemon **directly** under a driver-owned configuration, which is a binary
@@ -74,7 +73,8 @@ from a `file://` archive of `HEAD`, whose digest it verifies before pinning it.
 ## Native lifecycle
 
 `brew audit`, `brew install --build-from-source`, `brew list`, the external consumer
-build, `brew test`, the daemon exercise, `brew uninstall` and `brew cleanup` only run
-on a macOS host with Homebrew **and** `GLYPHASTORE_PACKAGE_CI_NATIVE=1`, because they
-mutate the host package manager. Everything that did not run is reported as
+build, `brew test`, `brew services` start/stop, the daemon exercise, `brew uninstall`
+and `brew cleanup` only run on a macOS host with Homebrew **and**
+`GLYPHASTORE_PACKAGE_CI_NATIVE=1`, because they mutate the host package manager.
+Everything that did not run is reported as
 `NOT_RUN` or `BLOCKED`, never as `PASS`.

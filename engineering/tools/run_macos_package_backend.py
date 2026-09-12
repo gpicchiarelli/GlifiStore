@@ -4,10 +4,12 @@
 The adapter renders the backend metadata from the release context and, when the
 host can actually do it, walks the lifecycle: lint or audit, build, install,
 inspect, prefix isolation, external consumer, daemon exercise, deactivate and
-activate or uninstall, cleanup. Every check that did not run says so; the
-service-lifecycle check stays an open gate because no GlyphaStore launchd job or
-brew services run has ever been executed and retained, so this backend can never
-report PASS today.
+activate or uninstall, cleanup. Every check that did not run says so.
+
+MacPorts `service-lifecycle` stays an open gate: the port installs no launchd
+startup item. Homebrew's formula declares a `brew services` block; when the
+native lifecycle runs, that block is started, health-checked and stopped. When
+native is skipped, Homebrew reports the same OPEN_GATE residual as MacPorts.
 
 The native lifecycle mutates the host package manager, so it is opt-in:
 set GLYPHASTORE_PACKAGE_CI_NATIVE=1 on a runner that may install packages.
@@ -87,8 +89,8 @@ SERVICE_GATE = {
         "is still an open packaging gate."
     ),
     "homebrew": (
-        "The formula declares a brew services block, but no retained run has ever started, "
-        "health-checked and stopped GlyphaStore through launchd."
+        "The formula declares a brew services block, but this run did not exercise "
+        "`brew services start/stop glyphastore` (native lifecycle not enabled)."
     ),
 }
 BUILD_TIMEOUT = 60 * 60
@@ -371,6 +373,55 @@ def client_command(root: Path, port: int, *arguments: str) -> tuple[list[str], d
     return command, environment
 
 
+def run_homebrew_service_lifecycle(
+    recorder: Recorder, *, root: Path, prefix: Path
+) -> None:
+    """Start, health-check and stop the formula through `brew services`."""
+    log = recorder.directory / "homebrew-service-lifecycle.log"
+    sample = prefix / "etc/glyphastore/glyphastored.conf.sample"
+    config = prefix / "etc/glyphastore/glyphastored.conf"
+    if not sample.is_file():
+        recorder.record(
+            "service-lifecycle",
+            "FAIL",
+            log=log.name,
+            detail=f"missing packaged sample configuration: {sample}",
+        )
+        return
+    if not config.exists():
+        shutil.copy2(sample, config)
+        _note(log, f"installed operator configuration from {sample.name}")
+    started = _run(["brew", "services", "start", "glyphastore"], log=log)
+    ready = started and wait_for_port(7379, time.monotonic() + DAEMON_READY_TIMEOUT)
+    _note(log, f"brew services reached 127.0.0.1:7379: {ready}")
+    healthy = False
+    if ready:
+        command, environment = client_command(
+            root,
+            7379,
+            "put",
+            "--key-hex",
+            b"brew-services".hex(),
+            "--value-hex",
+            b"lifecycle".hex(),
+        )
+        healthy = _run(command, log=log, environment=environment, timeout=300)
+    stopped = _run(["brew", "services", "stop", "glyphastore"], log=log)
+    # Ensure the port is released before later direct-daemon rows reuse the host.
+    if ready:
+        deadline = time.monotonic() + 30.0
+        while time.monotonic() < deadline:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+                if probe.connect_ex(("127.0.0.1", 7379)) != 0:
+                    break
+            time.sleep(0.25)
+    recorder.record(
+        "service-lifecycle",
+        "PASS" if started and ready and healthy and stopped else "FAIL",
+        log=log.name,
+    )
+
+
 def exercise_daemon(
     recorder: Recorder, *, root: Path, executable: Path, work: Path, backend: str
 ) -> None:
@@ -380,7 +431,7 @@ def exercise_daemon(
         log,
         "The installed daemon is started directly under a driver-owned configuration and data "
         "directory. This is not an init-system managed service run; see the service-lifecycle "
-        "check for that open gate.",
+        "check for brew services (Homebrew native) or the MacPorts launchd open gate.",
     )
     daemon = InstalledDaemon(executable, work, log)
     key = b"macos-package".hex()
@@ -606,6 +657,7 @@ def run_homebrew_lifecycle(
     )
     if build_external_consumer(recorder, root=root, prefix=keg, work=work, backend="homebrew"):
         _run(["brew", "test", "glyphastore"], log=logs / "homebrew-external-consumer.log")
+    run_homebrew_service_lifecycle(recorder, root=root, prefix=prefix)
     exercise_daemon(recorder, root=root, executable=daemon_binary, work=work, backend="homebrew")
 
     remove = logs / "homebrew-remove.log"
@@ -711,11 +763,14 @@ def execute(
             "package-metadata-render", "FAIL", log=render_log.name, detail=str(error)
         )
 
-    recorder.record("service-lifecycle", "OPEN_GATE", detail=SERVICE_GATE[backend])
-    recorder.residuals.append(
-        f"{backend}-service-integration={SERVICE_GATE[backend]}"
-        "|a retained launchd or brew services lifecycle run"
-    )
+    # MacPorts never installs a launchd item. Homebrew's services block is exercised
+    # only when the native lifecycle actually runs; otherwise it stays OPEN_GATE.
+    if backend == "macports":
+        recorder.record("service-lifecycle", "OPEN_GATE", detail=SERVICE_GATE[backend])
+        recorder.residuals.append(
+            f"{backend}-service-integration={SERVICE_GATE[backend]}"
+            "|a packaged launchd startup item plus a retained start/stop run"
+        )
 
     distribution = "the MacPorts ports tree" if backend == "macports" else "an official tap"
     upstream = recorder.write_log(
@@ -778,6 +833,13 @@ def execute(
             )
     elif native:
         fallback, reason = "NOT_RUN", "no rendered metadata to build from"
+
+    if "service-lifecycle" not in recorder.statuses:
+        recorder.record("service-lifecycle", "OPEN_GATE", detail=SERVICE_GATE[backend])
+        recorder.residuals.append(
+            f"{backend}-service-integration={SERVICE_GATE[backend]}"
+            "|a retained brew services start/health/stop run under GLYPHASTORE_PACKAGE_CI_NATIVE=1"
+        )
 
     recorder.pending(declared, fallback, reason or "not reached in this run")
 

@@ -140,6 +140,7 @@ class InstalledSdkMatrixHarnessTests(unittest.TestCase):
         self.assertEqual(status, 0)
         value = self.report(path)
         self.assertEqual(value["result"], "NOT_RUN")
+        self.assertTrue(value["package_installed"])
         self.assertIn("no sealed SDK distribution archive", value["reason"])
 
     def test_an_existing_report_is_never_silently_replaced(self) -> None:

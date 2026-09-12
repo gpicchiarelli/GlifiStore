@@ -149,7 +149,10 @@ for name in python perl ruby go erlang; do
 done
 shopt -u nullglob
 if (( ${#missing[@]} > 0 )); then
-  not_run "no sealed SDK distribution archive for: ${missing[*]}"
+  # Ownership was proven; missing sealed SDK archives mean the matrix did not run,
+  # not that the daemon was unpackaged.
+  write_report NOT_RUN 1 "no sealed SDK distribution archive for: ${missing[*]}"
+  exit 0
 fi
 
 profile="${INSTALLED_INTEROP_PROFILE:-secure}"

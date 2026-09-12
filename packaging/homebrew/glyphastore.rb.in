@@ -67,8 +67,9 @@ class Glyphastore < Formula
         #{var}/glyphastore
       which `brew uninstall` never removes.
 
-      The `brew services` definition is declared but has not been proven by a
-      retained GlyphaStore packaging lifecycle run.
+      Native packaging CI (`GLYPHASTORE_PACKAGE_CI_NATIVE=1`) starts, health-checks
+      and stops this formula through `brew services`. Without that retained run,
+      service-lifecycle stays an open gate.
     EOS
   end
 

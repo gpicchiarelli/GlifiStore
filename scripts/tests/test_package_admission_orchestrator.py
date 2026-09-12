@@ -229,6 +229,47 @@ class PackageAdmissionOrchestratorTests(unittest.TestCase):
                 replace=True,
             )
 
+    def test_orchestrator_prefers_a_retained_installed_sdk_matrix(self) -> None:
+        self.emit_package_ci(profile="main")
+        retained = self.packages / "deb" / "installed-sdk-matrix.json"
+        retained.parent.mkdir(parents=True, exist_ok=True)
+        retained.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "generated_at": "2026-01-01T00:00:00Z",
+                    "result": "NOT_RUN",
+                    "package_installed": True,
+                    "daemon": "/usr/bin/glyphastored",
+                    "prefix": "/usr",
+                    "file_list": "/tmp/package-file-list.txt",
+                    "languages": [],
+                    "reason": "no sealed SDK distribution archive for: ruby erlang",
+                }
+            ),
+            encoding="utf-8",
+        )
+        report, code = run_admission(
+            root=self.repository,
+            profile="main",
+            candidate=self.candidate,
+            evidence_roots=[self.packages],
+            artifact_roots=[self.packages],
+            output_dir=self.output,
+            context_path=self.context_path,
+            seal_sha256=None,
+            allow_blocking=True,
+            replace=True,
+        )
+        self.assertEqual(code, 0)
+        self.assertFalse(report["admitted"])
+        blockers = {item["id"] for item in report["blocking"]}
+        self.assertIn("installed-sdk-matrix-not-passing", blockers)
+        self.assertNotIn("installed-sdk-matrix-not-package-installed", blockers)
+        copied = json.loads((self.output / "installed-sdk-matrix.json").read_text(encoding="utf-8"))
+        self.assertTrue(copied["package_installed"])
+        self.assertIn("no sealed SDK distribution archive", copied["reason"])
+
 
 if __name__ == "__main__":
     raise SystemExit(unittest.main())

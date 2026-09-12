@@ -802,11 +802,13 @@ gates:
   - workflow: assurance.yml
     note: Framework negative suites plus the generated package-status freshness check
   stato: IMPLEMENTATA
-  rischio_residuo: Linux container dispatch now starts systemd as PID 1 when cgroup/privileged
-    allow it (fallback keeps service-lifecycle BLOCKED); awaiting a retained nightly PASS for
-    that row before claiming LIFECYCLE_VERIFIED. No retained MacPorts/Homebrew native lifecycle;
-    MacPorts/Homebrew service rows and every upstream acceptance stay OPEN_GATE; BSD external
-    consumer is implemented but unretained on a tagged release; deb, rpm, macports and homebrew
+  rischio_residuo: Linux container dispatch tries systemd-as-PID-1 create variants
+    (cgroupns=host, then private+docker.slice) before falling back so service-lifecycle
+    stays BLOCKED only when the host cannot; awaiting a retained nightly PASS before
+    claiming LIFECYCLE_VERIFIED. No retained MacPorts/Homebrew native lifecycle;
+    Homebrew brew services is exercised when native runs, otherwise OPEN_GATE with
+    MacPorts; every upstream acceptance stays OPEN_GATE; BSD external consumer is
+    implemented but unretained on a tagged release; deb, rpm, macports and homebrew
     remain required_for_release false
   riapertura:
   - Promoting a backend to required_for_release without retained LIFECYCLE_VERIFIED evidence and an ADR
@@ -856,9 +858,11 @@ gates:
   stato: IMPLEMENTATA
   rischio_residuo: Admission is wired fail-closed for tool execution and retains blockers, but
     admitted stays false until a package-installed cross-SDK matrix PASSes and package-upgrade
-    is exercised against a sealed SemVer N-1 predecessor; FreeBSD/OpenBSD still adapt
-    release_evidence without package-matrix upgrade rows; no annotated release has retained a
-    positive admission yet
+    is exercised against a sealed SemVer N-1 predecessor; Linux lifecycle now emits
+    installed-sdk-matrix.json after install (honest NOT_RUN when sealed SDK archives are
+    absent) and admission prefers that retained report over inventing a bare NOT_RUN;
+    FreeBSD/OpenBSD still adapt release_evidence without package-matrix upgrade rows; no
+    annotated release has retained a positive admission yet
   riapertura:
   - Selecting an N-1 baseline by arithmetic instead of SemVer precedence over sealed releases
   - Rebuilding an N-1 package from HEAD or admitting a draft/incomplete predecessor

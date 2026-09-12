@@ -132,7 +132,7 @@ Copied verbatim from the matrix; each one bounds what the backend may ever claim
 ### `homebrew` — Homebrew Formula
 
 - packaging/homebrew/glyphastore.rb.in is rendered by engineering/tools/render_macos_packaging.py; the native audit, build, install and daemon rows only run on a macOS host with Homebrew and GLYPHASTORE_PACKAGE_CI_NATIVE=1.
-- The formula declares a brew services block that no retained run has ever started or stopped, so service-lifecycle is an open gate and this backend can never report PASS today.
+- The formula declares a brew services block; the native lifecycle starts, health-checks and stops it when GLYPHASTORE_PACKAGE_CI_NATIVE=1. Without a retained native run, service-lifecycle stays an open gate and this backend cannot report PASS.
 - In-repo packaging is the project pipeline; it is not an official tap acceptance claim.
 
 ### `macports` — MacPorts Portfile

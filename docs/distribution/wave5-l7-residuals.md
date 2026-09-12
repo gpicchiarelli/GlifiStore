@@ -74,12 +74,15 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
   reaches `FUNCTIONALLY_VERIFIED` for both backends: build, install, protocol, restart,
   config preservation and removal PASS; `service-lifecycle` stays `BLOCKED` because the
   digest-pinned images historically did not run systemd as PID 1; container dispatch now
-  starts `linux-systemd-pid1.sh` with cgroup + privileged so `service-lifecycle` can run
-  through systemd when the host allows it (fallback keeps BLOCKED). `sealed-source-admission`
-  is `NOT_RUN` on unsealed nightly checkouts. When the inner driver writes evidence and exits
-  non-zero, the outer dispatcher prefers that report over inventing `BLOCKED`. Deb rules use
-  Unix Makefiles with static core; RPM `%cmake` forces `-DBUILD_SHARED_LIBS=OFF` and install
-  clears container `tsflags=nodocs` so manuals remain in the inventory.
+  tries systemd-as-PID-1 create variants (`cgroupns=host`, then `private` + `docker.slice`)
+  via `linux-systemd-pid1.sh` so `service-lifecycle` can run through systemd when the host
+  allows it (fallback keeps BLOCKED). After install the lifecycle also emits
+  `installed-sdk-matrix.json` for Wave F admission (honest `NOT_RUN` when sealed SDK
+  archives are absent). `sealed-source-admission` is `NOT_RUN` on unsealed nightly
+  checkouts. When the inner driver writes evidence and exits non-zero, the outer
+  dispatcher prefers that report over inventing `BLOCKED`. Deb rules use Unix Makefiles
+  with static core; RPM `%cmake` forces `-DBUILD_SHARED_LIBS=OFF` and install clears
+  container `tsflags=nodocs` so manuals remain in the inventory.
 - MacPorts and Homebrew have no hosted runner that may install into the host package manager, so
   their native rows stay opt-in (`--allow-native`, never on by default) and unproven.
 
@@ -91,14 +94,14 @@ Declarative status is generated into [package-status.md](package-status.md); the
 
 | Residual | State today | What would close it |
 | --- | --- | --- |
-| deb / rpm container lifecycle | Retained nightly `34651423676` (`0261d65`): both backends `FUNCTIONALLY_VERIFIED`; `service-lifecycle` was BLOCKED without systemd PID 1. Tip now dispatches containers with systemd as PID 1 (`linux-systemd-pid1.sh`) | A retained nightly/release run proving `service-lifecycle` PASS (and sealed-candidate rows) |
+| deb / rpm container lifecycle | Retained nightly `34651423676` (`0261d65`): both backends `FUNCTIONALLY_VERIFIED`; `service-lifecycle` was BLOCKED without systemd PID 1. Tip tries systemd create variants (`cgroupns=host`, then private+`docker.slice`) via `linux-systemd-pid1.sh` | A retained nightly/release run proving `service-lifecycle` PASS (and sealed-candidate rows) |
 | MacPorts `launchd` startup item | Not installed by the port, so `service-lifecycle` is `OPEN_GATE` | A packaged startup item plus a retained run that starts and stops it |
-| Homebrew `brew services` | Declared in the formula, never started or stopped in a retained run (`OPEN_GATE`) | A retained native run that exercises the services block |
+| Homebrew `brew services` | Native lifecycle starts/stops the declared block; without a retained native run it stays `OPEN_GATE` | A retained native run that exercises the services block |
 | MacPorts / Homebrew native rows | Opt-in only (`--allow-native`); no hosted runner may install into the host package manager | A disposable macOS host or an accepted runner policy, with retained logs |
 | `external-consumer` on BSD | Implemented in native lifecycle scripts; maps to package-ci `PASS` → `LIFECYCLE_VERIFIED` when the log is retained | A tagged/native retained run that keeps `*-external-consumer.log` |
 | `package-upgrade` anywhere | Never positively run: `NOT_APPLICABLE_INITIAL_BASELINE` today, `NOT_RUN` once a predecessor exists | A sealed N−1 package artifact admitted through `upgrade_baseline.py admit` |
 | Wave F admission tools | `run_package_admission.py` is wired into `package-ci.yml` (sealed candidate) and `release.yml` (`package-admission` job); reports are retained with honest blockers | A positive `admitted: true` after cross-SDK PASS and sealed N−1 `package-upgrade` |
-| Cross-SDK post-install matrix | `NOT_RUN`; admission reports block on it by construction | Running every SDK against a package-installed daemon and retaining the report |
+| Cross-SDK post-install matrix | Linux lifecycle emits `installed-sdk-matrix.json` after install; still `NOT_RUN` without sealed SDK archives in the packaging target; admission prefers retained reports | Running every SDK against a package-installed daemon and retaining a PASS |
 | Optional backends | `deb`, `rpm`, `macports`, `homebrew` are `required_for_release: false` and cannot admit a release artifact | Retained `LIFECYCLE_VERIFIED` evidence, a release-policy artifact, an ADR and a gate update |
 | Upstream acceptance | `OPEN_GATE` for FreeBSD, OpenBSD, MacPorts and Homebrew; in-repo packaging is the project pipeline only | Actual acceptance by the upstream ports tree or tap |
 | Apple `.pkg` | Deliberately out of scope; refused by the matrix validator | An accepted ADR, an Apple signing/notarization identity and an update model |

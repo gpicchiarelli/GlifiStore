@@ -416,6 +416,19 @@ class ContainerDispatchTests(unittest.TestCase):
         self.assertIn("-d", argv)
         self.assertNotIn("--rm", argv)
 
+        private = container_create_arguments(
+            runtime="docker",
+            image="debian:12@sha256:deadbeef",
+            name="glyphastore-deb-test",
+            root=Path("/repo"),
+            output=Path("/tmp/out"),
+            release_context=Path("/tmp/release-context.json"),
+            variant="cgroupns-private-parent",
+        )
+        private_joined = " ".join(private)
+        self.assertIn("--cgroupns=private", private_joined)
+        self.assertIn("--cgroup-parent=docker.slice", private_joined)
+
     def test_the_container_entry_restores_host_ownership_before_exit(self) -> None:
         # The outer runner is not root: root-owned evidence under /out becomes a
         # Permission denied that was previously reported as packaging FAIL.

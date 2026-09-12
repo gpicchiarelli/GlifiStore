@@ -637,6 +637,7 @@ def container_create_arguments(
     host_gid: int | None = None,
     seal: str = "",
     ci_identity: dict[str, str] | None = None,
+    variant: str = "cgroupns-host",
 ) -> list[str]:
     """Detached container whose PID 1 is systemd (required for service-lifecycle)."""
     mounts, environment = container_mount_and_environment(
@@ -652,22 +653,44 @@ def container_create_arguments(
     # cgroup + privileged: stock Debian/Fedora images need a real systemd PID 1
     # for systemctl enable/start of glyphastored.service. Without them the
     # dispatcher falls back to the one-shot entry and service-lifecycle stays BLOCKED.
+    # Two host layouts are tried: cgroupns=host (common on GHA) and private +
+    # docker.slice parent (cgroup v2 runners that refuse host namespace).
+    variants = {
+        "cgroupns-host": [
+            "--privileged",
+            "--cgroupns=host",
+            "-v",
+            "/sys/fs/cgroup:/sys/fs/cgroup:rw",
+            "--tmpfs",
+            "/tmp",
+            "--tmpfs",
+            "/run",
+            "--tmpfs",
+            "/run/lock",
+        ],
+        "cgroupns-private-parent": [
+            "--privileged",
+            "--cgroupns=private",
+            "--cgroup-parent=docker.slice",
+            "-v",
+            "/sys/fs/cgroup:/sys/fs/cgroup:rw",
+            "--tmpfs",
+            "/tmp",
+            "--tmpfs",
+            "/run",
+            "--tmpfs",
+            "/run/lock",
+        ],
+    }
+    if variant not in variants:
+        raise LinuxBackendError(f"unknown systemd container create variant: {variant}")
     return [
         runtime,
         "run",
         "-d",
         "--name",
         name,
-        "--privileged",
-        "--cgroupns=host",
-        "-v",
-        "/sys/fs/cgroup:/sys/fs/cgroup:rw",
-        "--tmpfs",
-        "/tmp",
-        "--tmpfs",
-        "/run",
-        "--tmpfs",
-        "/run/lock",
+        *variants[variant],
         "--workdir",
         "/out",
         *mounts,
@@ -676,6 +699,9 @@ def container_create_arguments(
         "/bin/sh",
         "/src/scripts/packaging/linux-systemd-pid1.sh",
     ]
+
+
+SYSTEMD_CREATE_VARIANTS = ("cgroupns-host", "cgroupns-private-parent")
 
 
 def container_exec_arguments(
@@ -764,24 +790,7 @@ def dispatch_container(
     _note(log, f"host_uid={os.getuid()} host_gid={os.getgid()}")
     _note(log, f"systemd container name={name}")
 
-    created = _run(
-        container_create_arguments(
-            runtime=runtime,
-            image=image,
-            name=name,
-            root=root,
-            output=recorder.directory,
-            release_context=release_context,
-            candidate=candidate,
-            seal=seal,
-            ci_identity=ci_identity,
-        ),
-        log=log,
-        timeout=CONTAINER_TIMEOUT,
-    )
-    if not created:
-        _note(log, "systemd container create failed; falling back to one-shot entry")
-        _run([runtime, "rm", "-f", name], log=log, timeout=60)
+    def one_shot() -> bool:
         return _run(
             container_run_arguments(
                 runtime=runtime,
@@ -800,36 +809,44 @@ def dispatch_container(
             timeout=CONTAINER_TIMEOUT,
         )
 
-    try:
-        if not wait_for_systemd_pid1(runtime, name, log=log):
-            _note(log, "systemd never became PID 1; falling back to one-shot entry")
-            _run([runtime, "rm", "-f", name], log=log, timeout=60)
-            return _run(
-                container_run_arguments(
-                    runtime=runtime,
-                    image=image,
-                    root=root,
-                    output=recorder.directory,
-                    release_context=release_context,
-                    backend=backend,
-                    profile=profile,
-                    stage=stage,
-                    candidate=candidate,
-                    seal=seal,
-                    ci_identity=ci_identity,
-                ),
-                log=log,
-                timeout=CONTAINER_TIMEOUT,
-            )
-        return _run(
-            container_exec_arguments(
-                runtime=runtime, name=name, backend=backend, profile=profile, stage=stage
+    for variant in SYSTEMD_CREATE_VARIANTS:
+        _run([runtime, "rm", "-f", name], log=log, timeout=60)
+        _note(log, f"trying systemd create variant={variant}")
+        created = _run(
+            container_create_arguments(
+                runtime=runtime,
+                image=image,
+                name=name,
+                root=root,
+                output=recorder.directory,
+                release_context=release_context,
+                candidate=candidate,
+                seal=seal,
+                ci_identity=ci_identity,
+                variant=variant,
             ),
             log=log,
             timeout=CONTAINER_TIMEOUT,
         )
-    finally:
-        _run([runtime, "rm", "-f", name], log=log, timeout=60)
+        if not created:
+            _note(log, f"systemd container create failed for variant={variant}")
+            continue
+        try:
+            if not wait_for_systemd_pid1(runtime, name, log=log):
+                _note(log, f"systemd never became PID 1 for variant={variant}")
+                continue
+            return _run(
+                container_exec_arguments(
+                    runtime=runtime, name=name, backend=backend, profile=profile, stage=stage
+                ),
+                log=log,
+                timeout=CONTAINER_TIMEOUT,
+            )
+        finally:
+            _run([runtime, "rm", "-f", name], log=log, timeout=60)
+
+    _note(log, "all systemd create variants failed; falling back to one-shot entry")
+    return one_shot()
 
 
 # --------------------------------------------------------------------------- #
@@ -1145,6 +1162,70 @@ def run_install(lifecycle: Lifecycle) -> None:
     )
     recorder.record(
         "package-install", "PASS" if installed and account and payload else "FAIL", log=log.name
+    )
+
+
+def write_package_file_list(lifecycle: Lifecycle) -> Path | None:
+    """Retain the package manager inventory used to prove daemon ownership."""
+    log = lifecycle.log("package-file-list")
+    destination = lifecycle.recorder.directory / "package-file-list.txt"
+    runtime_package = lifecycle.tokens["RUNTIME_PACKAGE"]
+    if lifecycle.backend == "deb":
+        command = ["dpkg", "-L", runtime_package]
+    else:
+        command = ["rpm", "-ql", runtime_package]
+    completed = subprocess.run(
+        command,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=SHORT_TIMEOUT,
+    )
+    destination.write_text(completed.stdout or "", encoding="utf-8")
+    _note(log, f"$ {' '.join(command)}")
+    _note(log, completed.stdout or "")
+    if completed.returncode != 0 or not destination.read_text(encoding="utf-8").strip():
+        _note(log, f"refused: inventory exit {completed.returncode}")
+        return None
+    return destination
+
+
+def run_installed_sdk_matrix(lifecycle: Lifecycle) -> None:
+    """Emit Wave F admission evidence; does not gate package-CI check rows."""
+    log = lifecycle.log("installed-sdk-matrix")
+    inventory = write_package_file_list(lifecycle)
+    if inventory is None:
+        _note(log, "no package file inventory; skipping installed SDK matrix harness")
+        return
+    bindir = Path(lifecycle.layout["bindir"])
+    if not bindir.is_absolute():
+        bindir = Path("/") / bindir
+    daemon = bindir / "glyphastored"
+    prefix = Path(lifecycle.layout["prefix"])
+    if not prefix.is_absolute():
+        prefix = Path("/") / prefix
+    report = lifecycle.recorder.directory / "installed-sdk-matrix.json"
+    environment = dict(os.environ)
+    environment.update(
+        {
+            "GLYPHASTORE_PACKAGE_DAEMON": str(daemon),
+            "GLYPHASTORE_PACKAGE_FILE_LIST": str(inventory),
+            "GLYPHASTORE_PACKAGE_PREFIX": str(prefix),
+            "INSTALLED_INTEROP_PROFILE": "plain",
+        }
+    )
+    _run(
+        [
+            "bash",
+            str(lifecycle.root / "scripts/test-package-installed-sdk-matrix.sh"),
+            "--report",
+            str(report),
+            "--replace",
+        ],
+        log=log,
+        environment=environment,
+        timeout=BUILD_TIMEOUT,
     )
 
 
@@ -1596,6 +1677,7 @@ def run_target_lifecycle(lifecycle: Lifecycle, *, source: SourceArchive | None) 
         )
 
     if recorder.passed("package-install"):
+        run_installed_sdk_matrix(lifecycle)
         run_external_consumer(lifecycle)
         run_service_lifecycle(lifecycle)
     else:
