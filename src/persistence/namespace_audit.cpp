@@ -22,8 +22,13 @@ inline constexpr std::string_view kSegmentPrefix = "segment-";
 inline constexpr std::string_view kSegmentSuffix = ".glifi";
 inline constexpr std::string_view kTemporaryPrefix = ".segment-";
 inline constexpr std::string_view kTemporarySuffix = ".glifi.tmp";
-inline constexpr std::size_t kFinalSegmentFilenameBytes = 40;
-inline constexpr std::size_t kTemporarySegmentFilenameBytes = 45;
+// segment-<16 hex>-<8 hex>.glifi  /  .segment-<16 hex>-<8 hex>.glifi.tmp
+inline constexpr std::size_t kFinalSegmentFilenameBytes =
+    kSegmentPrefix.size() + 16U + 1U + 8U + kSegmentSuffix.size();
+inline constexpr std::size_t kTemporarySegmentFilenameBytes =
+    kTemporaryPrefix.size() + 16U + 1U + 8U + kTemporarySuffix.size();
+static_assert(kFinalSegmentFilenameBytes == 39U);
+static_assert(kTemporarySegmentFilenameBytes == 44U);
 
 struct DirectoryCloser {
     void operator()(DIR* directory) const noexcept {
