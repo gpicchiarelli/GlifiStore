@@ -7,6 +7,7 @@ use Test::More;
 use lib "$FindBin::Bin/../lib";
 use GlifiStore::Protocol qw(
     OP_INIT OP_PING OP_GET OP_PUT OP_ERASE OP_BIND_WORKER OP_HEALTH OP_READY OP_STATS OP_BACKUP
+    INIT_IDENTITY_EXTENDED_BYTES
     encode_request decode_request encode_response decode_response worker_for
 );
 
@@ -99,7 +100,7 @@ isnt(hash_key_routing('tenant-a/orders/1', $keyed), hash_key_routing('tenant-a/o
     'siphash differs from FNV');
 is(encode_init_identity(), 'GlifiStore/2', 'plain INIT identity');
 my $extended = encode_init_identity({ algorithm => ROUTING_ALG_SIPHASH24_V1, seed => 12_379_813_738_877_118_345 });
-is(length($extended), 26, 'extended INIT length');
+is(length($extended), INIT_IDENTITY_EXTENDED_BYTES, 'extended INIT length');
 is_deeply(decode_init_identity($extended),
     { algorithm => ROUTING_ALG_SIPHASH24_V1, seed => 12_379_813_738_877_118_345 },
     'extended INIT round-trip');
