@@ -1,7 +1,7 @@
 # Durable backup and restore
 
 Status: offline implemented; online fenced backup implemented for open Stores  
-Applies to: durable data directories (`manifest.glypha` + catalog Segments)  
+Applies to: durable data directories (`manifest.glifi` + catalog Segments)  
 Owner: persistence maintainers  
 Last reviewed: 2026-08-01
 
@@ -10,9 +10,9 @@ architecture narrative; prefer the spec on conflict.
 
 ## Contract
 
-### Offline (`glyphastore_backup_store` / `backup_durable_store`)
+### Offline (`glifistore_backup_store` / `backup_durable_store`)
 
-Backup and restore are **offline** operations when driven by the CLI. Stop `glyphastored` / close
+Backup and restore are **offline** operations when driven by the CLI. Stop `glifistored` / close
 every Store that holds the source directory before running them. The implementation takes the
 exclusive Store lock and fails closed if the directory is already locked.
 
@@ -22,7 +22,7 @@ Procedure:
 2. Run `verify_durable_store` (Manifest, namespace audit, catalog Segment open + optional CRC scan).
 3. Create an empty destination directory (`create_new`).
 4. Copy only recovery-safe files: every Manifest catalog Segment (private `0600`), then
-   `manifest.glypha` last. Sync each file and the destination directory.
+   `manifest.glifi` last. Sync each file and the destination directory.
 5. Release locks and `verify_durable_store` the destination.
 
 Restore is the same verified copy from a backup directory into a new empty destination. Ordinary
@@ -39,7 +39,7 @@ data-directory lock:
    not `INTERNAL_ERROR` / reconcile).
 2. Flush durable state.
 3. Hold the catalog exclusive lock; structurally verify + copy Manifest catalog Segments (bounded
-   parallel) then `manifest.glypha` last (no source CRC under the fence).
+   parallel) then `manifest.glifi` last (no source CRC under the fence).
 4. Resume admissions; verify the destination independently (optional CRC; promotion gate).
 
 This is **online** (daemon/Store process stays up) with a **writer fence** during the copy window.
@@ -55,7 +55,7 @@ filesystem freeze / COW snapshot orchestration. Future zero-fence requirements:
 - Filesystem freeze / COW snapshot orchestration
 
 Offline repair that quarantines non-catalog anomalies into an explicit workspace is provided by
-`glyphastore_repair_store` (see [cli.md](../cli.md)); it never rewrites the source directory.
+`glifistore_repair_store` (see [cli.md](../cli.md)); it never rewrites the source directory.
 Operator procedures: [backup-restore runbook](../operations/backup-restore.md),
 [corruption-repair runbook](../operations/corruption-repair.md).
 
@@ -72,8 +72,8 @@ Operator procedures: [backup-restore runbook](../operations/backup-restore.md),
 ## Tooling
 
 ```bash
-glyphastore_backup_store [--json] [--no-scan] -- /path/to/source /path/to/backup
-glyphastore_backup_store [--json] [--no-scan] -- /path/to/backup /path/to/restored
+glifistore_backup_store [--json] [--no-scan] -- /path/to/source /path/to/backup
+glifistore_backup_store [--json] [--no-scan] -- /path/to/backup /path/to/restored
 ```
 
 Embedded / in-process:

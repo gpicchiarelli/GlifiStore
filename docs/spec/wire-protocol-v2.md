@@ -1,4 +1,4 @@
-# GlyphaStore Wire Protocol v2
+# GlifiStore Wire Protocol v2
 
 Status: normative for the current TCP server
 Applies to: protocol version 2
@@ -71,15 +71,15 @@ Unknown status codes must be treated as errors while preserving frame synchroniz
 
 | Value | Name | Request fields | Successful response |
 |---:|---|---|---|
-| 1 | `INIT` | empty key/value; `expire_at_ns = 0`; `target_worker = kNoWorker` | plain `GlyphaStore/2` or the section 7 extended SipHash identity; reports Worker metadata |
+| 1 | `INIT` | empty key/value; `expire_at_ns = 0`; `target_worker = kNoWorker` | plain `GlifiStore/2` or the section 7 extended SipHash identity; reports Worker metadata |
 | 2 | `PING` | empty key; opaque value; `expire_at_ns = 0`; `target_worker = kNoWorker` | echoes value |
 | 3 | `GET` | non-empty key; empty value; `expire_at_ns = 0`; `target_worker = kNoWorker` | stored value or `NOT_FOUND` |
 | 4 | `PUT` | non-empty key; value; optional `expire_at_ns`; `target_worker = kNoWorker` | empty value |
 | 5 | `ERASE` | non-empty key; empty value; `expire_at_ns = 0`; `target_worker = kNoWorker` | empty value or `NOT_FOUND` according to Store result |
 | 6 | `BIND_WORKER` | empty key/value; `expire_at_ns = 0`; `target_worker` set to a real Worker id (not `kNoWorker`) | confirms worker metadata; may transfer connection ownership |
-| 7 | `HEALTH` | empty key/value; `expire_at_ns = 0`; `target_worker = kNoWorker` | value is ASCII `GlyphaStore/live`; liveness probe |
-| 8 | `READY` | empty key/value; `expire_at_ns = 0`; `target_worker = kNoWorker` | value is ASCII `GlyphaStore/ready`; readiness probe |
-| 9 | `STATS` | empty key/value; `expire_at_ns = 0`; `target_worker = kNoWorker` | value is bounded ASCII `GlyphaStore/stats` report |
+| 7 | `HEALTH` | empty key/value; `expire_at_ns = 0`; `target_worker = kNoWorker` | value is ASCII `GlifiStore/live`; liveness probe |
+| 8 | `READY` | empty key/value; `expire_at_ns = 0`; `target_worker = kNoWorker` | value is ASCII `GlifiStore/ready`; readiness probe |
+| 9 | `STATS` | empty key/value; `expire_at_ns = 0`; `target_worker = kNoWorker` | value is bounded ASCII `GlifiStore/stats` report |
 | 10 | `BACKUP` | non-empty key = UTF-8 destination data-dir path; empty value; `expire_at_ns = 0`; `target_worker = kNoWorker` | value is bounded ASCII online-backup report (`status=ok`, file/byte counts); destination must be empty |
 
 `HEALTH`, `READY`, and `STATS` are accepted before initialization and binding. They do not mutate
@@ -171,11 +171,11 @@ When keyed routing (`siphash24-v1`, [ADR 0030](../adr/0030-keyed-worker-routing.
 successful `INIT` returns an extended identity:
 
 ```text
-"GlyphaStore/2" || 0x00 || u32le(algorithm=2) || u64le(worker_hash_seed)
+"GlifiStore/2" || 0x00 || u32le(algorithm=2) || u64le(worker_hash_seed)
 ```
 
 Clients must parse that extension and route with
-`siphash24(key, seed, seed ^ 0x6a09e667f3bcc909) % worker_count`. Plain `GlyphaStore/2` means FNV.
+`siphash24(key, seed, seed ^ 0x6a09e667f3bcc909) % worker_count`. Plain `GlifiStore/2` means FNV.
 Older clients fail closed against keyed servers.
 
 A client that receives `WRONG_OWNER` should trust the response's `owner_worker`, refresh the current

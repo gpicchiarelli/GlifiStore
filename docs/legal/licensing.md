@@ -1,13 +1,13 @@
 # Licensing and copyright policy
 
 Status: normative for contributors and redistributors
-Applies to: GlyphaStore repository, official SDKs, installs, CI
+Applies to: GlifiStore repository, official SDKs, installs, CI
 Owner: maintainers
 Last reviewed: 2026-08-01
 
 ## Project license
 
-GlyphaStore (core, tools, official SDKs, tests, docs, and artwork in this repository) is
+GlifiStore (core, tools, official SDKs, tests, docs, and artwork in this repository) is
 **BSD-3-Clause**. Authoritative text: [`LICENSE`](../../LICENSE).
 
 Copyright holder: **Giacomo Picchiarelli** (2026).
@@ -19,7 +19,7 @@ SPDX: `BSD-3-Clause`
 | Artifact | Required files |
 | --- | --- |
 | Source tree / tarball | `LICENSE`, `NOTICE`, `THIRD_PARTY_NOTICES.md` |
-| CMake install (Runtime component) | `LICENSE`, `NOTICE`, `VERSION`, `THIRD_PARTY_NOTICES.md` under `${CMAKE_INSTALL_DATADIR}/GlyphaStore` |
+| CMake install (Runtime component) | `LICENSE`, `NOTICE`, `VERSION`, `THIRD_PARTY_NOTICES.md` under `${CMAKE_INSTALL_DATADIR}/GlifiStore` |
 | Official SDK packages | Each SDK’s `LICENSE` (byte-identical to root), plus `NOTICE`; Python also ships `NOTICE` via `license-files` |
 | TLS-linked binaries | OpenSSL/LibreSSL notices per [tls-redistribution.md](tls-redistribution.md) |
 

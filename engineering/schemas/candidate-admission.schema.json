@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.dev/schemas/candidate-admission-v1.json",
-  "title": "GlyphaStore exact candidate admission receipt",
+  "$id": "https://glifistore.dev/schemas/candidate-admission-v1.json",
+  "title": "GlifiStore exact candidate admission receipt",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "result", "candidate_seal", "candidate_seal_sha256", "sealed_file_count", "admitted_at", "workflow", "run_id"],

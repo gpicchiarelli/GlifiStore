@@ -112,7 +112,7 @@ def render(matrix: dict[str, Any]) -> str:
         "> packaging proofs are the retained `*-package-evidence.json` documents produced by",
         "> [`scripts/package-ci.sh`](../../scripts/package-ci.sh) and validated by",
         "> [`engineering/tools/validate_package_evidence.py`](../../engineering/tools/validate_package_evidence.py).",
-        "> GlyphaStore remains an **architectural prototype**; no packaging gate is closed.",
+        "> GlifiStore remains an **architectural prototype**; no packaging gate is closed.",
         "",
         "Operator guide: [package CI](package-ci.md) · Open residuals:",
         "[Wave 5 (L7) residuals](wave5-l7-residuals.md).",

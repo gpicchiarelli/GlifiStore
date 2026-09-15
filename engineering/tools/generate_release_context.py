@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Derive the release context that drives GlyphaStore packaging CI.
+"""Derive the release context that drives GlifiStore packaging CI.
 
 The context is the only place where VERSION, ABI_VERSION, the git identity, the
 package revision and the SemVer-aware previous release are resolved. Every

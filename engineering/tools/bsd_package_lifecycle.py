@@ -14,7 +14,7 @@ statuses, the lifecycle state, the result and the emit arguments, so that:
 * a native log without its own PASSED marker is a FAIL, never an inferred pass;
 * upgrade from N-1 stays NOT_APPLICABLE_INITIAL_BASELINE or NOT_RUN until a
   sealed prior release package exists; FreeBSD/OpenBSD native producers run
-  install→seed→upgrade→verify when GLYPHASTORE_N1_PACKAGE_DIR supplies those
+  install→seed→upgrade→verify when GLIFISTORE_N1_PACKAGE_DIR supplies those
   bytes (Linux deb/rpm do the same);
 * the result stays OPEN_GATE while upstream acceptance is unproven, however far
   the native lifecycle got.
@@ -59,8 +59,8 @@ LIFECYCLE_SCRIPTS = {
     "openbsd": "scripts/test-openbsd-package-lifecycle.sh",
 }
 PACKAGE_PATTERNS = {
-    "freebsd": "glyphastore-*-freebsd*.pkg",
-    "openbsd": "glyphastore-*-openbsd*.tgz",
+    "freebsd": "glifistore-*-freebsd*.pkg",
+    "openbsd": "glifistore-*-openbsd*.tgz",
 }
 PORTS_MAKEFILES = {
     "freebsd": "Mk/bsd.port.mk",
@@ -386,7 +386,7 @@ def decide(
                 statuses["package-upgrade"] = "NOT_RUN"
                 details["package-upgrade"] = (
                     f"previous release {previous['tag']} is selected; sealed N-1 {display} package "
-                    "artifacts were not supplied via GLYPHASTORE_N1_PACKAGE_DIR, so upgrade "
+                    "artifacts were not supplied via GLIFISTORE_N1_PACKAGE_DIR, so upgrade "
                     "continuity was not exercised. This run never rebuilds N-1 from HEAD."
                 )
     else:
@@ -439,7 +439,7 @@ def decide(
         )
 
     residuals = [
-        f"upstream-ports-acceptance=No upstream {display} ports tree has accepted the GlyphaStore "
+        f"upstream-ports-acceptance=No upstream {display} ports tree has accepted the GlifiStore "
         "packaging|upstream ports review",
     ]
     if statuses.get("external-consumer") != "PASS":
@@ -479,7 +479,7 @@ def decide(
     else:
         residuals.append(
             f"package-upgrade-n1=Previous release is selected but sealed N-1 {display} packages "
-            "were not supplied via GLYPHASTORE_N1_PACKAGE_DIR|sealed N-1 package artifacts"
+            "were not supplied via GLIFISTORE_N1_PACKAGE_DIR|sealed N-1 package artifacts"
         )
 
     plan = check_plan(

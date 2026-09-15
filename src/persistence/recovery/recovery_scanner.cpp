@@ -1,13 +1,13 @@
 #include "persistence/recovery/recovery_scanner.hpp"
 
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/persistence/segment_file.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/persistence/segment_file.hpp"
 
 #include <limits>
 #include <string>
 #include <utility>
 
-namespace glyphastore::recovery {
+namespace glifistore::recovery {
 namespace {
 
 struct WorkerScanContext {
@@ -160,4 +160,4 @@ auto RecoveryScanner::scan_worker(const WorkerId worker, const std::span<const s
     return result;
 }
 
-} // namespace glyphastore::recovery
+} // namespace glifistore::recovery

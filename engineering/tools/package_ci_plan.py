@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resolve and close the GlyphaStore packaging CI plan, fail-closed.
+"""Resolve and close the GlifiStore packaging CI plan, fail-closed.
 
 One tool decides everything a workflow would otherwise restate in YAML: which
 profile a GitHub Actions event runs, whether a pull request may skip packaging

@@ -56,7 +56,7 @@ requirements:
   - docs/spec/tcp-client-conformance-v1.md
   - docs/spec/wire-protocol-v2.md
   implementazione:
-  - include/glyphastore/client/client.hpp
+  - include/glifistore/client/client.hpp
   - src/client/client.cpp
   - src/client/client_error.cpp
   - src/client/client_detail.hpp
@@ -68,7 +68,7 @@ requirements:
   - sdk/go/client/error_taxonomy_test.go
   - sdk/perl/t/03-error-taxonomy.t
   - sdk/ruby/test/test_error_taxonomy.rb
-  - sdk/erlang/test/glyphastore_error_taxonomy_SUITE.erl
+  - sdk/erlang/test/glifistore_error_taxonomy_SUITE.erl
   piattaforme:
   - linux-x86_64
   - macos-arm64

@@ -1,4 +1,4 @@
-// Package client is the official synchronous GlyphaStore Go TCP client.
+// Package client is the official synchronous GlifiStore Go TCP client.
 //
 // It implements wire protocol v2 and client-semantics v1: one bound connection
 // per Worker, monotonic request deadlines, at-most-one automatic retry for
@@ -18,7 +18,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gpicchiarelli/GlyphaStore/sdk/go/protocol"
+	"github.com/gpicchiarelli/GlifiStore/sdk/go/protocol"
 )
 
 type sendFailure struct {
@@ -55,7 +55,7 @@ func (c *connection) encodeScratch(size int) []byte {
 	return c.encode[:0]
 }
 
-// Client is a thread-safe GlyphaStore client with one bound TCP connection per Worker.
+// Client is a thread-safe GlifiStore client with one bound TCP connection per Worker.
 type Client struct {
 	cfg          Config
 	connections  []*connection
@@ -166,7 +166,7 @@ func (c *Client) dial() (net.Conn, error) {
 		conn, err = net.DialTimeout("tcp", net.JoinHostPort(c.cfg.Host, strconv.Itoa(c.cfg.Port)), c.cfg.ConnectTimeout)
 	}
 	if err != nil {
-		return nil, unavailable("could not connect to GlyphaStore: " + err.Error())
+		return nil, unavailable("could not connect to GlifiStore: " + err.Error())
 	}
 	if tcp, ok := conn.(*net.TCPConn); ok {
 		_ = tcp.SetNoDelay(true)

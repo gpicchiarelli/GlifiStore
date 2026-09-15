@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-07-25
 - Deciders: security maintainers
-- Applies to: `glyphastored` `--authz-map` / secure-profile admission
+- Applies to: `glifistored` `--authz-map` / secure-profile admission
 - Amends: [ADR 0022](0022-authorization-capabilities.md)
 - Supersedes: none
 - Depends on: [ADR 0022](0022-authorization-capabilities.md)

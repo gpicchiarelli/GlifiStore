@@ -7,7 +7,7 @@ Last reviewed: 2026-07-23
 
 Recovery on ordinary `Store::open` **never** mutates, truncates, or rewrites source files
 ([durability-recovery](../architecture/durability-recovery.md)). Suspected corruption is diagnosed
-with read-only tools; salvage uses `glyphastore_repair_store` into an explicit **empty workspace**
+with read-only tools; salvage uses `glifistore_repair_store` into an explicit **empty workspace**
 with quarantine **outside** the live store tree.
 
 ## Purpose
@@ -19,22 +19,22 @@ possible — without in-place destructive repair.
 
 | Symptom | First step |
 |---|---|
-| Daemon fails open / `READY` sticky fault | Stop daemon; `glyphastore_verify_store` on `--data-dir` |
-| Known bad Segment file | `glyphastore_inspect_segment` on the file |
+| Daemon fails open / `READY` sticky fault | Stop daemon; `glifistore_verify_store` on `--data-dir` |
+| Known bad Segment file | `glifistore_inspect_segment` on the file |
 | Extra files after crash (orphan Segments, notes) | Verify, then repair into workspace if verify passes except quarantinable anomalies |
 | Missing catalog Segment, symlink, hard link | **Fail closed** — repair refuses; restore from backup |
 
 ## Step 1 — Stop writers and verify (read-only)
 
 ```bash
-systemctl stop glyphastored
-glyphastore_verify_store --json -- /var/lib/glyphastore
+systemctl stop glifistored
+glifistore_verify_store --json -- /var/lib/glifistore
 ```
 
-`glyphastore_verify_store`:
+`glifistore_verify_store`:
 
 - takes the **exclusive Store lock** (fails if daemon still running);
-- decodes `manifest.glypha` and audits the namespace;
+- decodes `manifest.glifi` and audits the namespace;
 - opens each catalog Segment read-only against Manifest identity;
 - scans committed Record extents (unless `--no-scan`).
 
@@ -44,7 +44,7 @@ open for service until classified.
 Header-only check when iterating:
 
 ```bash
-glyphastore_verify_store --no-scan -- /var/lib/glyphastore
+glifistore_verify_store --no-scan -- /var/lib/glifistore
 ```
 
 ## Step 2 — Inspect individual Segments (optional)
@@ -52,8 +52,8 @@ glyphastore_verify_store --no-scan -- /var/lib/glyphastore
 When verify points at a specific catalog file or you have a detached Segment copy:
 
 ```bash
-glyphastore_inspect_segment --json -- segment-0123456789abcdef-00000001.glypha
-glyphastore_inspect_segment --no-scan -- segment-0123456789abcdef-00000001.glypha
+glifistore_inspect_segment --json -- segment-0123456789abcdef-00000001.glifi
+glifistore_inspect_segment --no-scan -- segment-0123456789abcdef-00000001.glifi
 ```
 
 Does **not** take the Store directory lock. A concurrent writer can cause a torn commit observation;
@@ -72,8 +72,8 @@ are present and safe.
 - Writable space for `<workspace>/store` and `<workspace>/quarantine`.
 
 ```bash
-install -d -m 700 /srv/glyphastore-repair-2026-07-23
-glyphastore_repair_store --json -- /var/lib/glyphastore /srv/glyphastore-repair-2026-07-23
+install -d -m 700 /srv/glifistore-repair-2026-07-23
+glifistore_repair_store --json -- /var/lib/glifistore /srv/glifistore-repair-2026-07-23
 ```
 
 On success the workspace contains:
@@ -87,8 +87,8 @@ On success the workspace contains:
 Open the repaired store only from `<workspace>/store`:
 
 ```bash
-glyphastore_verify_store -- /srv/glyphastore-repair-2026-07-23/store
-glyphastored --data-dir /srv/glyphastore-repair-2026-07-23/store ...
+glifistore_verify_store -- /srv/glifistore-repair-2026-07-23/store
+glifistored --data-dir /srv/glifistore-repair-2026-07-23/store ...
 ```
 
 Preserve `<workspace>/quarantine/` for forensics; do **not** copy quarantined files back into the
@@ -117,10 +117,10 @@ or engage maintainers; do not attempt manual catalog surgery in the production d
 ## What NOT to do
 
 - Do **not** edit, truncate, or `rm` files in the production data directory to “fix” recovery.
-- Do **not** run repair while `glyphastored` holds the lock.
+- Do **not** run repair while `glifistored` holds the lock.
 - Do **not** run repair with a non-empty workspace.
 - Do **not** use live/hot repair — not supported.
-- Do **not** invoke `glyphastore_rebuild_index` for durable v1; durable Indexes rebuild through
+- Do **not** invoke `glifistore_rebuild_index` for durable v1; durable Indexes rebuild through
   ordinary Store recovery. The tool exits `1` with an explicit error.
 - Do **not** place quarantine directories **inside** the live store catalog path; use the explicit
   workspace layout above.
@@ -129,15 +129,15 @@ or engage maintainers; do not attempt manual catalog surgery in the production d
 
 1. Retain original source directory read-only for evidence.
 2. Retain `<workspace>/quarantine/` and verify JSON/text tool output.
-3. Verify repaired or restored store before traffic: `glyphastore_verify_store` then `READY`.
+3. Verify repaired or restored store before traffic: `glifistore_verify_store` then `READY`.
 4. Root-cause: filesystem, hardware, abrupt power loss, or operator error — see
    [platform durability evidence](../architecture/platform-durability-evidence.md).
 
 ## Command summary
 
 ```bash
-glyphastore_verify_store   [--json] [--no-scan] -- <DATA-DIR>
-glyphastore_inspect_segment [--json] [--no-scan] -- <SEGMENT-FILE>
-glyphastore_repair_store   [--json] [--no-scan] -- <SOURCE-DIR> <EMPTY-WORKSPACE>
-glyphastore_backup_store   [--json] [--no-scan] -- <SOURCE-DIR> <EMPTY-DEST>   # when salvage impossible
+glifistore_verify_store   [--json] [--no-scan] -- <DATA-DIR>
+glifistore_inspect_segment [--json] [--no-scan] -- <SEGMENT-FILE>
+glifistore_repair_store   [--json] [--no-scan] -- <SOURCE-DIR> <EMPTY-WORKSPACE>
+glifistore_backup_store   [--json] [--no-scan] -- <SOURCE-DIR> <EMPTY-DEST>   # when salvage impossible
 ```

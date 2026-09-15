@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the GlyphaStore MacPorts Portfile and Homebrew formula, fail-closed.
+"""Render the GlifiStore MacPorts Portfile and Homebrew formula, fail-closed.
 
 The templates under packaging/macports/ and packaging/homebrew/ carry no version,
 URL or checksum. This tool injects them from the release context, which derives
@@ -34,9 +34,9 @@ from engineering.tools.package_framework import (
 MACOS_BACKENDS = ("homebrew", "macports")
 TEMPLATES = {
     "macports": Path("packaging/macports/Portfile.in"),
-    "homebrew": Path("packaging/homebrew/glyphastore.rb.in"),
+    "homebrew": Path("packaging/homebrew/glifistore.rb.in"),
 }
-RENDERED_NAMES = {"macports": "Portfile", "homebrew": "glyphastore.rb"}
+RENDERED_NAMES = {"macports": "Portfile", "homebrew": "glifistore.rb"}
 PLACEHOLDER = re.compile(r"\{\{[A-Z][A-Z0-9_]*\}\}")
 
 # Markers of a source that is a git ref or a checkout rather than a sealed
@@ -82,7 +82,7 @@ def archive_basename(url: str) -> str:
 
 
 def source_basename(product_version: str) -> str:
-    return f"GlyphaStore-{product_version}.tar.xz"
+    return f"GlifiStore-{product_version}.tar.xz"
 
 
 def ripemd160(path: Path) -> str | None:
@@ -177,7 +177,7 @@ def _require_sealed_context(context: dict[str, Any]) -> None:
 
 def _provenance(backend: str, context: dict[str, Any], profile: str) -> str:
     return (
-        f"# rendered for the {profile} packaging profile from GlyphaStore "
+        f"# rendered for the {profile} packaging profile from GlifiStore "
         f"{context['product_version']} at commit {context['git']['commit']}\n"
         f"# backend: {backend}; edits belong in {TEMPLATES[backend].as_posix()}"
     )
@@ -223,8 +223,8 @@ def render(
         # Keep the MacPorts idiom when the distfile follows the port version; a
         # prerelease, whose grammars differ, falls back to the literal name.
         distname = (
-            "GlyphaStore-${version}"
-            if source.distname == f"GlyphaStore-{port_version}"
+            "GlifiStore-${version}"
+            if source.distname == f"GlifiStore-{port_version}"
             else source.distname
         )
         values.update(

@@ -17,7 +17,7 @@ class MemoryOrderAuditTests(unittest.TestCase):
                 "return value.load(std::memory_order_acquire);\n",
                 encoding="utf-8",
             )
-            (root / "include" / "glyphastore").mkdir(parents=True)
+            (root / "include" / "glifistore").mkdir(parents=True)
             policy = root / "policy.json"
             policy.write_text(
                 json.dumps(
@@ -50,7 +50,7 @@ class MemoryOrderAuditTests(unittest.TestCase):
             source = root / "src" / "sample.cpp"
             source.parent.mkdir(parents=True)
             source.write_text("value.load(std::memory_order_relaxed);\n", encoding="utf-8")
-            (root / "include" / "glyphastore").mkdir(parents=True)
+            (root / "include" / "glifistore").mkdir(parents=True)
             policy = root / "policy.json"
             policy.write_text(
                 json.dumps(

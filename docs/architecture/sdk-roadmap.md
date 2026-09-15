@@ -26,9 +26,9 @@ has been published to its language registry or that the server is production-cer
 | Ruby | sync + optional `async`, backup, HEALTH/READY/STATS, AF_UNIX dial, pipeline, batch, Worker vectors | MRI-thread-safe sync / Fiber async | yes (not with AF_UNIX) | FNV + keyed SipHash `INIT` extension |
 
 All six use golden wire fixtures and participate in the default-routing interoperability harness.
-Every official client decodes plain `GlyphaStore/2` (FNV) and the extended SipHash INIT identity.
+Every official client decodes plain `GlifiStore/2` (FNV) and the extended SipHash INIT identity.
 The cleartext/TLS/secure interop matrix also exercises `execute_worker_pipelines` (one
-pre-sharded PUT→GET vector per Worker) against live `glyphastored`.
+pre-sharded PUT→GET vector per Worker) against live `glifistored`.
 
 ## Highest-priority gaps
 
@@ -50,7 +50,7 @@ so a broken client TLS configuration cannot satisfy the negative assertion. Rema
 installed-artifact secure-profile evidence.
 Documentation must not call the SDK security train complete before that matrix passes.
 
-The harness now has a fail-closed `GLYPHASTORE_INTEROP_USE_INSTALLED=1` mode: C++ and Go binaries
+The harness now has a fail-closed `GLIFISTORE_INTEROP_USE_INSTALLED=1` mode: C++ and Go binaries
 inside the checkout are refused, source load paths are not injected, and Python/Perl/Ruby/Erlang
 helpers verify that their loaded module is outside the repository. This is the isolation mechanism,
 while package orchestration supplies the artifact proof described below.
@@ -94,7 +94,7 @@ Ruby sequential and per-Worker threaded modes participate when a supported Ruby 
 available; older or absent runtimes are recorded as an explicit skip rather than producing
 out-of-contract measurements.
 
-The public C++ reference client now has `glyphastore_client_benchmark` with sequential, concurrent,
+The public C++ reference client now has `glifistore_client_benchmark` with sequential, concurrent,
 and mixed-owner batch modes; the shared matrix runs the concurrent mode once per Worker/depth cell.
 An attempted removal of its duplicate first-key pipeline hash was rejected after alternating local
 samples: the second pass measured about +0.8% at depth 1 and −0.4% at depth 8, so no stable throughput
@@ -140,7 +140,7 @@ Worker-indexed batch groups and disjoint positional result writes were retained:
 allocations (−6.4%) and from about 26.25 KiB to 25.55 KiB (−2.7%), while throughput remained flat
 within noise. Lazily preallocating parallel request/index vectors then removed the second request
 copy: 73 to 61 allocations (−16.4%) and about 25.55 KiB to 16.40 KiB (−35.8%), again with flat
-throughput. The benchmark is opt-in and requires a live daemon via `GLYPHASTORE_BENCH_PORT`.
+throughput. The benchmark is opt-in and requires a live daemon via `GLIFISTORE_BENCH_PORT`.
 Moving the two local batch closures into private helpers reduced the four-Worker case from 61 to 55
 allocations but raised repeat median latency from about 306–308 µs to about 315 µs; that candidate
 was reverted. A dedicated one-Worker fast path was retained: it removes grouping/fan-out and reduced
@@ -165,7 +165,7 @@ bounded server retention and recovery semantics. It is not part of wire v2 today
   `not_found` / `new_attempt` (client-semantics §3/§5), including Python and Ruby async clients
   (pipeline/batch/worker-pipeline slots use outcome `failed`).
 - `scripts/test-sdk-backup-interop.sh` exercises fenced online `BACKUP` against durable
-  `glyphastored` for all six official SDKs (C++ via `glyphastore_interop_client`).
+  `glifistored` for all six official SDKs (C++ via `glifistore_interop_client`).
 - `scripts/test-sdk-interop.sh` covers default FNV routing, Workers 1/2/4/8, plus keyed SipHash
   cleartext for workers 2/4 when `INTEROP_KEYED=1` (default); binary keys, empty values, TTL,
   pipelines, `execute_worker_pipelines`, PUT→ERASE→structured `NOT_FOUND` (including one

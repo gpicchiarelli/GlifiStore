@@ -99,8 +99,8 @@ requirements:
   - docs/abi/compatibility-policy.md
   implementazione:
   - ABI_VERSION
-  - include/glyphastore/abi/glyphastore.h
-  - src/abi/glyphastore.cpp
+  - include/glifistore/abi/glifistore.h
+  - src/abi/glifistore.cpp
   - abi/symbols-v1.txt
   - src/CMakeLists.txt
   - scripts/package-abi-consumer.py
@@ -190,7 +190,7 @@ requirements:
   - Il vecchio consumer ABI e le otto evidenze release-wide potranno nascere solo dalla prima release
   - Il reusable workflow e locale al repository e non costituisce oggi prova SLSA Build Level 3
   - Persistenza, SDK, ABI, wire, security matrix, package FreeBSD/OpenBSD e riproducibilita hanno producer same-run (release.yml); i producer package BSD restano bloccati da account ports non registrato e dall'assenza di retention nativa taggata
-  - Il producer FreeBSD resta bloccato finche l'account glyphastore non e registrato nel ports tree nativo
+  - Il producer FreeBSD resta bloccato finche l'account glifistore non e registrato nel ports tree nativo
   - Il producer persistente resta bloccato finche non esiste un vero Store di una release taggata precedente
   - Il producer ABI resta bloccato finche non esiste una release completa attestata precedente
   - Il producer wire resta bloccato finche non esiste una release completa attestata precedente con client v2 sigillato
@@ -278,7 +278,7 @@ requirements:
   - Il lifecycle deb/rpm container ha LIFECYCLE_VERIFIED trattenuto; required_for_release resta
     false e overall NOT_RUN senza candidate sigillato
   - Il lifecycle nativo MacPorts/Homebrew non e mai stato eseguito in un run CI trattenuto
-  - MacPorts dichiara startupitem unprivileged (user/group glyphastore) e Homebrew dichiara
+  - MacPorts dichiara startupitem unprivileged (user/group glifistore) e Homebrew dichiara
     brew services; senza run nativo trattenuto service-lifecycle resta OPEN_GATE per entrambi
   - upstream-ports-acceptance resta OPEN_GATE per FreeBSD, OpenBSD, MacPorts e Homebrew; il
     packaging in-repo e la pipeline del progetto, non un'accettazione upstream
@@ -286,7 +286,7 @@ requirements:
     (`package-external-consumer.sh`); senza un run tag trattenuto il residual resta la retention
   - package-upgrade resta NOT_APPLICABLE_INITIAL_BASELINE finche non esiste un predecessore
     SemVer annotato; Linux, BSD e macOS eseguono install→seed→upgrade→verify quando
-    GLYPHASTORE_N1_PACKAGE_DIR fornisce pacchetti/archivi sigillati (mai ricostruiti da HEAD);
+    GLIFISTORE_N1_PACKAGE_DIR fornisce pacchetti/archivi sigillati (mai ricostruiti da HEAD);
     manca ancora un PASS trattenuto su N-1 pubblicato
   - deb, rpm, macports e homebrew restano required_for_release false finche un gate non li promuove
   hazards:
@@ -305,10 +305,10 @@ requirements:
     draft, prerelease o priva di manifest non puo diventare baseline. I tre stati pre-upgrade restano
     distinti (NOT_APPLICABLE_INITIAL_BASELINE quando nulla precede, BLOCKED quando qualcosa precede ma
     nessuna release e ammissibile, NOT_RUN quando la baseline esiste e il run non l'ha esercitata).
-    Quando GLYPHASTORE_N1_PACKAGE_DIR fornisce i pacchetti sigillati del predecessore, Linux deb/rpm,
+    Quando GLIFISTORE_N1_PACKAGE_DIR fornisce i pacchetti sigillati del predecessore, Linux deb/rpm,
     FreeBSD/OpenBSD e MacPorts/Homebrew eseguono la camminata install→seed→upgrade→verify nel
     lifecycle nativo/container (macOS seleziona l'archivio sorgente sigillato
-    GlyphaStore-<version>.tar.xz). L'ammissione lega il manifest degli artifact
+    GlifiStore-<version>.tar.xz). L'ammissione lega il manifest degli artifact
     al digest dell'archivio sorgente sigillato e ogni evidence al SHA-256 dei byte esatti, cosi un
     pacchetto ricostruito fra verify e publish emerge come byte drift; N-1 non viene mai ricostruito
     da HEAD. Il report di ammissione registra i blocchi e non promuove alcun gate.
@@ -355,11 +355,11 @@ requirements:
     (run 34666166603), ma admitted resta false finche package-upgrade non esercita un
     predecessore SemVer N-1 sigillato
   - FreeBSD/OpenBSD dichiarano package-upgrade nella matrice e corrono
-    install→seed→upgrade→verify quando GLYPHASTORE_N1_PACKAGE_DIR fornisce `.pkg`/`.tgz`
+    install→seed→upgrade→verify quando GLIFISTORE_N1_PACKAGE_DIR fornisce `.pkg`/`.tgz`
     sigillati; senza quei byte restano NOT_RUN / NOT_APPLICABLE_INITIAL_BASELINE
   - Nessun tag annotato ha ancora trattenuto un'ammissione positiva
   - I backend selezionano il predecessore SemVer e restano NOT_RUN (o
-    NOT_APPLICABLE_INITIAL_BASELINE) finche GLYPHASTORE_N1_PACKAGE_DIR non fornisce i
+    NOT_APPLICABLE_INITIAL_BASELINE) finche GLIFISTORE_N1_PACKAGE_DIR non fornisce i
     pacchetti sigillati; Linux, BSD e macOS eseguono install→seed→upgrade→verify quando quei
     byte sono disponibili nel lifecycle nativo/container, ma senza un predecessore pubblicato
     non esiste ancora un PASS trattenuto

@@ -1,10 +1,10 @@
 # Assurance catalog (authority)
 
 Machine-readable requirements, hazards, quality gates, waivers, claims, and evidence
-pointers for GlyphaStore. Markdown under `docs/production-readiness.md` and
+pointers for GlifiStore. Markdown under `docs/production-readiness.md` and
 `docs/assurance/` is **generated** from this tree.
 
-GlyphaStore remains an **architectural prototype**. Do not treat closed checklist
+GlifiStore remains an **architectural prototype**. Do not treat closed checklist
 boxes as production readiness.
 
 ## Layout
@@ -37,7 +37,7 @@ boxes as production readiness.
 | `tools/generate_package_matrix.py` | Package matrix validation and profile expansion |
 | `tools/generate_package_status.py` | Generator for the derived `docs/distribution/package-status.md` view |
 | `tools/validate_package_evidence.py` | Fail-closed package evidence: a result never exceeds its checks |
-| `tools/upgrade_baseline.py` / `n1_package_artifacts.py` / `validate_package_admission.py` / `run_package_admission.py` | SemVer-aware sealed N-1 selection, install→seed→upgrade→verify wiring for Linux deb/rpm, FreeBSD/OpenBSD, and MacPorts/Homebrew when `GLYPHASTORE_N1_PACKAGE_DIR` supplies sealed predecessor bytes, and exact-byte package admission (wired in package-ci.yml / release.yml; positive admission / sealed N-1 PASS still residual) |
+| `tools/upgrade_baseline.py` / `n1_package_artifacts.py` / `validate_package_admission.py` / `run_package_admission.py` | SemVer-aware sealed N-1 selection, install→seed→upgrade→verify wiring for Linux deb/rpm, FreeBSD/OpenBSD, and MacPorts/Homebrew when `GLIFISTORE_N1_PACKAGE_DIR` supplies sealed predecessor bytes, and exact-byte package admission (wired in package-ci.yml / release.yml; positive admission / sealed N-1 PASS still residual) |
 | `formal/shard_pair/` | Reduced TLA+ ShardPair model + TLC helper |
 | `formal/persistence/` | Abstract write/sync/commit-slot/Manifest/recovery TLA+ model |
 

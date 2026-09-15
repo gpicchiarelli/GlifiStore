@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_CI = ROOT / "scripts/package-ci.sh"
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 SEALED_URL = (
-    f"https://github.com/gpicchiarelli/GlyphaStore/releases/download/v{VERSION}/"
+    f"https://github.com/gpicchiarelli/GlifiStore/releases/download/v{VERSION}/"
     f"{source_basename(VERSION)}"
 )
 SEALED_SHA256 = "a" * 64
@@ -84,12 +84,12 @@ class MacOsPackagingRenderTests(unittest.TestCase):
 
         self.assertIn(f"\nversion                 {VERSION}\n", rendered)
         self.assertIn("\nrevision                0\n", rendered)
-        self.assertIn("distname                GlyphaStore-${version}", rendered)
+        self.assertIn("distname                GlifiStore-${version}", rendered)
         self.assertIn(f"sha256  {SEALED_SHA256}", rendered)
         self.assertIn("size    1024", rendered)
         self.assertIn(
             "master_sites            "
-            f"https://github.com/gpicchiarelli/GlyphaStore/releases/download/v{VERSION}/",
+            f"https://github.com/gpicchiarelli/GlifiStore/releases/download/v{VERSION}/",
             rendered,
         )
         self.assertNotIn("{{", rendered)
@@ -100,10 +100,10 @@ class MacOsPackagingRenderTests(unittest.TestCase):
         )
 
         self.assertIn("startupitem.create      yes", rendered)
-        self.assertIn("startupitem.user        glyphastore", rendered)
-        self.assertIn("startupitem.group       glyphastore", rendered)
-        self.assertIn("startupitem.executable  ${prefix}/bin/glyphastored", rendered)
-        self.assertIn("add_users               glyphastore group=glyphastore", rendered)
+        self.assertIn("startupitem.user        glifistore", rendered)
+        self.assertIn("startupitem.group       glifistore", rendered)
+        self.assertIn("startupitem.executable  ${prefix}/bin/glifistored", rendered)
+        self.assertIn("add_users               glifistore group=glifistore", rendered)
 
     def test_the_portfile_carries_the_package_revision(self) -> None:
         rendered = render(
@@ -140,7 +140,7 @@ class MacOsPackagingRenderTests(unittest.TestCase):
         self.assertIn("\n  revision 2\n", rendered)
 
     def test_neither_template_hard_codes_a_version_or_a_checksum(self) -> None:
-        for name in ("packaging/macports/Portfile.in", "packaging/homebrew/glyphastore.rb.in"):
+        for name in ("packaging/macports/Portfile.in", "packaging/homebrew/glifistore.rb.in"):
             with self.subTest(template=name):
                 template = (ROOT / name).read_text(encoding="utf-8")
                 self.assertNotIn(VERSION, template)
@@ -148,7 +148,7 @@ class MacOsPackagingRenderTests(unittest.TestCase):
                 self.assertIn("{{VERSION}}", template)
 
     def test_rendering_writes_the_name_each_package_manager_expects(self) -> None:
-        directory = temporary_directory(self, "glyphastore-render-")
+        directory = temporary_directory(self, "glifistore-render-")
         context = self.released_context()
 
         portfile = render_to_file(
@@ -159,7 +159,7 @@ class MacOsPackagingRenderTests(unittest.TestCase):
         )
 
         self.assertEqual(portfile.name, "Portfile")
-        self.assertEqual(formula.name, "glyphastore.rb")
+        self.assertEqual(formula.name, "glifistore.rb")
 
 
 class ReleaseSourceAdmissionTests(unittest.TestCase):
@@ -174,11 +174,11 @@ class ReleaseSourceAdmissionTests(unittest.TestCase):
             profile="release",
         )
 
-        self.assertEqual(source.distname, f"GlyphaStore-{VERSION}")
+        self.assertEqual(source.distname, f"GlifiStore-{VERSION}")
         self.assertTrue(source.master_sites.endswith("/"))
 
     def test_the_release_profile_refuses_a_local_working_copy(self) -> None:
-        directory = temporary_directory(self, "glyphastore-source-")
+        directory = temporary_directory(self, "glifistore-source-")
         archive, sha256 = local_archive(directory)
 
         with self.assertRaises(MacPackagingError) as refused:
@@ -194,8 +194,8 @@ class ReleaseSourceAdmissionTests(unittest.TestCase):
 
     def test_the_release_profile_refuses_a_git_ref_tarball(self) -> None:
         for url in (
-            f"https://github.com/gpicchiarelli/GlyphaStore/archive/refs/tags/{source_basename(VERSION)}",
-            f"https://codeload.github.com/gpicchiarelli/GlyphaStore/{source_basename(VERSION)}",
+            f"https://github.com/gpicchiarelli/GlifiStore/archive/refs/tags/{source_basename(VERSION)}",
+            f"https://codeload.github.com/gpicchiarelli/GlifiStore/{source_basename(VERSION)}",
         ):
             with self.subTest(url=url), self.assertRaises(MacPackagingError) as refused:
                 resolve_source(
@@ -214,7 +214,7 @@ class ReleaseSourceAdmissionTests(unittest.TestCase):
             "short digest": {"url": SEALED_URL, "sha256": "abc"},
             "uppercase digest": {"url": SEALED_URL, "sha256": "A" * 64},
             "wrong archive": {
-                "url": SEALED_URL.replace(source_basename(VERSION), "GlyphaStore-9.9.9.tar.xz"),
+                "url": SEALED_URL.replace(source_basename(VERSION), "GlifiStore-9.9.9.tar.xz"),
                 "sha256": SEALED_SHA256,
             },
             "unsupported scheme": {
@@ -229,7 +229,7 @@ class ReleaseSourceAdmissionTests(unittest.TestCase):
                 )
 
     def test_a_local_archive_must_match_the_digest_it_pins(self) -> None:
-        directory = temporary_directory(self, "glyphastore-source-")
+        directory = temporary_directory(self, "glifistore-source-")
         archive, sha256 = local_archive(directory)
 
         admitted = resolve_source(
@@ -274,8 +274,8 @@ class ReleaseSourceAdmissionTests(unittest.TestCase):
 
 class PrefixIsolationTests(unittest.TestCase):
     OTOOL = (
-        "/opt/local/lib/libglyphastore.1.0.dylib:\n"
-        "\t/opt/local/lib/libglyphastore.1.dylib (compatibility version 1.0.0, current version 1.0.0)\n"
+        "/opt/local/lib/libglifistore.1.0.dylib:\n"
+        "\t/opt/local/lib/libglifistore.1.dylib (compatibility version 1.0.0, current version 1.0.0)\n"
         "\t/opt/local/lib/libssl.3.dylib (compatibility version 3.0.0, current version 3.0.0)\n"
         "\t@rpath/libextra.dylib (compatibility version 1.0.0, current version 1.0.0)\n"
         "\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)\n"
@@ -286,7 +286,7 @@ class PrefixIsolationTests(unittest.TestCase):
     def test_only_absolute_dependencies_are_parsed(self) -> None:
         dependencies = parse_otool(self.OTOOL)
 
-        self.assertNotIn("/opt/local/lib/libglyphastore.1.0.dylib:", dependencies)
+        self.assertNotIn("/opt/local/lib/libglifistore.1.0.dylib:", dependencies)
         self.assertNotIn("@rpath/libextra.dylib", dependencies)
         self.assertIn("/usr/lib/libSystem.B.dylib", dependencies)
         self.assertEqual(len(dependencies), 5)
@@ -307,7 +307,7 @@ class PrefixIsolationTests(unittest.TestCase):
 
         self.assertEqual(
             sorted(violation.dependency for violation in violations),
-            ["/opt/local/lib/libglyphastore.1.dylib", "/opt/local/lib/libssl.3.dylib"],
+            ["/opt/local/lib/libglifistore.1.dylib", "/opt/local/lib/libssl.3.dylib"],
         )
 
     def test_an_exception_only_counts_when_it_is_documented(self) -> None:
@@ -317,11 +317,11 @@ class PrefixIsolationTests(unittest.TestCase):
 
         self.assertEqual(
             [violation.dependency for violation in violations],
-            ["/opt/local/lib/libglyphastore.1.dylib"],
+            ["/opt/local/lib/libglifistore.1.dylib"],
         )
 
     def test_an_exception_without_a_reason_is_refused(self) -> None:
-        root = temporary_directory(self, "glyphastore-exceptions-")
+        root = temporary_directory(self, "glifistore-exceptions-")
         directory = root / "packaging/macports"
         directory.mkdir(parents=True)
         (directory / "prefix-exceptions.txt").write_text(
@@ -355,7 +355,7 @@ class MacOsPackageCiTests(unittest.TestCase):
         return json.loads(path.read_text(encoding="utf-8"))
 
     def test_macports_renders_metadata_and_never_reports_pass(self) -> None:
-        directory = temporary_directory(self, "glyphastore-macports-") / "run"
+        directory = temporary_directory(self, "glifistore-macports-") / "run"
 
         completed = self.run_package_ci(
             "--profile", "pr", "--backend", "macports", "--output-dir", str(directory)
@@ -379,7 +379,7 @@ class MacOsPackageCiTests(unittest.TestCase):
         self.assertNotIn("PASS", {statuses[check] for check in ("package-build", "package-install")})
 
     def test_homebrew_renders_metadata_on_the_main_profile(self) -> None:
-        directory = temporary_directory(self, "glyphastore-homebrew-") / "run"
+        directory = temporary_directory(self, "glifistore-homebrew-") / "run"
 
         completed = self.run_package_ci(
             "--profile", "main", "--backend", "homebrew", "--output-dir", str(directory)
@@ -387,7 +387,7 @@ class MacOsPackageCiTests(unittest.TestCase):
 
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("PACKAGE-CI homebrew main full OPEN_GATE", completed.stdout)
-        formula = directory / "homebrew/full/rendered/glyphastore.rb"
+        formula = directory / "homebrew/full/rendered/glifistore.rb"
         self.assertTrue(formula.is_file())
         self.assertIn(f'version "{VERSION}"', formula.read_text(encoding="utf-8"))
         self.assertEqual(self.evidence(directory, "homebrew", "main")["result"], "OPEN_GATE")
@@ -407,7 +407,7 @@ class ReleaseProfileDriverTests(unittest.TestCase):
     """scripts/package-ci.sh --profile release must not fall back to a checkout."""
 
     def test_the_driver_fails_without_a_sealed_source_archive(self) -> None:
-        directory = temporary_directory(self, "glyphastore-release-")
+        directory = temporary_directory(self, "glifistore-release-")
         context_path = directory / "release-context.json"
         context_path.write_text(
             json.dumps(build_context(ROOT), indent=2, sort_keys=True), encoding="utf-8"
@@ -416,9 +416,9 @@ class ReleaseProfileDriverTests(unittest.TestCase):
 
         environment = dict(os.environ)
         for name in (
-            "GLYPHASTORE_SOURCE_ARCHIVE_URL",
-            "GLYPHASTORE_SOURCE_ARCHIVE_SHA256",
-            "GLYPHASTORE_PACKAGE_CI_NATIVE",
+            "GLIFISTORE_SOURCE_ARCHIVE_URL",
+            "GLIFISTORE_SOURCE_ARCHIVE_SHA256",
+            "GLIFISTORE_PACKAGE_CI_NATIVE",
         ):
             environment.pop(name, None)
 
@@ -451,7 +451,7 @@ class ReleaseProfileDriverTests(unittest.TestCase):
         self.assertEqual(evidence["lifecycle_state"], "NONE")
         self.assertEqual(checks["package-metadata-render"]["status"], "FAIL")
         self.assertIn(
-            "GLYPHASTORE_SOURCE_ARCHIVE_URL", checks["package-metadata-render"]["detail"]
+            "GLIFISTORE_SOURCE_ARCHIVE_URL", checks["package-metadata-render"]["detail"]
         )
         self.assertFalse((output / "rendered/Portfile").exists())
 

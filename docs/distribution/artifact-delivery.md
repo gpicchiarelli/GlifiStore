@@ -3,7 +3,7 @@
 Status: normative for future tagged releases
 Claim ceiling: architectural prototype until every linked release gate has retained evidence
 
-GlyphaStore releases follow one unidirectional path:
+GlifiStore releases follow one unidirectional path:
 
 ```text
 annotated vX.Y.Z tag
@@ -46,7 +46,7 @@ never archives the working tree. `scripts/package-install-prefix.py` packages a 
 tree with normalized metadata and refuses a missing versioned C ABI.
 
 Syft discovers packaged components, but its output is not trusted as the artifact identity.
-`release_bundle.py bind-sbom` adds one authoritative GlyphaStore SPDX package whose version,
+`release_bundle.py bind-sbom` adds one authoritative GlifiStore SPDX package whose version,
 BSD-3-Clause license and SHA-256 identify the adjacent artifact, then normalizes creation time from
 `SOURCE_DATE_EPOCH`. Validation rejects a missing subject, a digest/version mismatch, duplicate
 package identities, a missing document-to-package relationship, or any discovered package for

@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 template <typename T, std::size_t Capacity> class SpscRing final {
     static_assert(Capacity >= 2 && std::has_single_bit(Capacity));
@@ -75,4 +75,4 @@ template <typename T, std::size_t Capacity> class SpscRing final {
     ConsumerState consumer_{};
 };
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

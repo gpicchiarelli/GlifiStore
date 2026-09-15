@@ -1,9 +1,9 @@
-#include "glyphastore/persistence/compaction.hpp"
+#include "glifistore/persistence/compaction.hpp"
 
 #include <limits>
 #include <vector>
 
-namespace glyphastore {
+namespace glifistore {
 
 auto validate_durable_compaction_transition(const Manifest& current, const Manifest& next,
                                             const WorkerId worker_id) -> Result<std::size_t> {
@@ -67,4 +67,4 @@ auto validate_durable_compaction_transition(const Manifest& current, const Manif
     return output_count;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

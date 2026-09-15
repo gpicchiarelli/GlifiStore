@@ -1,8 +1,8 @@
-#include "glyphastore/store/paired/mutation_state.hpp"
+#include "glifistore/store/paired/mutation_state.hpp"
 
 #include <utility>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 namespace {
 
 [[nodiscard]] auto can_enter_durable(const MutationStage stage) noexcept -> bool {
@@ -264,4 +264,4 @@ auto MutationLifecycle::mark_completed() noexcept -> bool {
     return true;
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

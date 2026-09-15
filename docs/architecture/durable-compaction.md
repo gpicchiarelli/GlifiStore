@@ -90,7 +90,7 @@ briefly lock target Worker + catalog
 The intent is protocol metadata, not a second data format. It must bind the Store ID, Worker,
 previous and next manifest generations, and exact source/replacement identities with a checksum.
 It is durable before any unlisted canonical replacement name can appear. Private
-`.segment-<id>-<generation>.glypha.tmp` files may exist before the intent, but are never referenced
+`.segment-<id>-<generation>.glifi.tmp` files may exist before the intent, but are never referenced
 by the authoritative Manifest and are recognized only as disposable engine temporaries.
 
 Before acquiring the lease and publishing that intent, the builder verifies the manifest snapshot,

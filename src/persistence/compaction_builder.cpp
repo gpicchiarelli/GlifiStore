@@ -1,12 +1,12 @@
-#include "glyphastore/persistence/compaction_builder.hpp"
+#include "glifistore/persistence/compaction_builder.hpp"
 
-#include "glyphastore/core/byte_rate_limiter.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/persistence/compaction_intent.hpp"
-#include "glyphastore/persistence/resource_limits.hpp"
-#include "glyphastore/persistence/segment_file.hpp"
-#include "glyphastore/segment/crc32c.hpp"
-#include "glyphastore/segment/record.hpp"
+#include "glifistore/core/byte_rate_limiter.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/persistence/compaction_intent.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
+#include "glifistore/persistence/segment_file.hpp"
+#include "glifistore/segment/crc32c.hpp"
+#include "glifistore/segment/record.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 struct PackedRecord {
@@ -656,4 +656,4 @@ auto build_durable_worker_compaction(DataDirectory& directory, const Manifest& c
                                            {}, {});
 }
 
-} // namespace glyphastore
+} // namespace glifistore

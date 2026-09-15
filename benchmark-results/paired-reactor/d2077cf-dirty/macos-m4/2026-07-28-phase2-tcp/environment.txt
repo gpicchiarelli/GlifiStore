@@ -27,7 +27,7 @@ d2077cf7b004802dc857c1489dfa82af0846abc3
  M sdk/erlang/README.md
  M sdk/go/README.md
  M sdk/perl/README.md
- M sdk/perl/lib/GlyphaStore.pm
+ M sdk/perl/lib/GlifiStore.pm
  M sdk/python/README.md
  M sdk/ruby/README.md
  M src/experimental/paired_reactor.cpp

@@ -1,15 +1,15 @@
 #pragma once
 
-#include "glyphastore/persistence/filesystem.hpp"
-#include "glyphastore/persistence/manifest.hpp"
-#include "glyphastore/persistence/namespace_audit.hpp"
-#include "glyphastore/store/config.hpp"
+#include "glifistore/persistence/filesystem.hpp"
+#include "glifistore/persistence/manifest.hpp"
+#include "glifistore/persistence/namespace_audit.hpp"
+#include "glifistore/store/config.hpp"
 #include "persistence/recovery/recovery_budget.hpp"
 
 #include <cstddef>
 #include <vector>
 
-namespace glyphastore::recovery {
+namespace glifistore::recovery {
 
 struct RecoveryCatalog final {
     Manifest manifest;
@@ -22,4 +22,4 @@ struct RecoveryCatalog final {
                                          const DurableCompactionIntent* compaction_intent,
                                          RecoveryMemoryBudget& budget) -> Result<RecoveryCatalog>;
 
-} // namespace glyphastore::recovery
+} // namespace glifistore::recovery

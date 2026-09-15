@@ -10,15 +10,15 @@
 #   - Native FreeBSD developer hosts
 #
 # Environment:
-#   GLYPHASTORE_FREEBSD_PRESET   cmake preset (default: unix-release)
-#   GLYPHASTORE_FREEBSD_FUZZ     set to 1 to also configure/build unix-fuzz (no run)
+#   GLIFISTORE_FREEBSD_PRESET   cmake preset (default: unix-release)
+#   GLIFISTORE_FREEBSD_FUZZ     set to 1 to also configure/build unix-fuzz (no run)
 #   CC / CXX                     optional compiler overrides
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
 
-preset="${GLYPHASTORE_FREEBSD_PRESET:-unix-release}"
+preset="${GLIFISTORE_FREEBSD_PRESET:-unix-release}"
 build_dir="$root/build/${preset}"
 
 if [[ "$(uname -s)" != "FreeBSD" ]]; then
@@ -52,7 +52,7 @@ cmake --version | head -1
 echo "== configure =="
 rm -rf "$build_dir"
 # AUTO TLS: enable when OpenSSL 3.x is installed via pkg; otherwise cleartext-only.
-cmake --preset "$preset" | tee /tmp/glyphastore-freebsd-cmake.log
+cmake --preset "$preset" | tee /tmp/glifistore-freebsd-cmake.log
 
 echo "== build =="
 cmake --build --preset "$preset"
@@ -64,16 +64,16 @@ echo "== ctest =="
 ctest --preset "$preset" --output-on-failure -LE 'crash|fault-injection'
 
 echo "== installed C/C++ consumers =="
-install_root="$(mktemp -d /tmp/glyphastore-freebsd-install.XXXXXX)"
-consumer_build="$(mktemp -d /tmp/glyphastore-freebsd-consumer.XXXXXX)"
+install_root="$(mktemp -d /tmp/glifistore-freebsd-install.XXXXXX)"
+consumer_build="$(mktemp -d /tmp/glifistore-freebsd-consumer.XXXXXX)"
 cleanup_install() {
   rm -rf "$install_root" "$consumer_build"
 }
 trap cleanup_install EXIT
 cmake --install "$build_dir" --prefix "$install_root"
-test -x "$install_root/bin/glyphastored"
-test -f "$install_root/include/glyphastore/abi/glyphastore.h"
-find "$install_root/lib" -maxdepth 1 -name 'libglyphastore.so.[0-9]*' -type f | grep -q .
+test -x "$install_root/bin/glifistored"
+test -f "$install_root/include/glifistore/abi/glifistore.h"
+find "$install_root/lib" -maxdepth 1 -name 'libglifistore.so.[0-9]*' -type f | grep -q .
 
 cmake -S tests/consumer -B "$consumer_build" -G Ninja \
   -DCMAKE_PREFIX_PATH="$install_root"
@@ -82,13 +82,13 @@ LD_LIBRARY_PATH="$install_root/lib" \
   ctest --test-dir "$consumer_build" --output-on-failure
 
 PKG_CONFIG_PATH="$install_root/libdata/pkgconfig:$install_root/lib/pkgconfig" \
-  pkg-config --cflags --libs glyphastore-abi >"$consumer_build/abi.flags"
+  pkg-config --cflags --libs glifistore-abi >"$consumer_build/abi.flags"
 # shellcheck disable=SC2046
 cc -std=c11 tests/consumer/abi.c \
   $(cat "$consumer_build/abi.flags") -o "$consumer_build/pkgconfig-abi-consumer"
 LD_LIBRARY_PATH="$install_root/lib" "$consumer_build/pkgconfig-abi-consumer"
 
-if [[ "${GLYPHASTORE_FREEBSD_FUZZ:-0}" == "1" ]]; then
+if [[ "${GLIFISTORE_FREEBSD_FUZZ:-0}" == "1" ]]; then
   echo "== fuzz build (compile only; continuous run stays on Linux Sanitizers) =="
   export CC="${CC:-clang}"
   export CXX="${CXX:-clang++}"

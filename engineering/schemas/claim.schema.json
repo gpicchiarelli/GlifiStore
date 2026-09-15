@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.local/schemas/claim.schema.json",
-  "title": "GlyphaStore release claim",
+  "$id": "https://glifistore.local/schemas/claim.schema.json",
+  "title": "GlifiStore release claim",
   "type": "object",
   "additionalProperties": false,
   "required": [

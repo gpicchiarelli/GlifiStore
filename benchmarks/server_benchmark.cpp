@@ -1,9 +1,9 @@
-#include "glyphastore/client/client.hpp"
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/core/little_endian.hpp"
-#include "glyphastore/server/protocol.hpp"
-#include "glyphastore/server/server.hpp"
+#include "glifistore/client/client.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/core/little_endian.hpp"
+#include "glifistore/server/protocol.hpp"
+#include "glifistore/server/server.hpp"
 #include "harness.hpp"
 #include "parse.hpp"
 
@@ -37,10 +37,10 @@
 
 namespace {
 
-using glyphastore::bench::Config;
-using glyphastore::bench::ParallelDistribution;
-using glyphastore::bench::Result;
-using glyphastore::bench::RunSettings;
+using glifistore::bench::Config;
+using glifistore::bench::ParallelDistribution;
+using glifistore::bench::Result;
+using glifistore::bench::RunSettings;
 
 enum class StorageProfile : std::uint8_t { volatile_memory, durable_sync, durable_group, durable_periodic };
 enum class Workload : std::uint8_t {
@@ -137,7 +137,7 @@ struct ClientWork {
 struct Sample {
     std::size_t hits{};
     double seconds{};
-    glyphastore::bench::ResourceSample resources{};
+    glifistore::bench::ResourceSample resources{};
     std::vector<double> latency_ns;
     std::vector<double> get_latency_ns;
     std::vector<double> put_latency_ns;
@@ -156,7 +156,7 @@ struct ClientResult {
 };
 
 [[nodiscard]] auto parse_size(const std::string_view value, const char* flag) -> std::size_t {
-    const auto parsed = glyphastore::bench::parse_decimal_size(value);
+    const auto parsed = glifistore::bench::parse_decimal_size(value);
     if (!parsed) {
         std::cerr << "invalid value for " << flag << ": " << value << '\n';
         std::exit(2);
@@ -244,7 +244,7 @@ class BenchmarkDataDirectory final {
         }
         static std::atomic_uint64_t counter{};
         path_ = std::filesystem::temp_directory_path() /
-                ("glyphastore-server-bench-" + std::to_string(static_cast<unsigned long>(::getpid())) + '-' +
+                ("glifistore-server-bench-" + std::to_string(static_cast<unsigned long>(::getpid())) + '-' +
                  std::to_string(counter.fetch_add(1U, std::memory_order_relaxed)));
     }
 
@@ -276,7 +276,7 @@ class MaintenanceOverlapGate final {
         }
     }
 
-    [[nodiscard]] static auto available_space_bytes(void* context) -> glyphastore::Result<std::uint64_t> {
+    [[nodiscard]] static auto available_space_bytes(void* context) -> glifistore::Result<std::uint64_t> {
         auto& gate = *static_cast<MaintenanceOverlapGate*>(context);
         if (std::this_thread::get_id() != gate.opener_thread_) {
             gate.start_.wait();
@@ -284,7 +284,7 @@ class MaintenanceOverlapGate final {
         std::error_code error;
         const auto space = std::filesystem::space(gate.directory_, error);
         if (error) {
-            return glyphastore::fail(glyphastore::ErrorCode::io_error, "server benchmark space probe failed");
+            return glifistore::fail(glifistore::ErrorCode::io_error, "server benchmark space probe failed");
         }
         return static_cast<std::uint64_t>(space.available);
     }
@@ -298,20 +298,20 @@ class MaintenanceOverlapGate final {
 
 [[nodiscard]] auto
 store_config(const Options& options, const BenchmarkDataDirectory& directory,
-             const glyphastore::DurableOpenMode open_mode = glyphastore::DurableOpenMode::create_new)
-    -> glyphastore::StoreConfig {
-    glyphastore::StoreConfig config{.worker_config = {.explicit_count = options.config.workers}};
+             const glifistore::DurableOpenMode open_mode = glifistore::DurableOpenMode::create_new)
+    -> glifistore::StoreConfig {
+    glifistore::StoreConfig config{.worker_config = {.explicit_count = options.config.workers}};
     switch (options.storage) {
     case StorageProfile::volatile_memory:
         return config;
     case StorageProfile::durable_sync:
-        config.storage_mode = glyphastore::StorageMode::durable_sync;
+        config.storage_mode = glifistore::StorageMode::durable_sync;
         break;
     case StorageProfile::durable_group:
-        config.storage_mode = glyphastore::StorageMode::durable_group;
+        config.storage_mode = glifistore::StorageMode::durable_group;
         break;
     case StorageProfile::durable_periodic:
-        config.storage_mode = glyphastore::StorageMode::durable_periodic;
+        config.storage_mode = glifistore::StorageMode::durable_periodic;
         break;
     }
     config.data_directory = directory.path();
@@ -322,7 +322,7 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
                             .min_records = 1};
     config.durable_periodic = {.sync_interval_ms = options.periodic_sync_ms,
                                .batch =
-                                   glyphastore::DurableGroupConfig{.max_records = options.group_max_records,
+                                   glifistore::DurableGroupConfig{.max_records = options.group_max_records,
                                                                    .max_bytes = options.group_max_bytes,
                                                                    .max_wait_ms = options.group_max_wait_ms,
                                                                    .min_records = 1}};
@@ -330,7 +330,7 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
     config.maintenance.suspend_on_p99_min_samples = options.maintenance_suspend_on_p99_min_samples;
     config.maintenance.max_latency_deferral_ms = options.maintenance_max_latency_deferral_ms;
     if (options.maintenance_overlap_seed_operations != 0) {
-        config.maintenance.mode = glyphastore::MaintenanceMode::background;
+        config.maintenance.mode = glifistore::MaintenanceMode::background;
         config.maintenance.min_eval_interval_ms = options.maintenance_overlap_eval_ms;
         config.maintenance.max_eval_interval_ms = options.maintenance_overlap_eval_ms;
         config.maintenance.dead_byte_ratio_bp_normal = 5'000;
@@ -343,7 +343,7 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
     std::size_t matched{};
     for (std::size_t suffix = 0; suffix < 10'000'000; ++suffix) {
         auto key = std::string{"maintenance-overlap-"} + std::to_string(suffix);
-        if (glyphastore::route_worker(key, workers) == worker && matched++ == ordinal) {
+        if (glifistore::route_worker(key, workers) == worker && matched++ == ordinal) {
             return key;
         }
     }
@@ -356,8 +356,8 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
         return true;
     }
     auto config = store_config(options, directory);
-    config.maintenance.mode = glyphastore::MaintenanceMode::disabled;
-    auto opened = glyphastore::Store::open(config);
+    config.maintenance.mode = glifistore::MaintenanceMode::disabled;
+    auto opened = glifistore::Store::open(config);
     if (!opened) {
         return false;
     }
@@ -383,7 +383,7 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
     return store->flush().has_value() && store->close().has_value();
 }
 
-[[nodiscard]] auto reactor_config(const Options& options) -> glyphastore::server::ReactorConfig {
+[[nodiscard]] auto reactor_config(const Options& options) -> glifistore::server::ReactorConfig {
     return {.port = 0,
             .maximum_connections = std::max(std::size_t{16}, options.config.threads * 2U),
             .worker_count = options.config.workers,
@@ -391,9 +391,9 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
             .durable_mutation_queue_wait_ms = 0};
 }
 
-[[nodiscard]] auto durable_profile(const glyphastore::server::Server& server,
-                                   const std::vector<glyphastore::server::PairWriterStats>& paired_before,
-                                   const std::vector<glyphastore::DurableBatchWorkerStats>& durable_before)
+[[nodiscard]] auto durable_profile(const glifistore::server::Server& server,
+                                   const std::vector<glifistore::server::PairWriterStats>& paired_before,
+                                   const std::vector<glifistore::DurableBatchWorkerStats>& durable_before)
     -> DurableProfileSample {
     DurableProfileSample result;
     std::uint64_t queue_wait_ns{};
@@ -405,7 +405,7 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
     };
     for (const auto& worker : server.pair_writer_stats()) {
         const auto baseline = std::ranges::find(paired_before, worker.worker_index,
-                                                &glyphastore::server::PairWriterStats::worker_index);
+                                                &glifistore::server::PairWriterStats::worker_index);
         const auto* before = baseline == paired_before.end() ? nullptr : &*baseline;
         result.completed += counter_delta(worker.completed, before == nullptr ? 0U : before->completed);
         result.rejected += counter_delta(worker.rejected, before == nullptr ? 0U : before->rejected);
@@ -468,7 +468,7 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
     std::uint64_t commit_ns{};
     for (const auto& worker : server.durable_batch_stats()) {
         const auto baseline = std::ranges::find(durable_before, worker.worker_id,
-                                                &glyphastore::DurableBatchWorkerStats::worker_id);
+                                                &glifistore::DurableBatchWorkerStats::worker_id);
         const auto* before = baseline == durable_before.end() ? nullptr : &*baseline;
         result.committed_batches +=
             counter_delta(worker.committed_batches, before == nullptr ? 0U : before->committed_batches);
@@ -514,7 +514,7 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
     return result;
 }
 
-[[nodiscard]] auto reactor_profile(const glyphastore::server::Server& server) -> ReactorProfileSample {
+[[nodiscard]] auto reactor_profile(const glifistore::server::Server& server) -> ReactorProfileSample {
     const auto stats = server.reactor_buffer_stats();
     return {.input_buffer_compactions = stats.input_compactions,
             .input_buffer_bytes_moved = stats.input_bytes_moved,
@@ -659,7 +659,7 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
             result.maintenance_overlap_release_ms =
                 parse_u32(argv[++index], "--maintenance-overlap-release-ms");
         } else if (argument == "--help" || argument == "-h") {
-            std::cout << "usage: glyphastore_server_benchmarks [--ops N] [--key-size N]"
+            std::cout << "usage: glifistore_server_benchmarks [--ops N] [--key-size N]"
                          " [--value-size N] [--workers N] [--clients N] [--pipeline N]"
                          " [--executor-affinity] [--latency] [--latency-split]"
                          " [--latency-sample-stride N] [--client-api] [--client-pipeline N]"
@@ -735,7 +735,7 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
 }
 
 [[nodiscard]] auto load_u32(const std::span<const std::byte> input) noexcept -> std::uint32_t {
-    return glyphastore::le::get_u32(input, 0);
+    return glifistore::le::get_u32(input, 0);
 }
 
 class BufferedResponseReader final {
@@ -745,19 +745,19 @@ class BufferedResponseReader final {
     }
 
     [[nodiscard]] auto receive(const int descriptor)
-        -> glyphastore::Result<glyphastore::server::DecodedFrame<glyphastore::server::ResponseView>> {
+        -> glifistore::Result<glifistore::server::DecodedFrame<glifistore::server::ResponseView>> {
         while (true) {
             const auto available = buffer_.size() - offset_;
             if (available >= sizeof(std::uint32_t)) {
                 const std::span<const std::byte> pending{buffer_.data() + offset_, available};
                 const auto size = static_cast<std::size_t>(load_u32(pending));
-                if (size < glyphastore::server::kResponseHeaderBytes ||
-                    size > glyphastore::server::kMaxFrameBytes) {
-                    return glyphastore::fail(glyphastore::ErrorCode::invalid_record,
+                if (size < glifistore::server::kResponseHeaderBytes ||
+                    size > glifistore::server::kMaxFrameBytes) {
+                    return glifistore::fail(glifistore::ErrorCode::invalid_record,
                                              "benchmark response size is invalid");
                 }
                 if (available >= size) {
-                    auto decoded = glyphastore::server::decode_response(pending.first(size));
+                    auto decoded = glifistore::server::decode_response(pending.first(size));
                     if (decoded) {
                         offset_ += size;
                     }
@@ -779,7 +779,7 @@ class BufferedResponseReader final {
             if (count < 0 && errno == EINTR) {
                 continue;
             }
-            return glyphastore::fail(glyphastore::ErrorCode::io_error, "benchmark response receive failed");
+            return glifistore::fail(glifistore::ErrorCode::io_error, "benchmark response receive failed");
         }
     }
 
@@ -788,8 +788,8 @@ class BufferedResponseReader final {
     std::size_t offset_{};
 };
 
-[[nodiscard]] auto make_material(const Config& config) -> glyphastore::bench::KeyMaterial {
-    glyphastore::bench::KeyMaterial material;
+[[nodiscard]] auto make_material(const Config& config) -> glifistore::bench::KeyMaterial {
+    glifistore::bench::KeyMaterial material;
     material.keys.reserve(config.operations);
     material.values.reserve(config.operations);
     std::size_t candidate{};
@@ -797,16 +797,16 @@ class BufferedResponseReader final {
         std::string key;
         const auto client = operation % config.threads;
         do {
-            key = glyphastore::bench::make_key(candidate++, config.key_size);
-        } while (glyphastore::route_worker(key, config.workers) != client % config.workers);
+            key = glifistore::bench::make_key(candidate++, config.key_size);
+        } while (glifistore::route_worker(key, config.workers) != client % config.workers);
         material.keys.push_back(std::move(key));
-        material.values.push_back(glyphastore::bench::make_value(operation, config.value_size));
+        material.values.push_back(glifistore::bench::make_value(operation, config.value_size));
     }
     return material;
 }
 
 [[nodiscard]] auto prepare_work(const Config& config, const std::size_t pipeline,
-                                const glyphastore::bench::KeyMaterial& material, const Workload workload)
+                                const glifistore::bench::KeyMaterial& material, const Workload workload)
     -> std::vector<ClientWork> {
     std::vector<ClientWork> work(config.threads);
     for (std::size_t client = 0; client < config.threads; ++client) {
@@ -814,8 +814,8 @@ class BufferedResponseReader final {
         std::size_t keys_in_batch{};
         for (std::size_t operation = client; operation < config.operations; operation += config.threads) {
             if (workload == Workload::read_after_write) {
-                const auto put = glyphastore::server::encode_request({
-                    .opcode = glyphastore::server::RequestOpcode::put,
+                const auto put = glifistore::server::encode_request({
+                    .opcode = glifistore::server::RequestOpcode::put,
                     .request_id = operation * 2U,
                     .key = bytes(material.keys[operation]),
                     .value = material.values[operation],
@@ -828,8 +828,8 @@ class BufferedResponseReader final {
             }
             const auto write_period = mixed_write_period(workload);
             if (write_period && operation % *write_period == 0) {
-                const auto put = glyphastore::server::encode_request({
-                    .opcode = glyphastore::server::RequestOpcode::put,
+                const auto put = glifistore::server::encode_request({
+                    .opcode = glifistore::server::RequestOpcode::put,
                     .request_id = operation * 2U,
                     .key = bytes(material.keys[operation]),
                     .value = material.values[operation],
@@ -839,8 +839,8 @@ class BufferedResponseReader final {
                 }
                 batch.insert(batch.end(), put->begin(), put->end());
             } else {
-                const auto get = glyphastore::server::encode_request({
-                    .opcode = glyphastore::server::RequestOpcode::get,
+                const auto get = glifistore::server::encode_request({
+                    .opcode = glifistore::server::RequestOpcode::get,
                     .request_id = operation * 2U + 1U,
                     .key = bytes(material.keys[operation]),
                 });
@@ -865,14 +865,14 @@ class BufferedResponseReader final {
 }
 
 [[nodiscard]] auto run_client(const int descriptor, const ClientWork& work,
-                              const glyphastore::bench::KeyMaterial& material, const std::size_t pipeline,
+                              const glifistore::bench::KeyMaterial& material, const std::size_t pipeline,
                               const bool measure_latency, const bool latency_split,
                               const std::size_t latency_sample_stride, const Workload workload)
     -> ClientResult {
     const auto bytes_per_pair =
-        2U * (glyphastore::server::kResponseHeaderBytes + material.values.front().size());
-    const auto response_capacity = pipeline > glyphastore::server::kMaxFrameBytes / bytes_per_pair
-                                       ? glyphastore::server::kMaxFrameBytes
+        2U * (glifistore::server::kResponseHeaderBytes + material.values.front().size());
+    const auto response_capacity = pipeline > glifistore::server::kMaxFrameBytes / bytes_per_pair
+                                       ? glifistore::server::kMaxFrameBytes
                                        : pipeline * bytes_per_pair;
     BufferedResponseReader responses{response_capacity};
     ClientResult result;
@@ -898,7 +898,7 @@ class BufferedResponseReader final {
         for (std::size_t index = 0; index < batch_responses; ++index) {
             auto decoded = responses.receive(descriptor);
             if (!decoded || !decoded->complete ||
-                decoded->frame.status != glyphastore::server::ResponseStatus::ok) {
+                decoded->frame.status != glifistore::server::ResponseStatus::ok) {
                 return {};
             }
             result.egress_bytes += decoded->consumed;
@@ -936,7 +936,7 @@ class BufferedResponseReader final {
 }
 
 [[nodiscard]] auto seed_get_workload(const Options& options, const std::vector<int>& descriptors,
-                                     const glyphastore::bench::KeyMaterial& material) -> bool {
+                                     const glifistore::bench::KeyMaterial& material) -> bool {
     if (options.workload == Workload::read_after_write) {
         return true;
     }
@@ -946,7 +946,7 @@ class BufferedResponseReader final {
     // multi-megabyte input burst unrelated to the measured pipeline.
     constexpr std::size_t maximum_seed_batch_bytes = std::size_t{2} * 1024U * 1024U;
     for (std::size_t client = 0; client < descriptors.size(); ++client) {
-        BufferedResponseReader responses{seed_pipeline * glyphastore::server::kResponseHeaderBytes};
+        BufferedResponseReader responses{seed_pipeline * glifistore::server::kResponseHeaderBytes};
         std::vector<std::byte> batch;
         std::size_t pending{};
         const auto flush = [&]() {
@@ -955,7 +955,7 @@ class BufferedResponseReader final {
             }
             for (std::size_t response = 0; response < pending; ++response) {
                 auto decoded = responses.receive(descriptors[client]);
-                if (!decoded || decoded->frame.status != glyphastore::server::ResponseStatus::ok) {
+                if (!decoded || decoded->frame.status != glifistore::server::ResponseStatus::ok) {
                     return false;
                 }
             }
@@ -965,7 +965,7 @@ class BufferedResponseReader final {
         };
         for (std::size_t operation = client; operation < options.config.operations;
              operation += options.config.threads) {
-            auto put = glyphastore::server::encode_request({.opcode = glyphastore::server::RequestOpcode::put,
+            auto put = glifistore::server::encode_request({.opcode = glifistore::server::RequestOpcode::put,
                                                             .request_id = operation * 2U,
                                                             .key = bytes(material.keys[operation]),
                                                             .value = material.values[operation]});
@@ -992,22 +992,22 @@ class BufferedResponseReader final {
     return true;
 }
 
-[[nodiscard]] auto run_sample(const Options& options, const glyphastore::bench::KeyMaterial& material,
+[[nodiscard]] auto run_sample(const Options& options, const glifistore::bench::KeyMaterial& material,
                               const std::vector<ClientWork>& work) -> Sample {
     BenchmarkDataDirectory directory{options.storage};
     if (!seed_maintenance_overlap(options, directory)) {
         return {};
     }
     const auto open_mode = options.maintenance_overlap_seed_operations == 0
-                               ? glyphastore::DurableOpenMode::create_new
-                               : glyphastore::DurableOpenMode::open_existing;
+                               ? glifistore::DurableOpenMode::create_new
+                               : glifistore::DurableOpenMode::open_existing;
     MaintenanceOverlapGate maintenance_gate{directory.path()};
     auto config = store_config(options, directory, open_mode);
     if (options.maintenance_overlap_seed_operations != 0) {
         config.filesystem_hooks = {.context = &maintenance_gate,
                                    .available_space_bytes = &MaintenanceOverlapGate::available_space_bytes};
     }
-    auto server = glyphastore::server::Server::create(reactor_config(options), std::move(config));
+    auto server = glifistore::server::Server::create(reactor_config(options), std::move(config));
     if (!server || !(*server)->start()) {
         maintenance_gate.release();
         return {};
@@ -1031,13 +1031,13 @@ class BufferedResponseReader final {
         descriptors.push_back(descriptor);
     }
     for (std::size_t client = 0; client < descriptors.size(); ++client) {
-        BufferedResponseReader responses{glyphastore::server::kResponseHeaderBytes + 64U};
-        const auto init = glyphastore::server::encode_request({
-            .opcode = glyphastore::server::RequestOpcode::init,
+        BufferedResponseReader responses{glifistore::server::kResponseHeaderBytes + 64U};
+        const auto init = glifistore::server::encode_request({
+            .opcode = glifistore::server::RequestOpcode::init,
             .request_id = 0xFFFF'FFFF'0000'0000ULL + client * 2U,
         });
-        const auto bind = glyphastore::server::encode_request({
-            .opcode = glyphastore::server::RequestOpcode::bind_worker,
+        const auto bind = glifistore::server::encode_request({
+            .opcode = glifistore::server::RequestOpcode::bind_worker,
             .request_id = 0xFFFF'FFFF'0000'0001ULL + client * 2U,
             .target_worker = static_cast<std::uint32_t>(client % options.config.workers),
         });
@@ -1046,14 +1046,14 @@ class BufferedResponseReader final {
             return {};
         }
         auto initialized = responses.receive(descriptors[client]);
-        if (!initialized || initialized->frame.status != glyphastore::server::ResponseStatus::ok ||
+        if (!initialized || initialized->frame.status != glifistore::server::ResponseStatus::ok ||
             initialized->frame.worker_count != options.config.workers ||
             !send_all(descriptors[client], *bind)) {
             cleanup();
             return {};
         }
         auto bound = responses.receive(descriptors[client]);
-        if (!bound || bound->frame.status != glyphastore::server::ResponseStatus::ok ||
+        if (!bound || bound->frame.status != glifistore::server::ResponseStatus::ok ||
             bound->frame.owner_worker != client % options.config.workers) {
             cleanup();
             return {};
@@ -1065,9 +1065,9 @@ class BufferedResponseReader final {
     }
     const auto paired_before = (*server)->pair_writer_stats();
     const auto durable_before = (*server)->durable_batch_stats();
-    glyphastore::hot_path::reset();
+    glifistore::hot_path::reset();
 
-    auto resources = glyphastore::bench::process_memory_snapshot();
+    auto resources = glifistore::bench::process_memory_snapshot();
     std::latch ready{static_cast<std::ptrdiff_t>(options.config.threads)};
     std::latch start{1};
     std::vector<ClientResult> client_results(options.config.threads);
@@ -1100,7 +1100,7 @@ class BufferedResponseReader final {
         maintenance_releaser.join();
     }
     const auto elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
-    const auto after = glyphastore::bench::process_memory_snapshot();
+    const auto after = glifistore::bench::process_memory_snapshot();
     resources.rss_after_bytes = after.rss_after_bytes;
     resources.peak_rss_bytes = after.peak_rss_bytes;
     std::size_t hits{};
@@ -1146,26 +1146,26 @@ class BufferedResponseReader final {
 }
 
 [[nodiscard]] auto run_client_api_sample(const Options& options,
-                                         const glyphastore::bench::KeyMaterial& material) -> Sample {
+                                         const glifistore::bench::KeyMaterial& material) -> Sample {
     BenchmarkDataDirectory directory{options.storage};
     if (!seed_maintenance_overlap(options, directory)) {
         return {};
     }
     const auto open_mode = options.maintenance_overlap_seed_operations == 0
-                               ? glyphastore::DurableOpenMode::create_new
-                               : glyphastore::DurableOpenMode::open_existing;
+                               ? glifistore::DurableOpenMode::create_new
+                               : glifistore::DurableOpenMode::open_existing;
     MaintenanceOverlapGate maintenance_gate{directory.path()};
     auto config = store_config(options, directory, open_mode);
     if (options.maintenance_overlap_seed_operations != 0) {
         config.filesystem_hooks = {.context = &maintenance_gate,
                                    .available_space_bytes = &MaintenanceOverlapGate::available_space_bytes};
     }
-    auto server = glyphastore::server::Server::create(reactor_config(options), std::move(config));
+    auto server = glifistore::server::Server::create(reactor_config(options), std::move(config));
     if (!server || !(*server)->start()) {
         maintenance_gate.release();
         return {};
     }
-    auto connected = glyphastore::client::Client::connect({.port = (*server)->port()});
+    auto connected = glifistore::client::Client::connect({.port = (*server)->port()});
     if (!connected) {
         maintenance_gate.release();
         (*server)->request_stop();
@@ -1175,8 +1175,8 @@ class BufferedResponseReader final {
     auto client = std::move(*connected);
     const auto paired_before = (*server)->pair_writer_stats();
     const auto durable_before = (*server)->durable_batch_stats();
-    glyphastore::hot_path::reset();
-    auto resources = glyphastore::bench::process_memory_snapshot();
+    glifistore::hot_path::reset();
+    auto resources = glifistore::bench::process_memory_snapshot();
     std::latch ready{static_cast<std::ptrdiff_t>(options.config.threads)};
     std::latch start{1};
     std::vector<ClientResult> client_results(options.config.threads);
@@ -1194,9 +1194,9 @@ class BufferedResponseReader final {
                 }
             }
             std::size_t latency_tick{};
-            std::vector<std::vector<glyphastore::client::PipelineRequest>> pipeline_batches;
+            std::vector<std::vector<glifistore::client::PipelineRequest>> pipeline_batches;
             if (options.client_pipeline != 0) {
-                std::vector<std::vector<glyphastore::client::PipelineRequest>> pending(client.worker_count());
+                std::vector<std::vector<glifistore::client::PipelineRequest>> pending(client.worker_count());
                 for (auto& batch : pending) {
                     batch.reserve(options.client_pipeline * 2U);
                 }
@@ -1204,10 +1204,10 @@ class BufferedResponseReader final {
                      operation += options.config.threads) {
                     auto& batch = pending[client.worker_for(material.keys[operation])];
                     batch.push_back(
-                        {.opcode = glyphastore::client::PipelineOpcode::put,
+                        {.opcode = glifistore::client::PipelineOpcode::put,
                          .key = bytes(material.keys[operation]),
                          .value = {material.values[operation].data(), material.values[operation].size()}});
-                    batch.push_back({.opcode = glyphastore::client::PipelineOpcode::get,
+                    batch.push_back({.opcode = glifistore::client::PipelineOpcode::get,
                                      .key = bytes(material.keys[operation])});
                     if (batch.size() == options.client_pipeline * 2U) {
                         pipeline_batches.push_back(std::move(batch));
@@ -1234,7 +1234,7 @@ class BufferedResponseReader final {
                         if (!(*executed)[index].succeeded()) {
                             return;
                         }
-                        if (batch[index].opcode == glyphastore::client::PipelineOpcode::get &&
+                        if (batch[index].opcode == glifistore::client::PipelineOpcode::get &&
                             !std::ranges::equal((*executed)[index].value, batch[index - 1U].value)) {
                             return;
                         }
@@ -1247,7 +1247,7 @@ class BufferedResponseReader final {
                                                     .count();
                                 result.latency_ns.push_back(ns);
                                 if (options.latency_split) {
-                                    if (batch[index].opcode == glyphastore::client::PipelineOpcode::get) {
+                                    if (batch[index].opcode == glifistore::client::PipelineOpcode::get) {
                                         result.get_latency_ns.push_back(ns);
                                     } else {
                                         result.put_latency_ns.push_back(ns);
@@ -1258,11 +1258,11 @@ class BufferedResponseReader final {
                     }
                     result.hits += batch.size();
                     for (const auto& request : batch) {
-                        result.ingress_bytes += glyphastore::server::kRequestHeaderBytes +
+                        result.ingress_bytes += glifistore::server::kRequestHeaderBytes +
                                                 request.key.size() + request.value.size();
                         result.egress_bytes +=
-                            glyphastore::server::kResponseHeaderBytes +
-                            (request.opcode == glyphastore::client::PipelineOpcode::get ? request.value.size()
+                            glifistore::server::kResponseHeaderBytes +
+                            (request.opcode == glifistore::client::PipelineOpcode::get ? request.value.size()
                                                                                         : 0U);
                     }
                     for (std::size_t index = 1; index < batch.size(); index += 2U) {
@@ -1313,11 +1313,11 @@ class BufferedResponseReader final {
                     }
                 }
                 ++result.hits;
-                result.ingress_bytes += 2U * glyphastore::server::kRequestHeaderBytes +
+                result.ingress_bytes += 2U * glifistore::server::kRequestHeaderBytes +
                                         material.keys[operation].size() * 2U +
                                         material.values[operation].size();
                 result.egress_bytes +=
-                    2U * glyphastore::server::kResponseHeaderBytes + material.values[operation].size();
+                    2U * glifistore::server::kResponseHeaderBytes + material.values[operation].size();
             }
         });
     }
@@ -1339,7 +1339,7 @@ class BufferedResponseReader final {
         maintenance_releaser.join();
     }
     const auto elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
-    const auto after = glyphastore::bench::process_memory_snapshot();
+    const auto after = glifistore::bench::process_memory_snapshot();
     resources.rss_after_bytes = after.rss_after_bytes;
     resources.peak_rss_bytes = after.peak_rss_bytes;
     std::size_t hits{};
@@ -1438,7 +1438,7 @@ struct LatencyPercentiles {
         }
     }
     std::vector<double> seconds;
-    std::vector<glyphastore::bench::ResourceSample> resources;
+    std::vector<glifistore::bench::ResourceSample> resources;
     std::vector<double> latency_ns;
     std::vector<double> get_latency_ns;
     std::vector<double> put_latency_ns;
@@ -1474,7 +1474,7 @@ struct LatencyPercentiles {
                              : options.workload == Workload::read_90_write_10 ? "server_tcp_read_90_write_10"
                                                                               : "server_tcp_read_after_write";
     const auto benchmark_name = std::string{client_name} + '_' + std::string{storage_name(options.storage)};
-    auto result = glyphastore::bench::finalize_result(
+    auto result = glifistore::bench::finalize_result(
         benchmark_name, options.config, options.settings,
         options.config.operations * (options.workload == Workload::read_after_write ? 2U : 1U), hits,
         std::move(seconds), std::move(resources));
@@ -1510,7 +1510,7 @@ struct LatencyPercentiles {
         for (const auto& profile : durable_profiles) {
             values.push_back(static_cast<double>(profile.*member));
         }
-        return glyphastore::bench::median(std::move(values));
+        return glifistore::bench::median(std::move(values));
     };
     const auto maximum_profile = [&](auto member) {
         double maximum{};
@@ -1584,7 +1584,7 @@ struct LatencyPercentiles {
         for (const auto& profile : reactor_profiles) {
             values.push_back(static_cast<double>(profile.*member));
         }
-        return glyphastore::bench::median(std::move(values));
+        return glifistore::bench::median(std::move(values));
     };
     const auto maximum_reactor_profile = [&](auto member) {
         double maximum{};
@@ -1635,10 +1635,10 @@ struct LatencyPercentiles {
 
 int main(int argc, char** argv) try {
     const auto parsed = options(argc, argv);
-    if (!glyphastore::bench::validate_run_settings(parsed.settings, parsed.config) || parsed.pipeline == 0 ||
+    if (!glifistore::bench::validate_run_settings(parsed.settings, parsed.config) || parsed.pipeline == 0 ||
         (parsed.client_api && parsed.workload != Workload::read_after_write) ||
         (parsed.client_api && parsed.client_pipeline > parsed.config.operations) ||
-        parsed.client_pipeline > glyphastore::client::ClientConfig{}.maximum_pipeline_requests / 2U ||
+        parsed.client_pipeline > glifistore::client::ClientConfig{}.maximum_pipeline_requests / 2U ||
         parsed.group_max_records == 0 || parsed.group_max_bytes == 0 || parsed.group_max_wait_ms == 0 ||
         parsed.periodic_sync_ms == 0 || parsed.maintenance_suspend_on_p99_min_samples == 0 ||
         (parsed.maintenance_overlap_seed_operations != 0 &&
@@ -1648,8 +1648,8 @@ int main(int argc, char** argv) try {
           parsed.maintenance_overlap_release_ms == 0))) {
         return 2;
     }
-    std::cout << "# glyphastore TCP server benchmark\n";
-    glyphastore::bench::print_metadata(std::cout, parsed.settings);
+    std::cout << "# glifistore TCP server benchmark\n";
+    glifistore::bench::print_metadata(std::cout, parsed.settings);
     std::cout << "# client_mode="
               << (parsed.client_pipeline != 0 ? "public-cpp-pipeline"
                   : parsed.client_api         ? "public-cpp-api"
@@ -1712,7 +1712,7 @@ int main(int argc, char** argv) try {
         std::cerr << "benchmark error: TCP sample validation failed\n";
         return 1;
     }
-    glyphastore::bench::print_result(std::cout, result);
+    glifistore::bench::print_result(std::cout, result);
     if (parsed.latency || parsed.latency_split) {
         std::cout << "latency_extras";
         if (parsed.latency) {

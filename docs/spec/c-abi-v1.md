@@ -1,8 +1,8 @@
-# GlyphaStore C ABI v1
+# GlifiStore C ABI v1
 
 Status: normative
-Authority: `ABI_VERSION`, `include/glyphastore/abi/glyphastore.h`
-Applies to: `libglyphastore` ABI major 1 on supported 64-bit Unix targets
+Authority: `ABI_VERSION`, `include/glifistore/abi/glifistore.h`
+Applies to: `libglifistore` ABI major 1 on supported 64-bit Unix targets
 
 ## Scope and version domains
 
@@ -14,7 +14,7 @@ async callbacks, Index, Segment, `ReadGeneration`, or file handles.
 
 The product version, C ABI version, wire protocol v2, and persistence format v1 are independent.
 `ABI_VERSION` is the sole authority for the first two C ABI components. ABI major 1 maps to the
-shared-library major (`libglyphastore.so.1` on ELF and the platform-equivalent compatibility version
+shared-library major (`libglifistore.so.1` on ELF and the platform-equivalent compatibility version
 on macOS/BSD). A product release does not imply an ABI bump.
 
 ## Types and layout

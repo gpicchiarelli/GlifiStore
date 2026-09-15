@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # OpenBSD / LibreSSL CI gate (security roadmap Phase 2.6 + Phase 6.5, ADR 0020).
 #
-# Builds glyphastored with system LibreSSL, runs the unit/integration suite,
+# Builds glifistored with system LibreSSL, runs the unit/integration suite,
 # and smokes TLS PUT→GET with the official Go client (including pledge/unveil
 # apply after Server::create).
 #
@@ -10,17 +10,17 @@
 #   - Native OpenBSD developer hosts
 #
 # Environment:
-#   GLYPHASTORE_OPENBSD_PRESET   cmake preset (default: unix-release)
-#   GLYPHASTORE_TEST_SHARD_COUNT number of deterministic test shards (optional)
-#   GLYPHASTORE_TEST_SHARD_INDEX zero-based shard index (set with shard count)
-#   GLYPHASTORE_SKIP_GO_SMOKE    set to 1 to skip Go TLS smoke
+#   GLIFISTORE_OPENBSD_PRESET   cmake preset (default: unix-release)
+#   GLIFISTORE_TEST_SHARD_COUNT number of deterministic test shards (optional)
+#   GLIFISTORE_TEST_SHARD_INDEX zero-based shard index (set with shard count)
+#   GLIFISTORE_SKIP_GO_SMOKE    set to 1 to skip Go TLS smoke
 #   CC / CXX                     optional compiler overrides
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
 
-preset="${GLYPHASTORE_OPENBSD_PRESET:-unix-release}"
+preset="${GLIFISTORE_OPENBSD_PRESET:-unix-release}"
 build_dir="$root/build/${preset}"
 
 if [[ "$(uname -s)" != "OpenBSD" ]]; then
@@ -48,63 +48,63 @@ command -v cmake >/dev/null 2>&1 || { echo "error: cmake required (pkg_add cmake
 command -v ninja >/dev/null 2>&1 || { echo "error: ninja required (pkg_add ninja)" >&2; exit 1; }
 command -v openssl >/dev/null 2>&1 || { echo "error: openssl CLI required (LibreSSL base)" >&2; exit 1; }
 
-echo "== configure (GLYPHASTORE_ENABLE_TLS=ON) =="
+echo "== configure (GLIFISTORE_ENABLE_TLS=ON) =="
 rm -rf "$build_dir"
-cmake --preset "$preset" -DGLYPHASTORE_ENABLE_TLS=ON | tee /tmp/glyphastore-cmake-tls.log
-if ! grep -q 'GlyphaStore TLS: enabled (LibreSSL)' /tmp/glyphastore-cmake-tls.log; then
+cmake --preset "$preset" -DGLIFISTORE_ENABLE_TLS=ON | tee /tmp/glifistore-cmake-tls.log
+if ! grep -q 'GlifiStore TLS: enabled (LibreSSL)' /tmp/glifistore-cmake-tls.log; then
   echo "error: expected CMake to enable TLS with LibreSSL backend" >&2
   exit 1
 fi
 
 echo "== build =="
 cmake --build --preset "$preset" --target \
-  glyphastored glyphastore_tests glyphastore_interop_client \
-  glyphastore_abi glyphastore_c_abi_tests glyphastore_c_abi_durable_tests
+  glifistored glifistore_tests glifistore_interop_client \
+  glifistore_abi glifistore_c_abi_tests glifistore_c_abi_durable_tests
 
-daemon="$build_dir/glyphastored"
-tests="$build_dir/glyphastore_tests"
+daemon="$build_dir/glifistored"
+tests="$build_dir/glifistore_tests"
 if [[ ! -x "$daemon" ]]; then
   echo "error: missing $daemon" >&2
   exit 1
 fi
 if ! "$daemon" --help 2>&1 | grep -q -- '--tls-cert'; then
-  echo "error: glyphastored was built without TLS CLI flags" >&2
+  echo "error: glifistored was built without TLS CLI flags" >&2
   exit 1
 fi
 
 echo "== ctest (built targets only; verbose, 15-minute per-target timeout) =="
-# This gate builds glyphastored + glyphastore_tests (+ Go interop smoke). Offline CLI
+# This gate builds glifistored + glifistore_tests (+ Go interop smoke). Offline CLI
 # tools, crash harnesses, and benchmarks are not built here; match only binaries that
 # exist so missing executables are not counted as failures. Verbose mode streams each
 # test-harness [RUN] marker, preserving the exact stalled case if the monolith times out.
-ctest --preset "$preset" --verbose --timeout 900 -R '^(glyphastore_tests|glyphastore_cli_daemon_)'
+ctest --preset "$preset" --verbose --timeout 900 -R '^(glifistore_tests|glifistore_cli_daemon_)'
 
 echo "== installed C ABI consumer =="
-install_root="$(mktemp -d /tmp/glyphastore-openbsd-install.XXXXXX)"
-consumer_build="$(mktemp -d /tmp/glyphastore-openbsd-consumer.XXXXXX)"
+install_root="$(mktemp -d /tmp/glifistore-openbsd-install.XXXXXX)"
+consumer_build="$(mktemp -d /tmp/glifistore-openbsd-consumer.XXXXXX)"
 cleanup_install() {
   rm -rf "$install_root" "$consumer_build"
 }
 trap cleanup_install EXIT
 cmake --install "$build_dir" --prefix "$install_root" --component AbiRuntime
 cmake --install "$build_dir" --prefix "$install_root" --component Development
-test -f "$install_root/include/glyphastore/abi/glyphastore.h"
-find "$install_root/lib" -maxdepth 1 -name 'libglyphastore.so.[0-9]*' -type f | grep -q .
+test -f "$install_root/include/glifistore/abi/glifistore.h"
+find "$install_root/lib" -maxdepth 1 -name 'libglifistore.so.[0-9]*' -type f | grep -q .
 
 cmake -S tests/consumer -B "$consumer_build" -G Ninja \
   -DCMAKE_PREFIX_PATH="$install_root"
-cmake --build "$consumer_build" --target glyphastore_abi_consumer_smoke
-LD_LIBRARY_PATH="$install_root/lib" "$consumer_build/glyphastore_abi_consumer_smoke"
+cmake --build "$consumer_build" --target glifistore_abi_consumer_smoke
+LD_LIBRARY_PATH="$install_root/lib" "$consumer_build/glifistore_abi_consumer_smoke"
 
 PKG_CONFIG_PATH="$install_root/lib/pkgconfig" \
-  pkg-config --cflags --libs glyphastore-abi >"$consumer_build/abi.flags"
+  pkg-config --cflags --libs glifistore-abi >"$consumer_build/abi.flags"
 # shellcheck disable=SC2046
 cc -std=c11 tests/consumer/abi.c \
   $(cat "$consumer_build/abi.flags") -o "$consumer_build/pkgconfig-abi-consumer"
 LD_LIBRARY_PATH="$install_root/lib" "$consumer_build/pkgconfig-abi-consumer"
 
-if [[ "${GLYPHASTORE_SKIP_GO_SMOKE:-0}" == "1" ]]; then
-  echo "== skip Go TLS smoke (GLYPHASTORE_SKIP_GO_SMOKE=1) =="
+if [[ "${GLIFISTORE_SKIP_GO_SMOKE:-0}" == "1" ]]; then
+  echo "== skip Go TLS smoke (GLIFISTORE_SKIP_GO_SMOKE=1) =="
   echo "OpenBSD / LibreSSL CI gate OK (tests only)"
   exit 0
 fi
@@ -150,7 +150,7 @@ ensure_go_toolchain() {
     arm64) expect_sha="953142ae3734098e65118ddca29ed2f469a85f039a78a1572da98ba271042e65" ;;
   esac
   local work
-  work="$(mktemp -d /tmp/glyphastore-go-boot.XXXXXX)"
+  work="$(mktemp -d /tmp/glifistore-go-boot.XXXXXX)"
   echo "installing Go ${version} from ${url}"
   if command -v curl >/dev/null 2>&1; then
     curl -fsSL "$url" -o "$work/$archive"
@@ -190,7 +190,7 @@ ensure_go_toolchain
 command -v go >/dev/null 2>&1 || { echo "error: go required for TLS smoke" >&2; exit 1; }
 
 echo "== Go TLS smoke (PUT→GET) =="
-work="$(mktemp -d /tmp/glyphastore-openbsd-tls.XXXXXX)"
+work="$(mktemp -d /tmp/glifistore-openbsd-tls.XXXXXX)"
 cleanup() {
   cleanup_install
   if [[ -f "$work/daemon.pid" ]]; then
@@ -225,8 +225,8 @@ openssl req -x509 -newkey rsa:2048 -nodes \
 mkdir -p "$root/sdk/go/bin"
 # OpenBSD CI clones are often not a full git worktree from Go's POV; disable
 # VCS stamping so `go build` does not fail with exit 128.
-(cd "$root/sdk/go" && go build -buildvcs=false -o bin/glyphastore-interop ./cmd/glyphastore-interop)
-go_helper="$root/sdk/go/bin/glyphastore-interop"
+(cd "$root/sdk/go" && go build -buildvcs=false -o bin/glifistore-interop ./cmd/glifistore-interop)
+go_helper="$root/sdk/go/bin/glifistore-interop"
 
 "$daemon" --bind 127.0.0.1 --port 0 --workers 1 \
   --storage-mode volatile --executor-affinity \
@@ -237,7 +237,7 @@ echo $! >"$work/daemon.pid"
 port=""
 for _ in $(jot 50 1); do
   if ! kill -0 "$(cat "$work/daemon.pid")" 2>/dev/null; then
-    echo "error: glyphastored exited early; log:" >&2
+    echo "error: glifistored exited early; log:" >&2
     cat "$work/daemon.log" >&2
     exit 1
   fi

@@ -23,7 +23,7 @@ pinned or physical-core-isolated result.
 Command:
 
 ```text
-build/macos-native-release/glyphastore_generation_publication_benchmark \
+build/macos-native-release/glifistore_generation_publication_benchmark \
   --ops 20000 --warmup 3 --repeats 11
 ```
 
@@ -51,7 +51,7 @@ two-byte value without protocol serialization or socket I/O, but it exercises th
 lookup and value materialization concurrently with publication.
 
 ```text
-build/macos-native-release/glyphastore_generation_publication_benchmark \
+build/macos-native-release/glifistore_generation_publication_benchmark \
   --ops 20000 --warmup 3 --repeats 11 --reader-work get
 ```
 

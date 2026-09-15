@@ -1,4 +1,4 @@
-Status: normative for official GlyphaStore TCP clients
+Status: normative for official GlifiStore TCP clients
 Applies to: wire protocol v2 clients (C++, Python, Perl, Go, Erlang, Ruby)
 Owner: networking maintainers
 Last reviewed: 2026-09-15
@@ -6,7 +6,7 @@ Last reviewed: 2026-09-15
 # Client semantics v1 — errors, retry, and timeouts
 
 This specification freezes the **observable** failure, retry, and deadline behavior that every
-official GlyphaStore TCP client must implement. It complements
+official GlifiStore TCP client must implement. It complements
 [wire protocol v2](wire-protocol-v2.md) (bytes on the wire) and is decided by
 [ADR 0019](../adr/0019-client-error-retry-timeout.md).
 
@@ -67,7 +67,7 @@ When an error is returned to the application, official clients **must** be able 
 | `retryability` | yes (may be derived) | See §4. |
 | `operation` | recommended | e.g. `get`, `put`, `erase`, `ping`, `backup`, `pipeline`. |
 
-Perl 0.1.x exposes the full §2.1 field set on `GlyphaStore::Error` (category, message, wire status,
+Perl 0.1.x exposes the full §2.1 field set on `GlifiStore::Error` (category, message, wire status,
 mutation outcome, bytes sent, request id, Worker, routing epoch, retryability, operation). Richer
 fields must not change category/outcome rules when added.
 

@@ -1,13 +1,13 @@
 #include "server/server_builder.hpp"
 
-#include "glyphastore/server/tls.hpp"
+#include "glifistore/server/tls.hpp"
 #include "server/reactor_factory.hpp"
 
 #include <chrono>
 #include <limits>
 #include <utility>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 [[nodiscard]] auto validate_config(const ReactorConfig& config) -> Status {
@@ -122,4 +122,4 @@ auto ServerBuilder::create_reactors(Store& store, ConnectionHandoffMesh& mesh, D
                                       abuse_, security_audit_);
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

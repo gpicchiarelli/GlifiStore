@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gpicchiarelli/GlyphaStore/sdk/go/client"
-	"github.com/gpicchiarelli/GlyphaStore/sdk/go/protocol"
+	"github.com/gpicchiarelli/GlifiStore/sdk/go/client"
+	"github.com/gpicchiarelli/GlifiStore/sdk/go/protocol"
 )
 
 func mustEncodeInitIdentity(routing protocol.WorkerRouting) []byte {
@@ -167,19 +167,19 @@ func (s *fakeServer) handle(conn net.Conn, bound **uint32, req protocol.Request)
 		if *bound != nil {
 			owner = **bound
 		}
-		return s.send(conn, protocol.StatusOK, req.RequestID, owner, []byte("GlyphaStore/live"))
+		return s.send(conn, protocol.StatusOK, req.RequestID, owner, []byte("GlifiStore/live"))
 	case protocol.OpcodeReady:
 		owner := uint32(0)
 		if *bound != nil {
 			owner = **bound
 		}
-		return s.send(conn, protocol.StatusOK, req.RequestID, owner, []byte("GlyphaStore/ready"))
+		return s.send(conn, protocol.StatusOK, req.RequestID, owner, []byte("GlifiStore/ready"))
 	case protocol.OpcodeStats:
 		owner := uint32(0)
 		if *bound != nil {
 			owner = **bound
 		}
-		return s.send(conn, protocol.StatusOK, req.RequestID, owner, []byte("GlyphaStore/stats\n"))
+		return s.send(conn, protocol.StatusOK, req.RequestID, owner, []byte("GlifiStore/stats\n"))
 	case protocol.OpcodeBindWorker:
 		if req.TargetWorker >= s.workerCount {
 			return s.send(conn, protocol.StatusInvalidRequest, req.RequestID, 0, nil)
@@ -444,22 +444,22 @@ func TestHealthReadyStatsAndRouting(t *testing.T) {
 	}
 	_ = c.Routing()
 	live, err := c.Health()
-	if err != nil || string(live) != "GlyphaStore/live" {
+	if err != nil || string(live) != "GlifiStore/live" {
 		t.Fatalf("health: %v %q", err, live)
 	}
 	ready, err := c.Ready()
-	if err != nil || string(ready) != "GlyphaStore/ready" {
+	if err != nil || string(ready) != "GlifiStore/ready" {
 		t.Fatalf("ready: %v %q", err, ready)
 	}
 	stats, err := c.Stats()
-	if err != nil || !strings.HasPrefix(string(stats), "GlyphaStore/stats") {
+	if err != nil || !strings.HasPrefix(string(stats), "GlifiStore/stats") {
 		t.Fatalf("stats: %v %q", err, stats)
 	}
 }
 
 func TestUnixSocketRefusesTLS(t *testing.T) {
 	_, err := client.Connect(client.Config{
-		UnixSocketPath: "/tmp/glyphastore-go-uds-tls-refuse.sock",
+		UnixSocketPath: "/tmp/glifistore-go-uds-tls-refuse.sock",
 		TLS:            client.TLSConfig{Enable: true},
 	})
 	if err == nil {
@@ -975,7 +975,7 @@ func TestBackupInternalErrorIsReconcileFirst(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer c.Close()
-	_, err = c.Backup("/tmp/glyphastore-go-backup-internal")
+	_, err = c.Backup("/tmp/glifistore-go-backup-internal")
 	if err == nil {
 		t.Fatal("expected backup INTERNAL_ERROR")
 	}
@@ -1008,7 +1008,7 @@ func TestBackupValidateFailureIsReconcileFirst(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer c.Close()
-	_, err = c.Backup("/tmp/glyphastore-go-backup-wrong-id")
+	_, err = c.Backup("/tmp/glifistore-go-backup-wrong-id")
 	if err == nil {
 		t.Fatal("expected backup validate failure")
 	}

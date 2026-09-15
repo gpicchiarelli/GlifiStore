@@ -1,9 +1,9 @@
-#include "glyphastore/persistence/manifest.hpp"
+#include "glifistore/persistence/manifest.hpp"
 
-#include "glyphastore/core/little_endian.hpp"
-#include "glyphastore/segment/crc32c.hpp"
-#include "glyphastore/segment/record.hpp"
-#include "glyphastore/store/config.hpp"
+#include "glifistore/core/little_endian.hpp"
+#include "glifistore/segment/crc32c.hpp"
+#include "glifistore/segment/record.hpp"
+#include "glifistore/store/config.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -12,7 +12,7 @@
 #include <string>
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 inline constexpr std::size_t kManifestChecksumOffset = 80;
@@ -264,4 +264,4 @@ auto select_newest_manifest(const std::span<const Manifest> candidates) -> Resul
     return selected;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

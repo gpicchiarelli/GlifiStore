@@ -1,7 +1,7 @@
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/server/connection_lifecycle.hpp"
-#include "glyphastore/server/reactor.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/server/connection_lifecycle.hpp"
+#include "glifistore/server/reactor.hpp"
 #include "server/reactor_detail.hpp"
 #include "system_error.hpp"
 
@@ -13,7 +13,7 @@
 #include <sys/uio.h>
 #include <utility>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 auto Reactor::read_ready(const ConnectionToken token) -> Status {
     auto* current = connection(token);
@@ -94,7 +94,7 @@ auto Reactor::read_ready(const ConnectionToken token) -> Status {
             return isolate_input_failure();
         }
         try {
-            if (glyphastore::fault::consume_fail(glyphastore::fault::Site::input_buffer)) {
+            if (glifistore::fault::consume_fail(glifistore::fault::Site::input_buffer)) {
                 throw std::bad_alloc{};
             }
             prepare_input_append(*current, received_size);
@@ -462,4 +462,4 @@ auto Reactor::write_ready(const ConnectionToken token) -> Status {
     }
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

@@ -20,9 +20,9 @@ from engineering.tools.package_framework import PackageFrameworkError
 ROOT = Path(__file__).resolve().parents[2]
 GIT_IDENTITY = (
     "-c",
-    "user.email=tests@glyphastore.invalid",
+    "user.email=tests@glifistore.invalid",
     "-c",
-    "user.name=GlyphaStore Tests",
+    "user.name=GlifiStore Tests",
     "-c",
     "commit.gpgsign=false",
     "-c",
@@ -58,7 +58,7 @@ def init_repository(repository: Path, version: str, abi: str = "1.0") -> None:
 
 class ReleaseContextTests(unittest.TestCase):
     def temporary_repository(self, version: str, abi: str = "1.0") -> Path:
-        directory = tempfile.TemporaryDirectory(prefix="glyphastore-release-context-")
+        directory = tempfile.TemporaryDirectory(prefix="glifistore-release-context-")
         self.addCleanup(directory.cleanup)
         repository = Path(directory.name) / "repository"
         repository.mkdir()
@@ -204,7 +204,7 @@ class ReleaseContextValidationTests(unittest.TestCase):
             validate_release_context(context)
 
     def test_the_command_line_writes_a_loadable_context(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="glyphastore-context-cli-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="glifistore-context-cli-") as temporary:
             output = Path(temporary) / "release-context.json"
             completed = subprocess.run(
                 [

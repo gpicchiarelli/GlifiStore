@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Resolve sealed N-1 package bytes supplied for package-upgrade continuity.
 
-GLYPHASTORE_N1_PACKAGE_DIR points at a directory of already-published packages.
+GLIFISTORE_N1_PACKAGE_DIR points at a directory of already-published packages.
 This module never rebuilds a predecessor from HEAD: it only selects files that
 already exist on disk and whose names carry the SemVer selected by the release
 context.
 
 Linux selects ``.deb`` / ``.rpm``; FreeBSD ``.pkg``; OpenBSD ``.tgz``; macOS
-MacPorts/Homebrew select the sealed ``GlyphaStore-<version>.tar.xz`` source
+MacPorts/Homebrew select the sealed ``GlifiStore-<version>.tar.xz`` source
 archive that those backends build and install from.
 
 Version matching is token-bound (not a substring), so ``0.0.9`` does not match
@@ -25,17 +25,17 @@ import re
 import sys
 from pathlib import Path
 
-N1_PACKAGE_DIR_ENVIRONMENT = "GLYPHASTORE_N1_PACKAGE_DIR"
+N1_PACKAGE_DIR_ENVIRONMENT = "GLIFISTORE_N1_PACKAGE_DIR"
 CONTAINER_N1_MOUNT = "/n1-packages"
 
 _EXCLUDED_NAME_TOKENS = ("debuginfo", "debugsource", "-dbgsym")
 _LINUX_NAME = re.compile(
-    r"^(?:lib)?glyphastore",
+    r"^(?:lib)?glifistore",
     re.IGNORECASE,
 )
-_BSD_NAME = re.compile(r"^glyphastore", re.IGNORECASE)
-_MACOS_SOURCE_NAME = re.compile(r"^GlyphaStore-(.+)\.tar\.xz$")
-# Arch tokens that appear in GlyphaStore package basenames across backends.
+_BSD_NAME = re.compile(r"^glifistore", re.IGNORECASE)
+_MACOS_SOURCE_NAME = re.compile(r"^GlifiStore-(.+)\.tar\.xz$")
+# Arch tokens that appear in GlifiStore package basenames across backends.
 _ARCH_TOKEN = re.compile(
     r"(?:^|[-_.])(amd64|arm64|aarch64|x86_64|i386|armv7)(?:[-_.]|$)",
     re.IGNORECASE,
@@ -233,12 +233,12 @@ def select_bsd_n1_packages(
 
 
 def select_macos_n1_source(directory: Path, version: str) -> Path:
-    """Sealed ``GlyphaStore-<version>.tar.xz`` under ``directory`` (never rebuilt)."""
+    """Sealed ``GlifiStore-<version>.tar.xz`` under ``directory`` (never rebuilt)."""
     version = _require_safe_version(version)
     directory = _require_directory(directory)
-    expected = f"GlyphaStore-{version}.tar.xz"
+    expected = f"GlifiStore-{version}.tar.xz"
     selected: list[Path] = []
-    for path in sorted(directory.rglob("GlyphaStore-*.tar.xz")):
+    for path in sorted(directory.rglob("GlifiStore-*.tar.xz")):
         if path.is_symlink() or not path.is_file():
             continue
         match = _MACOS_SOURCE_NAME.match(path.name)

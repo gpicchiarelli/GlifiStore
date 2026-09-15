@@ -1,8 +1,8 @@
 #include "benchmark_metadata.hpp"
 #include "experimental/generation_slot_pool.hpp"
 #include "experimental/pair_read_generation_shell.hpp"
-#include "glyphastore/server/thread_affinity.hpp"
-#include "glyphastore/store/paired/read_generation.hpp"
+#include "glifistore/server/thread_affinity.hpp"
+#include "glifistore/store/paired/read_generation.hpp"
 #include "parse.hpp"
 
 #include <algorithm>
@@ -26,11 +26,11 @@
 namespace {
 
 using Clock = std::chrono::steady_clock;
-using Generation = glyphastore::store::paired::PairReadGeneration;
-using Mutation = glyphastore::store::paired::ReadMutation;
-using SharedPool = glyphastore::experimental::GenerationSlotPool<Generation, 65>;
-using DirectPool = glyphastore::experimental::PairReadGenerationDirectSlotPool<65>;
-using PublishStatus = glyphastore::experimental::GenerationSlotPublishStatus;
+using Generation = glifistore::store::paired::PairReadGeneration;
+using Mutation = glifistore::store::paired::ReadMutation;
+using SharedPool = glifistore::experimental::GenerationSlotPool<Generation, 65>;
+using DirectPool = glifistore::experimental::PairReadGenerationDirectSlotPool<65>;
+using PublishStatus = glifistore::experimental::GenerationSlotPublishStatus;
 
 struct Options final {
     std::size_t operations{20'000};
@@ -45,7 +45,7 @@ struct Options final {
         throw std::invalid_argument{"missing numeric argument"};
     }
     const std::string_view input{text};
-    const auto value = glyphastore::bench::parse_decimal_size(input);
+    const auto value = glifistore::bench::parse_decimal_size(input);
     if (!value || *value == 0U) {
         throw std::invalid_argument{"numeric argument must be positive"};
     }
@@ -57,7 +57,7 @@ struct Options final {
     for (int index = 1; index < argc; ++index) {
         const std::string_view argument{argv[index]};
         if (argument == "--help" || argument == "-h") {
-            std::cout << "usage: glyphastore_generation_publication_benchmark "
+            std::cout << "usage: glifistore_generation_publication_benchmark "
                          "[--ops N] [--warmup N] [--repeats N] [--no-affinity] "
                          "[--reader-work adopt|get]\n";
             std::exit(0);
@@ -96,22 +96,22 @@ struct Options final {
 }
 
 struct Material final {
-    glyphastore::WorkerRoutingState routing{};
-    std::shared_ptr<glyphastore::Segment> segment;
+    glifistore::WorkerRoutingState routing{};
+    std::shared_ptr<glifistore::Segment> segment;
     std::string key{"generation-publication-affine"};
     std::uint64_t hash{};
-    std::vector<glyphastore::RecordRef> records;
+    std::vector<glifistore::RecordRef> records;
 };
 
 [[nodiscard]] auto make_material(const std::size_t operations) -> Material {
     Material material;
-    material.segment = std::make_shared<glyphastore::Segment>(glyphastore::SegmentId{702});
-    material.hash = glyphastore::hash_key_routing(material.key, material.routing);
+    material.segment = std::make_shared<glifistore::Segment>(glifistore::SegmentId{702});
+    material.hash = glifistore::hash_key_routing(material.key, material.routing);
     material.records.reserve(operations);
     const std::array value{std::byte{0x51}, std::byte{0x53}};
     for (std::size_t index = 0; index < operations; ++index) {
-        auto record = material.segment->append({.sequence = glyphastore::SequenceNumber{index + 1U},
-                                                .opcode = glyphastore::Opcode::put,
+        auto record = material.segment->append({.sequence = glifistore::SequenceNumber{index + 1U},
+                                                .opcode = glifistore::Opcode::put,
                                                 .key_hash = material.hash,
                                                 .key = bytes(material.key),
                                                 .value = value});
@@ -124,7 +124,7 @@ struct Material final {
 }
 
 struct alignas(128) ThreadResult final {
-    glyphastore::server::ExecutorAffinityResult affinity{};
+    glifistore::server::ExecutorAffinityResult affinity{};
     std::uint64_t operations{};
     std::uint64_t epoch_skips{};
     std::uint64_t checksum{};
@@ -143,8 +143,8 @@ struct Measurement final {
     double publication_p99_ns{};
     double reader_get_p50_ns{};
     double reader_get_p99_ns{};
-    glyphastore::server::ExecutorAffinityResult reader_affinity{};
-    glyphastore::server::ExecutorAffinityResult writer_affinity{};
+    glifistore::server::ExecutorAffinityResult reader_affinity{};
+    glifistore::server::ExecutorAffinityResult writer_affinity{};
 };
 
 [[nodiscard]] auto percentile(std::vector<std::uint64_t> samples, const double quantile) -> double {
@@ -172,7 +172,7 @@ template <typename Pool, typename Publish>
     std::barrier start{3, [&] noexcept { started = Clock::now(); }};
 
     std::thread reader([&] {
-        reader_result.affinity = glyphastore::server::configure_executor_thread(0, affinity);
+        reader_result.affinity = glifistore::server::configure_executor_thread(0, affinity);
         start.arrive_and_wait();
         std::uint64_t previous_epoch{};
         while (!writer_done.load(std::memory_order_acquire) || previous_epoch < material.records.size()) {
@@ -218,13 +218,13 @@ template <typename Pool, typename Publish>
     });
 
     std::thread writer([&] {
-        writer_result.affinity = glyphastore::server::configure_executor_thread(1, affinity);
+        writer_result.affinity = glifistore::server::configure_executor_thread(1, affinity);
         start.arrive_and_wait();
         for (std::size_t index = 0; index < material.records.size(); ++index) {
             const Mutation mutation{.key = {material.key, material.hash},
                                     .record = material.records[index],
                                     .segment = material.segment,
-                                    .opcode = glyphastore::Opcode::put};
+                                    .opcode = glifistore::Opcode::put};
             const auto sampled = (index & 63U) == 0U;
             const auto sample_start = sampled ? Clock::now() : Clock::time_point{};
             for (;;) {
@@ -329,9 +329,9 @@ void print(const std::string_view implementation, const std::size_t repeat, cons
               << measurement.reader_get_p50_ns << '\t' << measurement.reader_get_p99_ns << '\t'
               << measurement.reader_adoptions << '\t' << measurement.reader_epoch_skips << '\t'
               << measurement.pool_exhaustions << '\t' << measurement.live_high_watermark << '\t'
-              << glyphastore::server::affinity_mode_name(measurement.reader_affinity.mode) << '\t'
+              << glifistore::server::affinity_mode_name(measurement.reader_affinity.mode) << '\t'
               << measurement.reader_affinity.cpu << '\t'
-              << glyphastore::server::affinity_mode_name(measurement.writer_affinity.mode) << '\t'
+              << glifistore::server::affinity_mode_name(measurement.writer_affinity.mode) << '\t'
               << measurement.writer_affinity.cpu << '\t' << measurement.checksum << '\n';
 }
 
@@ -344,7 +344,7 @@ int main(const int argc, char** argv) try {
         static_cast<void>(run_shared(material, options.affinity, options.reader_get));
         static_cast<void>(run_direct(material, options.affinity, options.reader_get));
     }
-    glyphastore::bench::print_common_metadata(std::cout, options.warmup, options.repeats);
+    glifistore::bench::print_common_metadata(std::cout, options.warmup, options.repeats);
     std::cout << "implementation\trepeat\tseconds\tpublications_per_second\tns_per_publication\t"
                  "sample_p50_ns\tsample_p99_ns\treader_get_p50_ns\treader_get_p99_ns\t"
                  "reader_adoptions\treader_epoch_skips\t"

@@ -7,11 +7,11 @@
 # actually do it, and writes the check plan and the evidence itself.
 #
 # The native lifecycle installs into the host package manager, so it is opt-in
-# through GLYPHASTORE_PACKAGE_CI_NATIVE=1. Without it the backend reports the
+# through GLIFISTORE_PACKAGE_CI_NATIVE=1. Without it the backend reports the
 # metadata rows it really resolved and NOT_RUN for the rest.
 #
-# The release profile takes its source from GLYPHASTORE_SOURCE_ARCHIVE_URL and
-# GLYPHASTORE_SOURCE_ARCHIVE_SHA256; a checkout of HEAD is never admitted there.
+# The release profile takes its source from GLIFISTORE_SOURCE_ARCHIVE_URL and
+# GLIFISTORE_SOURCE_ARCHIVE_SHA256; a checkout of HEAD is never admitted there.
 #
 # Sourced by package-ci.sh; uses its root, tools, profile, stage, output_dir,
 # release_context and candidate_dir variables.
@@ -22,14 +22,14 @@
 macos_backend_candidate_source() {
   local candidate="$1"
   [[ -n "$candidate" ]] || return 0
-  [[ -z "${GLYPHASTORE_SOURCE_ARCHIVE_URL:-}" ]] || return 0
-  local archive="$candidate/GlyphaStore-$version.tar.xz"
+  [[ -z "${GLIFISTORE_SOURCE_ARCHIVE_URL:-}" ]] || return 0
+  local archive="$candidate/GlifiStore-$version.tar.xz"
   [[ -f "$archive" ]] || return 0
-  GLYPHASTORE_SOURCE_ARCHIVE_URL="file://$archive"
-  GLYPHASTORE_SOURCE_ARCHIVE_SHA256="$(python3 -c \
+  GLIFISTORE_SOURCE_ARCHIVE_URL="file://$archive"
+  GLIFISTORE_SOURCE_ARCHIVE_SHA256="$(python3 -c \
     'import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' \
     "$archive")"
-  export GLYPHASTORE_SOURCE_ARCHIVE_URL GLYPHASTORE_SOURCE_ARCHIVE_SHA256
+  export GLIFISTORE_SOURCE_ARCHIVE_URL GLIFISTORE_SOURCE_ARCHIVE_SHA256
 }
 
 macos_backend_run() {

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build packaging/common/consumer against an installed GlyphaStore prefix.
+# Build packaging/common/consumer against an installed GlifiStore prefix.
 #
 # Usage: package-external-consumer.sh <repo-root> <install-prefix> <work-directory>
 #

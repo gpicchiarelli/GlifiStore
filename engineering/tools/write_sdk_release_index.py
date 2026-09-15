@@ -111,7 +111,7 @@ def build_index(root: Path, artifact_dir: Path, require_complete: bool) -> dict[
     tag = os.environ.get("GITHUB_REF_NAME") if os.environ.get("GITHUB_REF_TYPE") == "tag" else None
     return {
         "schema_version": contract["schema_version"],
-        "glyphastore_version": version,
+        "glifistore_version": version,
         "source": {"commit": git_commit(root), "tag": tag, "dirty": git_dirty(root)},
         "contracts": {
             "wire_protocol": contract["wire_protocol"],
@@ -142,7 +142,7 @@ def verify_index(artifact_dir: Path, index: dict[str, Any], contract: dict[str, 
         path = artifact_dir / name
         if not path.is_file() or digest(path) != expected:
             raise ValueError(f"SDK release payload checksum mismatch: {name}")
-    version = index.get("glyphastore_version")
+    version = index.get("glifistore_version")
     if not isinstance(version, str) or not version:
         raise ValueError("SDK release index version is invalid")
     clients = index.get("clients", {})

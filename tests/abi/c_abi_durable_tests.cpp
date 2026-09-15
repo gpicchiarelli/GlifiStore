@@ -1,4 +1,4 @@
-#include "glyphastore/abi/glyphastore.h"
+#include "glifistore/abi/glifistore.h"
 
 #include <array>
 #include <atomic>
@@ -44,7 +44,7 @@ struct DirectoryGuard final {
 int main() {
     const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
     DirectoryGuard directory{std::filesystem::temp_directory_path() /
-                             ("glyphastore-c-abi-" + std::to_string(nonce))};
+                             ("glifistore-c-abi-" + std::to_string(nonce))};
     const auto native_path = directory.path.string();
 
     gs_store_options options{};

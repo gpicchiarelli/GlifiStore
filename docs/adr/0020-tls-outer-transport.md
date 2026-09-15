@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-07-20
 - Deciders: networking maintainers, security maintainers
-- Applies to: `glyphastored` network listeners; official SDK connect paths
+- Applies to: `glifistored` network listeners; official SDK connect paths
 - Amends: none
 - Supersedes: none
 
@@ -43,7 +43,7 @@ TLS library is not acceptable as the first-class secure profile.
 
 ## Decision
 
-1. **Secure profile uses TLS 1.3 as an outer transport.** GlyphaStore wire protocol v2 bytes run
+1. **Secure profile uses TLS 1.3 as an outer transport.** GlifiStore wire protocol v2 bytes run
    inside the TLS record layer. No new opcode is required for “enable TLS”.
 2. **Cleartext and TLS listeners are explicit and separate.** A process may expose one or both only
    via distinct configuration; there is no opportunistic fallback from TLS to cleartext on the same

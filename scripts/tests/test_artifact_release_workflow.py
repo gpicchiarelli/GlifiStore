@@ -84,7 +84,7 @@ class ArtifactReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("needs: candidate", job)
         self.assertIn("needs.candidate.outputs.artifact-name", job)
         self.assertLess(job.index("verify-seal"), job.index("tar -xJf"))
-        self.assertIn("GLYPHASTORE_CPP_PREFIX", job)
+        self.assertIn("GLIFISTORE_CPP_PREFIX", job)
         self.assertIn("INSTALLED_INTEROP_PROFILE=plain", job)
         self.assertIn("release_evidence.py create", job)
         self.assertIn("--type sdk_installed_interop", job)
@@ -204,10 +204,10 @@ class ArtifactReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("make -C \"$work/port\" DISTDIR=\"$work/distfiles\" check-plist", script)
         self.assertIn("pkg add -y", script)
         self.assertIn("package-external-consumer.sh", script)
-        self.assertIn("service glyphastored start", script)
-        self.assertIn("service glyphastored stop", script)
-        self.assertIn("glyphastore_verify_store -- /var/db/glyphastore", script)
-        self.assertIn("pkg delete -y glyphastore", script)
+        self.assertIn("service glifistored start", script)
+        self.assertIn("service glifistored stop", script)
+        self.assertIn("glifistore_verify_store -- /var/db/glifistore", script)
+        self.assertIn("pkg delete -y glifistore", script)
         for check_id in (
             "package-build",
             "package-install",
@@ -240,16 +240,16 @@ class ArtifactReleaseWorkflowTests(unittest.TestCase):
 
         self.assertIn('[[ "$(uname -s)" == "OpenBSD" ]]', script)
         self.assertIn("PORTS_ACCOUNT_REGISTERED", script)
-        self.assertIn("$ports_root/databases/glyphastore", script)
+        self.assertIn("$ports_root/databases/glifistore", script)
         self.assertIn("PACKAGE_REPOSITORY=", script)
         self.assertIn("pkg_add", script)
         self.assertIn("package-external-consumer.sh", script)
-        self.assertIn("rcctl enable glyphastored", script)
-        self.assertIn("rcctl start glyphastored", script)
-        self.assertIn("rcctl stop glyphastored", script)
-        self.assertIn("glyphastore_verify_store -- /var/glyphastore", script)
-        self.assertIn("pkg_delete glyphastore", script)
-        self.assertIn("libglyphastore.so.${abi_version}", script)
+        self.assertIn("rcctl enable glifistored", script)
+        self.assertIn("rcctl start glifistored", script)
+        self.assertIn("rcctl stop glifistored", script)
+        self.assertIn("glifistore_verify_store -- /var/glifistore", script)
+        self.assertIn("pkg_delete glifistore", script)
+        self.assertIn("libglifistore.so.${abi_version}", script)
         for check_id in (
             "package-build",
             "package-install",
@@ -299,7 +299,7 @@ class ArtifactReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("release_bundle.py verify-seal", evidence)
         self.assertIn("release_bundle.py validate-sbom", evidence)
         self.assertIn("verify_hardening.py", evidence)
-        self.assertIn("--binary build/security-candidate-prefix/bin/glyphastored", evidence)
+        self.assertIn("--binary build/security-candidate-prefix/bin/glifistored", evidence)
         self.assertIn("--type security_matrix", evidence)
         self.assertIn("release-input-${{ github.sha }}-security-matrix", evidence)
         for check_id in (

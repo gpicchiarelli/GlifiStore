@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproducible external-server benchmark for the Python GlyphaStore SDK."""
+"""Reproducible external-server benchmark for the Python GlifiStore SDK."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from typing import Callable
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PACKAGE_ROOT / "src"))
 
-from glyphastore import (  # noqa: E402
+from glifistore import (  # noqa: E402
     AsyncClient,
     Client,
     ClientConfig,
@@ -174,7 +174,7 @@ def report(
     samples: list[float],
 ) -> None:
     rates = [operation_count / sample for sample in samples]
-    print("# glyphastore Python client benchmark")
+    print("# glifistore Python client benchmark")
     print(
         f"# sdk_version={version} runtime={runtime} execution={execution} "
         f"workers={workers} pipeline_pairs={pipeline} operations={operation_count}"

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.dev/schemas/upgrade-baseline-admission-v1.json",
-  "title": "GlyphaStore N-1 upgrade baseline admission receipt",
+  "$id": "https://glifistore.dev/schemas/upgrade-baseline-admission-v1.json",
+  "title": "GlifiStore N-1 upgrade baseline admission receipt",
   "description": "Receipt written by engineering/tools/upgrade_baseline.py admit. It exists only after the downloaded previous-release bundle verified byte for byte against the digests recorded in its own release manifest, so an upgrade proven against it cannot have been proven against a local rebuild of N-1.",
   "type": "object",
   "additionalProperties": false,

@@ -30,7 +30,7 @@ and requires both batch members to return `unavailable` with the runtime fail-cl
 Each file was produced with the equivalent of:
 
 ```text
-build/macos-native-release/glyphastore_server_benchmarks \
+build/macos-native-release/glifistore_server_benchmarks \
   --ops 800 --workers 1 --clients 4 --pipeline 32 --executor-affinity --latency \
   --workload read-after-write --storage-mode durable-group \
   --group-max-records <1|4|16|32> --group-max-bytes 1048576 \

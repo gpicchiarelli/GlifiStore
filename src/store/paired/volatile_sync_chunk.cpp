@@ -1,15 +1,15 @@
-#include "glyphastore/store/paired/volatile_sync_chunk.hpp"
+#include "glifistore/store/paired/volatile_sync_chunk.hpp"
 
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/store/paired/mutation_execution.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/store/paired/mutation_execution.hpp"
 #include "store/store_internal.hpp"
 
 #include <exception>
 #include <utility>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 namespace {
 
 [[nodiscard]] auto
@@ -100,7 +100,7 @@ apply_store_mutations(Store& store, const std::size_t shard, const VolatileSyncC
         published_nodes[publication_count] = &view;
         ++publication_count;
         if (mode == VolatileSyncChunkMode::dedicated_writer &&
-            glyphastore::fault::consume_fail(glyphastore::fault::Site::mutate)) {
+            glifistore::fault::consume_fail(glifistore::fault::Site::mutate)) {
             invoke_hook(publish_fail_closed);
         }
     };
@@ -181,7 +181,7 @@ void apply_volatile_sync_publication_chunk(
         }
         // Mid-chunk sticky: published nodes ACK'd above; never-entered siblings keep
         // the resource_exhausted stamp from apply_store_mutations.
-        if (glyphastore::fault::consume_fail(glyphastore::fault::Site::publish)) {
+        if (glifistore::fault::consume_fail(glifistore::fault::Site::publish)) {
             throw std::bad_alloc{};
         }
         invoke_hook(reclaim_after_publish);
@@ -195,4 +195,4 @@ void apply_volatile_sync_publication_chunk(
     }
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

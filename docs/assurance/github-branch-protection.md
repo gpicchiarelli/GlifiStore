@@ -49,7 +49,7 @@ thresholds, `Paired Linux hard-pinned A/B` (self-hosted), physical E3 jobs.
 1. **Secret scanning** + **push protection** (public repos: enable both).
 2. **Private vulnerability reporting** (aligns with `SECURITY.md`).
 3. **Code scanning** enabled so Scorecard / CodeQL / Trivy SARIF can publish when
-   repository variable `GLYPHASTORE_UPLOAD_SARIF=true`.
+   repository variable `GLIFISTORE_UPLOAD_SARIF=true`.
 4. **Dependabot alerts** + security updates (ecosystems configured in
    [`.github/dependabot.yml`](../../.github/dependabot.yml)).
 

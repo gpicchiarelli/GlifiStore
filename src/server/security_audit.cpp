@@ -1,10 +1,10 @@
-#include "glyphastore/server/security_audit.hpp"
+#include "glifistore/server/security_audit.hpp"
 
 #include <chrono>
 #include <iostream>
 #include <string>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 constexpr std::size_t kMaxLoggedFieldBytes = 256U;
@@ -136,4 +136,4 @@ auto SecurityAudit::stats() const noexcept -> SecurityAuditStats {
     };
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

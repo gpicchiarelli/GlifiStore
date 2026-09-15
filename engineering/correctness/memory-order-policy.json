@@ -63,7 +63,7 @@
     },
     {
       "id": "server-bounded-queues",
-      "paths": ["include/glyphastore/server/bounded_mpsc_queue.hpp", "src/server/spsc_ring.hpp"],
+      "paths": ["include/glifistore/server/bounded_mpsc_queue.hpp", "src/server/spsc_ring.hpp"],
       "classification": "correctness ownership protocol",
       "allowed_orders": ["relaxed", "acquire", "release", "acq_rel"],
       "writer": "queue producers",
@@ -75,7 +75,7 @@
     },
     {
       "id": "server-handoff",
-      "paths": ["include/glyphastore/server/connection_handoff.hpp", "src/server/connection_handoff.cpp"],
+      "paths": ["include/glifistore/server/connection_handoff.hpp", "src/server/connection_handoff.cpp"],
       "classification": "correctness handoff protocol",
       "allowed_orders": ["relaxed", "acquire", "release", "acq_rel"],
       "writer": "source reactor and shutdown controller",
@@ -87,7 +87,7 @@
     },
     {
       "id": "server-reactor-lifecycle",
-      "paths": ["include/glyphastore/server/reactor.hpp", "include/glyphastore/server/server.hpp", "include/glyphastore/store/prepared_read.hpp", "src/server/reactor.cpp", "src/server/reactor_dispatch.cpp", "src/server/reactor_execute.cpp", "src/server/reactor_io.cpp", "src/server/disk_read_executor.cpp", "src/server/server_health.cpp", "src/server/server_lifecycle.cpp"],
+      "paths": ["include/glifistore/server/reactor.hpp", "include/glifistore/server/server.hpp", "include/glifistore/store/prepared_read.hpp", "src/server/reactor.cpp", "src/server/reactor_dispatch.cpp", "src/server/reactor_execute.cpp", "src/server/reactor_io.cpp", "src/server/disk_read_executor.cpp", "src/server/server_health.cpp", "src/server/server_lifecycle.cpp"],
       "classification": "correctness lifecycle protocol",
       "allowed_orders": ["relaxed", "acquire", "release", "acq_rel"],
       "writer": "reactor, disk-reader lanes, and server shutdown controller",
@@ -123,7 +123,7 @@
     },
     {
       "id": "persistence-file-health",
-      "paths": ["include/glyphastore/persistence/filesystem.hpp", "include/glyphastore/persistence/segment_file.hpp", "src/persistence/filesystem_directory.cpp", "src/persistence/segment_file.cpp", "src/persistence/store_backup.cpp"],
+      "paths": ["include/glifistore/persistence/filesystem.hpp", "include/glifistore/persistence/segment_file.hpp", "src/persistence/filesystem_directory.cpp", "src/persistence/segment_file.cpp", "src/persistence/store_backup.cpp"],
       "classification": "correctness health and backup coordination",
       "allowed_orders": ["relaxed", "acquire", "release", "acq_rel"],
       "writer": "filesystem failure paths, appenders, and backup workers",
@@ -147,7 +147,7 @@
     },
     {
       "id": "worker-lifecycle",
-      "paths": ["include/glyphastore/worker/worker.hpp", "src/worker/worker.cpp"],
+      "paths": ["include/glifistore/worker/worker.hpp", "src/worker/worker.cpp"],
       "classification": "correctness worker lifecycle protocol",
       "allowed_orders": ["relaxed", "acquire", "release", "acq_rel"],
       "writer": "Worker owner and Store shutdown",
@@ -171,7 +171,7 @@
     },
     {
       "id": "paired-reader-writer-runtime",
-      "paths": ["include/glyphastore/store/paired/*.hpp", "src/store/paired/*.cpp", "src/store/paired/*.hpp"],
+      "paths": ["include/glifistore/store/paired/*.hpp", "src/store/paired/*.cpp", "src/store/paired/*.hpp"],
       "classification": "critical correctness publication/reclamation protocol",
       "allowed_orders": ["relaxed", "acquire", "release", "acq_rel", "seq_cst"],
       "writer": "one shard Writer/execution-token owner plus Reader lease/admission participants",

@@ -220,8 +220,8 @@ def validate(
     store_files = [name for name in files if name.startswith(f"{STORE_DIRECTORY}/")]
     if not store_files:
         raise FixtureError("fixture store directory contains no files")
-    if f"{STORE_DIRECTORY}/manifest.glypha" not in files:
-        raise FixtureError("fixture store has no manifest.glypha")
+    if f"{STORE_DIRECTORY}/manifest.glifi" not in files:
+        raise FixtureError("fixture store has no manifest.glifi")
 
     sums = root / CHECKSUM_NAME
     if sums.is_symlink() or not sums.is_file():
@@ -256,8 +256,8 @@ def create(args: argparse.Namespace) -> None:
     if output.exists() or output.is_symlink():
         raise FixtureError(f"output already exists: {output}")
     source_files = _regular_files(source, exclude_checksum=False)
-    if not source_files or "manifest.glypha" not in source_files:
-        raise FixtureError("source Store has no manifest.glypha")
+    if not source_files or "manifest.glifi" not in source_files:
+        raise FixtureError("source Store has no manifest.glifi")
     version = args.product_version
     _semver(version)
     if output.name != version:

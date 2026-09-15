@@ -23,7 +23,7 @@ OP_RE = re.compile(
 
 def production_files(root: Path) -> list[Path]:
     files: list[Path] = []
-    for source_root in (root / "include" / "glyphastore", root / "src"):
+    for source_root in (root / "include" / "glifistore", root / "src"):
         for path in source_root.rglob("*"):
             if path.suffix in {".cpp", ".hpp"} and path.is_file():
                 files.append(path)
@@ -120,7 +120,7 @@ def build_report(root: Path, policy_path: Path) -> dict:
         raise ValueError(f"unused memory-order policy rules: {', '.join(unused)}")
     return {
         "schema_version": 1,
-        "scope": ["include/glyphastore/**/*.hpp", "src/**/*.{cpp,hpp}"],
+        "scope": ["include/glifistore/**/*.hpp", "src/**/*.{cpp,hpp}"],
         "source_sha256": digest.hexdigest(),
         "operation_count": len(records),
         "domain_count": len(used_rules),

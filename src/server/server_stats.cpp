@@ -1,12 +1,12 @@
 #include "server/server_stats.hpp"
 
-#include "glyphastore/server/latency_histogram.hpp"
-#include "glyphastore/store/paired/read_generation.hpp"
+#include "glifistore/server/latency_histogram.hpp"
+#include "glifistore/store/paired/read_generation.hpp"
 
 #include <string>
 #include <utility>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 auto ServerStatsReporter::maintenance_state_name(const MaintenanceState state) noexcept -> std::string_view {
     switch (state) {
@@ -116,12 +116,12 @@ auto ServerStatsReporter::render(const ServerStatsSnapshot& snapshot, const std:
     try {
         std::string out;
         out.reserve(4096);
-        out += "GlyphaStore/stats\n";
-#ifndef GLYPHASTORE_VERSION
-#define GLYPHASTORE_VERSION "dev"
+        out += "GlifiStore/stats\n";
+#ifndef GLIFISTORE_VERSION
+#define GLIFISTORE_VERSION "dev"
 #endif
         out += "version=";
-        out += GLYPHASTORE_VERSION;
+        out += GLIFISTORE_VERSION;
         out += '\n';
         out += snapshot.live ? "live=1\n" : "live=0\n";
         out += snapshot.ready ? "ready=1\n" : "ready=0\n";
@@ -739,4 +739,4 @@ auto ServerStatsReporter::render(const ServerStatsSnapshot& snapshot, const std:
     }
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

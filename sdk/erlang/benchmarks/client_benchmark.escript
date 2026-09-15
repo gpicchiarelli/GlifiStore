@@ -1,6 +1,6 @@
 #!/usr/bin/env escript
 %%! -noshell -noinput +S 4:4
-%% Reproducible external-server benchmark for the Erlang GlyphaStore SDK.
+%% Reproducible external-server benchmark for the Erlang GlifiStore SDK.
 %% Workload matches Python/Perl/Go/Ruby: ordered PUT/GET pipeline read-after-write.
 %% Fixed +S 4:4 (not 1:1) so execute_worker_pipelines fan-out can use multiple
 %% schedulers; still capped for cross-machine comparability.
@@ -22,7 +22,7 @@ main(Args) ->
 add_beam_path() ->
     Script = escript:script_name(),
     Root = filename:dirname(filename:dirname(Script)),
-    Beam = filename:join([Root, "_build", "default", "lib", "glyphastore", "ebin"]),
+    Beam = filename:join([Root, "_build", "default", "lib", "glifistore", "ebin"]),
     true = code:add_patha(Beam).
 
 parse_args(Opts, []) ->
@@ -85,16 +85,16 @@ run(Opts) ->
         end,
     Batches = material(Ops, Workers, Pipeline),
     BatchFrames = Pipeline * 2,
-    Config = glyphastore_util:merge_config(#{
+    Config = glifistore_util:merge_config(#{
         host => maps:get(host, Opts),
         port => Port,
         maximum_pipeline_requests => BatchFrames,
         request_timeout => 120.0
     }),
-    case glyphastore_client:connect(Config) of
+    case glifistore_client:connect(Config) of
         {ok, Client} ->
             try
-                case glyphastore_client:worker_count(Client) of
+                case glifistore_client:worker_count(Client) of
                     Workers ->
                         ok;
                     Other ->
@@ -113,7 +113,7 @@ run(Opts) ->
                 end || _ <- lists:seq(1, Repeats)],
                 report(UseConcurrent, Callers, Mode, Workers, Pipeline, Ops * 2, Samples)
             after
-                glyphastore_client:close(Client)
+                glifistore_client:close(Client)
             end;
         {error, Err} ->
             io:format(standard_error, "~p~n", [Err]),
@@ -183,7 +183,7 @@ run_batch_mode(Client, Batches) ->
             Flat = lists:append(Wave),
             case Flat of
                 [] -> ok;
-                _ -> validate_batch(Flat, glyphastore_client:execute_batch(Client, Flat))
+                _ -> validate_batch(Flat, glifistore_client:execute_batch(Client, Flat))
             end
         end,
         lists:seq(0, MaxRounds - 1)
@@ -216,7 +216,7 @@ fill_requests_step(Quotas, Candidate, Acc, CallerId) ->
             Acc;
         true ->
             Key = list_to_binary(io_lib:format("erlang-bench-~B-~12..0B", [CallerId, Candidate])),
-            {ok, Owner} = glyphastore_protocol:worker_for(Key, length(Quotas)),
+            {ok, Owner} = glifistore_protocol:worker_for(Key, length(Quotas)),
             Quota = lists:nth(Owner + 1, Quotas),
             case Quota of
                 0 ->
@@ -253,7 +253,7 @@ run_sequential(Client, Batches) ->
         fun(WorkerBatches) ->
             lists:foreach(
                 fun(Batch) ->
-                    validate_batch(Batch, glyphastore_client:execute_pipeline(Client, Batch))
+                    validate_batch(Batch, glifistore_client:execute_pipeline(Client, Batch))
                 end,
                 WorkerBatches
             )
@@ -277,7 +277,7 @@ run_concurrent(Client, Batches) ->
                 true ->
                     ok;
                 false ->
-                    {ok, All} = glyphastore_client:execute_worker_pipelines(Client, Wave),
+                    {ok, All} = glifistore_client:execute_worker_pipelines(Client, Wave),
                     lists:foreach(
                         fun({Batch, Responses}) ->
                             case Batch of
@@ -332,10 +332,10 @@ report(UseConcurrent, Callers, Mode, Workers, Pipeline, OperationCount, Samples)
             {false, true} -> "single-process-worker-concurrent";
             {false, false} -> "single-process-worker-sequential"
         end,
-    Version = binary_to_list(glyphastore_version:version()),
+    Version = binary_to_list(glifistore_version:version()),
     SortedS = lists:sort(Samples),
     SortedR = lists:sort(Rates),
-    io:format("# glyphastore Erlang client benchmark~n"),
+    io:format("# glifistore Erlang client benchmark~n"),
     io:format(
         "# sdk_version=~s runtime=sync execution=~s mode=~s callers=~B workers=~B "
         "pipeline_pairs=~B operations=~B~n",

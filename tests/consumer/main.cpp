@@ -1,15 +1,15 @@
-#include "glyphastore/store/store.hpp"
+#include "glifistore/store/store.hpp"
 
-#if __has_include("glyphastore/index/index.hpp")
+#if __has_include("glifistore/index/index.hpp")
 #error "Index headers must not be present in the installed API"
 #endif
-#if __has_include("glyphastore/segment/segment.hpp")
+#if __has_include("glifistore/segment/segment.hpp")
 #error "Segment headers must not be present in the installed API"
 #endif
-#if __has_include("glyphastore/server/server.hpp")
+#if __has_include("glifistore/server/server.hpp")
 #error "Server implementation headers must not be present in the installed API"
 #endif
-#if __has_include("glyphastore/worker/worker.hpp")
+#if __has_include("glifistore/worker/worker.hpp")
 #error "Worker headers must not be present in the installed API"
 #endif
 
@@ -27,7 +27,7 @@ auto bytes(const std::string_view value) -> std::span<const std::byte> {
 } // namespace
 
 int main() {
-    auto store = glyphastore::Store::open({.worker_config = {.explicit_count = 1}});
+    auto store = glifistore::Store::open({.worker_config = {.explicit_count = 1}});
     if (!store || !(**store).put("consumer", bytes("value"))) {
         return 1;
     }

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Erlang SDK client benchmark suite (sequential + concurrent) against glyphastored.
+# Erlang SDK client benchmark suite (sequential + concurrent) against glifistored.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 stamp="$(date -u +%Y%m%d-%H%M%S)"
 sdk_version="$(tr -d '[:space:]' <"$root/VERSION")"
 outdir="${1:-$root/benchmark-results-erlang-${sdk_version}-${stamp}}"
-daemon="${GLYPHASTORED:-}"
+daemon="${GLIFISTORED:-}"
 host="127.0.0.1"
 ops="${OPS:-100000}"
 warmup="${WARMUP:-1}"
@@ -22,14 +22,14 @@ prefer_bins=(
 )
 if [[ -z "$daemon" ]]; then
   for dir in "${prefer_bins[@]}"; do
-    if [[ -x "$dir/glyphastored" ]]; then
-      daemon="$dir/glyphastored"
+    if [[ -x "$dir/glifistored" ]]; then
+      daemon="$dir/glifistored"
       break
     fi
   done
 fi
 if [[ -z "$daemon" || ! -x "$daemon" ]]; then
-  echo "missing glyphastored; build a release/debug preset first" >&2
+  echo "missing glifistored; build a release/debug preset first" >&2
   exit 1
 fi
 
@@ -53,8 +53,8 @@ chmod +x "$bench"
   echo "git_sha=$(git -C "$root" rev-parse HEAD)"
   echo "erlang=$(erl -noshell -eval 'io:format("~s~n",[erlang:system_info(otp_release)]),halt().')"
   echo "rebar3=$(rebar3 version | head -1)"
-  echo "erlang_sdk_version=$(erl -noshell -pa "$sdk/_build/default/lib/glyphastore/ebin" -eval 'io:format("~s~n",[glyphastore_version:version()]),halt().')"
-  echo "glyphastored=$daemon"
+  echo "erlang_sdk_version=$(erl -noshell -pa "$sdk/_build/default/lib/glifistore/ebin" -eval 'io:format("~s~n",[glifistore_version:version()]),halt().')"
+  echo "glifistored=$daemon"
   echo "ops=$ops warmup=$warmup repeats=$repeats callers=$callers"
   echo "workload=ordered PUT/GET pipeline read-after-write, value_size=64"
   echo "storage_mode=volatile"
@@ -71,7 +71,7 @@ start_server() {
   local port=""
   for _ in $(seq 1 50); do
     if ! kill -0 "$pid" 2>/dev/null; then
-      echo "glyphastored exited early; see $log_file" >&2
+      echo "glifistored exited early; see $log_file" >&2
       return 1
     fi
     port="$(lsof -nP -iTCP -sTCP:LISTEN -a -p "$pid" 2>/dev/null | awk 'NR==2 {split($9,a,":"); print a[length(a)]}')"
@@ -81,7 +81,7 @@ start_server() {
     fi
     sleep 0.1
   done
-  echo "could not discover glyphastored listen port" >&2
+  echo "could not discover glifistored listen port" >&2
   return 1
 }
 
@@ -204,12 +204,12 @@ seq = {(r["workers"], r["pipeline_pairs"]): r for r in rows if "sequential" in r
 conc = {(r["workers"], r["pipeline_pairs"]): r for r in rows if "concurrent" in r["execution"]}
 
 lines = [
-    f"# GlyphaStore Erlang client benchmarks — version `{sdk_version}`",
+    f"# GlifiStore Erlang client benchmarks — version `{sdk_version}`",
     "",
     f"Parsed `{len(rows)}` result files from `{outdir.name}`.",
     "",
     "Workload: validated ordered `PUT`/`GET` pipeline read-after-write, value size 64 bytes,",
-    "volatile `glyphastored`, same-host loopback. Median ops/s is the comparison statistic.",
+    "volatile `glifistored`, same-host loopback. Median ops/s is the comparison statistic.",
     "",
     "| Execution | Workers | Pipeline pairs | Median ops/s | Min ops/s | Max ops/s | Median s |",
     "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
@@ -250,7 +250,7 @@ lines.extend([
 ])
 (outdir / "summary.md").write_text("\n".join(lines), encoding="utf-8")
 (outdir / "README.md").write_text(
-    f"""# GlyphaStore Erlang SDK benchmarks — {sdk_version}
+    f"""# GlifiStore Erlang SDK benchmarks — {sdk_version}
 
 Sequential and concurrent (`execute_worker_pipelines`) matrix for the OTP client.
 
@@ -260,7 +260,7 @@ Sequential and concurrent (`execute_worker_pipelines`) matrix for the OTP client
 ./scripts/benchmark_erlang_client.sh
 ```
 
-Optional: `OPS`, `WARMUP`, `REPEATS`, `GLYPHASTORED`.
+Optional: `OPS`, `WARMUP`, `REPEATS`, `GLIFISTORED`.
 """,
     encoding="utf-8",
 )

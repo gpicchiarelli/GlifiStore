@@ -1,11 +1,11 @@
-#include "glyphastore/store/prepared_read.hpp"
+#include "glifistore/store/prepared_read.hpp"
 #include "store/store_impl.hpp"
 
 #include <memory>
 #include <new>
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 
 detail::PreparedColdRead::PreparedColdRead(State&& state) noexcept {
     static_assert(sizeof(State) <= kStateBytes);
@@ -53,4 +53,4 @@ detail::PreparedColdRead::~PreparedColdRead() {
     reset();
 }
 
-} // namespace glyphastore
+} // namespace glifistore

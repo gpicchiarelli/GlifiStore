@@ -1,7 +1,7 @@
 #include "concurrency/linearizability.hpp"
-#include "glyphastore/core/error.hpp"
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/core/error.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/store/store.hpp"
 #include "test.hpp"
 
 #include <atomic>
@@ -18,37 +18,37 @@ auto bytes(const std::string_view value) -> std::span<const std::byte> {
     return {reinterpret_cast<const std::byte*>(value.data()), value.size()};
 }
 
-auto value_string(const glyphastore::OwnedValue& value) -> std::string {
+auto value_string(const glifistore::OwnedValue& value) -> std::string {
     return {reinterpret_cast<const char*>(value.bytes.data()), value.bytes.size()};
 }
 
-using glyphastore::test::lin::check_and_minimize;
-using glyphastore::test::lin::check_history;
-using glyphastore::test::lin::HistoryRecorder;
-using glyphastore::test::lin::Operation;
-using glyphastore::test::lin::OpKind;
-using glyphastore::test::lin::OutcomeKind;
+using glifistore::test::lin::check_and_minimize;
+using glifistore::test::lin::check_history;
+using glifistore::test::lin::HistoryRecorder;
+using glifistore::test::lin::Operation;
+using glifistore::test::lin::OpKind;
+using glifistore::test::lin::OutcomeKind;
 
-auto map_get_outcome(const glyphastore::Result<glyphastore::OwnedValue>& result)
+auto map_get_outcome(const glifistore::Result<glifistore::OwnedValue>& result)
     -> std::pair<OutcomeKind, std::string> {
     if (result.has_value())
         return {OutcomeKind::ok_value, value_string(*result)};
-    if (result.error().code == glyphastore::ErrorCode::not_found)
+    if (result.error().code == glifistore::ErrorCode::not_found)
         return {OutcomeKind::not_found, {}};
-    if (result.error().code == glyphastore::ErrorCode::unavailable)
+    if (result.error().code == glifistore::ErrorCode::unavailable)
         return {OutcomeKind::unavailable, {}};
     return {OutcomeKind::other_error, {}};
 }
 
-auto map_status(const glyphastore::Status& status) -> OutcomeKind {
+auto map_status(const glifistore::Status& status) -> OutcomeKind {
     if (status.has_value())
         return OutcomeKind::ok_void;
-    if (status.error().code == glyphastore::ErrorCode::unavailable)
+    if (status.error().code == glifistore::ErrorCode::unavailable)
         return OutcomeKind::unavailable;
-    if (status.error().code == glyphastore::ErrorCode::not_found)
+    if (status.error().code == glifistore::ErrorCode::not_found)
         return OutcomeKind::not_found;
-    if (status.error().code == glyphastore::ErrorCode::sequence_conflict ||
-        status.error().code == glyphastore::ErrorCode::resource_exhausted)
+    if (status.error().code == glifistore::ErrorCode::sequence_conflict ||
+        status.error().code == glifistore::ErrorCode::resource_exhausted)
         return OutcomeKind::rejected;
     return OutcomeKind::other_error;
 }
@@ -56,10 +56,10 @@ auto map_status(const glyphastore::Status& status) -> OutcomeKind {
 [[nodiscard]] auto run_seeded_history(const std::uint64_t seed, const std::size_t thread_count,
                                       const std::size_t ops_per_thread) -> bool {
     // Keep adverse scheduling light enough that the history checker stays within budget.
-    glyphastore::fault::configure(seed ^ 0x9E3779B97F4A7C15ULL, 12, 20);
+    glifistore::fault::configure(seed ^ 0x9E3779B97F4A7C15ULL, 12, 20);
 
-    auto opened = glyphastore::Store::open({.worker_config = {.explicit_count = 2}});
-    GLYPHA_REQUIRE(opened.has_value());
+    auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 2}});
+    GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
 
     HistoryRecorder recorder;
@@ -106,8 +106,8 @@ auto map_status(const glyphastore::Status& status) -> OutcomeKind {
                     const auto compacted = store.compact();
                     auto outcome = OutcomeKind::ok_void;
                     if (!compacted) {
-                        outcome = compacted.error().code == glyphastore::ErrorCode::sequence_conflict ||
-                                          compacted.error().code == glyphastore::ErrorCode::resource_exhausted
+                        outcome = compacted.error().code == glifistore::ErrorCode::sequence_conflict ||
+                                          compacted.error().code == glifistore::ErrorCode::resource_exhausted
                                       ? OutcomeKind::rejected
                                       : OutcomeKind::other_error;
                     }
@@ -130,7 +130,7 @@ auto map_status(const glyphastore::Status& status) -> OutcomeKind {
     if (!result.linearizable) {
         std::string trace = "seed=" + std::to_string(seed) + " " + result.message + "full history:\n";
         for (const auto& operation : recorder.snapshot()) {
-            trace += "  " + glyphastore::test::lin::format_operation(operation) + "\n";
+            trace += "  " + glifistore::test::lin::format_operation(operation) + "\n";
         }
         throw std::runtime_error{std::move(trace)};
     }
@@ -158,68 +158,68 @@ auto make_op(const std::size_t id, const OpKind kind, std::string key, std::stri
 
 } // namespace
 
-GLYPHA_TEST("linearizability checker accepts a sequential put-get history") {
+GLIFI_TEST("linearizability checker accepts a sequential put-get history") {
     const std::vector<Operation> history{
         make_op(0, OpKind::put, "a", "1", OutcomeKind::ok_void, 0, 1),
         make_op(1, OpKind::get, "a", {}, OutcomeKind::ok_value, 2, 3, "1"),
     };
-    GLYPHA_REQUIRE(check_history(history).linearizable);
+    GLIFI_REQUIRE(check_history(history).linearizable);
 }
 
-GLYPHA_TEST("linearizability checker rejects a non-linearizable read") {
+GLIFI_TEST("linearizability checker rejects a non-linearizable read") {
     const std::vector<Operation> history{
         make_op(0, OpKind::put, "a", "1", OutcomeKind::ok_void, 0, 3),
         make_op(1, OpKind::get, "a", {}, OutcomeKind::ok_value, 1, 2, "2"),
     };
     const auto result = check_and_minimize(history);
-    GLYPHA_REQUIRE(!result.linearizable);
-    GLYPHA_REQUIRE(result.minimal_trace.size() <= 2);
+    GLIFI_REQUIRE(!result.linearizable);
+    GLIFI_REQUIRE(result.minimal_trace.size() <= 2);
 }
 
-GLYPHA_TEST("linearizability checker models TTL expiry on get") {
+GLIFI_TEST("linearizability checker models TTL expiry on get") {
     const std::vector<Operation> history{
         make_op(0, OpKind::put_ttl, "a", "1", OutcomeKind::ok_void, 0, 1, {}, 100, 50),
         make_op(1, OpKind::get, "a", {}, OutcomeKind::not_found, 2, 3, {}, 0, 100),
     };
-    GLYPHA_REQUIRE(check_history(history).linearizable);
+    GLIFI_REQUIRE(check_history(history).linearizable);
 }
 
-GLYPHA_TEST("linearizability checker rejects unmodeled errors") {
+GLIFI_TEST("linearizability checker rejects unmodeled errors") {
     const std::vector<Operation> history{
         make_op(0, OpKind::put, "a", "1", OutcomeKind::other_error, 0, 1),
     };
-    GLYPHA_REQUIRE(!check_history(history).linearizable);
+    GLIFI_REQUIRE(!check_history(history).linearizable);
 }
 
-GLYPHA_TEST("linearizability checker models missing and successful erase distinctly") {
+GLIFI_TEST("linearizability checker models missing and successful erase distinctly") {
     const std::vector<Operation> missing{
         make_op(0, OpKind::erase, "a", {}, OutcomeKind::not_found, 0, 1),
     };
-    GLYPHA_REQUIRE(check_history(missing).linearizable);
+    GLIFI_REQUIRE(check_history(missing).linearizable);
 
     const std::vector<Operation> impossible_success{
         make_op(0, OpKind::erase, "a", {}, OutcomeKind::ok_void, 0, 1),
     };
-    GLYPHA_REQUIRE(!check_history(impossible_success).linearizable);
+    GLIFI_REQUIRE(!check_history(impossible_success).linearizable);
 }
 
-GLYPHA_TEST("linearizability minimizer preserves any value-producing write for successful erase") {
+GLIFI_TEST("linearizability minimizer preserves any value-producing write for successful erase") {
     const std::vector<Operation> history{
         make_op(0, OpKind::put, "a", "non-empty", OutcomeKind::ok_void, 0, 1),
         make_op(1, OpKind::erase, "a", {}, OutcomeKind::ok_void, 2, 3),
     };
-    GLYPHA_REQUIRE(glyphastore::test::lin::history_has_matching_write(history, history[1]));
+    GLIFI_REQUIRE(glifistore::test::lin::history_has_matching_write(history, history[1]));
 }
 
-GLYPHA_TEST("linearizability checker models explicit pre-Store rejection as no-op") {
+GLIFI_TEST("linearizability checker models explicit pre-Store rejection as no-op") {
     const std::vector<Operation> history{
         make_op(0, OpKind::put, "a", "1", OutcomeKind::rejected, 0, 1),
         make_op(1, OpKind::get, "a", {}, OutcomeKind::not_found, 2, 3),
     };
-    GLYPHA_REQUIRE(check_history(history).linearizable);
+    GLIFI_REQUIRE(check_history(history).linearizable);
 }
 
-GLYPHA_TEST("paired Store concurrent histories stay linearizable (seeded)") {
+GLIFI_TEST("paired Store concurrent histories stay linearizable (seeded)") {
     // GS-CONCUR-LIN-001
     constexpr std::uint64_t seed_count = 64;
     std::uint64_t conclusive{};
@@ -228,11 +228,11 @@ GLYPHA_TEST("paired Store concurrent histories stay linearizable (seeded)") {
     }
     // An inconclusive bounded search is evidence neither for nor against the
     // runtime. Keep histories small enough that this campaign is fully decided.
-    GLYPHA_REQUIRE(conclusive == seed_count);
+    GLIFI_REQUIRE(conclusive == seed_count);
 }
 
-GLYPHA_TEST("paired Store TTL put-get stays linearizable under fixed clock") {
-    class FixedClock final : public glyphastore::StoreClock {
+GLIFI_TEST("paired Store TTL put-get stays linearizable under fixed clock") {
+    class FixedClock final : public glifistore::StoreClock {
       public:
         explicit FixedClock(const std::uint64_t now) : now_(now) {}
         [[nodiscard]] auto now_ns() const noexcept -> std::uint64_t override {
@@ -243,8 +243,8 @@ GLYPHA_TEST("paired Store TTL put-get stays linearizable under fixed clock") {
         std::uint64_t now_;
     };
     const auto clock = std::make_shared<FixedClock>(50);
-    auto opened = glyphastore::Store::open({.worker_config = {.explicit_count = 1}, .clock = clock});
-    GLYPHA_REQUIRE(opened.has_value());
+    auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1}, .clock = clock});
+    GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     HistoryRecorder recorder;
     const auto put_id = recorder.begin(OpKind::put_ttl, "ttl", "live", 100, 50);
@@ -252,27 +252,27 @@ GLYPHA_TEST("paired Store TTL put-get stays linearizable under fixed clock") {
     const auto get_id = recorder.begin(OpKind::get, "ttl", {}, 0, 50);
     const auto [outcome, value] = map_get_outcome(store.get("ttl"));
     recorder.complete(get_id, outcome, value);
-    GLYPHA_REQUIRE(outcome == OutcomeKind::ok_value);
-    GLYPHA_REQUIRE(store.close().has_value());
-    GLYPHA_REQUIRE(check_history(recorder.snapshot()).linearizable);
+    GLIFI_REQUIRE(outcome == OutcomeKind::ok_value);
+    GLIFI_REQUIRE(store.close().has_value());
+    GLIFI_REQUIRE(check_history(recorder.snapshot()).linearizable);
 }
 
-GLYPHA_TEST("paired Store close_drain_deadline_ms is honored when idle") {
-    auto opened = glyphastore::Store::open({
+GLIFI_TEST("paired Store close_drain_deadline_ms is honored when idle") {
+    auto opened = glifistore::Store::open({
         .worker_config = {.explicit_count = 1},
         .close_drain_deadline_ms = 5'000,
     });
-    GLYPHA_REQUIRE(opened.has_value());
+    GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
-    GLYPHA_REQUIRE(store.put("d", bytes("1")).has_value());
-    GLYPHA_REQUIRE(store.close().has_value());
+    GLIFI_REQUIRE(store.put("d", bytes("1")).has_value());
+    GLIFI_REQUIRE(store.close().has_value());
 }
 
-GLYPHA_TEST("paired Store close linearizes against late mutations") {
-    auto opened = glyphastore::Store::open({.worker_config = {.explicit_count = 1}});
-    GLYPHA_REQUIRE(opened.has_value());
+GLIFI_TEST("paired Store close linearizes against late mutations") {
+    auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1}});
+    GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
-    GLYPHA_REQUIRE(store.put("x", bytes("1")).has_value());
+    GLIFI_REQUIRE(store.put("x", bytes("1")).has_value());
     HistoryRecorder recorder;
     std::atomic_bool start{false};
     std::thread closer([&] {
@@ -292,5 +292,5 @@ GLYPHA_TEST("paired Store close linearizes against late mutations") {
     start.store(true, std::memory_order_release);
     closer.join();
     writer.join();
-    GLYPHA_REQUIRE(check_and_minimize(recorder.snapshot()).linearizable);
+    GLIFI_REQUIRE(check_and_minimize(recorder.snapshot()).linearizable);
 }

@@ -86,11 +86,11 @@ def expected_names(
     return tuple(
         sorted(
             (
-                f"GlyphaStore-{version}.tar.xz",
-                f"glyphastore-{version}-{target_os}-{architecture}.tar.xz",
-                f"glyphastore-abi-v{abi_major}-consumer-"
+                f"GlifiStore-{version}.tar.xz",
+                f"glifistore-{version}-{target_os}-{architecture}.tar.xz",
+                f"glifistore-abi-v{abi_major}-consumer-"
                 f"{version}-{target_os}-{architecture}.tar.xz",
-                f"glyphastore-wire-v{wire_version}-client-"
+                f"glifistore-wire-v{wire_version}-client-"
                 f"{version}-{target_os}-{architecture}.tar.xz",
             )
         )

@@ -19,8 +19,8 @@ class PersistenceFixtureTests(unittest.TestCase):
         self.root = Path(self.temporary.name)
         self.source = self.root / "source"
         self.source.mkdir()
-        (self.source / "manifest.glypha").write_bytes(b"manifest-v1")
-        (self.source / "segment-0123456789abcdef-00000001.glypha").write_bytes(b"segment-v1")
+        (self.source / "manifest.glifi").write_bytes(b"manifest-v1")
+        (self.source / "segment-0123456789abcdef-00000001.glifi").write_bytes(b"segment-v1")
         self.repository = self.root / "repository"
         self.repository.mkdir()
         subprocess.run(["git", "init", "-q", str(self.repository)], check=True)
@@ -28,7 +28,7 @@ class PersistenceFixtureTests(unittest.TestCase):
             ["git", "-C", str(self.repository), "config", "user.name", "Fixture Test"],
             check=True,
         )
-        self.producer_artifact = self.root / "glyphastore-release.tar.xz"
+        self.producer_artifact = self.root / "glifistore-release.tar.xz"
         self.producer_artifact.write_bytes(b"tagged release artifact")
         subprocess.run(
             ["git", "-C", str(self.repository), "config", "user.email", "fixture@example.invalid"],
@@ -122,8 +122,8 @@ class PersistenceFixtureTests(unittest.TestCase):
             set(recorded),
             {
                 "STORE-FIXTURE.json",
-                "store/manifest.glypha",
-                "store/segment-0123456789abcdef-00000001.glypha",
+                "store/manifest.glifi",
+                "store/segment-0123456789abcdef-00000001.glifi",
             },
         )
         for name, expected in recorded.items():
@@ -142,7 +142,7 @@ class PersistenceFixtureTests(unittest.TestCase):
         )
         self.assertIn("not older", result.stderr)
 
-        (fixture / "store/manifest.glypha").write_bytes(b"tampered")
+        (fixture / "store/manifest.glifi").write_bytes(b"tampered")
         result = self.run_tool(
             "validate",
             str(fixture),
@@ -165,7 +165,7 @@ class PersistenceFixtureTests(unittest.TestCase):
 
     def test_validation_rejects_symlink_members(self) -> None:
         fixture = self.create("0.1.0")
-        (fixture / "store/link").symlink_to("manifest.glypha")
+        (fixture / "store/link").symlink_to("manifest.glifi")
         result = self.run_tool(
             "validate",
             str(fixture),

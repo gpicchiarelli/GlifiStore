@@ -1,4 +1,4 @@
-#include "glyphastore/persistence/filesystem.hpp"
+#include "glifistore/persistence/filesystem.hpp"
 
 #include "filesystem_detail.hpp"
 #include "system_error.hpp"
@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 
 using persistence_detail::descriptor_stat;
 
@@ -151,4 +151,4 @@ auto FileDescriptor::sync(const FileSyncMode mode) const -> Status {
     return {};
 }
 
-} // namespace glyphastore
+} // namespace glifistore

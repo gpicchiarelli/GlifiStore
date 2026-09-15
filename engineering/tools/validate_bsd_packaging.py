@@ -41,13 +41,13 @@ def validate(root: Path, release: bool = False) -> None:
         "packaging/freebsd/Makefile",
         "packaging/freebsd/pkg-descr",
         "packaging/freebsd/pkg-plist",
-        "packaging/freebsd/files/glyphastored.in",
-        "packaging/freebsd/files/glyphastored.conf.sample",
+        "packaging/freebsd/files/glifistored.in",
+        "packaging/freebsd/files/glifistored.conf.sample",
         "packaging/openbsd/Makefile",
         "packaging/openbsd/pkg/DESCR",
         "packaging/openbsd/pkg/PLIST",
-        "packaging/openbsd/pkg/glyphastored.rc",
-        "packaging/openbsd/files/glyphastored.conf",
+        "packaging/openbsd/pkg/glifistored.rc",
+        "packaging/openbsd/files/glifistored.conf",
     ]
     missing = [name for name in required if not (root / name).is_file()]
     if missing:
@@ -55,8 +55,8 @@ def validate(root: Path, release: bool = False) -> None:
 
     freebsd_make = read(root / "packaging/freebsd/Makefile")
     freebsd_plist = read(root / "packaging/freebsd/pkg-plist")
-    freebsd_rc = read(root / "packaging/freebsd/files/glyphastored.in")
-    freebsd_config = read(root / "packaging/freebsd/files/glyphastored.conf.sample")
+    freebsd_rc = read(root / "packaging/freebsd/files/glifistored.in")
+    freebsd_config = read(root / "packaging/freebsd/files/glifistored.conf.sample")
     require(freebsd_make, rf"^DISTVERSION=\s*{re.escape(product)}\s*$", "FreeBSD product version")
     if "BSD 3-Clause License" not in license_text:
         raise PackagingError("repository LICENSE is not the expected BSD-3-Clause text")
@@ -65,46 +65,46 @@ def validate(root: Path, release: bool = False) -> None:
             "FreeBSD license authority")
     require(freebsd_make, r"^USES=.*\bcmake:testing\b.*\bssl\b", "FreeBSD system TLS/CMake policy")
     require(freebsd_make, r"^USE_LDCONFIG=\s*yes\s*$", "FreeBSD shared-library cache integration")
-    require(freebsd_make, r"^USE_RC_SUBR=\s*glyphastored\s*$", "FreeBSD rc.subr integration")
-    require(freebsd_make, r"^USERS=\s*glyphastore\s*$", "FreeBSD dedicated service user")
-    require(freebsd_plist, rf"^lib/libglyphastore\.so\.{abi_major}$", "FreeBSD ABI-major library")
-    require(freebsd_plist, rf"^lib/libglyphastore\.so\.{re.escape(abi)}$", "FreeBSD full ABI library")
-    require(freebsd_plist, r"^@sample etc/glyphastored\.conf\.sample$", "FreeBSD preserved config")
-    require(freebsd_plist, r"^share/GlyphaStore/examples/glyphastored\.conf\.sample$",
+    require(freebsd_make, r"^USE_RC_SUBR=\s*glifistored\s*$", "FreeBSD rc.subr integration")
+    require(freebsd_make, r"^USERS=\s*glifistore\s*$", "FreeBSD dedicated service user")
+    require(freebsd_plist, rf"^lib/libglifistore\.so\.{abi_major}$", "FreeBSD ABI-major library")
+    require(freebsd_plist, rf"^lib/libglifistore\.so\.{re.escape(abi)}$", "FreeBSD full ABI library")
+    require(freebsd_plist, r"^@sample etc/glifistored\.conf\.sample$", "FreeBSD preserved config")
+    require(freebsd_plist, r"^share/GlifiStore/examples/glifistored\.conf\.sample$",
             "FreeBSD portable runtime sample")
-    require(freebsd_plist, r"^@dir\(glyphastore,glyphastore,0750\) /var/db/glyphastore$",
+    require(freebsd_plist, r"^@dir\(glifistore,glifistore,0750\) /var/db/glifistore$",
             "FreeBSD owned data directory")
     require(freebsd_rc, r"^# KEYWORD: shutdown$", "FreeBSD shutdown ordering")
-    require(freebsd_rc, r"command_args=.*-p \$\{pidfile\}.*-u \$\{glyphastored_user\}",
+    require(freebsd_rc, r"command_args=.*-p \$\{pidfile\}.*-u \$\{glifistored_user\}",
             "FreeBSD daemon pid/user isolation")
-    require(freebsd_config, r"^data-dir=/var/db/glyphastore$", "FreeBSD native data path")
+    require(freebsd_config, r"^data-dir=/var/db/glifistore$", "FreeBSD native data path")
 
     openbsd_make = read(root / "packaging/openbsd/Makefile")
     openbsd_plist = read(root / "packaging/openbsd/pkg/PLIST")
-    openbsd_rc = read(root / "packaging/openbsd/pkg/glyphastored.rc")
-    openbsd_config = read(root / "packaging/openbsd/files/glyphastored.conf")
+    openbsd_rc = read(root / "packaging/openbsd/pkg/glifistored.rc")
+    openbsd_config = read(root / "packaging/openbsd/files/glifistored.conf")
     require(openbsd_make, rf"^V\s*=\s*{re.escape(product)}\s*$", "OpenBSD product version")
     require(openbsd_make, r"^PERMIT_PACKAGE\s*=\s*Yes\s*$", "OpenBSD package permission")
-    require(openbsd_make, rf"^SHARED_LIBS \+=\s*glyphastore {re.escape(abi)}\s*$",
+    require(openbsd_make, rf"^SHARED_LIBS \+=\s*glifistore {re.escape(abi)}\s*$",
             "OpenBSD ABI major/minor library")
     require(openbsd_make, r"^MODULES\s*=\s*devel/cmake\s*$", "OpenBSD native CMake module")
     require(openbsd_make, r"^WANTLIB \+=.*\bcrypto\b.*\bssl\b", "OpenBSD base LibreSSL dependency")
-    require(openbsd_plist, r"^@newuser _glyphastore:", "OpenBSD dedicated service user")
-    require(openbsd_plist, r"^@lib lib/libglyphastore\.so\.\$\{LIBglyphastore_VERSION\}$",
+    require(openbsd_plist, r"^@newuser _glifistore:", "OpenBSD dedicated service user")
+    require(openbsd_plist, r"^@lib lib/libglifistore\.so\.\$\{LIBglifistore_VERSION\}$",
             "OpenBSD ports-controlled shared library")
-    sample_file = openbsd_plist.find("share/examples/glyphastore/glyphastored.conf")
-    sample_directive = openbsd_plist.find("@sample ${SYSCONFDIR}/glyphastored.conf")
+    sample_file = openbsd_plist.find("share/examples/glifistore/glifistored.conf")
+    sample_directive = openbsd_plist.find("@sample ${SYSCONFDIR}/glifistored.conf")
     if sample_file < 0 or sample_directive <= sample_file:
         raise PackagingError("OpenBSD @sample must immediately follow the installed example")
-    require(openbsd_plist, r"^@rcscript \$\{RCDIR\}/glyphastored$", "OpenBSD rc.d packaging")
-    require(openbsd_plist, r"^share/GlyphaStore/examples/glyphastored\.conf\.sample$",
+    require(openbsd_plist, r"^@rcscript \$\{RCDIR\}/glifistored$", "OpenBSD rc.d packaging")
+    require(openbsd_plist, r"^share/GlifiStore/examples/glifistored\.conf\.sample$",
             "OpenBSD portable runtime sample")
-    require(openbsd_plist, r"^@sample /var/glyphastore/$", "OpenBSD preserved data directory")
-    require(openbsd_rc, r'^daemon="\$\{TRUEPREFIX\}/bin/glyphastored"$', "OpenBSD TRUEPREFIX daemon")
-    require(openbsd_rc, r'^daemon_user="_glyphastore"$', "OpenBSD daemon user")
+    require(openbsd_plist, r"^@sample /var/glifistore/$", "OpenBSD preserved data directory")
+    require(openbsd_rc, r'^daemon="\$\{TRUEPREFIX\}/bin/glifistored"$', "OpenBSD TRUEPREFIX daemon")
+    require(openbsd_rc, r'^daemon_user="_glifistore"$', "OpenBSD daemon user")
     require(openbsd_rc, r"^rc_bg=YES$", "OpenBSD background service policy")
     require(openbsd_rc, r"^\. /etc/rc\.d/rc\.subr$", "OpenBSD rc.subr integration")
-    require(openbsd_config, r"^data-dir=/var/glyphastore$", "OpenBSD native data path")
+    require(openbsd_config, r"^data-dir=/var/glifistore$", "OpenBSD native data path")
 
     combined = "\n".join((freebsd_make, openbsd_make))
     if re.search(r"bundled|vendored|FetchContent", combined, flags=re.IGNORECASE):

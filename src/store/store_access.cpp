@@ -1,14 +1,14 @@
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/core/types.hpp"
-#include "glyphastore/segment/record.hpp"
-#include "glyphastore/store/config.hpp"
-#include "glyphastore/store/paired/shard_pair_runtime.hpp"
-#include "glyphastore/store/prepared_read.hpp"
-#include "glyphastore/store/store.hpp"
-#include "glyphastore/store/value.hpp"
-#include "glyphastore/worker/topology.hpp"
-#include "glyphastore/worker/worker.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/core/types.hpp"
+#include "glifistore/segment/record.hpp"
+#include "glifistore/store/config.hpp"
+#include "glifistore/store/paired/shard_pair_runtime.hpp"
+#include "glifistore/store/prepared_read.hpp"
+#include "glifistore/store/store.hpp"
+#include "glifistore/store/value.hpp"
+#include "glifistore/worker/topology.hpp"
+#include "glifistore/worker/worker.hpp"
 #include "store/store_impl.hpp"
 #include "store/store_internal.hpp"
 
@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore {
+namespace glifistore {
 
 auto detail::StoreAccess::get_owned(Store& store, const std::size_t worker_index, const HashedKey& key,
                                     const std::uint64_t now_ns) -> Result<OwnedValue> {
@@ -384,7 +384,7 @@ auto detail::StoreAccess::mutate_durable_batch(Store& store, const std::size_t w
     try {
         // Litmus: allocation / pre-mutate throw must stay known-not-committed — never
         // escape to Writer catch with durable_mutate_entered already true.
-        if (glyphastore::fault::consume_fail(glyphastore::fault::Site::durable_batch_pre)) {
+        if (glifistore::fault::consume_fail(glifistore::fault::Site::durable_batch_pre)) {
             throw std::bad_alloc{};
         }
         results.reserve(mutations.size());
@@ -421,10 +421,10 @@ auto detail::StoreAccess::mutate_durable_batch(Store& store, const std::size_t w
         }
 
         for (const auto& mutation : mutations) {
-#if defined(GLYPHASTORE_FAULT_INJECTION)
+#if defined(GLIFISTORE_FAULT_INJECTION)
             // Litmus: arm the real emergency gate after the batch-entry check so
             // later siblings exercise the per-mutate re-check (mid-batch TOCTOU).
-            if (glyphastore::fault::consume_fail(glyphastore::fault::Site::durable_batch_gate)) {
+            if (glifistore::fault::consume_fail(glifistore::fault::Site::durable_batch_gate)) {
                 if (auto* controller = store.impl_->maintenance.get(); controller != nullptr) {
                     controller->publish_mutations_rejected(true);
                 }
@@ -666,4 +666,4 @@ auto detail::StoreAccess::concurrency(const Store& store) noexcept -> StoreConcu
     return store.impl_->concurrency;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

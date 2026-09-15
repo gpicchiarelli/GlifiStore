@@ -1,10 +1,10 @@
 # OpenBSD reference port
 
 This is upstream reference material for a future OpenBSD ports submission. It uses the native
-CMake module, base LibreSSL, kqueue, the existing pledge/unveil path, an `_glyphastore` account,
+CMake module, base LibreSSL, kqueue, the existing pledge/unveil path, an `_glifistore` account,
 `rc.subr`/`rcctl`, configuration samples, and OpenBSD major/minor shared-library notation.
 
-It is intentionally **not yet represented as a proven package**: the `_glyphastore` account details
+It is intentionally **not yet represented as a proven package**: the `_glifistore` account details
 must be reviewed with the ports project. Do **not** create
 `packaging/openbsd/PORTS_ACCOUNT_REGISTERED` until that upstream registration exists; the marker is
 a honesty latch for `validate_bsd_packaging.py --release` and the fail-closed OpenBSD package
@@ -19,7 +19,7 @@ marker above and an admitted sealed candidate they stay `BLOCKED`
 ([bsd-packaging.md](../../docs/distribution/bsd-packaging.md)).
 
 `package-upgrade` stays `NOT_APPLICABLE_INITIAL_BASELINE` or `NOT_RUN` until sealed N−1 packages
-are supplied via `GLYPHASTORE_N1_PACKAGE_DIR`. The native lifecycle then runs
+are supplied via `GLIFISTORE_N1_PACKAGE_DIR`. The native lifecycle then runs
 install→seed→upgrade→verify against those `.tgz` bytes (never rebuilt from HEAD).
 OpenBSD does not invent a PASS from selection alone.
 

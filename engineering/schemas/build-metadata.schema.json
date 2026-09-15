@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.dev/schemas/build-metadata-v1.json",
-  "title": "GlyphaStore build metadata",
+  "$id": "https://glifistore.dev/schemas/build-metadata-v1.json",
+  "title": "GlifiStore build metadata",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "product_version", "abi", "wire_version", "persistent_format_version", "source", "target", "toolchain", "build_options", "builder"],

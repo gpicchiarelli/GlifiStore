@@ -9,23 +9,23 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-USE_INSTALLED = os.environ.get("GLYPHASTORE_INTEROP_USE_INSTALLED") == "1"
+USE_INSTALLED = os.environ.get("GLIFISTORE_INTEROP_USE_INSTALLED") == "1"
 if not USE_INSTALLED:
     sys.path.insert(0, str(ROOT / "sdk" / "python" / "src"))
 
-import glyphastore  # noqa: E402
-from glyphastore import (  # noqa: E402
+import glifistore  # noqa: E402
+from glifistore import (  # noqa: E402
     Client,
     ClientConfig,
-    GlyphaError,
+    GlifiError,
     MutationOutcome,
     PipelineOpcode,
     PipelineRequest,
 )
 
 if USE_INSTALLED:
-    source_root = Path(os.environ["GLYPHASTORE_SOURCE_ROOT"]).resolve()
-    loaded_from = Path(glyphastore.__file__).resolve()
+    source_root = Path(os.environ["GLIFISTORE_SOURCE_ROOT"]).resolve()
+    loaded_from = Path(glifistore.__file__).resolve()
     if loaded_from.is_relative_to(source_root):
         raise RuntimeError(f"installed-artifact mode loaded Python SDK from source: {loaded_from}")
 
@@ -44,7 +44,7 @@ def to_hex(payload: bytes) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="GlyphaStore Python interop helper")
+    parser = argparse.ArgumentParser(description="GlifiStore Python interop helper")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, required=True)
     parser.add_argument(
@@ -115,7 +115,7 @@ def main() -> int:
         if args.command == "expect-not-found":
             try:
                 client.get(key)
-            except GlyphaError as error:
+            except GlifiError as error:
                 if error.category == "not_found" and error.retryability == "new_attempt":
                     return 0
                 print(f"unexpected GET error: {error.category}", file=sys.stderr)
@@ -125,7 +125,7 @@ def main() -> int:
         if args.command == "expect-permission-denied":
             try:
                 result = client.put(key, value, expire_at_ns=args.expire_at_ns)
-            except GlyphaError as error:
+            except GlifiError as error:
                 if error.category == "permission_denied":
                     return 0
                 print(f"unexpected PUT error: {error.category}", file=sys.stderr)
@@ -141,7 +141,7 @@ def main() -> int:
         if args.command == "expect-overloaded":
             try:
                 result = client.put(key, value, expire_at_ns=args.expire_at_ns)
-            except GlyphaError as error:
+            except GlifiError as error:
                 if error.category == "overloaded":
                     return 0
                 print(f"unexpected PUT error: {error.category}", file=sys.stderr)
@@ -160,7 +160,7 @@ def main() -> int:
                 burst_key = key if key else f"burst-{index}".encode()
                 try:
                     result = client.put(burst_key, value or b"x", expire_at_ns=args.expire_at_ns)
-                except GlyphaError as error:
+                except GlifiError as error:
                     if error.category == "overloaded":
                         return 0
                     print(f"unexpected PUT error: {error.category}", file=sys.stderr)

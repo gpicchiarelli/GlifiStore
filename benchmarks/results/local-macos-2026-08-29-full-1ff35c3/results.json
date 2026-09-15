@@ -58,7 +58,7 @@
     {
       "source": "copy-heavy.txt",
       "metadata": {
-        "benchmark": "glyphastore_durable_compaction",
+        "benchmark": "glifistore_durable_compaction",
         "git_sha": "1ff35c3",
         "storage_mode": "durable-periodic;seed_flush_before_measurement=true",
         "compaction_scope": "public Store::compact;one Worker;maintenance disabled",
@@ -69,7 +69,7 @@
     {
       "source": "high-reclaim.txt",
       "metadata": {
-        "benchmark": "glyphastore_durable_compaction",
+        "benchmark": "glifistore_durable_compaction",
         "git_sha": "1ff35c3",
         "storage_mode": "durable-periodic;seed_flush_before_measurement=true",
         "compaction_scope": "public Store::compact;one Worker;maintenance disabled",
@@ -80,7 +80,7 @@
     {
       "source": "low-reclaim.txt",
       "metadata": {
-        "benchmark": "glyphastore_durable_compaction",
+        "benchmark": "glifistore_durable_compaction",
         "git_sha": "1ff35c3",
         "storage_mode": "durable-periodic;seed_flush_before_measurement=true",
         "compaction_scope": "public Store::compact;one Worker;maintenance disabled",
@@ -91,7 +91,7 @@
     {
       "source": "medium-reclaim.txt",
       "metadata": {
-        "benchmark": "glyphastore_durable_compaction",
+        "benchmark": "glifistore_durable_compaction",
         "git_sha": "1ff35c3",
         "storage_mode": "durable-periodic;seed_flush_before_measurement=true",
         "compaction_scope": "public Store::compact;one Worker;maintenance disabled",
@@ -102,7 +102,7 @@
     {
       "source": "no-gain.txt",
       "metadata": {
-        "benchmark": "glyphastore_durable_compaction",
+        "benchmark": "glifistore_durable_compaction",
         "git_sha": "1ff35c3",
         "storage_mode": "durable-periodic;seed_flush_before_measurement=true",
         "compaction_scope": "public Store::compact;one Worker;maintenance disabled",
@@ -113,7 +113,7 @@
     {
       "source": "ttl-50.txt",
       "metadata": {
-        "benchmark": "glyphastore_durable_compaction",
+        "benchmark": "glifistore_durable_compaction",
         "git_sha": "1ff35c3",
         "storage_mode": "durable-periodic;seed_flush_before_measurement=true",
         "compaction_scope": "public Store::compact;one Worker;maintenance disabled",
@@ -11372,7 +11372,7 @@
     {
       "source": "churn-background.txt",
       "metadata": {
-        "benchmark": "glyphastore_concurrent_maintenance",
+        "benchmark": "glifistore_concurrent_maintenance",
         "git_sha": "1ff35c3",
         "scenario": "churn",
         "warmups": "0;measured_repeats=7;threads=4;operations=8192;keys=128;value_bytes=32768;reclaim_value_bytes=262144;put_percent=100;cooldown_ms=250",
@@ -11386,7 +11386,7 @@
     {
       "source": "churn-cooperative.txt",
       "metadata": {
-        "benchmark": "glyphastore_concurrent_maintenance",
+        "benchmark": "glifistore_concurrent_maintenance",
         "git_sha": "1ff35c3",
         "scenario": "churn",
         "warmups": "0;measured_repeats=7;threads=4;operations=8192;keys=128;value_bytes=32768;reclaim_value_bytes=262144;put_percent=100;cooldown_ms=250",
@@ -11400,7 +11400,7 @@
     {
       "source": "churn-disabled.txt",
       "metadata": {
-        "benchmark": "glyphastore_concurrent_maintenance",
+        "benchmark": "glifistore_concurrent_maintenance",
         "git_sha": "1ff35c3",
         "scenario": "churn",
         "warmups": "0;measured_repeats=7;threads=4;operations=8192;keys=128;value_bytes=32768;reclaim_value_bytes=262144;put_percent=100;cooldown_ms=250",
@@ -11414,7 +11414,7 @@
     {
       "source": "forced-rotation-background.txt",
       "metadata": {
-        "benchmark": "glyphastore_concurrent_maintenance",
+        "benchmark": "glifistore_concurrent_maintenance",
         "git_sha": "1ff35c3",
         "scenario": "forced-rotation",
         "warmups": "1;measured_repeats=7;threads=4;operations=15360;keys=128;value_bytes=65536;reclaim_value_bytes=262144;put_percent=5;cooldown_ms=250",
@@ -11428,7 +11428,7 @@
     {
       "source": "forced-rotation-cooperative.txt",
       "metadata": {
-        "benchmark": "glyphastore_concurrent_maintenance",
+        "benchmark": "glifistore_concurrent_maintenance",
         "git_sha": "1ff35c3",
         "scenario": "forced-rotation",
         "warmups": "1;measured_repeats=7;threads=4;operations=15360;keys=128;value_bytes=65536;reclaim_value_bytes=262144;put_percent=5;cooldown_ms=250",
@@ -11442,7 +11442,7 @@
     {
       "source": "forced-rotation-disabled.txt",
       "metadata": {
-        "benchmark": "glyphastore_concurrent_maintenance",
+        "benchmark": "glifistore_concurrent_maintenance",
         "git_sha": "1ff35c3",
         "scenario": "forced-rotation",
         "warmups": "1;measured_repeats=7;threads=4;operations=15360;keys=128;value_bytes=65536;reclaim_value_bytes=262144;put_percent=5;cooldown_ms=250",
@@ -11456,7 +11456,7 @@
     {
       "source": "idle-background.txt",
       "metadata": {
-        "benchmark": "glyphastore_concurrent_maintenance",
+        "benchmark": "glifistore_concurrent_maintenance",
         "git_sha": "1ff35c3",
         "scenario": "idle",
         "warmups": "0;measured_repeats=7;threads=4;operations=15360;keys=128;value_bytes=65536;reclaim_value_bytes=262144;put_percent=5;cooldown_ms=250",
@@ -11468,7 +11468,7 @@
     {
       "source": "idle-cooperative.txt",
       "metadata": {
-        "benchmark": "glyphastore_concurrent_maintenance",
+        "benchmark": "glifistore_concurrent_maintenance",
         "git_sha": "1ff35c3",
         "scenario": "idle",
         "warmups": "0;measured_repeats=7;threads=4;operations=15360;keys=128;value_bytes=65536;reclaim_value_bytes=262144;put_percent=5;cooldown_ms=250",
@@ -11480,7 +11480,7 @@
     {
       "source": "idle-disabled.txt",
       "metadata": {
-        "benchmark": "glyphastore_concurrent_maintenance",
+        "benchmark": "glifistore_concurrent_maintenance",
         "git_sha": "1ff35c3",
         "scenario": "idle",
         "warmups": "0;measured_repeats=7;threads=4;operations=15360;keys=128;value_bytes=65536;reclaim_value_bytes=262144;put_percent=5;cooldown_ms=250",
@@ -11492,7 +11492,7 @@
     {
       "source": "mixed-background.txt",
       "metadata": {
-        "benchmark": "glyphastore_concurrent_maintenance",
+        "benchmark": "glifistore_concurrent_maintenance",
         "git_sha": "1ff35c3",
         "scenario": "mixed",
         "warmups": "1;measured_repeats=7;threads=4;operations=15360;keys=128;value_bytes=65536;reclaim_value_bytes=262144;put_percent=5;cooldown_ms=250",
@@ -11506,7 +11506,7 @@
     {
       "source": "mixed-cooperative.txt",
       "metadata": {
-        "benchmark": "glyphastore_concurrent_maintenance",
+        "benchmark": "glifistore_concurrent_maintenance",
         "git_sha": "1ff35c3",
         "scenario": "mixed",
         "warmups": "1;measured_repeats=7;threads=4;operations=15360;keys=128;value_bytes=65536;reclaim_value_bytes=262144;put_percent=5;cooldown_ms=250",
@@ -11520,7 +11520,7 @@
     {
       "source": "mixed-disabled.txt",
       "metadata": {
-        "benchmark": "glyphastore_concurrent_maintenance",
+        "benchmark": "glifistore_concurrent_maintenance",
         "git_sha": "1ff35c3",
         "scenario": "mixed",
         "warmups": "1;measured_repeats=7;threads=4;operations=15360;keys=128;value_bytes=65536;reclaim_value_bytes=262144;put_percent=5;cooldown_ms=250",

@@ -1,6 +1,6 @@
-#include "glyphastore/client/client.hpp"
-#include "glyphastore/server/protocol.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/client/client.hpp"
+#include "glifistore/server/protocol.hpp"
+#include "glifistore/store/store.hpp"
 
 #include <arpa/inet.h>
 #include <cerrno>
@@ -142,14 +142,14 @@ void print_usage(const char* program) {
     return ntohs(endpoint.sin_port);
 }
 
-[[nodiscard]] auto storage_mode(const std::string& storage) -> glyphastore::StorageMode {
+[[nodiscard]] auto storage_mode(const std::string& storage) -> glifistore::StorageMode {
     if (storage == "durable-group") {
-        return glyphastore::StorageMode::durable_group;
+        return glifistore::StorageMode::durable_group;
     }
     if (storage == "durable-periodic") {
-        return glyphastore::StorageMode::durable_periodic;
+        return glifistore::StorageMode::durable_periodic;
     }
-    return glyphastore::StorageMode::durable_sync;
+    return glifistore::StorageMode::durable_sync;
 }
 
 class DaemonProcess final {
@@ -252,7 +252,7 @@ class DaemonProcess final {
 }
 
 [[nodiscard]] auto discard_response(const int socket) -> bool {
-    std::array<std::byte, glyphastore::server::kResponseHeaderBytes> header{};
+    std::array<std::byte, glifistore::server::kResponseHeaderBytes> header{};
     if (!receive_exact(socket, header)) {
         return false;
     }
@@ -269,15 +269,15 @@ class DaemonProcess final {
 }
 
 [[nodiscard]] auto initialize_wire_session(const int socket) -> bool {
-    const auto init = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::init,
+    const auto init = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::init,
         .request_id = 1,
     });
     if (!init || !send_all(socket, *init) || !discard_response(socket)) {
         return false;
     }
-    const auto bind = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::bind_worker,
+    const auto bind = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::bind_worker,
         .request_id = 2,
         .target_worker = 0,
     });
@@ -297,10 +297,10 @@ class DaemonProcess final {
 }
 
 [[nodiscard]] auto wait_for_client(const std::uint16_t port, const int timeout_ms = 10'000)
-    -> std::optional<glyphastore::client::Client> {
+    -> std::optional<glifistore::client::Client> {
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds{timeout_ms};
     while (std::chrono::steady_clock::now() < deadline) {
-        auto connected = glyphastore::client::Client::connect(
+        auto connected = glifistore::client::Client::connect(
             {.host = "127.0.0.1", .port = port, .connect_timeout_ms = 200, .request_timeout_ms = 2'000});
         if (connected) {
             return std::move(*connected);
@@ -316,12 +316,12 @@ class DaemonProcess final {
 
 [[nodiscard]] auto verify_store_key(const std::filesystem::path& data_dir, const std::string& storage,
                                     const bool expect_present) -> bool {
-    auto opened = glyphastore::Store::open({
+    auto opened = glifistore::Store::open({
         .worker_config = {.explicit_count = 1},
-        .concurrency = glyphastore::StoreConcurrencyMode::legacy_mutex,
+        .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
         .storage_mode = storage_mode(storage),
         .data_directory = data_dir,
-        .durable_open_mode = glyphastore::DurableOpenMode::open_existing,
+        .durable_open_mode = glifistore::DurableOpenMode::open_existing,
     });
     if (!opened) {
         std::cerr << "Store reopen failed: " << opened.error().message << '\n';
@@ -340,7 +340,7 @@ class DaemonProcess final {
     } else if (value) {
         std::cerr << "pre-commit mutation became visible after SIGKILL\n";
         return false;
-    } else if (value.error().code != glyphastore::ErrorCode::not_found) {
+    } else if (value.error().code != glifistore::ErrorCode::not_found) {
         std::cerr << "unexpected reopen error: " << value.error().message << '\n';
         return false;
     }
@@ -354,7 +354,7 @@ class DaemonProcess final {
 [[nodiscard]] auto verify_wire_get(const std::uint16_t port, const bool expect_present) -> bool {
     auto client = wait_for_client(port);
     if (!client) {
-        std::cerr << "timed out waiting for restarted glyphastored\n";
+        std::cerr << "timed out waiting for restarted glifistored\n";
         return false;
     }
     const auto get = client->get(kAckKey);
@@ -370,7 +370,7 @@ class DaemonProcess final {
     } else if (get) {
         std::cerr << "wire GET found key that should be absent\n";
         return false;
-    } else if (get.error().code != glyphastore::ErrorCode::not_found) {
+    } else if (get.error().code != glifistore::ErrorCode::not_found) {
         std::cerr << "wire GET returned unexpected error: " << get.error().message << '\n';
         return false;
     }
@@ -380,7 +380,7 @@ class DaemonProcess final {
 
 [[nodiscard]] auto run_checkpoint(const Options& options) -> bool {
     const auto root = std::filesystem::temp_directory_path() /
-                      ("glyphastore-crash-daemon-" + run_suffix() + "-" + options.storage + "-" +
+                      ("glifistore-crash-daemon-" + run_suffix() + "-" + options.storage + "-" +
                        std::string{checkpoint_name(options.checkpoint)});
     const auto data_dir = root / "store";
     std::error_code ignored;
@@ -402,7 +402,7 @@ class DaemonProcess final {
     if (options.checkpoint == Checkpoint::pre_commit) {
         const auto socket = wait_for_socket(daemon.port());
         if (socket < 0) {
-            std::cerr << "timed out waiting for glyphastored to accept connections\n";
+            std::cerr << "timed out waiting for glifistored to accept connections\n";
             return false;
         }
         if (!initialize_wire_session(socket)) {
@@ -410,8 +410,8 @@ class DaemonProcess final {
             static_cast<void>(::close(socket));
             return false;
         }
-        const auto put = glyphastore::server::encode_request({
-            .opcode = glyphastore::server::RequestOpcode::put,
+        const auto put = glifistore::server::encode_request({
+            .opcode = glifistore::server::RequestOpcode::put,
             .request_id = 3,
             .key = {reinterpret_cast<const std::byte*>(kAckKey.data()), kAckKey.size()},
             .value = {reinterpret_cast<const std::byte*>(kAckValue.data()), kAckValue.size()},
@@ -426,7 +426,7 @@ class DaemonProcess final {
     } else {
         auto client = wait_for_client(daemon.port());
         if (!client) {
-            std::cerr << "timed out waiting for glyphastored to accept connections\n";
+            std::cerr << "timed out waiting for glifistored to accept connections\n";
             return false;
         }
 
@@ -482,7 +482,7 @@ class DaemonProcess final {
 int main(int argc, char** argv) {
     auto options = parse_options(argc, argv);
     if (!options) {
-        print_usage(argc > 0 ? argv[0] : "glyphastore_crash_daemon");
+        print_usage(argc > 0 ? argv[0] : "glifistore_crash_daemon");
         return 2;
     }
     std::cout << "# crash-daemon storage=" << options->storage

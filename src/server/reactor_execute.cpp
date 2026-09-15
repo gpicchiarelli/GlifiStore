@@ -1,7 +1,7 @@
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/core/worker_routing.hpp"
-#include "glyphastore/server/reactor.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/core/worker_routing.hpp"
+#include "glifistore/server/reactor.hpp"
 #include "server/reactor_detail.hpp"
 #include "store/store_internal.hpp"
 #include "system_error.hpp"
@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 auto Reactor::execute_local(const ConnectionToken token, const RequestView& request,
                             const std::uint64_t key_hash, std::uint64_t& cached_now_ns) -> Status {
@@ -414,4 +414,4 @@ void Reactor::flush_deferred_mutation_payloads() noexcept {
     }
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

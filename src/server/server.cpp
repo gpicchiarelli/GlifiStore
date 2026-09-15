@@ -1,6 +1,6 @@
-#include "glyphastore/server/server.hpp"
+#include "glifistore/server/server.hpp"
 
-#include "glyphastore/core/fault_injection.hpp"
+#include "glifistore/core/fault_injection.hpp"
 #include "server/server_builder.hpp"
 #include "server/server_runtime.hpp"
 #include "server/server_stats.hpp"
@@ -12,7 +12,7 @@
 #include <string_view>
 #include <utility>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 [[nodiscard]] auto probe_server_live(const void* context) noexcept -> bool {
@@ -37,7 +37,7 @@ namespace {
 }
 
 [[nodiscard]] auto format_backup_ok_report(const DurableStoreBackupReport& report) -> std::string {
-    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::backup_report)) {
+    if (glifistore::fault::consume_fail(glifistore::fault::Site::backup_report)) {
         throw std::bad_alloc{};
     }
     const auto destination = report.destination.string();
@@ -278,4 +278,4 @@ auto Server::durable_batch_stats() const -> std::vector<DurableBatchWorkerStats>
     return detail::StoreAccess::batch_stats(*store_);
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

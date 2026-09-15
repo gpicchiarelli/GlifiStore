@@ -1,5 +1,5 @@
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/store/store.hpp"
 #include "test.hpp"
 
 #include <atomic>
@@ -16,17 +16,17 @@ auto bytes(std::string_view value) -> std::span<const std::byte> {
     return {reinterpret_cast<const std::byte*>(value.data()), value.size()};
 }
 
-auto value_string(const glyphastore::OwnedValue& value) -> std::string_view {
+auto value_string(const glifistore::OwnedValue& value) -> std::string_view {
     return {reinterpret_cast<const char*>(value.bytes.data()), value.bytes.size()};
 }
 } // namespace
 
-GLYPHA_TEST("concurrent store puts on distinct routed keys preserve all values") {
+GLIFI_TEST("concurrent store puts on distinct routed keys preserve all values") {
     constexpr std::size_t worker_total = 8;
     constexpr std::size_t keys_per_thread = 250;
-    auto opened = glyphastore::Store::open({.worker_config = {.explicit_count = worker_total},
-                                            .concurrency = glyphastore::StoreConcurrencyMode::legacy_mutex});
-    GLYPHA_REQUIRE(opened.has_value());
+    auto opened = glifistore::Store::open({.worker_config = {.explicit_count = worker_total},
+                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
+    GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
 
     std::atomic<bool> failed{false};
@@ -48,24 +48,24 @@ GLYPHA_TEST("concurrent store puts on distinct routed keys preserve all values")
     for (auto& thread : threads) {
         thread.join();
     }
-    GLYPHA_REQUIRE(!failed.load());
+    GLIFI_REQUIRE(!failed.load());
 
     for (std::size_t thread_id = 0; thread_id < 8; ++thread_id) {
         for (std::size_t offset = 0; offset < keys_per_thread; ++offset) {
             const auto key = "concurrent-key-" + std::to_string(thread_id * keys_per_thread + offset);
             const auto expected = "value-" + std::to_string(offset);
             const auto record = store.get(key);
-            GLYPHA_REQUIRE(record.has_value());
-            GLYPHA_REQUIRE(value_string(*record) == expected);
+            GLIFI_REQUIRE(record.has_value());
+            GLIFI_REQUIRE(value_string(*record) == expected);
         }
     }
-    GLYPHA_REQUIRE(store.verify_index().has_value());
+    GLIFI_REQUIRE(store.verify_index().has_value());
 }
 
-GLYPHA_TEST("concurrent store read after write on one key serializes updates") {
-    auto opened = glyphastore::Store::open({.worker_config = {.explicit_count = 4},
-                                            .concurrency = glyphastore::StoreConcurrencyMode::legacy_mutex});
-    GLYPHA_REQUIRE(opened.has_value());
+GLIFI_TEST("concurrent store read after write on one key serializes updates") {
+    auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 4},
+                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
+    GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     constexpr std::size_t thread_total = 8;
     constexpr std::size_t iterations = 500;
@@ -106,15 +106,15 @@ GLYPHA_TEST("concurrent store read after write on one key serializes updates") {
     for (auto& thread : threads) {
         thread.join();
     }
-    GLYPHA_REQUIRE(!failed.load());
-    GLYPHA_REQUIRE(observed_max.load() == iterations - 1);
-    GLYPHA_REQUIRE(store.verify_index().has_value());
+    GLIFI_REQUIRE(!failed.load());
+    GLIFI_REQUIRE(observed_max.load() == iterations - 1);
+    GLIFI_REQUIRE(store.verify_index().has_value());
 }
 
-GLYPHA_TEST("concurrent store verify index succeeds under mixed traffic") {
-    auto opened = glyphastore::Store::open({.worker_config = {.explicit_count = 4},
-                                            .concurrency = glyphastore::StoreConcurrencyMode::legacy_mutex});
-    GLYPHA_REQUIRE(opened.has_value());
+GLIFI_TEST("concurrent store verify index succeeds under mixed traffic") {
+    auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 4},
+                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
+    GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     std::atomic<bool> verify_failed{false};
     std::atomic<bool> traffic_failed{false};
@@ -158,7 +158,7 @@ GLYPHA_TEST("concurrent store verify index succeeds under mixed traffic") {
     }
     verifier.join();
 
-    GLYPHA_REQUIRE(!traffic_failed.load());
-    GLYPHA_REQUIRE(!verify_failed.load());
-    GLYPHA_REQUIRE(store.verify_index().has_value());
+    GLIFI_REQUIRE(!traffic_failed.load());
+    GLIFI_REQUIRE(!verify_failed.load());
+    GLIFI_REQUIRE(store.verify_index().has_value());
 }

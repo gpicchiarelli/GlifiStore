@@ -1,11 +1,11 @@
-/* Embedded C ABI smoke test for an installed GlyphaStore package.
+/* Embedded C ABI smoke test for an installed GlifiStore package.
  *
  * Opens a Store with the ABI defaults through the installed C ABI, writes and
  * reads back one record, then closes it. Linked through the installed
- * pkg-config file, so a wrong prefix in glyphastore-abi.pc fails here rather
+ * pkg-config file, so a wrong prefix in glifistore-abi.pc fails here rather
  * than silently falling back to a source-tree path.
  */
-#include <glyphastore/abi/glyphastore.h>
+#include <glifistore/abi/glifistore.h>
 
 #include <stdio.h>
 #include <string.h>

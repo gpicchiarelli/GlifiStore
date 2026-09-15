@@ -1,4 +1,4 @@
-# GlyphaStore Benchmark Standard
+# GlifiStore Benchmark Standard
 
 Status: normative measurement methodology
 Applies to: performance claims and regression reports

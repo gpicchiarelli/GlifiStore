@@ -53,11 +53,11 @@ Depth is opt-in, and by design:
 | Environment | Effect |
 | --- | --- |
 | default | structural rows only: release context, matrix, rendered packaging metadata, reference-port and account-marker reads |
-| `GLYPHASTORE_PACKAGE_CI_CONTAINER=1` | `deb`/`rpm` build, install, service and removal inside the digest-pinned container |
-| `GLYPHASTORE_PACKAGE_CI_NATIVE=1` | the same rows on a disposable root host; on macOS, the MacPorts/Homebrew native lifecycle |
+| `GLIFISTORE_PACKAGE_CI_CONTAINER=1` | `deb`/`rpm` build, install, service and removal inside the digest-pinned container |
+| `GLIFISTORE_PACKAGE_CI_NATIVE=1` | the same rows on a disposable root host; on macOS, the MacPorts/Homebrew native lifecycle |
 | `--candidate DIR` | admit a sealed release-candidate directory; the native lifecycles refuse to build without it |
 
-`GLYPHASTORE_PACKAGE_CI_NATIVE=1` installs into the host package manager and creates system
+`GLIFISTORE_PACKAGE_CI_NATIVE=1` installs into the host package manager and creates system
 accounts and services. Use a disposable machine or VM; never a workstation.
 
 The FreeBSD and OpenBSD native lifecycles additionally require a native host, root, a complete
@@ -196,35 +196,35 @@ never as “current version minus one”:
 | --- | --- |
 | No annotated predecessor | `NOT_APPLICABLE_INITIAL_BASELINE` |
 | Predecessor selected, no sealed packages | `NOT_RUN` |
-| Predecessor selected and `GLYPHASTORE_N1_PACKAGE_DIR` set | Linux deb/rpm, FreeBSD/OpenBSD, and MacPorts/Homebrew run install→seed→upgrade→verify inside the native/container lifecycle |
-| Invalid `GLYPHASTORE_N1_PACKAGE_DIR` | `FAIL` (never rebuild from HEAD) |
+| Predecessor selected and `GLIFISTORE_N1_PACKAGE_DIR` set | Linux deb/rpm, FreeBSD/OpenBSD, and MacPorts/Homebrew run install→seed→upgrade→verify inside the native/container lifecycle |
+| Invalid `GLIFISTORE_N1_PACKAGE_DIR` | `FAIL` (never rebuild from HEAD) |
 
 Mount the sealed predecessor packages into package CI (also forwarded into the Linux packaging
 container as `/n1-packages`):
 
 ```bash
-export GLYPHASTORE_N1_PACKAGE_DIR=/path/to/sealed-n1-debs-or-rpms
-GLYPHASTORE_PACKAGE_CI_CONTAINER=1 scripts/package-ci.sh --profile nightly --backend deb
+export GLIFISTORE_N1_PACKAGE_DIR=/path/to/sealed-n1-debs-or-rpms
+GLIFISTORE_PACKAGE_CI_CONTAINER=1 scripts/package-ci.sh --profile nightly --backend deb
 ```
 
 ## What this pipeline does not prove
 
 - The `deb`/`rpm` container lifecycle has retained nightly evidence at `LIFECYCLE_VERIFIED`
   with `service-lifecycle` PASS
-  ([run 34662210614](https://github.com/gpicchiarelli/GlyphaStore/actions/runs/34662210614));
+  ([run 34662210614](https://github.com/gpicchiarelli/GlifiStore/actions/runs/34662210614));
   overall result stays `NOT_RUN` without a sealed candidate. See
   [wave5-l7-residuals.md](wave5-l7-residuals.md).
 - MacPorts declares an unprivileged launchd startup item; Homebrew declares `brew services`.
   Both are exercised when native packaging CI is enabled; without a retained native run they
   stay `OPEN_GATE` for `service-lifecycle`.
 - `package-upgrade` is `NOT_APPLICABLE_INITIAL_BASELINE` until a predecessor exists, then
-  `NOT_RUN` until sealed N−1 packages are supplied via `GLYPHASTORE_N1_PACKAGE_DIR` (never
+  `NOT_RUN` until sealed N−1 packages are supplied via `GLIFISTORE_N1_PACKAGE_DIR` (never
   rebuilt from HEAD). Linux deb/rpm, FreeBSD/OpenBSD, and MacPorts/Homebrew run
   install→seed→upgrade→verify when that directory is available inside the native/container
   lifecycle.
 - The cross-SDK post-install matrix against a package-installed daemon has retained nightly
   PASS evidence
-  ([run 34666166603](https://github.com/gpicchiarelli/GlyphaStore/actions/runs/34666166603));
+  ([run 34666166603](https://github.com/gpicchiarelli/GlifiStore/actions/runs/34666166603));
   Wave F `admitted: true` still waits on sealed N−1 `package-upgrade`.
 - In-repo packaging is the project's own pipeline. It is not a Debian, Fedora, MacPorts, Homebrew,
   FreeBSD or OpenBSD acceptance, and nothing here may be described as one.

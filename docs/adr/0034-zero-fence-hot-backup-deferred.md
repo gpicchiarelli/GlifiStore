@@ -13,9 +13,9 @@
 
 ## Context
 
-GlyphaStore already supports:
+GlifiStore already supports:
 
-1. **Offline** verified catalog copy (`glyphastore_backup_store`) with exclusive data-dir lock.
+1. **Offline** verified catalog copy (`glifistore_backup_store`) with exclusive data-dir lock.
 2. **Online fenced** copy (`Store::backup_to` / wire `BACKUP`): fence new admissions, drain
    in-flight work, flush, copy under catalog lock, resume. Concurrent public ops may observe
    `unavailable` during the fence.
@@ -38,10 +38,10 @@ defers implementation past 0.1.x.
 ## Alternatives considered
 
 1. **Ship “copy while open” without fencing as 0.1.x.** Rejected: no consistency proof.
-2. **Filesystem freeze / LVM / ZFS / APFS snapshot orchestration inside GlyphaStore.** Deferred as
+2. **Filesystem freeze / LVM / ZFS / APFS snapshot orchestration inside GlifiStore.** Deferred as
    an optional operator integration: valuable, but platform-specific and outside the durable
    catalog contract; may be recommended as an *external* zero-downtime approach without claiming a
-   GlyphaStore API.
+   GlifiStore API.
 3. **Extend the fenced path only (shorter fence, copy parallelism).** Accepted as incremental
    improvement to the **existing** online path; does **not** satisfy zero-fence claims.
    Status: online `Store::backup_to` resumes admissions after catalog copy and runs destination
@@ -102,7 +102,7 @@ A release that claims zero-fence hot backup **must** specify and prove all of th
 
 For zero-downtime needs before an in-process design lands: take a **volume/filesystem snapshot**
 of a quiescent or crash-consistent volume, then run offline verify/copy from the snapshot clone.
-That is an operator procedure, not a GlyphaStore catalog feature, and must be labeled as such.
+That is an operator procedure, not a GlifiStore catalog feature, and must be labeled as such.
 
 ## Consequences
 

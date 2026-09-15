@@ -53,7 +53,7 @@ install_go_toolchain() {
     arm64) expect_sha="3450b45a3f9ee8568792736a5c5e70a1f2e9b36c35a8f74958c03e51d7d92bec" ;;
   esac
   local work
-  work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-go-boot.XXXXXX")"
+  work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-go-boot.XXXXXX")"
   # shellcheck disable=SC2064
   trap "rm -rf '$work'" RETURN
   log "installing Go ${version} from ${url}"
@@ -93,7 +93,7 @@ install_ruby_toolchain() {
     local archive="mise-v${version}-linux-${mise_arch}.tar.gz"
     local url="https://github.com/jdx/mise/releases/download/v${version}/${archive}"
     local work
-    work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-mise-boot.XXXXXX")"
+    work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-mise-boot.XXXXXX")"
     log "installing mise ${version} from ${url}"
     curl -fsSL "$url" -o "$work/$archive"
     echo "${expect_sha}  $work/$archive" | sha256sum -c -

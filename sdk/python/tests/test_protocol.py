@@ -6,11 +6,11 @@ from pathlib import Path
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 try:
-    import glyphastore  # noqa: F401
+    import glifistore  # noqa: F401
 except ImportError:
     sys.path.insert(0, str(PACKAGE_ROOT / "src"))
 
-from glyphastore.protocol import (  # noqa: E402
+from glifistore.protocol import (  # noqa: E402
     REQUEST_HEADER_BYTES,
     RESPONSE_HEADER_BYTES,
     ROUTING_ALG_SIPHASH24_V1,
@@ -79,7 +79,7 @@ class ProtocolTests(unittest.TestCase):
             encode_request(Opcode.HEALTH, 7),
             encode_request(Opcode.READY, 8),
             encode_request(Opcode.STATS, 9),
-            encode_request(Opcode.BACKUP, 10, key=b"/tmp/glyphastore-backup"),
+            encode_request(Opcode.BACKUP, 10, key=b"/tmp/glifistore-backup"),
         ]
         self.assertEqual(encoded, expected)
 
@@ -105,7 +105,7 @@ class ProtocolTests(unittest.TestCase):
     def test_response_decoder_matches_every_canonical_fixture(self) -> None:
         decoded = [decode_response(frame) for frame in frames(fixture("wire_responses_v2.hex"))]
         self.assertEqual([response.status for response in decoded], list(Status))
-        self.assertEqual(decoded[0].value, b"GlyphaStore/2")
+        self.assertEqual(decoded[0].value, b"GlifiStore/2")
         self.assertEqual(decoded[6].owner_worker, 2)
         self.assertTrue(all(response.worker_count == 4 for response in decoded))
 
@@ -158,7 +158,7 @@ class ProtocolTests(unittest.TestCase):
         self.assertNotEqual(digest, hash_key_routing(b"tenant-a/orders/1"))
 
         plain = encode_init_identity()
-        self.assertEqual(plain, b"GlyphaStore/2")
+        self.assertEqual(plain, b"GlifiStore/2")
         self.assertEqual(decode_init_identity(plain), WorkerRouting())
 
         extended = encode_init_identity(
@@ -170,9 +170,9 @@ class ProtocolTests(unittest.TestCase):
             WorkerRouting(algorithm=ROUTING_ALG_SIPHASH24_V1, seed=0xABCD_EF01_2345_6789),
         )
         with self.assertRaises(ValueError):
-            decode_init_identity(b"GlyphaStore/2\x00bad")
+            decode_init_identity(b"GlifiStore/2\x00bad")
         with self.assertRaises(ValueError):
-            decode_init_identity(b"GlyphaStore/3")
+            decode_init_identity(b"GlifiStore/3")
 
     def test_u64_fields_reject_out_of_range_values(self) -> None:
         with self.assertRaises(ValueError):

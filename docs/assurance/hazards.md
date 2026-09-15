@@ -2,7 +2,7 @@
 
 # Hazard register
 
-Generated from `engineering/hazards/`. GlyphaStore is an architectural prototype;
+Generated from `engineering/hazards/`. GlifiStore is an architectural prototype;
 accepted residual risks do not imply production readiness.
 
 | ID | Event | Severity | Probability | Detectability | State | Requirements |

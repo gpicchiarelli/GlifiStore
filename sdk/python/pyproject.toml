@@ -3,9 +3,9 @@ requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "glyphastore"
+name = "glifistore"
 dynamic = ["version"]
-description = "Native Python client for GlyphaStore wire protocol v2"
+description = "Native Python client for GlifiStore wire protocol v2"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "BSD-3-Clause"
@@ -13,7 +13,7 @@ license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]
 authors = [{ name = "Giacomo Picchiarelli" }]
 maintainers = [{ name = "Giacomo Picchiarelli" }]
 keywords = [
-  "glyphastore",
+  "glifistore",
   "cache",
   "key-value",
   "tcp",
@@ -41,7 +41,7 @@ classifiers = [
 dependencies = []
 
 [tool.setuptools.dynamic]
-version = { attr = "glyphastore.__version__" }
+version = { attr = "glifistore.__version__" }
 
 [project.optional-dependencies]
 dev = [
@@ -50,19 +50,19 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/gpicchiarelli/GlyphaStore"
-Documentation = "https://github.com/gpicchiarelli/GlyphaStore/blob/main/sdk/python/README.md"
-Repository = "https://github.com/gpicchiarelli/GlyphaStore"
-Issues = "https://github.com/gpicchiarelli/GlyphaStore/issues"
-Changelog = "https://github.com/gpicchiarelli/GlyphaStore/blob/main/sdk/python/CHANGELOG.md"
-"Wire protocol" = "https://github.com/gpicchiarelli/GlyphaStore/blob/main/docs/spec/wire-protocol-v2.md"
+Homepage = "https://github.com/gpicchiarelli/GlifiStore"
+Documentation = "https://github.com/gpicchiarelli/GlifiStore/blob/main/sdk/python/README.md"
+Repository = "https://github.com/gpicchiarelli/GlifiStore"
+Issues = "https://github.com/gpicchiarelli/GlifiStore/issues"
+Changelog = "https://github.com/gpicchiarelli/GlifiStore/blob/main/sdk/python/CHANGELOG.md"
+"Wire protocol" = "https://github.com/gpicchiarelli/GlifiStore/blob/main/docs/spec/wire-protocol-v2.md"
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["glyphastore*"]
+include = ["glifistore*"]
 
 [tool.setuptools.package-data]
-glyphastore = ["py.typed"]
+glifistore = ["py.typed"]

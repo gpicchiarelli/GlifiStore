@@ -1,7 +1,7 @@
-#include "glyphastore/core/worker_routing.hpp"
+#include "glifistore/core/worker_routing.hpp"
 
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/core/little_endian.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/core/little_endian.hpp"
 
 #include <atomic>
 #include <cstring>
@@ -14,7 +14,7 @@
 #include <unistd.h>
 #endif
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 std::atomic<std::uint32_t> g_worker_routing_algorithm{
@@ -187,4 +187,4 @@ auto decode_init_identity_value(const std::span<const std::byte> value) -> Resul
     return state;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

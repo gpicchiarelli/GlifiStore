@@ -25,13 +25,13 @@ container. It refuses a template containing a literal product version, an unknow
 
 | Package | Contents |
 | --- | --- |
-| `glyphastore` | daemon, operator tools, systemd unit, `/etc/glyphastore/glyphastored.conf` |
-| `libglyphastore1` | `libglyphastore.so.<abi-major>` — the ABI-major soname, so two ABI generations can coexist |
-| `glyphastore-dev` | headers, static libraries, the `.so` link, pkg-config and CMake package files |
+| `glifistore` | daemon, operator tools, systemd unit, `/etc/glifistore/glifistored.conf` |
+| `libglifistore1` | `libglifistore.so.<abi-major>` — the ABI-major soname, so two ABI generations can coexist |
+| `glifistore-dev` | headers, static libraries, the `.so` link, pkg-config and CMake package files |
 
 The library package is **not** `Multi-Arch: same` and installs into `/usr/lib`
 rather than `/usr/lib/<triplet>`. That is not laziness: the installed
-`glyphastore-abi.pc` derives its prefix as `${pcfiledir}/../..`, which only resolves
+`glifistore-abi.pc` derives its prefix as `${pcfiledir}/../..`, which only resolves
 correctly from a non-multiarch libdir. Making the package multiarch-co-installable
 requires changing how that prefix is computed, which is a separate change with its
 own compatibility argument.
@@ -43,12 +43,12 @@ own compatibility argument.
 scripts/package-ci.sh --profile pr --backend deb --output-dir build/package-ci
 
 # Full lifecycle inside the digest-pinned image from the package matrix.
-GLYPHASTORE_PACKAGE_CI_CONTAINER=1 \
+GLIFISTORE_PACKAGE_CI_CONTAINER=1 \
     scripts/package-ci.sh --profile pr --backend deb --output-dir build/package-ci
 
 # Full lifecycle on this host. Installs and removes system packages; needs root
 # and a machine you are willing to lose.
-sudo GLYPHASTORE_PACKAGE_CI_NATIVE=1 \
+sudo GLIFISTORE_PACKAGE_CI_NATIVE=1 \
     scripts/package-ci.sh --profile pr --backend deb --output-dir build/package-ci
 ```
 
@@ -71,12 +71,12 @@ then runs
 over its `compile_commands.json`, logs and the installed `.pc`/`.cmake` files — so a
 consumer that quietly found headers in `GITHUB_WORKSPACE` fails instead of passing.
 `put-get-erase` and `restart-recovery` speak wire protocol v2 to the **installed**
-`glyphastored`, not to a build-tree binary.
+`glifistored`, not to a build-tree binary.
 
 ## Residual
 
 `package-upgrade` stays `NOT_APPLICABLE_INITIAL_BASELINE` or `NOT_RUN` until sealed N−1
-packages are supplied via `GLYPHASTORE_N1_PACKAGE_DIR`. The container lifecycle then runs
+packages are supplied via `GLIFISTORE_N1_PACKAGE_DIR`. The container lifecycle then runs
 install→seed→upgrade→verify against those `.deb` bytes (never rebuilt from HEAD). It is not
 a pass, and it does not promote the backend to `UPGRADE_VERIFIED`. Upstream Debian acceptance
 is not claimed and not in scope here.

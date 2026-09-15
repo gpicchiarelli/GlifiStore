@@ -73,7 +73,7 @@ Paired volatile `Store::get` / `get_copy` for values ≤ `OwnedBytes::kInlineByt
 
 - `ReadLease` adopts a raw generation pointer (no `shared_ptr` control block on the hot path).
 - Value materialization uses SSO; `OwnedValue::from_bytes` does not heap for ≤64 B.
-- Proof: `glyphastore_allocation_fault_tests` `run_paired_volatile_get_inline_zero_heap`
+- Proof: `glifistore_allocation_fault_tests` `run_paired_volatile_get_inline_zero_heap`
   (evidence class **local** / CI when the suite runs). Durable cold GET and >64 B copies may allocate.
 
 ## 7. Reuse and residual gaps

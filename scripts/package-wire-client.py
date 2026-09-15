@@ -38,7 +38,7 @@ def add_bytes(archive: tarfile.TarFile, name: str, payload: bytes, epoch: int, m
 
 
 def read_wire_version(root: Path) -> int:
-    header = (root / "include/glyphastore/server/protocol.hpp").read_text(encoding="utf-8")
+    header = (root / "include/glifistore/server/protocol.hpp").read_text(encoding="utf-8")
     match = re.search(r"\bkProtocolVersion\s*=\s*([0-9]+)\s*;", header)
     if match is None:
         raise ReleaseIdentityError("wire protocol version authority is missing")
@@ -66,7 +66,7 @@ def package(
         if not value or not value.replace("-", "").replace("_", "").isalnum():
             raise ReleaseIdentityError(f"{name} must be a simple identifier")
     basename = (
-        f"glyphastore-wire-v{wire_version}-client-"
+        f"glifistore-wire-v{wire_version}-client-"
         f"{identity.product_version}-{safe_os}-{safe_arch}"
     )
     output_directory.mkdir(parents=True, exist_ok=True)
@@ -88,7 +88,7 @@ def package(
         archive.addfile(info(f"{basename}/", identity.source_date_epoch, 0o755, tarfile.DIRTYPE))
         add_bytes(
             archive,
-            f"{basename}/glyphastore-wire-v{wire_version}-client",
+            f"{basename}/glifistore-wire-v{wire_version}-client",
             binary,
             identity.source_date_epoch,
             0o755,

@@ -1,21 +1,21 @@
-#include "glyphastore/store/paired/completion_policy.hpp"
-#include "glyphastore/store/paired/lane_state.hpp"
-#include "glyphastore/store/paired/mutation_state.hpp"
+#include "glifistore/store/paired/completion_policy.hpp"
+#include "glifistore/store/paired/lane_state.hpp"
+#include "glifistore/store/paired/mutation_state.hpp"
 #include "test.hpp"
 
 #include <array>
 
-using glyphastore::store::paired::CommitKnowledge;
-using glyphastore::store::paired::CompletionDecision;
-using glyphastore::store::paired::decide_completion;
-using glyphastore::store::paired::DurableDecision;
-using glyphastore::store::paired::MutationLifecycle;
-using glyphastore::store::paired::MutationStage;
-using glyphastore::store::paired::PublicationDecision;
-using glyphastore::store::paired::PublicationState;
-using glyphastore::store::paired::wire_error_code_for;
+using glifistore::store::paired::CommitKnowledge;
+using glifistore::store::paired::CompletionDecision;
+using glifistore::store::paired::decide_completion;
+using glifistore::store::paired::DurableDecision;
+using glifistore::store::paired::MutationLifecycle;
+using glifistore::store::paired::MutationStage;
+using glifistore::store::paired::PublicationDecision;
+using glifistore::store::paired::PublicationState;
+using glifistore::store::paired::wire_error_code_for;
 
-GLYPHA_TEST("property OVERLOADED wire code iff known_not_committed completion") {
+GLIFI_TEST("property OVERLOADED wire code iff known_not_committed completion") {
     const std::array knowledge{
         CommitKnowledge::known_not_committed,
         CommitKnowledge::committed,
@@ -35,31 +35,31 @@ GLYPHA_TEST("property OVERLOADED wire code iff known_not_committed completion") 
             }
             const auto code = wire_error_code_for(decided.kind);
             if (decided.kind == CompletionDecision::Kind::known_not_committed) {
-                GLYPHA_REQUIRE(code == glyphastore::ErrorCode::resource_exhausted);
+                GLIFI_REQUIRE(code == glifistore::ErrorCode::resource_exhausted);
             } else if (decided.kind == CompletionDecision::Kind::indeterminate) {
-                GLYPHA_REQUIRE(code == glyphastore::ErrorCode::unavailable);
+                GLIFI_REQUIRE(code == glifistore::ErrorCode::unavailable);
             } else if (decided.kind == CompletionDecision::Kind::success) {
                 // success must not be routed through wire_error_code_for by callers;
                 // the helper returns internal_error as a guard rail.
-                GLYPHA_REQUIRE(code == glyphastore::ErrorCode::internal_error);
+                GLIFI_REQUIRE(code == glifistore::ErrorCode::internal_error);
             }
         }
     }
 }
 
-GLYPHA_TEST("property decided completion cannot change outcome") {
+GLIFI_TEST("property decided completion cannot change outcome") {
     MutationLifecycle life;
-    GLYPHA_REQUIRE(life.admit());
-    GLYPHA_REQUIRE(life.expire_pre_store());
-    GLYPHA_REQUIRE(life.stage() == MutationStage::completion_decided);
+    GLIFI_REQUIRE(life.admit());
+    GLIFI_REQUIRE(life.expire_pre_store());
+    GLIFI_REQUIRE(life.stage() == MutationStage::completion_decided);
     CompletionDecision again{.kind = CompletionDecision::Kind::success};
-    GLYPHA_REQUIRE(!life.decide(again));
-    GLYPHA_REQUIRE(life.stage() == MutationStage::completion_decided);
+    GLIFI_REQUIRE(!life.decide(again));
+    GLIFI_REQUIRE(life.stage() == MutationStage::completion_decided);
 }
 
-GLYPHA_TEST("lane_state aggregates keep cache-line alignment contracts") {
-    static_assert(alignof(glyphastore::store::paired::AsyncLaneState) >= 128);
-    static_assert(alignof(glyphastore::store::paired::GenerationState) >= 128);
-    static_assert(alignof(glyphastore::store::paired::SyncLaneState) >= 128);
-    static_assert(alignof(glyphastore::store::paired::ReclamationState) >= 128);
+GLIFI_TEST("lane_state aggregates keep cache-line alignment contracts") {
+    static_assert(alignof(glifistore::store::paired::AsyncLaneState) >= 128);
+    static_assert(alignof(glifistore::store::paired::GenerationState) >= 128);
+    static_assert(alignof(glifistore::store::paired::SyncLaneState) >= 128);
+    static_assert(alignof(glifistore::store::paired::ReclamationState) >= 128);
 }

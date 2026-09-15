@@ -79,7 +79,7 @@ base per tutto il run e ha misurato 182.632 PUT/s medi; non va confuso con la ce
 
 ## Verifica
 
-- `glyphastore_tests`: 629/629.
+- `glifistore_tests`: 629/629.
 - CTest `macos-native-release`: 53/53, inclusi crash-sync e allocation fault campaign.
 - ASan+UBSan: censimento arena/COW e quattro test paired concorrenti verdi.
 - TSan: FIFO combiner, GET/PUT linearizzato e delta directory COW verdi.

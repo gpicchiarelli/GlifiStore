@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-07-25
 - Deciders: security maintainers
-- Applies to: in-memory Index / SwissTable placement; `glyphastored --index-hash-seed`
+- Applies to: in-memory Index / SwissTable placement; `glifistored --index-hash-seed`
 - Amends: [ADR 0007](0007-swiss-table-index.md) (seed is process-configurable); Index v1 mix constant
 - Supersedes: none
 - Depends on: [ADR 0004](0004-index-as-derived-state.md), [ADR 0006](0006-key-routing-hash.md), [ADR 0007](0007-swiss-table-index.md)

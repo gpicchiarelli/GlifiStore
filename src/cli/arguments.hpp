@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glyphastore/core/error.hpp"
+#include "glifistore/core/error.hpp"
 
 #include <cstddef>
 #include <iosfwd>
@@ -9,7 +9,7 @@
 #include <string_view>
 #include <vector>
 
-namespace glyphastore::cli {
+namespace glifistore::cli {
 
 enum class OptionArity { none, required };
 
@@ -47,4 +47,4 @@ struct ParsedArguments {
 void write_help(std::ostream& output, std::string_view program, std::string_view summary,
                 std::string_view usage_suffix, std::span<const OptionSpec> specs);
 
-} // namespace glyphastore::cli
+} // namespace glifistore::cli

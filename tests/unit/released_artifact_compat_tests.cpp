@@ -1,8 +1,8 @@
-#include "glyphastore/persistence/compaction_intent.hpp"
-#include "glyphastore/persistence/manifest.hpp"
-#include "glyphastore/segment/record.hpp"
-#include "glyphastore/segment/segment_header.hpp"
-#include "glyphastore/server/protocol.hpp"
+#include "glifistore/persistence/compaction_intent.hpp"
+#include "glifistore/persistence/manifest.hpp"
+#include "glifistore/segment/record.hpp"
+#include "glifistore/segment/segment_header.hpp"
+#include "glifistore/server/protocol.hpp"
 #include "hex_fixture.hpp"
 #include "test.hpp"
 
@@ -15,18 +15,18 @@
 namespace {
 
 [[nodiscard]] auto released_root() -> std::filesystem::path {
-    return std::filesystem::path{GLYPHASTORE_SOURCE_DIR} / "tests/fixtures/released";
+    return std::filesystem::path{GLIFISTORE_SOURCE_DIR} / "tests/fixtures/released";
 }
 
 [[nodiscard]] auto decode_wire_requests(const std::span<const std::byte> corpus) -> bool {
     std::size_t offset{};
     while (offset < corpus.size()) {
         const auto remaining = corpus.subspan(offset);
-        const auto decoded = glyphastore::server::decode_request(remaining);
+        const auto decoded = glifistore::server::decode_request(remaining);
         if (!decoded || !decoded->complete || decoded->consumed == 0) {
             return false;
         }
-        const auto reencoded = glyphastore::server::encode_request(decoded->frame);
+        const auto reencoded = glifistore::server::encode_request(decoded->frame);
         if (!reencoded || reencoded->size() != decoded->consumed ||
             !std::equal(reencoded->begin(), reencoded->end(), remaining.begin())) {
             return false;
@@ -40,11 +40,11 @@ namespace {
     std::size_t offset{};
     while (offset < corpus.size()) {
         const auto remaining = corpus.subspan(offset);
-        const auto decoded = glyphastore::server::decode_response(remaining);
+        const auto decoded = glifistore::server::decode_response(remaining);
         if (!decoded || !decoded->complete || decoded->consumed == 0) {
             return false;
         }
-        const auto reencoded = glyphastore::server::encode_response(decoded->frame);
+        const auto reencoded = glifistore::server::encode_response(decoded->frame);
         if (!reencoded || reencoded->size() != decoded->consumed ||
             !std::equal(reencoded->begin(), reencoded->end(), remaining.begin())) {
             return false;
@@ -56,24 +56,24 @@ namespace {
 
 [[nodiscard]] auto decode_named_fixture(const std::filesystem::path& path) -> bool {
     const auto name = path.filename().string();
-    const auto bytes = glyphastore::test::read_hex_fixture(path);
+    const auto bytes = glifistore::test::read_hex_fixture(path);
     if (name.find("manifest") != std::string::npos && name.find("intent") == std::string::npos) {
-        return glyphastore::decode_manifest(bytes).has_value();
+        return glifistore::decode_manifest(bytes).has_value();
     }
     if (name.find("compaction_intent") != std::string::npos) {
-        return glyphastore::decode_compaction_intent(bytes).has_value();
+        return glifistore::decode_compaction_intent(bytes).has_value();
     }
     if (name.find("segment_header") != std::string::npos ||
         name.find("segment_v1_header") != std::string::npos) {
-        std::array<std::byte, glyphastore::kSegmentHeaderReservedBytes> encoded{};
+        std::array<std::byte, glifistore::kSegmentHeaderReservedBytes> encoded{};
         if (bytes.size() > encoded.size()) {
             return false;
         }
         std::copy(bytes.begin(), bytes.end(), encoded.begin());
-        return glyphastore::decode_segment_header(encoded).has_value();
+        return glifistore::decode_segment_header(encoded).has_value();
     }
     if (name.find("record") != std::string::npos) {
-        return glyphastore::decode_record(bytes).has_value();
+        return glifistore::decode_record(bytes).has_value();
     }
     if (name == "wire_requests_v2.hex") {
         return decode_wire_requests(bytes);
@@ -87,9 +87,9 @@ namespace {
 
 } // namespace
 
-GLYPHA_TEST("released artifact harness decodes every labeled fixture tree") {
+GLIFI_TEST("released artifact harness decodes every labeled fixture tree") {
     const auto root = released_root();
-    GLYPHA_REQUIRE(std::filesystem::exists(root));
+    GLIFI_REQUIRE(std::filesystem::exists(root));
     std::size_t labels = 0;
     std::size_t fixtures = 0;
     for (const auto& entry : std::filesystem::directory_iterator{root}) {
@@ -102,9 +102,9 @@ GLYPHA_TEST("released artifact harness decodes every labeled fixture tree") {
                 continue;
             }
             ++fixtures;
-            GLYPHA_REQUIRE(decode_named_fixture(fixture.path()));
+            GLIFI_REQUIRE(decode_named_fixture(fixture.path()));
         }
     }
     // Zero labels is success: the harness is present; tagged drops remain an alpha gate.
-    GLYPHA_REQUIRE(labels == 0 || fixtures > 0);
+    GLIFI_REQUIRE(labels == 0 || fixtures > 0);
 }

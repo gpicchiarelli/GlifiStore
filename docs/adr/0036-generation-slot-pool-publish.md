@@ -102,7 +102,7 @@ Map slots to the existing lease fence without reader-turn QSBR.
 
 **Until acceptance: keep Alternative A in production.** Implementation work may proceed only behind
 compile-time / runtime guards that do not change default paired Store behavior, or as isolated
-prototype/tests that do not link into `glyphastored` defaults.
+prototype/tests that do not link into `glifistored` defaults.
 
 ## Consequences
 
@@ -222,7 +222,7 @@ This removes the earlier candidate blocker where every slot merely accepted an a
 generation. It still does **not** close V11/V12: COW pages, spines, arena blocks and keys can still
 allocate, Writer-side shared ownership remains, and the 512-byte shell ABI budget needs every
 supported toolchain row. The bridge is dormant in the core because the production `DeltaState` is
-private; its access header is non-installed and neither `ShardPairRuntime` nor `glyphastored` can
+private; its access header is non-installed and neither `ShardPairRuntime` nor `glifistored` can
 select it.
 
 The follow-up inline owner removes the backing-storage `shared_ptr` by nesting the bank and pool in

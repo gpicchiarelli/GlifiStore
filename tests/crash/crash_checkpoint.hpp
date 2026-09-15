@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glyphastore/persistence/filesystem.hpp"
+#include "glifistore/persistence/filesystem.hpp"
 
 #include <array>
 #include <cerrno>
@@ -14,7 +14,7 @@
 #include <string_view>
 #include <unistd.h>
 
-namespace glyphastore::crash {
+namespace glifistore::crash {
 
 enum class CheckpointAction { kill, pause };
 
@@ -87,4 +87,4 @@ inline auto wait_for_checkpoint(const std::filesystem::path& checkpoint_dir, con
     return false;
 }
 
-} // namespace glyphastore::crash
+} // namespace glifistore::crash

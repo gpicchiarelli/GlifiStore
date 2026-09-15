@@ -3,7 +3,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-export GLYPHASTORE_ROOT="$root"
+export GLIFISTORE_ROOT="$root"
 # shellcheck disable=SC1091
 source "$root/scripts/export-reproducible-build-env.sh"
 sdk="$root/sdk/ruby"
@@ -30,9 +30,9 @@ for fixture in wire_requests_v2.hex wire_responses_v2.hex; do
 done
 
 expected="$(tr -d '[:space:]' <"$root/VERSION")"
-got="$(RUBYLIB="$sdk/lib" "$ruby_bin" -e 'require "glypha_store/version"; print GlyphaStore::VERSION')"
+got="$(RUBYLIB="$sdk/lib" "$ruby_bin" -e 'require "glifi_store/version"; print GlifiStore::VERSION')"
 if [[ "$got" != "$expected" ]]; then
-  echo "GlyphaStore::VERSION='$got' does not match VERSION='$expected'" >&2
+  echo "GlifiStore::VERSION='$got' does not match VERSION='$expected'" >&2
   exit 1
 fi
 if ! "$ruby_bin" -e 'v=RUBY_VERSION.split(".").map!(&:to_i); exit(v[0] > 3 || (v[0]==3 && v[1] >= 2) ? 0 : 1)'; then
@@ -40,23 +40,23 @@ if ! "$ruby_bin" -e 'v=RUBY_VERSION.split(".").map!(&:to_i); exit(v[0] > 3 || (v
   exit 1
 fi
 
-rm -rf "$sdk/dist" "$sdk"/glyphastore-*.gem
+rm -rf "$sdk/dist" "$sdk"/glifistore-*.gem
 mkdir -p "$sdk/dist"
 (
   cd "$sdk"
-  "$gem_bin" build glyphastore.gemspec
-  mv -f "glyphastore-$got.gem" "dist/glyphastore-$got.gem"
+  "$gem_bin" build glifistore.gemspec
+  mv -f "glifistore-$got.gem" "dist/glifistore-$got.gem"
 )
-"$root/scripts/normalize-ruby-gem.sh" "$sdk/dist/glyphastore-$got.gem"
-"$gem_bin" specification "$sdk/dist/glyphastore-$got.gem" >/dev/null
+"$root/scripts/normalize-ruby-gem.sh" "$sdk/dist/glifistore-$got.gem"
+"$gem_bin" specification "$sdk/dist/glifistore-$got.gem" >/dev/null
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-ruby-pack.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-ruby-pack.XXXXXX")"
 cleanup() { rm -rf "$work"; }
 trap cleanup EXIT
 
 # Gem must ship copyright notices (BSD-3-Clause redistribution).
-"$gem_bin" unpack --target "$work" "$sdk/dist/glyphastore-$got.gem" >/dev/null
-gem_dir="$work/glyphastore-$got"
+"$gem_bin" unpack --target "$work" "$sdk/dist/glifistore-$got.gem" >/dev/null
+gem_dir="$work/glifistore-$got"
 for required in LICENSE NOTICE; do
   if [[ ! -f "$gem_dir/$required" ]]; then
     echo "ERROR: gem missing $required" >&2
@@ -68,19 +68,19 @@ export GEM_HOME="$work/gem_home"
 export GEM_PATH="$GEM_HOME"
 export PATH="$GEM_HOME/bin:$PATH"
 mkdir -p "$GEM_HOME"
-"$gem_bin" install --local --no-document "$sdk/dist/glyphastore-$got.gem"
+"$gem_bin" install --local --no-document "$sdk/dist/glifistore-$got.gem"
 "$gem_bin" install --no-document async minitest >/dev/null
 
-installed_cli="$GEM_HOME/bin/glyphastore-interop"
+installed_cli="$GEM_HOME/bin/glifistore-interop"
 if [[ ! -x "$installed_cli" ]]; then
-  echo "ERROR: installed gem is missing glyphastore-interop" >&2
+  echo "ERROR: installed gem is missing glifistore-interop" >&2
   exit 1
 fi
 (
   cd "$work"
   unset RUBYLIB || true
   installed_help="$("$installed_cli" --help)"
-  grep -q '^Usage: glyphastore-interop ' <<<"$installed_help"
+  grep -q '^Usage: glifistore-interop ' <<<"$installed_help"
 )
 echo "Installed Ruby interop CLI load-path OK ($installed_cli)"
 
@@ -92,4 +92,4 @@ cp -R "$sdk/test" "$work/test"
   "$ruby_bin" -Itest -e 'Dir["test/test_*.rb"].sort.each { |f| require "./#{f}" }'
 )
 
-echo "Ruby packaging verification OK ($sdk/dist/glyphastore-$got.gem)"
+echo "Ruby packaging verification OK ($sdk/dist/glifistore-$got.gem)"

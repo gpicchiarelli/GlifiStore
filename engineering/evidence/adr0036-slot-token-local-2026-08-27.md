@@ -3,7 +3,7 @@
 Status: local prototype campaign; not CI proof and not release evidence.
 
 Scope: `src/experimental/paired_shard.cpp` and the test-only pool/storage headers under
-`src/experimental/`. Neither implementation is selectable by `glyphastored`. A later dormant core
+`src/experimental/`. Neither implementation is selectable by `glifistored`. A later dormant core
 bridge constructs the private production generation in candidate storage; its access header is not
 installed and the official paired runtime remains unchanged.
 
@@ -136,4 +136,4 @@ Residual limits:
 - no V11/V12 performance A/B has been recorded for a production-congruent implementation;
 - the multi-OS sanitizer/CI matrix remains open.
 
-Therefore ADR 0036 remains `proposed` and GlyphaStore remains an architectural prototype.
+Therefore ADR 0036 remains `proposed` and GlifiStore remains an architectural prototype.

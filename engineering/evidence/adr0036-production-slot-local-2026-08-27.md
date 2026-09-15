@@ -33,12 +33,12 @@
 ## Commands (local)
 
 ```bash
-cmake --build --preset macos-debug --target glyphastore_tests
-build/macos-debug/glyphastore_tests 'ADR 0036 production slot V7'
-cmake --build --preset macos-release --target glyphastore_tests
-build/macos-release/glyphastore_tests 'ADR 0036 production slot V7'
-cmake --build --preset macos-asan --target glyphastore_tests
-build/macos-asan/glyphastore_tests 'ADR 0036 production slot V7'
-cmake --build --preset macos-tsan --target glyphastore_tests
-build/macos-tsan/glyphastore_tests 'ADR 0036 production slot V7'
+cmake --build --preset macos-debug --target glifistore_tests
+build/macos-debug/glifistore_tests 'ADR 0036 production slot V7'
+cmake --build --preset macos-release --target glifistore_tests
+build/macos-release/glifistore_tests 'ADR 0036 production slot V7'
+cmake --build --preset macos-asan --target glifistore_tests
+build/macos-asan/glifistore_tests 'ADR 0036 production slot V7'
+cmake --build --preset macos-tsan --target glifistore_tests
+build/macos-tsan/glifistore_tests 'ADR 0036 production slot V7'
 ```

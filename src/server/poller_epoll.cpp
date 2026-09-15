@@ -1,11 +1,11 @@
-#include "glyphastore/server/poller.hpp"
+#include "glifistore/server/poller.hpp"
 #include "system_error.hpp"
 
 #if !defined(__linux__)
 #error "epoll backend requires Linux"
 #endif
 
-#include "glyphastore/core/fault_injection.hpp"
+#include "glifistore/core/fault_injection.hpp"
 
 #include <algorithm>
 #include <array>
@@ -13,7 +13,7 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 [[nodiscard]] auto epoll_flags(const IoInterest interest) noexcept -> std::uint32_t {
@@ -101,7 +101,7 @@ auto Poller::modify(const int descriptor, const std::uint64_t token, const IoInt
 }
 
 auto Poller::remove(const int descriptor) -> Status {
-    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::poller_remove)) {
+    if (glifistore::fault::consume_fail(glifistore::fault::Site::poller_remove)) {
         return fail(ErrorCode::io_error, "injected poller remove failure");
     }
     int result = 0;
@@ -135,4 +135,4 @@ auto Poller::wait(const std::span<IoEvent> events, const int timeout_ms) -> Resu
     return static_cast<std::size_t>(ready);
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

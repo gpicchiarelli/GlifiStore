@@ -19,7 +19,7 @@
 #include <sched.h>
 #endif
 
-namespace glyphastore::bench {
+namespace glifistore::bench {
 
 namespace {
 bool g_cpu_pin_applied = false;
@@ -135,4 +135,4 @@ auto allocator_pressure_relief() noexcept -> AllocatorPressureReliefSample {
 #endif
 }
 
-} // namespace glyphastore::bench
+} // namespace glifistore::bench

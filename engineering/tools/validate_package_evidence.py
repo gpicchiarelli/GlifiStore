@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Emit and validate GlyphaStore package evidence, fail-closed.
+"""Emit and validate GlifiStore package evidence, fail-closed.
 
 Package evidence is the only channel through which a backend reports what it
 did. It is bound to the release context (commit, product version, package

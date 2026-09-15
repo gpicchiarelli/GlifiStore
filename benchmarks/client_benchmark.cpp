@@ -1,4 +1,4 @@
-#include "glyphastore/client/client.hpp"
+#include "glifistore/client/client.hpp"
 #include "parse.hpp"
 
 #include <algorithm>
@@ -19,7 +19,7 @@
 namespace {
 
 using Clock = std::chrono::steady_clock;
-using PipelineRequest = glyphastore::client::PipelineRequest;
+using PipelineRequest = glifistore::client::PipelineRequest;
 
 struct Options {
     std::string host{"127.0.0.1"};
@@ -48,7 +48,7 @@ struct Workload {
 }
 
 [[nodiscard]] auto parse_size(const std::string_view text, const std::string_view option) -> std::size_t {
-    const auto value = glyphastore::bench::parse_decimal_size(text);
+    const auto value = glifistore::bench::parse_decimal_size(text);
     if (!value || *value == 0) {
         fail(std::string{option} + " must be a positive integer");
     }
@@ -60,7 +60,7 @@ struct Workload {
     for (int index = 1; index < argc; ++index) {
         const std::string_view option{argv[index]};
         if (option == "--help") {
-            std::cout << "usage: glyphastore_client_benchmark --port N [--host HOST] [--workers N] "
+            std::cout << "usage: glifistore_client_benchmark --port N [--host HOST] [--workers N] "
                          "[--ops N] [--pipeline N] [--warmup N] [--repeats N] "
                          "[--execution concurrent|sequential|batch]\n";
             std::exit(0);
@@ -112,7 +112,7 @@ struct Workload {
     return options;
 }
 
-[[nodiscard]] auto make_workload(glyphastore::client::Client& client, const Options& options) -> Workload {
+[[nodiscard]] auto make_workload(glifistore::client::Client& client, const Options& options) -> Workload {
     Workload workload;
     workload.keys.resize(options.workers);
     workload.values.resize(options.workers);
@@ -149,10 +149,10 @@ struct Workload {
             auto& batch = worker_batches.emplace_back();
             batch.reserve((end - begin) * 2U);
             for (std::size_t index = begin; index < end; ++index) {
-                batch.push_back({.opcode = glyphastore::client::PipelineOpcode::put,
+                batch.push_back({.opcode = glifistore::client::PipelineOpcode::put,
                                  .key = as_bytes(workload.keys[worker][index]),
                                  .value = as_bytes(workload.values[worker][index])});
-                batch.push_back({.opcode = glyphastore::client::PipelineOpcode::get,
+                batch.push_back({.opcode = glifistore::client::PipelineOpcode::get,
                                  .key = as_bytes(workload.keys[worker][index])});
             }
         }
@@ -161,7 +161,7 @@ struct Workload {
 }
 
 [[nodiscard]] auto validate(const std::span<const PipelineRequest> requests,
-                            const std::vector<glyphastore::client::PipelineResponse>& responses) -> bool {
+                            const std::vector<glifistore::client::PipelineResponse>& responses) -> bool {
     if (responses.size() != requests.size()) {
         return false;
     }
@@ -169,7 +169,7 @@ struct Workload {
         if (!responses[index].succeeded()) {
             return false;
         }
-        if (requests[index].opcode == glyphastore::client::PipelineOpcode::get &&
+        if (requests[index].opcode == glifistore::client::PipelineOpcode::get &&
             !std::ranges::equal(responses[index].value, requests[index - 1U].value)) {
             return false;
         }
@@ -177,13 +177,13 @@ struct Workload {
     return true;
 }
 
-[[nodiscard]] auto execute_pipeline(glyphastore::client::Client& client,
+[[nodiscard]] auto execute_pipeline(glifistore::client::Client& client,
                                     const std::vector<PipelineRequest>& requests) -> bool {
     auto responses = client.execute_pipeline(requests);
     return responses && validate(requests, *responses);
 }
 
-[[nodiscard]] auto run_sequential(glyphastore::client::Client& client, const Workload& workload) -> double {
+[[nodiscard]] auto run_sequential(glifistore::client::Client& client, const Workload& workload) -> double {
     const auto started = Clock::now();
     for (const auto& worker_batches : workload.batches) {
         for (const auto& batch : worker_batches) {
@@ -195,7 +195,7 @@ struct Workload {
     return std::chrono::duration<double>{Clock::now() - started}.count();
 }
 
-[[nodiscard]] auto run_concurrent(glyphastore::client::Client& client, const Workload& workload) -> double {
+[[nodiscard]] auto run_concurrent(glifistore::client::Client& client, const Workload& workload) -> double {
     std::barrier start{static_cast<std::ptrdiff_t>(workload.batches.size() + 1U)};
     std::atomic_bool failed{};
     std::vector<std::thread> threads;
@@ -222,7 +222,7 @@ struct Workload {
     return std::chrono::duration<double>{Clock::now() - started}.count();
 }
 
-[[nodiscard]] auto run_batch(glyphastore::client::Client& client, const Workload& workload) -> double {
+[[nodiscard]] auto run_batch(glifistore::client::Client& client, const Workload& workload) -> double {
     std::size_t rounds{};
     for (const auto& worker_batches : workload.batches) {
         rounds = std::max(rounds, worker_batches.size());
@@ -253,7 +253,7 @@ struct Workload {
 
 int main(const int argc, char** argv) {
     const auto options = parse_options(argc, argv);
-    auto connected = glyphastore::client::Client::connect({
+    auto connected = glifistore::client::Client::connect({
         .host = options.host,
         .port = options.port,
         .maximum_pipeline_requests = options.pipeline * 2U,
@@ -291,11 +291,11 @@ int main(const int argc, char** argv) {
     }
     const auto name = options.execution == "batch" ? "cpp_client_batch_read_after_write"
                                                    : "cpp_client_pipeline_read_after_write";
-    std::cout << "# glyphastore C++ client benchmark\n"
-              << "# sdk_version=" << GLYPHASTORE_SDK_VERSION
+    std::cout << "# glifistore C++ client benchmark\n"
+              << "# sdk_version=" << GLIFISTORE_SDK_VERSION
               << " runtime=native execution=" << options.execution << " workers=" << options.workers
               << " pipeline_pairs=" << options.pipeline << " operations=" << operation_count << '\n'
-              << "name=" << name << " sdk_version=" << GLYPHASTORE_SDK_VERSION
+              << "name=" << name << " sdk_version=" << GLIFISTORE_SDK_VERSION
               << " runtime=native execution=" << options.execution << " workers=" << options.workers
               << " pipeline_pairs=" << options.pipeline << " operations=" << operation_count
               << " samples=" << samples.size() << " median_seconds=" << median(samples)

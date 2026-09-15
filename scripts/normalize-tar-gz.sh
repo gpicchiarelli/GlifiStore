@@ -26,7 +26,7 @@ stamp_files() {
   fi
 }
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-norm-tar.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-norm-tar.XXXXXX")"
 cleanup() { rm -rf "$work"; }
 trap cleanup EXIT
 

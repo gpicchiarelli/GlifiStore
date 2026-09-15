@@ -78,4 +78,4 @@ mentre TLS e connessioni pipelined restano contigui per contratto e benchmark.
 Aggiornamento 2026-08-01 (adozione paired): il punto 3 resta **deferred** per 0.1.0 — nessun A/B che
 dimostri coda/syscall migliori senza rischio su ordering/ack
 ([`paired-shards-plan.md`](paired-shards-plan.md)). Il punto 4 è coperto dal harness Linux hard-pinned
-in attesa di `glyphastore-linux-perf` ([`paired-shards-linux-p1.md`](paired-shards-linux-p1.md)).
+in attesa di `glifistore-linux-perf` ([`paired-shards-linux-p1.md`](paired-shards-linux-p1.md)).

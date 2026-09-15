@@ -1,6 +1,6 @@
 #include "benchmark_metadata.hpp"
 #include "experimental/pair_read_generation_shell.hpp"
-#include "glyphastore/store/paired/read_generation.hpp"
+#include "glifistore/store/paired/read_generation.hpp"
 #include "parse.hpp"
 
 #include <array>
@@ -20,14 +20,14 @@
 namespace {
 
 using Clock = std::chrono::steady_clock;
-using Generation = glyphastore::store::paired::PairReadGeneration;
-using Mutation = glyphastore::store::paired::ReadMutation;
-using ShellAccess = glyphastore::experimental::PairReadGenerationShellAccess;
-using ShellBank = glyphastore::experimental::PairReadGenerationShellBank<2>;
-using PublicationPool = glyphastore::experimental::GenerationSlotPool<Generation, 2>;
-using InlinePool = glyphastore::experimental::PairReadGenerationInlineSlotPool<2>;
-using DirectRing = glyphastore::experimental::PairReadGenerationDirectRing<2>;
-using DirectPool = glyphastore::experimental::PairReadGenerationDirectSlotPool<2>;
+using Generation = glifistore::store::paired::PairReadGeneration;
+using Mutation = glifistore::store::paired::ReadMutation;
+using ShellAccess = glifistore::experimental::PairReadGenerationShellAccess;
+using ShellBank = glifistore::experimental::PairReadGenerationShellBank<2>;
+using PublicationPool = glifistore::experimental::GenerationSlotPool<Generation, 2>;
+using InlinePool = glifistore::experimental::PairReadGenerationInlineSlotPool<2>;
+using DirectRing = glifistore::experimental::PairReadGenerationDirectRing<2>;
+using DirectPool = glifistore::experimental::PairReadGenerationDirectSlotPool<2>;
 
 struct Options final {
     std::size_t operations{20'000};
@@ -40,7 +40,7 @@ struct Options final {
         throw std::invalid_argument{"missing numeric argument"};
     }
     const std::string_view input{text};
-    const auto value = glyphastore::bench::parse_decimal_size(input);
+    const auto value = glifistore::bench::parse_decimal_size(input);
     if (!value || (!allow_zero && *value == 0) || *value > Generation::kMaximumIncrementalDeltaEntries) {
         throw std::invalid_argument{"operation count is outside the incremental delta bound"};
     }
@@ -52,7 +52,7 @@ struct Options final {
     for (int index = 1; index < argc; ++index) {
         const std::string_view argument{argv[index]};
         if (argument == "--help" || argument == "-h") {
-            std::cout << "usage: glyphastore_generation_shell_benchmark "
+            std::cout << "usage: glifistore_generation_shell_benchmark "
                          "[--ops N] [--warmup N] [--repeats N]\n";
             std::exit(0);
         }
@@ -77,22 +77,22 @@ struct Options final {
 }
 
 struct Material final {
-    glyphastore::WorkerRoutingState routing{};
-    std::shared_ptr<glyphastore::Segment> segment;
+    glifistore::WorkerRoutingState routing{};
+    std::shared_ptr<glifistore::Segment> segment;
     std::string key{"generation-shell-key"};
     std::uint64_t hash{};
-    std::vector<glyphastore::RecordRef> records;
+    std::vector<glifistore::RecordRef> records;
 };
 
 [[nodiscard]] auto make_material(const std::size_t operations) -> Material {
     Material material;
-    material.segment = std::make_shared<glyphastore::Segment>(glyphastore::SegmentId{701});
-    material.hash = glyphastore::hash_key_routing(material.key, material.routing);
+    material.segment = std::make_shared<glifistore::Segment>(glifistore::SegmentId{701});
+    material.hash = glifistore::hash_key_routing(material.key, material.routing);
     material.records.reserve(operations);
     const std::array value{std::byte{0x47}, std::byte{0x53}};
     for (std::size_t index = 0; index < operations; ++index) {
-        auto record = material.segment->append({.sequence = glyphastore::SequenceNumber{index + 1U},
-                                                .opcode = glyphastore::Opcode::put,
+        auto record = material.segment->append({.sequence = glifistore::SequenceNumber{index + 1U},
+                                                .opcode = glifistore::Opcode::put,
                                                 .key_hash = material.hash,
                                                 .key = bytes(material.key),
                                                 .value = value});
@@ -128,7 +128,7 @@ struct Measurement final {
         const Mutation mutation{.key = {material.key, material.hash},
                                 .record = material.records[index],
                                 .segment = material.segment,
-                                .opcode = glyphastore::Opcode::put};
+                                .opcode = glifistore::Opcode::put};
         auto next = fixed_shell ? ShellAccess::publish_incremental(current, std::span{&mutation, 1},
                                                                    bank.at(index % 2U))
                                 : Generation::publish_incremental(current, std::span{&mutation, 1});
@@ -174,7 +174,7 @@ struct Measurement final {
         const Mutation mutation{.key = {material.key, material.hash},
                                 .record = material.records[index],
                                 .segment = material.segment,
-                                .opcode = glyphastore::Opcode::put};
+                                .opcode = glifistore::Opcode::put};
         if (inline_storage) {
             auto reservation = inline_pool.try_reserve();
             if (!reservation) {
@@ -182,7 +182,7 @@ struct Measurement final {
             }
             reservation->mark_store_linearized();
             if (inline_pool.publish_incremental(*reservation, std::span{&mutation, 1}) !=
-                glyphastore::experimental::GenerationSlotPublishStatus::published) {
+                glifistore::experimental::GenerationSlotPublishStatus::published) {
                 throw std::runtime_error{"inline pool publication failed"};
             }
             const auto* adopted = inline_pool.adopt();
@@ -206,7 +206,7 @@ struct Measurement final {
         }
         reservation->mark_store_linearized();
         if (owning_pool.commit(*reservation, std::move(*next)) !=
-            glyphastore::experimental::GenerationSlotPublishStatus::published) {
+            glifistore::experimental::GenerationSlotPublishStatus::published) {
             throw std::runtime_error{"owning pool publication failed"};
         }
         const auto* adopted = owning_pool.adopt();
@@ -243,7 +243,7 @@ struct Measurement final {
         const Mutation mutation{.key = {material.key, material.hash},
                                 .record = material.records[index],
                                 .segment = material.segment,
-                                .opcode = glyphastore::Opcode::put};
+                                .opcode = glifistore::Opcode::put};
         auto next = ring.publish(std::span{&mutation, 1});
         if (!next) {
             throw std::runtime_error{"direct generation publication failed"};
@@ -274,14 +274,14 @@ struct Measurement final {
         const Mutation mutation{.key = {material.key, material.hash},
                                 .record = material.records[index],
                                 .segment = material.segment,
-                                .opcode = glyphastore::Opcode::put};
+                                .opcode = glifistore::Opcode::put};
         auto reservation = pool.try_reserve();
         if (!reservation) {
             throw std::runtime_error{"direct pool reservation failed"};
         }
         reservation->mark_store_linearized();
         if (pool.publish_incremental(*reservation, std::span{&mutation, 1}) !=
-            glyphastore::experimental::GenerationSlotPublishStatus::published) {
+            glifistore::experimental::GenerationSlotPublishStatus::published) {
             throw std::runtime_error{"direct pool publication failed"};
         }
         const auto* adopted = pool.adopt();
@@ -328,7 +328,7 @@ int main(const int argc, char** argv) try {
         static_cast<void>(run_direct_once(material));
         static_cast<void>(run_direct_pool_once(material));
     }
-    glyphastore::bench::print_common_metadata(std::cout, options.warmup, options.repeats);
+    glifistore::bench::print_common_metadata(std::cout, options.warmup, options.repeats);
     std::cout << "implementation\trepeat\tseconds\tops_per_second\tns_per_op\t"
                  "shell_allocations\tshell_reuses\tchecksum\n";
     for (std::size_t repeat = 0; repeat < options.repeats; ++repeat) {

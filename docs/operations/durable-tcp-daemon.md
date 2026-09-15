@@ -1,16 +1,16 @@
 # Operator guide: durable TCP daemon
 
 Status: descriptive
-Applies to: `glyphastored` wire protocol v2 with durable storage (paired Reader–Writer runtime)
+Applies to: `glifistored` wire protocol v2 with durable storage (paired Reader–Writer runtime)
 Owner: platform and persistence maintainers
 Last reviewed: 2026-07-31
 
-End-to-end checklist for running a durable `glyphastored` instance. For 0.1.0 the daemon uses only
+End-to-end checklist for running a durable `glifistored` instance. For 0.1.0 the daemon uses only
 paired shard pairs (Reader/Reactor + serial Writer); prefer `--shard-pairs` (`--workers` is a 0.1.x
 alias). Normative CLI and wire rules live in [cli.md](../cli.md) and
 [wire protocol v2](../spec/wire-protocol-v2.md); this guide ties configuration, probes, drain, and
-offline maintenance into one completeness story. After install, see also `man 8 glyphastored` and
-`man 7 glyphastore` (mdoc pages under [`man/`](../../man/README.md)).
+offline maintenance into one completeness story. After install, see also `man 8 glifistored` and
+`man 7 glifistore` (mdoc pages under [`man/`](../../man/README.md)).
 
 ## 1. Choose storage mode and open policy
 
@@ -28,7 +28,7 @@ names fail closed before listen.
 Every durable profile still requires an explicit data directory. Profiles do **not** invent a path.
 
 ```bash
-glyphastored --profile production --data-dir /var/lib/glyphastore \
+glifistored --profile production --data-dir /var/lib/glifistore \
   --bind 0.0.0.0 --port 7379
 ```
 
@@ -36,7 +36,7 @@ Equivalent config file:
 
 ```ini
 profile = production
-data-dir = /var/lib/glyphastore
+data-dir = /var/lib/glifistore
 bind = 0.0.0.0
 port = 7379
 ```
@@ -45,13 +45,13 @@ Precedence: **defaults < profile < config file < environment < CLI**. Validate t
 settings without listening:
 
 ```bash
-glyphastored --profile production --data-dir /var/lib/glyphastore --dump-config
+glifistored --profile production --data-dir /var/lib/glifistore --dump-config
 ```
 
 ### Explicit storage mode
 
 When a profile is wrong for your durability contract, set `--storage-mode` explicitly. All durable
-modes require `--data-dir` (or `data-dir` / `GLYPHASTORE_DATA_DIR`).
+modes require `--data-dir` (or `data-dir` / `GLIFISTORE_DATA_DIR`).
 
 | Mode | Acknowledgement contract (summary) |
 |---|---|
@@ -60,7 +60,7 @@ modes require `--data-dir` (or `data-dir` / `GLYPHASTORE_DATA_DIR`).
 | `durable-group` | strict group commit with bounded concurrent producers |
 
 ```bash
-glyphastored --storage-mode durable-sync --data-dir /var/lib/glyphastore ...
+glifistored --storage-mode durable-sync --data-dir /var/lib/glifistore ...
 ```
 
 Durable-only flags (`--open-mode`, batch limits, resource caps) are rejected with volatile storage.
@@ -154,8 +154,8 @@ probes return `INTERNAL_ERROR` with an empty value.
 
 | Probe | Success value | Use for |
 |---|---|---|
-| `HEALTH` (7) | `GlyphaStore/live` | process / executor liveness (`started && !failed_`) — **not** paired Writer sticky health |
-| `READY` (8) | `GlyphaStore/ready` | load balancer readiness — admission open, not shutting down, catalog/pair Writers healthy, maintenance not in emergency or sticky fault |
+| `HEALTH` (7) | `GlifiStore/live` | process / executor liveness (`started && !failed_`) — **not** paired Writer sticky health |
+| `READY` (8) | `GlifiStore/ready` | load balancer readiness — admission open, not shutting down, catalog/pair Writers healthy, maintenance not in emergency or sticky fault |
 | `STATS` (9) | bounded ASCII report | admin snapshot: version, live/ready, connections, durable lane/batch counters, per-lane latency histograms (`queue_wait_ns` / `service_ns`), maintenance fields |
 
 **Fail closed for traffic:** orchestrators must gate on `READY`, not `HEALTH` alone. During
@@ -205,8 +205,8 @@ mutations that never enter Store execution before the deadline complete as wire 
 exit fail closed (non-zero exit).
 
 ```bash
-glyphastored --shutdown-drain-ms 120000 --data-dir /var/lib/glyphastore ...
-# GLYPHASTORE_SHUTDOWN_DRAIN_MS=120000
+glifistored --shutdown-drain-ms 120000 --data-dir /var/lib/glifistore ...
+# GLIFISTORE_SHUTDOWN_DRAIN_MS=120000
 ```
 
 Procedure: remove from load balancing → confirm `READY` fails → `SIGTERM` → verify clean exit and
@@ -219,19 +219,19 @@ All maintenance tools require **stopped writers**. The daemon must not hold the 
 
 | Task | Tool / runbook |
 |---|---|
-| Structural verify | `glyphastore_verify_store` — [cli.md § verify](../cli.md#glyphastore_verify_store), [corruption-repair runbook](corruption-repair.md) |
-| Offline backup / restore | `glyphastore_backup_store` — [backup-restore runbook](backup-restore.md) |
-| Salvage with quarantine | `glyphastore_repair_store` — [corruption-repair runbook](corruption-repair.md) |
-| Segment forensics | `glyphastore_inspect_segment` — [corruption-repair runbook](corruption-repair.md) |
+| Structural verify | `glifistore_verify_store` — [cli.md § verify](../cli.md#glifistore_verify_store), [corruption-repair runbook](corruption-repair.md) |
+| Offline backup / restore | `glifistore_backup_store` — [backup-restore runbook](backup-restore.md) |
+| Salvage with quarantine | `glifistore_repair_store` — [corruption-repair runbook](corruption-repair.md) |
+| Segment forensics | `glifistore_inspect_segment` — [corruption-repair runbook](corruption-repair.md) |
 
 Typical planned maintenance:
 
 ```bash
-systemctl stop glyphastored
-glyphastore_verify_store -- /var/lib/glyphastore
-install -d -m 700 /backup/glyphastore-$(date +%F)
-glyphastore_backup_store -- /var/lib/glyphastore /backup/glyphastore-$(date +%F)
-systemctl start glyphastored
+systemctl stop glifistored
+glifistore_verify_store -- /var/lib/glifistore
+install -d -m 700 /backup/glifistore-$(date +%F)
+glifistore_backup_store -- /var/lib/glifistore /backup/glifistore-$(date +%F)
+systemctl start glifistored
 ```
 
 Restore always targets a **new empty** directory; cut over at the orchestration layer (symlink,
@@ -241,11 +241,11 @@ mount, or config), not by overwriting the live path in place.
 
 | Claim or shortcut | Status |
 |---|---|
-| Offline `glyphastore_backup_store` while `glyphastored` holds the lock | **Not supported** — offline tool fails closed on the exclusive Store lock |
+| Offline `glifistore_backup_store` while `glifistored` holds the lock | **Not supported** — offline tool fails closed on the exclusive Store lock |
 | Online fenced backup (`BACKUP` / `Server::backup_to`) | **Supported** — admission pause for flush + structural check + catalog copy; destination verify after resume; not zero-fence hot I/O |
 | In-place restore over production data | **Forbidden** — copy into a new path, verify, then swap |
-| Filesystem snapshot without stopped writers | **Insufficient** — freeze writers and run `glyphastore_verify_store` on the image |
-| `glyphastore_rebuild_index` for durable v1 | **Permanently refused** — Indexes rebuild via Store recovery or `glyphastore_repair_store` |
+| Filesystem snapshot without stopped writers | **Insufficient** — freeze writers and run `glifistore_verify_store` on the image |
+| `glifistore_rebuild_index` for durable v1 | **Permanently refused** — Indexes rebuild via Store recovery or `glifistore_repair_store` |
 | E3/E4 sudden power-loss certification | **Pending** — process-kill (E2), E3 harness, and operator campaign-prep (`scripts/run-e3-campaign.sh`) exist; no pinned native filesystem row is certified ([platform durability evidence](../architecture/platform-durability-evidence.md), [E3 campaign](e3-campaign.md)) |
 | `HEALTH` as readiness during deploys | **Wrong signal** — use `READY` |
 | Blind retry after `OVERLOADED` | **Unsafe** — same logical mutation may be uncommitted; reconcile or start a new attempt |
@@ -257,17 +257,17 @@ NFS, SMB, FUSE, overlay, and remote/user-space storage are outside the local-fil
 
 ```bash
 # Start (production durable)
-glyphastored --profile production --data-dir /var/lib/glyphastore --bind 0.0.0.0 --port 7379
+glifistored --profile production --data-dir /var/lib/glifistore --bind 0.0.0.0 --port 7379
 
 # Validate config
-glyphastored --profile production --data-dir /var/lib/glyphastore --dump-config
+glifistored --profile production --data-dir /var/lib/glifistore --dump-config
 
 # Graceful stop (orchestrator preStop)
-kill -TERM "$(pidof glyphastored)"
+kill -TERM "$(pidof glifistored)"
 
 # Offline verify + backup (daemon stopped)
-glyphastore_verify_store -- /var/lib/glyphastore
-glyphastore_backup_store -- /var/lib/glyphastore /backup/empty-dest
+glifistore_verify_store -- /var/lib/glifistore
+glifistore_backup_store -- /var/lib/glifistore /backup/empty-dest
 ```
 
 ## Related documentation

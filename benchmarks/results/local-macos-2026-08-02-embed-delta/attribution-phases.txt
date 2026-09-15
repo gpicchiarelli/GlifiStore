@@ -1,4 +1,4 @@
-GlyphaStore hot-path phase attribution (lab instrumentation)
+GlifiStore hot-path phase attribution (lab instrumentation)
 Claim ceiling: architectural prototype / same-machine lab evidence only.
 [GET]
   admit          samples=0 total_ns=0 mean_ns=0.00 pct=0.0

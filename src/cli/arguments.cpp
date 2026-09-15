@@ -6,7 +6,7 @@
 #include <ostream>
 #include <string>
 
-namespace glyphastore::cli {
+namespace glifistore::cli {
 namespace {
 
 [[nodiscard]] auto find_long(const std::span<const OptionSpec> specs, const std::string_view name)
@@ -289,4 +289,4 @@ void write_help(std::ostream& output, const std::string_view program, const std:
     }
 }
 
-} // namespace glyphastore::cli
+} // namespace glifistore::cli

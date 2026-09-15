@@ -1,12 +1,12 @@
 #include "cli/arguments.hpp"
-#include "glyphastore/core/worker_routing.hpp"
-#include "glyphastore/index/index_hash_seed.hpp"
-#include "glyphastore/server/crash_test_hooks.hpp"
-#include "glyphastore/server/daemon_config.hpp"
-#include "glyphastore/server/daemon_log.hpp"
-#include "glyphastore/server/openbsd_sandbox.hpp"
-#include "glyphastore/server/server.hpp"
-#include "glyphastore/server/tls.hpp"
+#include "glifistore/core/worker_routing.hpp"
+#include "glifistore/index/index_hash_seed.hpp"
+#include "glifistore/server/crash_test_hooks.hpp"
+#include "glifistore/server/daemon_config.hpp"
+#include "glifistore/server/daemon_log.hpp"
+#include "glifistore/server/openbsd_sandbox.hpp"
+#include "glifistore/server/server.hpp"
+#include "glifistore/server/tls.hpp"
 
 #include <cerrno>
 #include <chrono>
@@ -26,12 +26,12 @@ extern "C" void request_stop(const int signal) {
     g_stop_signal = signal;
 }
 
-[[nodiscard]] auto install_signal_handler(const int signal, const char* name) -> glyphastore::Status {
+[[nodiscard]] auto install_signal_handler(const int signal, const char* name) -> glifistore::Status {
     struct sigaction action{};
     action.sa_handler = request_stop;
     if (sigemptyset(&action.sa_mask) != 0 || ::sigaction(signal, &action, nullptr) != 0) {
         const auto error_number = errno;
-        return glyphastore::fail(glyphastore::ErrorCode::io_error,
+        return glifistore::fail(glifistore::ErrorCode::io_error,
                                  std::string{"cannot install "} + name + " handler: " +
                                      std::error_code{error_number, std::system_category()}.message());
     }
@@ -39,18 +39,18 @@ extern "C" void request_stop(const int signal) {
 }
 
 void print_help(const std::string_view program) {
-    glyphastore::cli::write_help(std::cout, program, "GlyphaStore native binary key-value server.",
-                                 "[OPTIONS]", glyphastore::server::daemon_option_specs());
+    glifistore::cli::write_help(std::cout, program, "GlifiStore native binary key-value server.",
+                                 "[OPTIONS]", glifistore::server::daemon_option_specs());
 }
 
-void emit_human_listen(const std::string_view program, const glyphastore::server::DaemonOptions& arguments,
-                       const glyphastore::server::Server& server) {
+void emit_human_listen(const std::string_view program, const glifistore::server::DaemonOptions& arguments,
+                       const glifistore::server::Server& server) {
     std::cout << program << ": listening address=" << arguments.server.bind_address
               << " executors=" << server.executor_count()
-              << " storage=" << glyphastore::server::storage_mode_name(arguments.store.storage_mode);
+              << " storage=" << glifistore::server::storage_mode_name(arguments.store.storage_mode);
     if (server.cleartext_port() != 0 && server.tls_port() != 0) {
         std::cout << " cleartext_port=" << server.cleartext_port() << " tls_port=" << server.tls_port()
-                  << " transport=cleartext+tls1.3 backend=" << glyphastore::server::tls_backend_name();
+                  << " transport=cleartext+tls1.3 backend=" << glifistore::server::tls_backend_name();
         if (arguments.server.tls.mtls_enabled()) {
             std::cout << " auth=mtls";
         } else {
@@ -58,7 +58,7 @@ void emit_human_listen(const std::string_view program, const glyphastore::server
         }
     } else if (server.tls_port() != 0) {
         std::cout << " port=" << server.tls_port()
-                  << " transport=tls1.3 backend=" << glyphastore::server::tls_backend_name();
+                  << " transport=tls1.3 backend=" << glifistore::server::tls_backend_name();
         if (arguments.server.tls.mtls_enabled()) {
             std::cout << " auth=mtls";
         } else {
@@ -79,7 +79,7 @@ void emit_human_listen(const std::string_view program, const glyphastore::server
     std::cout << '\n' << std::flush;
 }
 
-void observe_lifecycle(const glyphastore::server::Server& server, glyphastore::server::DaemonLog& log,
+void observe_lifecycle(const glifistore::server::Server& server, glifistore::server::DaemonLog& log,
                        bool& was_ready, bool& was_emergency, bool& was_fault) {
     if (!log.structured()) {
         return;
@@ -89,7 +89,7 @@ void observe_lifecycle(const glyphastore::server::Server& server, glyphastore::s
     if (is_ready && !was_ready) {
         log.emit_ready(true);
     } else if (!is_ready && was_ready) {
-        log.emit_ready(false, glyphastore::server::classify_ready_loss(server));
+        log.emit_ready(false, glifistore::server::classify_ready_loss(server));
     }
     was_ready = is_ready;
 
@@ -101,11 +101,11 @@ void observe_lifecycle(const glyphastore::server::Server& server, glyphastore::s
     }
 
     const bool faulted =
-        snapshot.state == glyphastore::MaintenanceState::faulted && snapshot.last_error.has_value();
+        snapshot.state == glifistore::MaintenanceState::faulted && snapshot.last_error.has_value();
     if (faulted && !was_fault) {
         log.emit_maintenance_fault(
             snapshot.state,
-            std::string{glyphastore::server::daemon_error_code_name(snapshot.last_error->code)},
+            std::string{glifistore::server::daemon_error_code_name(snapshot.last_error->code)},
             snapshot.last_error->message);
         was_fault = true;
     } else if (!faulted) {
@@ -116,8 +116,8 @@ void observe_lifecycle(const glyphastore::server::Server& server, glyphastore::s
 } // namespace
 
 int main(const int argc, char** argv) try {
-    const auto program = glyphastore::cli::executable_name(argc > 0 ? argv[0] : "glyphastored");
-    auto arguments = glyphastore::server::parse_daemon_options(argc, argv);
+    const auto program = glifistore::cli::executable_name(argc > 0 ? argv[0] : "glifistored");
+    auto arguments = glifistore::server::parse_daemon_options(argc, argv);
     if (!arguments) {
         std::cerr << program << ": error: " << arguments.error().message << "\nTry '" << program
                   << " --help' for more information.\n";
@@ -128,15 +128,15 @@ int main(const int argc, char** argv) try {
         return 0;
     }
     if (arguments->show_version) {
-        std::cout << program << ' ' << GLYPHASTORE_VERSION << '\n';
+        std::cout << program << ' ' << GLIFISTORE_VERSION << '\n';
         return 0;
     }
     if (arguments->show_dump_config) {
-        std::cout << glyphastore::server::format_daemon_config_dump(*arguments);
+        std::cout << glifistore::server::format_daemon_config_dump(*arguments);
         return 0;
     }
 
-    glyphastore::server::DaemonLog log{arguments->log_format, program, arguments->quiet};
+    glifistore::server::DaemonLog log{arguments->log_format, program, arguments->quiet};
     log.emit_start();
 
     // Writing to a closed peer must surface as EPIPE, not process death (TLS/handshake
@@ -147,29 +147,29 @@ int main(const int argc, char** argv) try {
     }
 
     // ADR 0026: apply Index mix seed before any Store/Index construction.
-    glyphastore::set_index_hash_seed(arguments->index_hash_seed);
-    glyphastore::set_worker_routing(arguments->worker_routing);
+    glifistore::set_index_hash_seed(arguments->index_hash_seed);
+    glifistore::set_worker_routing(arguments->worker_routing);
 
-    if (auto crash_hooks = glyphastore::server::maybe_install_crash_test_hooks(arguments->store);
+    if (auto crash_hooks = glifistore::server::maybe_install_crash_test_hooks(arguments->store);
         !crash_hooks) {
         std::cerr << program << ": error: " << crash_hooks.error().message << '\n';
         return 2;
     }
 
-    auto server = glyphastore::server::Server::create(arguments->server, arguments->store);
+    auto server = glifistore::server::Server::create(arguments->server, arguments->store);
     if (!server) {
         std::cerr << program << ": error: " << server.error().message << '\n';
         return 1;
     }
     // OpenBSD: unveil data/TLS/authz paths then pledge. Fail closed (ADR 0020 /
     // security roadmap Phase 6.5). No-op on Linux/macOS/FreeBSD.
-    if (auto sandboxed = glyphastore::server::apply_openbsd_sandbox(*arguments); !sandboxed) {
+    if (auto sandboxed = glifistore::server::apply_openbsd_sandbox(*arguments); !sandboxed) {
         std::cerr << program << ": error: " << sandboxed.error().message << '\n';
         return 1;
     }
-    if (glyphastore::server::openbsd_sandbox_supported() && !arguments->quiet) {
+    if (glifistore::server::openbsd_sandbox_supported() && !arguments->quiet) {
         std::cerr << program << ": openbsd-sandbox=pledge+unveil promises="
-                  << glyphastore::server::openbsd_sandbox_promises() << '\n';
+                  << glifistore::server::openbsd_sandbox_promises() << '\n';
     }
     if (auto installed = install_signal_handler(SIGINT, "SIGINT"); !installed) {
         std::cerr << program << ": error: " << installed.error().message << '\n';
@@ -193,7 +193,7 @@ int main(const int argc, char** argv) try {
     if (log.structured()) {
         log.emit_listen(arguments->server.bind_address, (*server)->cleartext_port(), (*server)->tls_port(),
                         (*server)->executor_count(),
-                        glyphastore::server::storage_mode_name(arguments->store.storage_mode),
+                        glifistore::server::storage_mode_name(arguments->store.storage_mode),
                         (*server)->unix_socket_path());
     } else if (!arguments->quiet) {
         emit_human_listen(program, *arguments, **server);
@@ -201,7 +201,7 @@ int main(const int argc, char** argv) try {
 
     bool was_ready = (*server)->ready();
     bool was_emergency = (*server)->maintenance_snapshot().mutations_rejected;
-    bool was_fault = (*server)->maintenance_snapshot().state == glyphastore::MaintenanceState::faulted &&
+    bool was_fault = (*server)->maintenance_snapshot().state == glifistore::MaintenanceState::faulted &&
                      (*server)->maintenance_snapshot().last_error.has_value();
     if (log.structured() && was_ready) {
         log.emit_ready(true);
@@ -217,7 +217,7 @@ int main(const int argc, char** argv) try {
     if (executor_failure) {
         if (const auto failure = (*server)->first_failure(); failure.has_value()) {
             if (log.structured()) {
-                log.emit_executor_failure(glyphastore::server::daemon_error_code_name(failure->code),
+                log.emit_executor_failure(glifistore::server::daemon_error_code_name(failure->code),
                                           failure->message);
             }
         }
@@ -243,11 +243,11 @@ int main(const int argc, char** argv) try {
     }
     return 0;
 } catch (const std::exception& exception) {
-    const auto program = glyphastore::cli::executable_name(argc > 0 ? argv[0] : "glyphastored");
+    const auto program = glifistore::cli::executable_name(argc > 0 ? argv[0] : "glifistored");
     std::cerr << program << ": fatal: " << exception.what() << '\n';
     return 1;
 } catch (...) {
-    const auto program = glyphastore::cli::executable_name(argc > 0 ? argv[0] : "glyphastored");
+    const auto program = glifistore::cli::executable_name(argc > 0 ? argv[0] : "glifistored");
     std::cerr << program << ": fatal: unknown non-standard exception\n";
     return 1;
 }

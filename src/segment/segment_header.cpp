@@ -1,14 +1,14 @@
-#include "glyphastore/segment/segment_header.hpp"
+#include "glifistore/segment/segment_header.hpp"
 
-#include "glyphastore/core/little_endian.hpp"
-#include "glyphastore/segment/crc32c.hpp"
-#include "glyphastore/segment/record.hpp"
+#include "glifistore/core/little_endian.hpp"
+#include "glifistore/segment/crc32c.hpp"
+#include "glifistore/segment/record.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstring>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 inline constexpr std::size_t kImmutableChecksumOffset = 52;
@@ -244,4 +244,4 @@ auto select_newest_segment_commit(const DecodedSegmentHeader& header) -> Result<
     return *selected;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

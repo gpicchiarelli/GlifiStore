@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the interop peer exclusively through an installed GlyphaStore CMake package.
+# Build the interop peer exclusively through an installed GlifiStore CMake package.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -32,7 +32,7 @@ if [[ -z "$cmake_bin" || ! -x "$cmake_bin" ]]; then
 fi
 
 expected="$(tr -d '[:space:]' <"$root/VERSION")"
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-cpp-artifact.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-cpp-artifact.XXXXXX")"
 cleanup() { rm -rf "$work"; }
 trap cleanup EXIT
 prefix="$work/prefix"
@@ -40,7 +40,7 @@ consumer="$work/consumer"
 mkdir -p "$prefix" "$consumer"
 
 if [[ -f "$artifact_root/CMakeCache.txt" ]]; then
-  "$cmake_bin" --build "$artifact_root" --target glyphastore_client glyphastore_abi
+  "$cmake_bin" --build "$artifact_root" --target glifistore_client glifistore_abi
   "$cmake_bin" --install "$artifact_root" --prefix "$prefix" --component AbiRuntime
   "$cmake_bin" --install "$artifact_root" --prefix "$prefix" --component Development
 elif [[ -d "$artifact_root" ]]; then
@@ -54,18 +54,18 @@ configs=()
 if command -v rg >/dev/null 2>&1; then
   while IFS= read -r config; do
     configs+=("$config")
-  done < <(rg --files "$prefix" | rg '/GlyphaStoreConfig\.cmake$')
+  done < <(rg --files "$prefix" | rg '/GlifiStoreConfig\.cmake$')
 else
   while IFS= read -r config; do
     configs+=("$config")
-  done < <(find "$prefix" -type f -name GlyphaStoreConfig.cmake -print)
+  done < <(find "$prefix" -type f -name GlifiStoreConfig.cmake -print)
 fi
 if [[ "${#configs[@]}" -ne 1 ]]; then
-  echo "installed prefix must contain exactly one GlyphaStoreConfig.cmake" >&2
+  echo "installed prefix must contain exactly one GlifiStoreConfig.cmake" >&2
   exit 1
 fi
 package_dir="$(dirname "${configs[0]}")"
-for companion in GlyphaStoreConfigVersion.cmake GlyphaStoreTargets.cmake FindGlyphaStoreTls.cmake; do
+for companion in GlifiStoreConfigVersion.cmake GlifiStoreTargets.cmake FindGlifiStoreTls.cmake; do
   if [[ ! -f "$package_dir/$companion" ]]; then
     echo "installed C++ package is missing $companion" >&2
     exit 1
@@ -75,30 +75,30 @@ done
 cp "$root/tools/interop_client.cpp" "$consumer/interop_client.cpp"
 cat >"$consumer/CMakeLists.txt" <<EOF
 cmake_minimum_required(VERSION 3.25)
-project(GlyphaStoreInstalledInterop LANGUAGES CXX)
-find_package(GlyphaStore $expected EXACT REQUIRED CONFIG
-  PATHS "\${GLYPHASTORE_PACKAGE_DIR}"
+project(GlifiStoreInstalledInterop LANGUAGES CXX)
+find_package(GlifiStore $expected EXACT REQUIRED CONFIG
+  PATHS "\${GLIFISTORE_PACKAGE_DIR}"
   NO_DEFAULT_PATH)
-add_executable(glyphastore-interop-cpp interop_client.cpp)
-target_link_libraries(glyphastore-interop-cpp PRIVATE GlyphaStore::client)
-target_compile_features(glyphastore-interop-cpp PRIVATE cxx_std_23)
-if(DEFINED ENV{GLYPHASTORE_SANITIZERS} AND NOT "\$ENV{GLYPHASTORE_SANITIZERS}" STREQUAL "")
-  target_compile_options(glyphastore-interop-cpp PRIVATE -fno-omit-frame-pointer
-    "-fsanitize=\$ENV{GLYPHASTORE_SANITIZERS}")
-  target_link_options(glyphastore-interop-cpp PRIVATE
-    "-fsanitize=\$ENV{GLYPHASTORE_SANITIZERS}")
+add_executable(glifistore-interop-cpp interop_client.cpp)
+target_link_libraries(glifistore-interop-cpp PRIVATE GlifiStore::client)
+target_compile_features(glifistore-interop-cpp PRIVATE cxx_std_23)
+if(DEFINED ENV{GLIFISTORE_SANITIZERS} AND NOT "\$ENV{GLIFISTORE_SANITIZERS}" STREQUAL "")
+  target_compile_options(glifistore-interop-cpp PRIVATE -fno-omit-frame-pointer
+    "-fsanitize=\$ENV{GLIFISTORE_SANITIZERS}")
+  target_link_options(glifistore-interop-cpp PRIVATE
+    "-fsanitize=\$ENV{GLIFISTORE_SANITIZERS}")
 endif()
 EOF
 
 "$cmake_bin" -S "$consumer" -B "$consumer/build" \
   -DCMAKE_BUILD_TYPE=Release \
-  -DGLYPHASTORE_PACKAGE_DIR="$package_dir" \
+  -DGLIFISTORE_PACKAGE_DIR="$package_dir" \
   -DCMAKE_FIND_USE_PACKAGE_REGISTRY=FALSE
-"$cmake_bin" --build "$consumer/build" --target glyphastore-interop-cpp
+"$cmake_bin" --build "$consumer/build" --target glifistore-interop-cpp
 
-built="$consumer/build/glyphastore-interop-cpp"
+built="$consumer/build/glifistore-interop-cpp"
 if [[ ! -x "$built" ]]; then
-  echo "installed C++ package did not produce glyphastore-interop-cpp" >&2
+  echo "installed C++ package did not produce glifistore-interop-cpp" >&2
   exit 1
 fi
 mkdir -p "$(dirname "$output")"

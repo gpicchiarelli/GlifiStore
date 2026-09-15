@@ -165,6 +165,6 @@ False-sharing: hot pointers already `alignas(128)` (`published_generation`,
 
 ## 7. Environment note
 
-`glyphastore_benchmarks` from `macos-release` may still print a stale
+`glifistore_benchmarks` from `macos-release` may still print a stale
 `# git_sha=` from CMake cache; objects were rebuilt against `94f1307`.
 Phases binary correctly reported `git_sha=94f1307`.

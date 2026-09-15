@@ -8,7 +8,7 @@ recovery, and mutation. Process-kill evidence remains a certification gate.
 A Segment identity maps to one canonical lowercase filename:
 
 ```text
-segment-<16 hexadecimal Segment-ID digits>-<8 hexadecimal generation digits>.glypha
+segment-<16 hexadecimal Segment-ID digits>-<8 hexadecimal generation digits>.glifi
 ```
 
 Creation uses the recognizable temporary `.<final-name>.tmp`, private mode `0600`, `O_EXCL`,

@@ -6,7 +6,7 @@ preset="${PGO_PRESET:-macos-pgo-generate}"
 build_dir="$root/build/${preset}"
 profile_dir="${PGO_PROFILE_DIR:-$root/build/pgo-profiles}"
 merged_profile="$profile_dir/merged.profdata"
-benchmarks="${PGO_BENCHMARKS:-$build_dir/glyphastore_benchmarks}"
+benchmarks="${PGO_BENCHMARKS:-$build_dir/glifistore_benchmarks}"
 
 find_llvm_tool() {
     local name="$1"
@@ -37,10 +37,10 @@ fi
 mkdir -p "$profile_dir"
 rm -f "$profile_dir"/*.profraw "$merged_profile"
 
-export LLVM_PROFILE_FILE="$profile_dir/glyphastore-%p-%m.profraw"
+export LLVM_PROFILE_FILE="$profile_dir/glifistore-%p-%m.profraw"
 
 echo "# PGO training profile dir: $profile_dir"
-echo "# Running GlyphaStore benchmark workload"
+echo "# Running GlifiStore benchmark workload"
 
 run_case() {
     echo "# benchmark $*"
@@ -66,7 +66,7 @@ run_case --filter store-durable-recovery-open --ops 4096 --repeats 1 --warmup 1 
 run_case --filter store-durable-parallel-all --ops 2048 --repeats 1 --warmup 1 --key-size 16 \
     --workers 4 --threads 4 --distribution worker-affine
 
-pgo_durable="${PGO_DURABLE:-$root/build/${preset}/glyphastore_pgo_durable}"
+pgo_durable="${PGO_DURABLE:-$root/build/${preset}/glifistore_pgo_durable}"
 if [[ -x "$pgo_durable" ]]; then
     echo "# durable PGO legacy binary: $pgo_durable (optional supplement)"
     "$pgo_durable" "${PGO_DURABLE_OPS:-1024}" || true

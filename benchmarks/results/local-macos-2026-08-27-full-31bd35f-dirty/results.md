@@ -1,4 +1,4 @@
-# GlyphaStore benchmark report
+# GlifiStore benchmark report
 
 Generated at `2026-08-27T03:28:10+00:00` from 180 result(s).
 

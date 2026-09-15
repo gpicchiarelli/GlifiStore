@@ -3,11 +3,11 @@ Changes
 cpanfile
 .perlcriticrc
 .perltidyrc
-lib/GlyphaStore.pm
-lib/GlyphaStore/Client.pm
-lib/GlyphaStore/Error.pm
-lib/GlyphaStore/Protocol.pm
-lib/GlyphaStore/SendFailure.pm
+lib/GlifiStore.pm
+lib/GlifiStore/Client.pm
+lib/GlifiStore/Error.pm
+lib/GlifiStore/Protocol.pm
+lib/GlifiStore/SendFailure.pm
 LICENSE
 NOTICE
 THIRD_PARTY_NOTICES.md

@@ -1,15 +1,15 @@
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/store/paired/completion_policy.hpp"
-#include "glyphastore/store/paired/fail_closed_state.hpp"
-#include "glyphastore/store/paired/lane_publication.hpp"
-#include "glyphastore/store/paired/mutation_batch.hpp"
-#include "glyphastore/store/paired/mutation_execution.hpp"
-#include "glyphastore/store/paired/mutation_recovery.hpp"
-#include "glyphastore/store/paired/mutation_state.hpp"
-#include "glyphastore/store/paired/publication_coordinator.hpp"
-#include "glyphastore/store/paired/shard_pair_runtime.hpp"
-#include "glyphastore/store/paired/volatile_sync_chunk.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/store/paired/completion_policy.hpp"
+#include "glifistore/store/paired/fail_closed_state.hpp"
+#include "glifistore/store/paired/lane_publication.hpp"
+#include "glifistore/store/paired/mutation_batch.hpp"
+#include "glifistore/store/paired/mutation_execution.hpp"
+#include "glifistore/store/paired/mutation_recovery.hpp"
+#include "glifistore/store/paired/mutation_state.hpp"
+#include "glifistore/store/paired/publication_coordinator.hpp"
+#include "glifistore/store/paired/shard_pair_runtime.hpp"
+#include "glifistore/store/paired/volatile_sync_chunk.hpp"
 #include "store/paired/shard_pair_runtime_impl.hpp"
 #include "store/store_internal.hpp"
 
@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 auto ShardPairRuntime::run_writer_sync_drain(WriterSyncDrainEnv& env) noexcept -> bool {
     auto& lane = env.lane;
@@ -228,7 +228,7 @@ auto ShardPairRuntime::run_writer_sync_drain(WriterSyncDrainEnv& env) noexcept -
                     auto results = detail::StoreAccess::mutate_durable_batch(store_, shard, views);
                     // Keep mutate_inflight through classification: a throw here must not
                     // stamp Store-entered siblings as never-started resource_exhausted.
-                    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::post_mutate)) {
+                    if (glifistore::fault::consume_fail(glifistore::fault::Site::post_mutate)) {
                         throw std::bad_alloc{};
                     }
                     if (results.size() != views.size()) {
@@ -294,7 +294,7 @@ auto ShardPairRuntime::run_writer_sync_drain(WriterSyncDrainEnv& env) noexcept -
                             sibling_snapshot_published = true;
                             // ACK-after-visibility only for sticky committed+error items.
                             ack_sticky_after_visibility();
-                            if (glyphastore::fault::consume_fail(glyphastore::fault::Site::publish)) {
+                            if (glifistore::fault::consume_fail(glifistore::fault::Site::publish)) {
                                 throw std::bad_alloc{};
                             }
                             if (sticky_publication_failure) {
@@ -760,8 +760,8 @@ auto ShardPairRuntime::run_writer_sync_drain(WriterSyncDrainEnv& env) noexcept -
                                         // Mark published before reclaim so catch cannot invert RAW.
                                         generation_published = true;
                                         shadow_mark_published(true);
-                                        if (glyphastore::fault::consume_fail(
-                                                glyphastore::fault::Site::publish)) {
+                                        if (glifistore::fault::consume_fail(
+                                                glifistore::fault::Site::publish)) {
                                             throw std::bad_alloc{};
                                         }
                                         reclaim_proportional();
@@ -799,7 +799,7 @@ auto ShardPairRuntime::run_writer_sync_drain(WriterSyncDrainEnv& env) noexcept -
                                     update_delta_stats();
                                     generation_published = true;
                                     shadow_mark_published(true);
-                                    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::publish)) {
+                                    if (glifistore::fault::consume_fail(glifistore::fault::Site::publish)) {
                                         throw std::bad_alloc{};
                                     }
                                     reclaim_proportional();
@@ -943,4 +943,4 @@ auto ShardPairRuntime::run_writer_sync_drain(WriterSyncDrainEnv& env) noexcept -
     return drained_sync_turn;
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

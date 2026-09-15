@@ -128,7 +128,7 @@ probe_path="$(cd "$probe_path" 2>/dev/null && pwd || {
   printf '%s/%s\n' "$(cd "$probe_parent" && pwd)" "$probe_name"
 })"
 
-crash_regex='^glyphastore_crash_(sync|periodic|group|daemon_sync|daemon_group|daemon_periodic)$'
+crash_regex='^glifistore_crash_(sync|periodic|group|daemon_sync|daemon_group|daemon_periodic)$'
 ctest_bin=""
 if [[ -n "${CTEST:-}" ]]; then
   ctest_bin="$CTEST"
@@ -162,8 +162,8 @@ if [[ "$run_mode" == "process-kill" ]]; then
     exit 2
   }
 elif [[ "$run_mode" == "random-campaign" ]]; then
-  [[ -x "$build_dir/glyphastore_crash_persistence" ]] ||
-    { echo "error: missing executable $build_dir/glyphastore_crash_persistence" >&2; exit 2; }
+  [[ -x "$build_dir/glifistore_crash_persistence" ]] ||
+    { echo "error: missing executable $build_dir/glifistore_crash_persistence" >&2; exit 2; }
   [[ -w "$probe_path" ]] ||
     { echo "error: probe path must be writable for random-campaign evidence: $probe_path" >&2; exit 2; }
 fi
@@ -209,7 +209,7 @@ append_command_output() {
 }
 
 {
-  printf 'schema=glyphastore-durability-evidence-v1\n'
+  printf 'schema=glifistore-durability-evidence-v1\n'
   printf 'generated_utc=%s\n' "$utc_now"
   printf 'collector=scripts/collect-durability-evidence.sh\n'
   printf 'requested_suite=%s\n' "$run_mode"
@@ -344,7 +344,7 @@ if [[ "$run_mode" != "metadata" ]]; then
       printf 'unavailable\n'
     fi
     printf '\n[test_binaries]\n'
-    for binary_name in glyphastore_crash_persistence glyphastore_crash_daemon glyphastored; do
+    for binary_name in glifistore_crash_persistence glifistore_crash_daemon glifistored; do
       binary_path="$build_dir/$binary_name"
       if [[ -x "$binary_path" ]]; then
         digest_line="$(sha256_file "$binary_path" 2>/dev/null || true)"
@@ -399,7 +399,7 @@ elif [[ "$run_mode" == "random-campaign" ]]; then
       printf 'campaign_iterations=%s\n' "$campaign_iterations"
       printf 'started_utc=%s\n\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
     } >"$log"
-    TMPDIR="$probe_path" "$build_dir/glyphastore_crash_persistence" \
+    TMPDIR="$probe_path" "$build_dir/glifistore_crash_persistence" \
       --mode random-campaign \
       --campaign-seed "$campaign_seed" \
       --iterations "$campaign_iterations" \
@@ -423,7 +423,7 @@ if [[ "$source_dirty" == "yes" ]]; then
 fi
 
 {
-  printf '# GlyphaStore durability evidence\n\n'
+  printf '# GlifiStore durability evidence\n\n'
   printf -- '- Generated (UTC): `%s`\n' "$utc_now"
   printf -- '- Source commit: `%s`\n' "$source_commit"
   printf -- '- Source worktree dirty: `%s`\n' "$source_dirty"

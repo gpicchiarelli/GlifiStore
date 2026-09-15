@@ -1,6 +1,6 @@
-#include "glyphastore/core/fault_injection.hpp"
+#include "glifistore/core/fault_injection.hpp"
 
-#if defined(GLYPHASTORE_FAULT_INJECTION)
+#if defined(GLIFISTORE_FAULT_INJECTION)
 
 #include <atomic>
 #include <chrono>
@@ -9,7 +9,7 @@
 #include <mutex>
 #include <thread>
 
-namespace glyphastore::fault {
+namespace glifistore::fault {
 namespace {
 
 constexpr std::size_t kPendingFailSlots = 4;
@@ -211,6 +211,6 @@ void at(const Site) noexcept {
     }
 }
 
-} // namespace glyphastore::fault
+} // namespace glifistore::fault
 
 #endif

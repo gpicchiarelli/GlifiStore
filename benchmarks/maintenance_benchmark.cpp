@@ -1,11 +1,11 @@
 #include "benchmark_metadata.hpp"
-#include "glyphastore/core/error.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/core/types.hpp"
-#include "glyphastore/persistence/filesystem_hooks.hpp"
-#include "glyphastore/segment/record.hpp"
-#include "glyphastore/store/config.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/core/error.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/core/types.hpp"
+#include "glifistore/persistence/filesystem_hooks.hpp"
+#include "glifistore/segment/record.hpp"
+#include "glifistore/store/config.hpp"
+#include "glifistore/store/store.hpp"
 #include "parse.hpp"
 
 #include <algorithm>
@@ -101,7 +101,7 @@ struct CompactionStartGate {
     std::atomic_bool claimed{false};
     std::atomic_bool intent_claimed{false};
 
-    static auto available_space_bytes(void* context) -> glyphastore::Result<std::uint64_t> {
+    static auto available_space_bytes(void* context) -> glifistore::Result<std::uint64_t> {
         auto& gate = *static_cast<CompactionStartGate*>(context);
         if (std::this_thread::get_id() != gate.opener_thread &&
             !gate.claimed.exchange(true, std::memory_order_acq_rel)) {
@@ -110,16 +110,16 @@ struct CompactionStartGate {
         std::error_code error;
         const auto space = std::filesystem::space(gate.store, error);
         if (error) {
-            return glyphastore::fail(glyphastore::ErrorCode::io_error,
+            return glifistore::fail(glifistore::ErrorCode::io_error,
                                      "maintenance benchmark space probe failed");
         }
         return static_cast<std::uint64_t>(space.available);
     }
 
-    static auto before(void* context, const glyphastore::FilesystemOperation operation)
-        -> glyphastore::Status {
+    static auto before(void* context, const glifistore::FilesystemOperation operation)
+        -> glifistore::Status {
         auto& gate = *static_cast<CompactionStartGate*>(context);
-        if (operation == glyphastore::FilesystemOperation::write_compaction_intent &&
+        if (operation == glifistore::FilesystemOperation::write_compaction_intent &&
             gate.compaction_intent_started != nullptr && gate.rotation_entered != nullptr &&
             !gate.intent_claimed.exchange(true, std::memory_order_acq_rel)) {
             gate.compaction_intent_started->count_down();
@@ -164,14 +164,14 @@ struct Sample {
     std::uint64_t maintenance_pacing_delay_ns{};
     std::uint64_t maintenance_pacing_sleep_count{};
     std::uint64_t maintenance_pacing_burst_bytes{};
-    glyphastore::MaintenanceSkipReason maintenance_last_skip{};
-    glyphastore::MaintenanceObservation maintenance_observation{};
-    glyphastore::DurableRotationStats rotation{};
+    glifistore::MaintenanceSkipReason maintenance_last_skip{};
+    glifistore::MaintenanceObservation maintenance_observation{};
+    glifistore::DurableRotationStats rotation{};
     std::size_t segments_after{};
 };
 
-[[nodiscard]] auto is_generation_backpressure(const glyphastore::Error& error) noexcept -> bool {
-    if (error.code != glyphastore::ErrorCode::resource_exhausted) {
+[[nodiscard]] auto is_generation_backpressure(const glifistore::Error& error) noexcept -> bool {
+    if (error.code != glifistore::ErrorCode::resource_exhausted) {
         return false;
     }
     return error.message == "mutation rejected until paired Reader reaches quiescence" ||
@@ -218,7 +218,7 @@ class TemporaryDirectory final {
   public:
     TemporaryDirectory() {
         auto pattern =
-            (std::filesystem::temp_directory_path() / "glyphastore-maintenance-bench-XXXXXX").string();
+            (std::filesystem::temp_directory_path() / "glifistore-maintenance-bench-XXXXXX").string();
         std::vector<char> writable(pattern.begin(), pattern.end());
         writable.push_back('\0');
         const auto* created = ::mkdtemp(writable.data());
@@ -285,34 +285,34 @@ class TemporaryDirectory final {
     return "unknown";
 }
 
-[[nodiscard]] auto skip_reason_name(const glyphastore::MaintenanceSkipReason reason) noexcept
+[[nodiscard]] auto skip_reason_name(const glifistore::MaintenanceSkipReason reason) noexcept
     -> std::string_view {
     switch (reason) {
-    case glyphastore::MaintenanceSkipReason::none:
+    case glifistore::MaintenanceSkipReason::none:
         return "none";
-    case glyphastore::MaintenanceSkipReason::mode_disabled:
+    case glifistore::MaintenanceSkipReason::mode_disabled:
         return "mode-disabled";
-    case glyphastore::MaintenanceSkipReason::mode_cooperative:
+    case glifistore::MaintenanceSkipReason::mode_cooperative:
         return "mode-cooperative";
-    case glyphastore::MaintenanceSkipReason::no_gain:
+    case glifistore::MaintenanceSkipReason::no_gain:
         return "no-gain";
-    case glyphastore::MaintenanceSkipReason::no_candidate:
+    case glifistore::MaintenanceSkipReason::no_candidate:
         return "no-candidate";
-    case glyphastore::MaintenanceSkipReason::budget:
+    case glifistore::MaintenanceSkipReason::budget:
         return "budget";
-    case glyphastore::MaintenanceSkipReason::store_closed:
+    case glifistore::MaintenanceSkipReason::store_closed:
         return "store-closed";
-    case glyphastore::MaintenanceSkipReason::sequence_conflict:
+    case glifistore::MaintenanceSkipReason::sequence_conflict:
         return "sequence-conflict";
-    case glyphastore::MaintenanceSkipReason::policy_deferred:
+    case glifistore::MaintenanceSkipReason::policy_deferred:
         return "policy-deferred";
-    case glyphastore::MaintenanceSkipReason::reclaim_threshold:
+    case glifistore::MaintenanceSkipReason::reclaim_threshold:
         return "reclaim-threshold";
-    case glyphastore::MaintenanceSkipReason::copy_budget:
+    case glifistore::MaintenanceSkipReason::copy_budget:
         return "copy-budget";
-    case glyphastore::MaintenanceSkipReason::rate_budget:
+    case glifistore::MaintenanceSkipReason::rate_budget:
         return "rate-budget";
-    case glyphastore::MaintenanceSkipReason::latency_budget:
+    case glifistore::MaintenanceSkipReason::latency_budget:
         return "latency-budget";
     }
     return "unknown";
@@ -339,7 +339,7 @@ class TemporaryDirectory final {
         throw std::runtime_error("missing value for " + std::string{flag});
     }
     const std::string_view text{value};
-    const auto parsed = glyphastore::bench::parse_decimal_size(text);
+    const auto parsed = glifistore::bench::parse_decimal_size(text);
     if (!parsed) {
         throw std::runtime_error("invalid value for " + std::string{flag} + ": " + std::string{text});
     }
@@ -385,7 +385,7 @@ class TemporaryDirectory final {
         } else if (argument == "--scenario" && index + 1 < argc) {
             options.scenario = parse_scenario(argv[++index]);
         } else if (argument == "--help" || argument == "-h") {
-            std::cout << "usage: glyphastore_maintenance_benchmark [--warmup N] [--repeats N]"
+            std::cout << "usage: glifistore_maintenance_benchmark [--warmup N] [--repeats N]"
                          " [--operations N] [--threads N] [--keys N] [--value-bytes N]"
                          " [--reclaim-value-bytes N]"
                          " [--put-percent N] [--maintenance-interval-ms N]"
@@ -427,35 +427,35 @@ class TemporaryDirectory final {
     return options;
 }
 
-[[nodiscard]] auto maintenance_mode(const Mode mode) noexcept -> glyphastore::MaintenanceMode {
+[[nodiscard]] auto maintenance_mode(const Mode mode) noexcept -> glifistore::MaintenanceMode {
     switch (mode) {
     case Mode::disabled:
-        return glyphastore::MaintenanceMode::disabled;
+        return glifistore::MaintenanceMode::disabled;
     case Mode::cooperative:
-        return glyphastore::MaintenanceMode::cooperative;
+        return glifistore::MaintenanceMode::cooperative;
     case Mode::background:
-        return glyphastore::MaintenanceMode::background;
+        return glifistore::MaintenanceMode::background;
     }
-    return glyphastore::MaintenanceMode::disabled;
+    return glifistore::MaintenanceMode::disabled;
 }
 
 [[nodiscard]] auto store_config(const Options& options, const Mode mode,
                                 const std::filesystem::path& directory,
-                                const glyphastore::DurableOpenMode open_mode, CompactionStartGate* start_gate)
-    -> glyphastore::StoreConfig {
+                                const glifistore::DurableOpenMode open_mode, CompactionStartGate* start_gate)
+    -> glifistore::StoreConfig {
     const auto interval = static_cast<std::uint32_t>(options.maintenance_interval_ms);
     const bool default_idle_intervals =
         options.scenario == Scenario::idle && !options.maintenance_interval_set;
-    glyphastore::StoreConfig config{
+    glifistore::StoreConfig config{
         .worker_config = {.explicit_count = kBenchmarkWorkerCount},
-        .storage_mode = glyphastore::StorageMode::durable_periodic,
+        .storage_mode = glifistore::StorageMode::durable_periodic,
         .data_directory = directory,
         .durable_open_mode = open_mode,
         .durable_periodic =
             {
                 .sync_interval_ms = 60'000,
                 .batch =
-                    glyphastore::DurableGroupConfig{
+                    glifistore::DurableGroupConfig{
                         .max_records = 4'096,
                         .max_bytes = 32U * 1024U * 1024U,
                         .max_wait_ms = 60'000,
@@ -481,17 +481,17 @@ class TemporaryDirectory final {
 }
 
 [[nodiscard]] auto open_store(const Options& options, const Mode mode, const std::filesystem::path& directory,
-                              const glyphastore::DurableOpenMode open_mode,
+                              const glifistore::DurableOpenMode open_mode,
                               CompactionStartGate* start_gate = nullptr)
-    -> std::unique_ptr<glyphastore::Store> {
-    auto opened = glyphastore::Store::open(store_config(options, mode, directory, open_mode, start_gate));
+    -> std::unique_ptr<glifistore::Store> {
+    auto opened = glifistore::Store::open(store_config(options, mode, directory, open_mode, start_gate));
     if (!opened) {
         throw std::runtime_error("failed to open maintenance benchmark Store: " + opened.error().message);
     }
     return std::move(*opened);
 }
 
-void require_status(const glyphastore::Status& status, const std::string_view operation) {
+void require_status(const glifistore::Status& status, const std::string_view operation) {
     if (!status) {
         throw std::runtime_error(std::string{operation} + " failed: " + status.error().message);
     }
@@ -502,7 +502,7 @@ void require_status(const glyphastore::Status& status, const std::string_view op
     std::size_t matched{};
     for (std::size_t suffix = 0; suffix < 1'000'000; ++suffix) {
         auto candidate = std::string{prefix} + std::to_string(suffix);
-        if (glyphastore::route_worker(candidate, 2) != worker) {
+        if (glifistore::route_worker(candidate, 2) != worker) {
             continue;
         }
         if (matched++ == ordinal) {
@@ -571,14 +571,14 @@ void require_status(const glyphastore::Status& status, const std::string_view op
     std::size_t count{};
     for (const auto& entry : std::filesystem::directory_iterator(directory)) {
         const auto name = entry.path().filename().string();
-        if (name.starts_with("segment-") && name.ends_with(".glypha")) {
+        if (name.starts_with("segment-") && name.ends_with(".glifi")) {
             ++count;
         }
     }
     return count;
 }
 
-void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& keys,
+void verify_reopened(glifistore::Store& store, const std::vector<std::string>& keys,
                      const std::size_t value_bytes) {
     require_status(store.verify_index(), "verify_index");
     for (const auto& key : keys) {
@@ -589,10 +589,10 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
     }
 }
 
-[[nodiscard]] auto settle_background_maintenance(glyphastore::Store& store,
+[[nodiscard]] auto settle_background_maintenance(glifistore::Store& store,
                                                  const std::uint64_t minimum_useful,
                                                  const std::uint64_t worker_count)
-    -> glyphastore::MaintenanceSnapshot {
+    -> glifistore::MaintenanceSnapshot {
     const auto deadline = Clock::now() + std::chrono::seconds{5};
     auto stable_since = Clock::now();
     auto snapshot = store.maintenance_snapshot();
@@ -608,9 +608,9 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
             stable_evaluation_start = snapshot.evaluation_cycles;
             stable_since = Clock::now();
         }
-        const bool quiescent = snapshot.state != glyphastore::MaintenanceState::evaluating &&
-                               snapshot.state != glyphastore::MaintenanceState::compacting &&
-                               snapshot.state != glyphastore::MaintenanceState::draining;
+        const bool quiescent = snapshot.state != glifistore::MaintenanceState::evaluating &&
+                               snapshot.state != glifistore::MaintenanceState::compacting &&
+                               snapshot.state != glifistore::MaintenanceState::draining;
         const auto& observation = snapshot.last_observation;
         const bool no_reclaimable_candidate =
             !observation.compaction_candidate_worker ||
@@ -642,7 +642,7 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
     }
 
     auto seed_store =
-        open_store(options, Mode::disabled, directory.store(), glyphastore::DurableOpenMode::create_new);
+        open_store(options, Mode::disabled, directory.store(), glifistore::DurableOpenMode::create_new);
     std::vector<std::byte> seed_value(options.reclaim_value_bytes, std::byte{0x5A});
     constexpr std::size_t seed_operations{1'024};
     for (std::size_t operation = 0; operation < seed_operations; ++operation) {
@@ -667,7 +667,7 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
         .store = directory.store(),
         .opener_thread = std::this_thread::get_id(),
     };
-    auto store = open_store(options, mode, directory.store(), glyphastore::DurableOpenMode::open_existing,
+    auto store = open_store(options, mode, directory.store(), glifistore::DurableOpenMode::open_existing,
                             &start_gate);
 
     std::vector<ThreadStats> thread_stats(options.threads);
@@ -746,7 +746,7 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
                     ++cooperative_stats.useful;
                     cooperative_stats.bytes_copied += compacted->bytes_copied;
                 }
-            } else if (compacted.error().code == glyphastore::ErrorCode::sequence_conflict) {
+            } else if (compacted.error().code == glifistore::ErrorCode::sequence_conflict) {
                 ++cooperative_stats.conflicts;
             } else {
                 ++cooperative_stats.unexpected_errors;
@@ -810,7 +810,7 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
     const auto segments_after = segment_count(directory.store());
 
     auto reopened =
-        open_store(options, Mode::disabled, directory.store(), glyphastore::DurableOpenMode::open_existing);
+        open_store(options, Mode::disabled, directory.store(), glifistore::DurableOpenMode::open_existing);
     verify_reopened(*reopened, reclaim_keys, options.reclaim_value_bytes);
     verify_reopened(*reopened, foreground_keys, options.value_bytes);
     require_status(reopened->close(), "reopened Store close");
@@ -843,9 +843,9 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
         .maintenance_pacing_sleep_count = cooperative ? 0 : maintenance.last_compaction_pacing_sleep_count,
         .maintenance_pacing_burst_bytes = cooperative ? 0 : maintenance.last_compaction_pacing_burst_bytes,
         .maintenance_last_skip =
-            cooperative ? glyphastore::MaintenanceSkipReason::none : maintenance.last_skip_reason,
+            cooperative ? glifistore::MaintenanceSkipReason::none : maintenance.last_skip_reason,
         .maintenance_observation =
-            cooperative ? glyphastore::MaintenanceObservation{} : maintenance.last_observation,
+            cooperative ? glifistore::MaintenanceObservation{} : maintenance.last_observation,
         .rotation = maintenance.rotation,
         .segments_after = segments_after,
     };
@@ -862,7 +862,7 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
     const auto rotating_key = key_for_worker(1, 0, "rotation-foreground-");
 
     auto seed_store =
-        open_store(options, Mode::disabled, directory.store(), glyphastore::DurableOpenMode::create_new);
+        open_store(options, Mode::disabled, directory.store(), glifistore::DurableOpenMode::create_new);
     std::vector<std::byte> seed_value(options.reclaim_value_bytes, std::byte{0x5A});
     constexpr std::size_t seed_operations{1'024};
     for (std::size_t operation = 0; operation < seed_operations; ++operation) {
@@ -874,19 +874,19 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
 
     std::vector<std::byte> rotation_value(options.reclaim_value_bytes, std::byte{0x3C});
     const auto key_bytes = std::as_bytes(std::span{rotating_key});
-    const glyphastore::RecordInput sizing{
-        .sequence = glyphastore::SequenceNumber{1},
-        .opcode = glyphastore::Opcode::put,
-        .type = glyphastore::ValueType::bytes,
-        .key_hash = glyphastore::hash_key(key_bytes),
+    const glifistore::RecordInput sizing{
+        .sequence = glifistore::SequenceNumber{1},
+        .opcode = glifistore::Opcode::put,
+        .type = glifistore::ValueType::bytes,
+        .key_hash = glifistore::hash_key(key_bytes),
         .key = key_bytes,
         .value = rotation_value,
     };
-    const auto encoded_size = glyphastore::encoded_record_size(sizing);
+    const auto encoded_size = glifistore::encoded_record_size(sizing);
     if (!encoded_size) {
         throw std::runtime_error("failed to size forced-rotation Record: " + encoded_size.error().message);
     }
-    const auto payload_bytes = glyphastore::kSegmentSizeBytes - glyphastore::kSegmentHeaderReservedBytes;
+    const auto payload_bytes = glifistore::kSegmentSizeBytes - glifistore::kSegmentHeaderReservedBytes;
     const auto fill_records = payload_bytes / *encoded_size;
     if (fill_records == 0) {
         throw std::runtime_error("forced-rotation Record does not fit in a Segment");
@@ -910,7 +910,7 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
         .store = directory.store(),
         .opener_thread = std::this_thread::get_id(),
     };
-    auto store = open_store(options, mode, directory.store(), glyphastore::DurableOpenMode::open_existing,
+    auto store = open_store(options, mode, directory.store(), glifistore::DurableOpenMode::open_existing,
                             &start_gate);
 
     CooperativeStats cooperative_stats;
@@ -925,7 +925,7 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
                     ++cooperative_stats.useful;
                     cooperative_stats.bytes_copied += compacted->bytes_copied;
                 }
-            } else if (compacted.error().code == glyphastore::ErrorCode::sequence_conflict) {
+            } else if (compacted.error().code == glifistore::ErrorCode::sequence_conflict) {
                 ++cooperative_stats.conflicts;
             } else {
                 ++cooperative_stats.unexpected_errors;
@@ -933,7 +933,7 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
         });
     }
 
-    glyphastore::Status rotation;
+    glifistore::Status rotation;
     std::uint64_t rotation_latency_ns{};
     std::thread writer{[&] {
         start.wait();
@@ -988,7 +988,7 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
     const auto segments_after = segment_count(directory.store());
 
     auto reopened =
-        open_store(options, Mode::disabled, directory.store(), glyphastore::DurableOpenMode::open_existing);
+        open_store(options, Mode::disabled, directory.store(), glifistore::DurableOpenMode::open_existing);
     verify_reopened(*reopened, reclaim_keys, options.reclaim_value_bytes);
     verify_reopened(*reopened, std::vector<std::string>{rotating_key}, options.reclaim_value_bytes);
     require_status(reopened->close(), "forced-rotation reopened Store close");
@@ -1035,7 +1035,7 @@ void verify_reopened(glyphastore::Store& store, const std::vector<std::string>& 
         .opener_thread = std::this_thread::get_id(),
     };
     auto store =
-        open_store(options, mode, directory.store(), glyphastore::DurableOpenMode::create_new, &start_gate);
+        open_store(options, mode, directory.store(), glifistore::DurableOpenMode::create_new, &start_gate);
     const auto cpu_started = process_cpu_ns();
     const auto wall_started = Clock::now();
     start.count_down();
@@ -1163,8 +1163,8 @@ int main(int argc, char** argv) {
             throw std::runtime_error("maintenance benchmark selected no modes");
         }
 
-        std::cout << "# benchmark=glyphastore_concurrent_maintenance\n";
-        glyphastore::bench::print_common_metadata(std::cout, options.warmups, options.repeats);
+        std::cout << "# benchmark=glifistore_concurrent_maintenance\n";
+        glifistore::bench::print_common_metadata(std::cout, options.warmups, options.repeats);
         std::cout << "# scenario=" << scenario_name(options.scenario) << '\n';
         std::cout << "# threads=" << options.threads << ";operations=" << options.operations
                   << ";keys=" << options.keys << ";value_bytes=" << options.value_bytes

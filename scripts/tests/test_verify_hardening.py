@@ -27,9 +27,9 @@ class VerifyHardeningTests(unittest.TestCase):
         )
 
     def test_binary_mode_inspects_exact_executable(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="glyphastore-hardening-test-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="glifistore-hardening-test-") as temporary:
             directory = Path(temporary)
-            binary = directory / "glyphastored"
+            binary = directory / "glifistored"
             binary.write_bytes(b"ELF fixture")
             binary.chmod(0o755)
             readelf = directory / "readelf"
@@ -53,12 +53,12 @@ esac
             self.assertIn("distributed ELF properties", result.stdout)
 
     def test_binary_mode_rejects_symlink_before_resolution(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="glyphastore-hardening-test-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="glifistore-hardening-test-") as temporary:
             directory = Path(temporary)
             target = directory / "target"
             target.write_bytes(b"ELF fixture")
             target.chmod(0o755)
-            link = directory / "glyphastored"
+            link = directory / "glifistored"
             link.symlink_to(target)
 
             result = self.run_verifier("--binary", str(link))
@@ -67,8 +67,8 @@ esac
             self.assertIn("missing or unsafe", result.stderr)
 
     def test_binary_mode_rejects_non_executable_file(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="glyphastore-hardening-test-") as temporary:
-            binary = Path(temporary) / "glyphastored"
+        with tempfile.TemporaryDirectory(prefix="glifistore-hardening-test-") as temporary:
+            binary = Path(temporary) / "glifistored"
             binary.write_bytes(b"ELF fixture")
             binary.chmod(0o644)
 
@@ -79,7 +79,7 @@ esac
 
     def test_cli_requires_exactly_one_input_mode(self) -> None:
         missing = self.run_verifier()
-        both = self.run_verifier("build/unix-strict", "--binary", "glyphastored")
+        both = self.run_verifier("build/unix-strict", "--binary", "glifistored")
 
         self.assertEqual(missing.returncode, 2)
         self.assertEqual(both.returncode, 2)

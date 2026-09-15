@@ -1,11 +1,11 @@
-#include "glyphastore/server/poller.hpp"
+#include "glifistore/server/poller.hpp"
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
 #error "kqueue backend requires macOS, FreeBSD, or OpenBSD"
 #endif
 
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/server/socket.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/server/socket.hpp"
 #include "system_error.hpp"
 
 #include <algorithm>
@@ -15,7 +15,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 [[nodiscard]] auto token_pointer(const std::uint64_t token) noexcept -> void* {
@@ -92,7 +92,7 @@ auto Poller::modify(const int descriptor, const std::uint64_t token, const IoInt
 }
 
 auto Poller::remove(const int descriptor) -> Status {
-    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::poller_remove)) {
+    if (glifistore::fault::consume_fail(glifistore::fault::Site::poller_remove)) {
         return fail(ErrorCode::io_error, "injected poller remove failure");
     }
     std::array<struct kevent, 2> changes{};
@@ -139,4 +139,4 @@ auto Poller::wait(const std::span<IoEvent> events, const int timeout_ms) -> Resu
     return static_cast<std::size_t>(ready);
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

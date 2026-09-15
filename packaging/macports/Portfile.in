@@ -8,7 +8,7 @@
 PortSystem              1.0
 PortGroup               cmake 1.1
 
-name                    glyphastore
+name                    glifistore
 version                 {{VERSION}}
 revision                {{REVISION}}
 categories              databases
@@ -17,13 +17,13 @@ maintainers             {gmail.com:gpicchiarelli @gpicchiarelli}
 
 description             Paired reader/writer key-value storage prototype
 
-long_description        GlyphaStore is an architectural prototype of a paired \
+long_description        GlifiStore is an architectural prototype of a paired \
                         reader/writer key-value store: partition ownership, \
                         immutable read generations, bounded lanes and \
                         fail-closed recovery. It is engineering and research \
                         material, not production storage software.
 
-homepage                https://github.com/gpicchiarelli/GlyphaStore
+homepage                https://github.com/gpicchiarelli/GlifiStore
 
 master_sites            {{MASTER_SITES}}
 distname                {{DISTNAME}}
@@ -35,12 +35,12 @@ depends_lib             port:openssl3
 
 compiler.cxx_standard   2023
 
-configure.args-append   -DGLYPHASTORE_ENABLE_TLS=ON \
-                        -DGLYPHASTORE_BUILD_BENCHMARKS=OFF \
-                        -DGLYPHASTORE_BUILD_FUZZERS=OFF \
-                        -DGLYPHASTORE_FAULT_INJECTION=OFF \
-                        -DGLYPHASTORE_NATIVE_CPU=OFF \
-                        -DGLYPHASTORE_WARNINGS_AS_ERRORS=ON \
+configure.args-append   -DGLIFISTORE_ENABLE_TLS=ON \
+                        -DGLIFISTORE_BUILD_BENCHMARKS=OFF \
+                        -DGLIFISTORE_BUILD_FUZZERS=OFF \
+                        -DGLIFISTORE_FAULT_INJECTION=OFF \
+                        -DGLIFISTORE_NATIVE_CPU=OFF \
+                        -DGLIFISTORE_WARNINGS_AS_ERRORS=ON \
                         -DOPENSSL_ROOT_DIR=${prefix}
 
 # A MacPorts build must resolve every dependency inside its own prefix. Picking
@@ -54,57 +54,57 @@ test.run                yes
 test.target             test
 
 # Dedicated unprivileged service account; the daemon never runs as root.
-add_users               glyphastore group=glyphastore \
-                        realname=GlyphaStore\ service\ account
+add_users               glifistore group=glifistore \
+                        realname=GlifiStore\ service\ account
 
 # Unprivileged launchd job (MacPorts 2.7+ startupitem.user/group). The daemon is
 # Type=simple / stays in the foreground, which matches startupitem.executable.
 startupitem.create      yes
-startupitem.executable  ${prefix}/bin/glyphastored --config ${prefix}/etc/glyphastore/glyphastored.conf
-startupitem.user        glyphastore
-startupitem.group       glyphastore
+startupitem.executable  ${prefix}/bin/glifistored --config ${prefix}/etc/glifistore/glifistored.conf
+startupitem.user        glifistore
+startupitem.group       glifistore
 startupitem.netchange   no
 
-set glyphastore_confdir ${prefix}/etc/glyphastore
-set glyphastore_datadir ${prefix}/var/db/glyphastore
+set glifistore_confdir ${prefix}/etc/glifistore
+set glifistore_datadir ${prefix}/var/db/glifistore
 
-destroot.keepdirs       ${destroot}${glyphastore_datadir}
+destroot.keepdirs       ${destroot}${glifistore_datadir}
 
 post-destroot {
-    xinstall -d -m 0755 ${destroot}${glyphastore_confdir}
-    xinstall -m 0644 ${filespath}/glyphastored.conf.sample \
-        ${destroot}${glyphastore_confdir}/glyphastored.conf.sample
-    reinplace "s|@GLYPHASTORE_DATA_DIR@|${glyphastore_datadir}|g" \
-        ${destroot}${glyphastore_confdir}/glyphastored.conf.sample
-    xinstall -d -m 0750 ${destroot}${glyphastore_datadir}
+    xinstall -d -m 0755 ${destroot}${glifistore_confdir}
+    xinstall -m 0644 ${filespath}/glifistored.conf.sample \
+        ${destroot}${glifistore_confdir}/glifistored.conf.sample
+    reinplace "s|@GLIFISTORE_DATA_DIR@|${glifistore_datadir}|g" \
+        ${destroot}${glifistore_confdir}/glifistored.conf.sample
+    xinstall -d -m 0750 ${destroot}${glifistore_datadir}
 }
 
 post-activate {
-    if {![file isdirectory ${glyphastore_datadir}]} {
-        xinstall -d -m 0750 ${glyphastore_datadir}
+    if {![file isdirectory ${glifistore_datadir}]} {
+        xinstall -d -m 0750 ${glifistore_datadir}
     }
-    file attributes ${glyphastore_datadir} \
-        -owner glyphastore -group glyphastore -permissions 0750
-    if {![file exists ${glyphastore_confdir}/glyphastored.conf]} {
-        xinstall -m 0644 ${glyphastore_confdir}/glyphastored.conf.sample \
-            ${glyphastore_confdir}/glyphastored.conf
+    file attributes ${glifistore_datadir} \
+        -owner glifistore -group glifistore -permissions 0750
+    if {![file exists ${glifistore_confdir}/glifistored.conf]} {
+        xinstall -m 0644 ${glifistore_confdir}/glifistored.conf.sample \
+            ${glifistore_confdir}/glifistored.conf
     }
 }
 
 notes "
-GlyphaStore is an architectural prototype. Review every limit in
-${glyphastore_confdir}/glyphastored.conf before exposing the daemon beyond
+GlifiStore is an architectural prototype. Review every limit in
+${glifistore_confdir}/glifistored.conf before exposing the daemon beyond
 loopback.
 
 The port installs an unprivileged launchd startup item (user/group
-glyphastore). After install, start it with:
+glifistore). After install, start it with:
 
-    sudo port load glyphastore
+    sudo port load glifistore
 
-Durable data lives in ${glyphastore_datadir} and is never removed by
+Durable data lives in ${glifistore_datadir} and is never removed by
 `port uninstall`.
 "
 
 livecheck.type          regex
-livecheck.url           https://github.com/gpicchiarelli/GlyphaStore/releases
-livecheck.regex         {GlyphaStore-(\d+(?:\.\d+)+)\.tar\.xz}
+livecheck.url           https://github.com/gpicchiarelli/GlifiStore/releases
+livecheck.regex         {GlifiStore-(\d+(?:\.\d+)+)\.tar\.xz}

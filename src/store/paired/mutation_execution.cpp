@@ -1,8 +1,8 @@
-#include "glyphastore/store/paired/mutation_execution.hpp"
+#include "glifistore/store/paired/mutation_execution.hpp"
 
 #include "store/store_internal.hpp"
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 void rewrite_known_not_committed_wire_error(Error& error) noexcept {
     switch (error.code) {
@@ -49,4 +49,4 @@ auto execute_durable_single(Store& store, const std::size_t shard, const Mutatio
     return result;
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

@@ -1,6 +1,6 @@
-#include "glyphastore/persistence/segment_file.hpp"
+#include "glifistore/persistence/segment_file.hpp"
 
-#include "glyphastore/core/fault_injection.hpp"
+#include "glifistore/core/fault_injection.hpp"
 #include "segment_file_detail.hpp"
 #include "system_error.hpp"
 
@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 
 using segment_file_detail::creation_failure;
 using segment_file_detail::fixed_hex;
@@ -26,7 +26,7 @@ using segment_file_detail::validate_private_segment;
 
 auto segment_filename(const SegmentHeaderIdentity& identity) -> std::string {
     return "segment-" + fixed_hex(identity.segment_id.value, 16) + '-' +
-           fixed_hex(identity.generation.value, 8) + ".glypha";
+           fixed_hex(identity.generation.value, 8) + ".glifi";
 }
 
 auto DurableSegmentFile::create(DataDirectory& directory, const SegmentHeaderIdentity& identity)
@@ -332,7 +332,7 @@ void DurableSegmentFile::discard_staged(DataDirectory& directory,
 
 auto DurableSegmentFile::open(DataDirectory& directory, const SegmentHeaderIdentity& expected_identity,
                               const SegmentFileOpenMode mode) -> Result<DurableSegmentFile> {
-    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::segment_open)) {
+    if (glifistore::fault::consume_fail(glifistore::fault::Site::segment_open)) {
         return fail(ErrorCode::descriptor_exhausted, "injected Segment open failure");
     }
     if (!directory.healthy()) {
@@ -449,4 +449,4 @@ void DurableSegmentFile::rollback_pending_metadata() noexcept {
     pending_bytes_ = 0;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

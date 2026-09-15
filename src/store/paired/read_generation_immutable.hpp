@@ -5,7 +5,7 @@
 
 #include "store/paired/read_generation_internals.hpp"
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 class ImmutableReadIndex final {
   public:
@@ -349,4 +349,4 @@ class ImmutableReadIndex final {
     friend class IncrementalBaseBuilder;
 };
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

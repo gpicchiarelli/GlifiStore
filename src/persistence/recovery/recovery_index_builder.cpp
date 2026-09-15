@@ -1,12 +1,12 @@
 #include "persistence/recovery/recovery_index_builder.hpp"
 
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/persistence/resource_limits.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
 
 #include <limits>
 #include <utility>
 
-namespace glyphastore::recovery {
+namespace glifistore::recovery {
 
 auto RecoveryIndexBuilder::build(const WorkerId worker, const std::size_t worker_index,
                                  const std::size_t worker_count, const WorkerRoutingState routing,
@@ -74,4 +74,4 @@ auto RecoveryIndexBuilder::build(const WorkerId worker, const std::size_t worker
     };
 }
 
-} // namespace glyphastore::recovery
+} // namespace glifistore::recovery

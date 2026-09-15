@@ -12,7 +12,7 @@
 | `lane_state.hpp` | Pad `queued_bytes`; Writer telemetry barrier; `LaneMetrics` `alignas(128)` | static_assert + build |
 | `adopt_read_generation` | Skip `reader_safe_epoch` acq_rel when unchanged | memory-order inventory |
 | Writer / sync waiter | pause → yield → park ladder | combining + paired tests |
-| GET ≤64 B | Zero-heap steady-state forbid-alloc | `glyphastore_allocation_fault_tests` |
+| GET ≤64 B | Zero-heap steady-state forbid-alloc | `glifistore_allocation_fault_tests` |
 | Combining | durable_sync × token FIFO; put_batch RAW; hot-key sibling shard | `shard_combining_executor_tests` |
 | SPSC | Hot-producer backpressure; slow-consumer fairness | `bounded_mpsc_queue_tests` |
 

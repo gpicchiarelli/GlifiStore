@@ -17,7 +17,7 @@ excluded.
 
 ## Workload
 
-`glyphastore_maintenance_benchmark --scenario mixed --operations 15360 --threads 4 --keys 128
+`glifistore_maintenance_benchmark --scenario mixed --operations 15360 --threads 4 --keys 128
 --value-bytes 65536 --reclaim-value-bytes 262144 --put-percent 5 --maintenance-interval-ms 10
 --cooldown-ms 250 --warmup 2 --repeats 5`
 

@@ -1,25 +1,25 @@
 # Manual pages
 
-GlyphaStore ships portable [mdoc(7)](https://man.openbsd.org/mdoc.7) sources for
+GlifiStore ships portable [mdoc(7)](https://man.openbsd.org/mdoc.7) sources for
 every binary installed by the Runtime component.
 
 | Page | Section | Binary |
 |---|---|---|
-| `glyphastore.7` | 7 | overview |
-| `glyphastored.8` | 8 | `glyphastored` |
-| `glyphastore_demo.1` | 1 | `glyphastore_demo` |
-| `glyphastore_inspect_segment.1` | 1 | `glyphastore_inspect_segment` |
-| `glyphastore_verify_store.1` | 1 | `glyphastore_verify_store` |
-| `glyphastore_backup_store.1` | 1 | `glyphastore_backup_store` |
-| `glyphastore_migrate_store.1` | 1 | `glyphastore_migrate_store` |
-| `glyphastore_repair_store.1` | 1 | `glyphastore_repair_store` |
-| `glyphastore_rebuild_index.1` | 1 | `glyphastore_rebuild_index` |
+| `glifistore.7` | 7 | overview |
+| `glifistored.8` | 8 | `glifistored` |
+| `glifistore_demo.1` | 1 | `glifistore_demo` |
+| `glifistore_inspect_segment.1` | 1 | `glifistore_inspect_segment` |
+| `glifistore_verify_store.1` | 1 | `glifistore_verify_store` |
+| `glifistore_backup_store.1` | 1 | `glifistore_backup_store` |
+| `glifistore_migrate_store.1` | 1 | `glifistore_migrate_store` |
+| `glifistore_repair_store.1` | 1 | `glifistore_repair_store` |
+| `glifistore_rebuild_index.1` | 1 | `glifistore_rebuild_index` |
 
 ## Build and install
 
 ```bash
-cmake -S . -B build -DGLYPHASTORE_MAN_DATE="August 1, 2026"
-cmake --build build --target glyphastore_manpages
+cmake -S . -B build -DGLIFISTORE_MAN_DATE="August 1, 2026"
+cmake --build build --target glifistore_manpages
 cmake --install build --component Runtime
 ```
 
@@ -29,7 +29,7 @@ typically `share/man` on Linux/BSD and Homebrew prefixes on macOS.
 Optional gzip at install time:
 
 ```bash
-cmake -S . -B build -DGLYPHASTORE_COMPRESS_MANPAGES=ON
+cmake -S . -B build -DGLIFISTORE_COMPRESS_MANPAGES=ON
 ```
 
 Default is uncompressed so installs do not require `gzip`; packaging may compress

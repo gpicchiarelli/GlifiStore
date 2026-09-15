@@ -1,6 +1,6 @@
 # Shared installed-file inventory
 
-[`payload.yaml`](payload.yaml) is the one inventory of what a GlyphaStore package
+[`payload.yaml`](payload.yaml) is the one inventory of what a GlifiStore package
 installs, split into the components the retention policy cares about. It exists so
 that a payload claim is checked against a declared list rather than against
 whatever the build happened to produce.
@@ -9,11 +9,11 @@ whatever the build happened to produce.
 
 | Component | Contents | Removed by `remove` | Removed by `purge` |
 | --- | --- | --- | --- |
-| `runtime` | daemon, operator tools, `share/GlyphaStore` metadata | yes | yes |
-| `library` | `libglyphastore.so.<abi-major>` and its full-version sibling | yes | yes |
+| `runtime` | daemon, operator tools, `share/GlifiStore` metadata | yes | yes |
+| `library` | `libglifistore.so.<abi-major>` and its full-version sibling | yes | yes |
 | `development` | headers, static libraries, the `.so` link, pkg-config and CMake package files | yes | yes |
 | `documentation` | manual pages | yes | yes |
-| `configuration` | `/etc/glyphastore/glyphastored.conf` | **no** | yes (deb); rpm has no purge |
+| `configuration` | `/etc/glifistore/glifistored.conf` | **no** | yes (deb); rpm has no purge |
 | `service` | the systemd unit | yes | yes |
 | `data` | the durable state directory | **no** | **no** |
 

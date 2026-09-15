@@ -6,7 +6,7 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cmake="${CMAKE:-$root/.tools/venv/bin/cmake}"
 ctest="${CTEST:-$root/.tools/venv/bin/ctest}"
 python="${PYTHON:-$root/.tools/venv/bin/python}"
-output_dir="${GLYPHASTORE_CORRECTNESS_OUTPUT_DIR:-$root/build/correctness}"
+output_dir="${GLIFISTORE_CORRECTNESS_OUTPUT_DIR:-$root/build/correctness}"
 summary="$output_dir/local-correctness-summary.tsv"
 mkdir -p "$output_dir"
 : > "$summary"
@@ -87,21 +87,21 @@ run_asan() {
     fi
 
     execute "$cmake" --preset "$preset" \
-        -DGLYPHASTORE_ENABLE_POINTER_PAIR_SANITIZER="$pointer_pair_mode" &&
+        -DGLIFISTORE_ENABLE_POINTER_PAIR_SANITIZER="$pointer_pair_mode" &&
         execute "$cmake" --build --preset "$preset" || return
 
     local help_file="$output_dir/asan-options.txt"
-    execute env GLYPHASTORE_TEST_FILTER="__asan_option_probe__" \
+    execute env GLIFISTORE_TEST_FILTER="__asan_option_probe__" \
         ASAN_OPTIONS="help=1:detect_leaks=0" \
-        "$root/build/$preset/glyphastore_tests" > /dev/null 2>"$help_file" || true
+        "$root/build/$preset/glifistore_tests" > /dev/null 2>"$help_file" || true
     local options="detect_leaks=${asan_detect_leaks}:halt_on_error=1:abort_on_error=1"
     for option in check_initialization_order detect_stack_use_after_return strict_string_checks \
         alloc_dealloc_mismatch; do
         if rg -q "^[[:space:]]*$option$" "$help_file"; then
             local option_probe="$output_dir/asan-$option-probe.txt"
-            execute env GLYPHASTORE_TEST_FILTER="__asan_option_probe__" \
+            execute env GLIFISTORE_TEST_FILTER="__asan_option_probe__" \
                 ASAN_OPTIONS="detect_leaks=0:$option=1" \
-                "$root/build/$preset/glyphastore_tests" > /dev/null 2>"$option_probe" || true
+                "$root/build/$preset/glifistore_tests" > /dev/null 2>"$option_probe" || true
             if ! rg -qi "not supported|unrecognized flag|unknown flag" "$option_probe"; then
                 options="$options:$option=1"
             fi
@@ -128,7 +128,7 @@ run_gcc_diversity() {
     local build="$output_dir/gcc-debug"
     execute env CXX="$compiler" "$cmake" -S "$root" -B "$build" -G Ninja \
         -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_STANDARD=23 -DCMAKE_CXX_EXTENSIONS=OFF \
-        -DGLYPHASTORE_WARNINGS_AS_ERRORS=ON -DGLYPHASTORE_FAULT_INJECTION=ON &&
+        -DGLIFISTORE_WARNINGS_AS_ERRORS=ON -DGLIFISTORE_FAULT_INJECTION=ON &&
         execute "$cmake" --build "$build" &&
         execute "$ctest" --test-dir "$build" --output-on-failure
 }
@@ -137,7 +137,7 @@ run_scan_build() {
     local scanner="$1"
     local build="$output_dir/scan-build"
     execute "$cmake" -S "$root" -B "$build" -G Ninja -DCMAKE_BUILD_TYPE=Debug \
-        -DBUILD_TESTING=OFF -DGLYPHASTORE_BUILD_BENCHMARKS=OFF &&
+        -DBUILD_TESTING=OFF -DGLIFISTORE_BUILD_BENCHMARKS=OFF &&
         execute "$scanner" --status-bugs "$cmake" --build "$build" --clean-first
 }
 
@@ -155,8 +155,8 @@ run_fuzz_smoke() {
     fi
     cat "$configure_log"
     execute "$cmake" --build --preset "$preset" &&
-        execute env GLYPHASTORE_FUZZ_BUILD_DIR="$root/build/$preset" \
-        GLYPHASTORE_FUZZ_SECONDS="${GLYPHASTORE_FUZZ_SECONDS:-30}" \
+        execute env GLIFISTORE_FUZZ_BUILD_DIR="$root/build/$preset" \
+        GLIFISTORE_FUZZ_SECONDS="${GLIFISTORE_FUZZ_SECONDS:-30}" \
         "$root/scripts/run-fuzzers.sh"
 }
 
@@ -265,7 +265,7 @@ fi
 echo "== OPTIONAL: libFuzzer smoke =="
 if run_fuzz_smoke "$native_prefix-fuzz"; then
     if ! tail -1 "$summary" | rg -q '^libFuzzer smoke[[:space:]]+OPTIONAL_UNAVAILABLE'; then
-        record "libFuzzer smoke" PASS "${GLYPHASTORE_FUZZ_SECONDS:-30}s per target"
+        record "libFuzzer smoke" PASS "${GLIFISTORE_FUZZ_SECONDS:-30}s per target"
     fi
 else
     status=$?

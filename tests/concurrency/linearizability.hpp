@@ -1,6 +1,6 @@
 #pragma once
 
-// History recorder + linearizability checker for GlyphaStore key operations
+// History recorder + linearizability checker for GlifiStore key operations
 // (GET/PUT/ERASE/TTL/RAW/close/compaction). Requirement: GS-CONCUR-LIN-001.
 
 #include <algorithm>
@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::test::lin {
+namespace glifistore::test::lin {
 
 enum class OpKind : std::uint8_t {
     get,
@@ -407,4 +407,4 @@ class HistoryRecorder final {
     std::atomic<std::uint64_t> tick_{0};
 };
 
-} // namespace glyphastore::test::lin
+} // namespace glifistore::test::lin

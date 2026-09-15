@@ -3,18 +3,18 @@
 Status: structural reference + fail-closed native producers; retained tagged evidence pending
 
 `packaging/freebsd/` and `packaging/openbsd/` are upstream reference ports, not evidence that an
-official ports tree has accepted GlyphaStore or that a package has passed clean-host installation.
+official ports tree has accepted GlifiStore or that a package has passed clean-host installation.
 `engineering/tools/validate_bsd_packaging.py` checks their structural invariants and ties product
 and shared-library versions back to `VERSION` and `ABI_VERSION`.
 
 The FreeBSD reference uses staged CMake installation, system TLS, `USE_LDCONFIG`, a static plist,
-the `rc.subr` framework, `/usr/local/etc/glyphastored.conf`, `/var/db/glyphastore`, and a dedicated
-`glyphastore` account. The service is disabled by default, uses `daemon(8)` only as a supervisor,
+the `rc.subr` framework, `/usr/local/etc/glifistored.conf`, `/var/db/glifistore`, and a dedicated
+`glifistore` account. The service is disabled by default, uses `daemon(8)` only as a supervisor,
 records the child PID, drops privileges, and forwards normal stop into the daemon's SIGTERM drain.
 
 The OpenBSD reference uses the ports CMake module, base LibreSSL, `SHARED_LIBS` major/minor
-authority, WANTLIB, `${TRUEPREFIX}`, `@sample`, `@rcscript`, `/etc/glyphastored.conf`,
-`/var/glyphastore`, and `_glyphastore`. The daemon's existing kqueue and pledge/unveil paths remain
+authority, WANTLIB, `${TRUEPREFIX}`, `@sample`, `@rcscript`, `/etc/glifistored.conf`,
+`/var/glifistore`, and `_glifistore`. The daemon's existing kqueue and pledge/unveil paths remain
 native; no TLS implementation is bundled.
 
 The `--release` validator additionally requires explicit account-registration markers. Those
@@ -72,7 +72,7 @@ Consequences that hold by construction:
 - `package-upgrade` is `NOT_APPLICABLE_INITIAL_BASELINE` while no annotated release precedes the
   current one, and `NOT_RUN` once one exists and sealed N−1 packages are not supplied (or the
   native lifecycle did not reach the walk). Upgrade continuity is never inferred from a rebuild;
-  FreeBSD/OpenBSD run install→seed→upgrade→verify when `GLYPHASTORE_N1_PACKAGE_DIR` supplies
+  FreeBSD/OpenBSD run install→seed→upgrade→verify when `GLIFISTORE_N1_PACKAGE_DIR` supplies
   sealed predecessor `.pkg`/`.tgz` packages (same contract as Linux deb/rpm).
 - `LIFECYCLE_VERIFIED` requires an external consumer built against the installed package
   prefix (`scripts/lib/package-external-consumer.sh`); with that step retained, the native

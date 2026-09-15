@@ -100,7 +100,7 @@ struct CompactionSyncEioIo {
             ::pwrite(descriptor, bytes.data(), bytes.size(), static_cast<off_t>(offset)));
     }
 
-    static auto sync_file(void* context, const int descriptor, const glyphastore::FileSyncMode) -> int {
+    static auto sync_file(void* context, const int descriptor, const glifistore::FileSyncMode) -> int {
         auto& io = *static_cast<CompactionSyncEioIo*>(context);
         if (!io.armed) {
             return ::fsync(descriptor);
@@ -129,7 +129,7 @@ struct CompactionSyncEintrIo {
             ::pwrite(descriptor, bytes.data(), bytes.size(), static_cast<off_t>(offset)));
     }
 
-    static auto sync_file(void* context, const int descriptor, const glyphastore::FileSyncMode) -> int {
+    static auto sync_file(void* context, const int descriptor, const glifistore::FileSyncMode) -> int {
         auto& io = *static_cast<CompactionSyncEintrIo*>(context);
         if (!io.armed) {
             return ::fsync(descriptor);
@@ -145,35 +145,35 @@ struct CompactionSyncEintrIo {
 };
 
 auto seed_two_sealed_compaction_fixture(const std::filesystem::path& path,
-                                        const glyphastore::StoreId& store_id,
+                                        const glifistore::StoreId& store_id,
                                         const std::string_view first_key, const std::string_view first_value,
                                         const std::string_view second_key,
                                         const std::string_view second_value)
-    -> std::vector<glyphastore::ManifestSegmentEntry> {
+    -> std::vector<glifistore::ManifestSegmentEntry> {
     const std::vector entries{
-        glyphastore::ManifestSegmentEntry{.segment_id = glyphastore::SegmentId{1},
-                                          .generation = glyphastore::GenerationId{1},
-                                          .owner_worker = glyphastore::WorkerId{0},
-                                          .role = glyphastore::ManifestSegmentRole::sealed},
-        glyphastore::ManifestSegmentEntry{.segment_id = glyphastore::SegmentId{2},
-                                          .generation = glyphastore::GenerationId{1},
-                                          .owner_worker = glyphastore::WorkerId{0},
-                                          .role = glyphastore::ManifestSegmentRole::sealed},
-        glyphastore::ManifestSegmentEntry{.segment_id = glyphastore::SegmentId{3},
-                                          .generation = glyphastore::GenerationId{1},
-                                          .owner_worker = glyphastore::WorkerId{0},
-                                          .role = glyphastore::ManifestSegmentRole::active},
+        glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
+                                          .generation = glifistore::GenerationId{1},
+                                          .owner_worker = glifistore::WorkerId{0},
+                                          .role = glifistore::ManifestSegmentRole::sealed},
+        glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
+                                          .generation = glifistore::GenerationId{1},
+                                          .owner_worker = glifistore::WorkerId{0},
+                                          .role = glifistore::ManifestSegmentRole::sealed},
+        glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
+                                          .generation = glifistore::GenerationId{1},
+                                          .owner_worker = glifistore::WorkerId{0},
+                                          .role = glifistore::ManifestSegmentRole::active},
     };
-    auto directory = glyphastore::DataDirectory::open_and_lock(path);
-    GLYPHA_REQUIRE(directory.has_value());
+    auto directory = glifistore::DataDirectory::open_and_lock(path);
+    GLIFI_REQUIRE(directory.has_value());
     auto first = create_segment(*directory, store_id, entries[0]);
     append_record(first, 1, first_key, first_value);
-    GLYPHA_REQUIRE(first.seal().committed());
+    GLIFI_REQUIRE(first.seal().committed());
     auto second = create_segment(*directory, store_id, entries[1]);
     append_record(second, 2, second_key, second_value);
-    GLYPHA_REQUIRE(second.seal().committed());
+    GLIFI_REQUIRE(second.seal().committed());
     static_cast<void>(create_segment(*directory, store_id, entries[2]));
-    GLYPHA_REQUIRE(directory->publish_manifest(recovery_manifest(store_id, 1, entries)).durable());
+    GLIFI_REQUIRE(directory->publish_manifest(recovery_manifest(store_id, 1, entries)).durable());
     return entries;
 }
 
@@ -181,81 +181,81 @@ auto seed_two_sealed_compaction_fixture(const std::filesystem::path& path,
 
 // GS-PERSIST-FAULT-001 / Wave 3 L4: compaction staging retries EINTR and completes short
 // pwrite transfers end-to-end (FileIoHooks), then publishes cleanly. E0–E2 only.
-GLYPHA_TEST("online compaction staging retries EINTR and short writes before intent") {
+GLIFI_TEST("online compaction staging retries EINTR and short writes before intent") {
     RecoveryTemporaryDirectory temporary;
     const auto store_id = recovery_store_id();
     const auto entries =
         seed_two_sealed_compaction_fixture(temporary.path(), store_id, "eintr-a", "alpha", "eintr-b", "beta");
 
     CompactionFragmentedWriteIo io{};
-    auto directory = glyphastore::DataDirectory::open_and_lock(
-        temporary.path(), glyphastore::FilesystemHooks{
+    auto directory = glifistore::DataDirectory::open_and_lock(
+        temporary.path(), glifistore::FilesystemHooks{
                               .file_io = {.context = &io,
                                           .read_some_at = &CompactionFragmentedWriteIo::read_some_at,
                                           .write_some_at = &CompactionFragmentedWriteIo::write_some_at}});
-    GLYPHA_REQUIRE(directory.has_value());
-    auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory));
-    GLYPHA_REQUIRE(runtime.has_value());
+    GLIFI_REQUIRE(directory.has_value());
+    auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
+    GLIFI_REQUIRE(runtime.has_value());
     io.armed = true;
     const auto result = (*runtime)->compact_worker(0, 0);
-    GLYPHA_REQUIRE(result.compacted());
-    GLYPHA_REQUIRE(io.write_calls > 0);
-    GLYPHA_REQUIRE(io.remaining_eintr == 0);
-    GLYPHA_REQUIRE((*runtime)->healthy());
-    GLYPHA_REQUIRE((*runtime)->manifest().manifest_generation == 2);
-    GLYPHA_REQUIRE(!std::filesystem::exists(temporary.path() / glyphastore::kCompactionIntentFilename));
-    GLYPHA_REQUIRE(owned_text(*(*runtime)->get("eintr-a")) == "alpha");
-    GLYPHA_REQUIRE(owned_text(*(*runtime)->get("eintr-b")) == "beta");
+    GLIFI_REQUIRE(result.compacted());
+    GLIFI_REQUIRE(io.write_calls > 0);
+    GLIFI_REQUIRE(io.remaining_eintr == 0);
+    GLIFI_REQUIRE((*runtime)->healthy());
+    GLIFI_REQUIRE((*runtime)->manifest().manifest_generation == 2);
+    GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() / glifistore::kCompactionIntentFilename));
+    GLIFI_REQUIRE(owned_text(*(*runtime)->get("eintr-a")) == "alpha");
+    GLIFI_REQUIRE(owned_text(*(*runtime)->get("eintr-b")) == "beta");
     runtime->reset();
 
-    auto reopened = glyphastore::DurableRuntimeCatalog::open_existing(temporary.path());
-    GLYPHA_REQUIRE(reopened.has_value());
-    GLYPHA_REQUIRE((*reopened)->namespace_audit().clean());
-    GLYPHA_REQUIRE(owned_text(*(*reopened)->get("eintr-a")) == "alpha");
-    GLYPHA_REQUIRE(owned_text(*(*reopened)->get("eintr-b")) == "beta");
-    GLYPHA_REQUIRE(entries.size() == 3);
+    auto reopened = glifistore::DurableRuntimeCatalog::open_existing(temporary.path());
+    GLIFI_REQUIRE(reopened.has_value());
+    GLIFI_REQUIRE((*reopened)->namespace_audit().clean());
+    GLIFI_REQUIRE(owned_text(*(*reopened)->get("eintr-a")) == "alpha");
+    GLIFI_REQUIRE(owned_text(*(*reopened)->get("eintr-b")) == "beta");
+    GLIFI_REQUIRE(entries.size() == 3);
 }
 
 // GS-PERSIST-FAULT-001 / Wave 3 L4: FileDescriptor::sync retries EINTR from FileIoHooks
 // during pre-intent staging, then publishes cleanly. E0–E2 only.
-GLYPHA_TEST("online compaction staging retries sync EINTR before intent") {
+GLIFI_TEST("online compaction staging retries sync EINTR before intent") {
     RecoveryTemporaryDirectory temporary;
     const auto store_id = recovery_store_id();
     const auto entries =
         seed_two_sealed_compaction_fixture(temporary.path(), store_id, "sync-a", "alpha", "sync-b", "beta");
 
     CompactionSyncEintrIo io{};
-    auto directory = glyphastore::DataDirectory::open_and_lock(
+    auto directory = glifistore::DataDirectory::open_and_lock(
         temporary.path(),
-        glyphastore::FilesystemHooks{.file_io = {.context = &io,
+        glifistore::FilesystemHooks{.file_io = {.context = &io,
                                                  .read_some_at = &CompactionSyncEintrIo::read_some_at,
                                                  .write_some_at = &CompactionSyncEintrIo::write_some_at,
                                                  .sync_file = &CompactionSyncEintrIo::sync_file}});
-    GLYPHA_REQUIRE(directory.has_value());
-    auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory));
-    GLYPHA_REQUIRE(runtime.has_value());
+    GLIFI_REQUIRE(directory.has_value());
+    auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
+    GLIFI_REQUIRE(runtime.has_value());
     io.armed = true;
     const auto result = (*runtime)->compact_worker(0, 0);
-    GLYPHA_REQUIRE(result.compacted());
-    GLYPHA_REQUIRE(io.sync_calls > 0);
-    GLYPHA_REQUIRE(io.remaining_eintr == 0);
-    GLYPHA_REQUIRE((*runtime)->healthy());
-    GLYPHA_REQUIRE((*runtime)->manifest().manifest_generation == 2);
-    GLYPHA_REQUIRE(!std::filesystem::exists(temporary.path() / glyphastore::kCompactionIntentFilename));
-    GLYPHA_REQUIRE(owned_text(*(*runtime)->get("sync-a")) == "alpha");
-    GLYPHA_REQUIRE(owned_text(*(*runtime)->get("sync-b")) == "beta");
+    GLIFI_REQUIRE(result.compacted());
+    GLIFI_REQUIRE(io.sync_calls > 0);
+    GLIFI_REQUIRE(io.remaining_eintr == 0);
+    GLIFI_REQUIRE((*runtime)->healthy());
+    GLIFI_REQUIRE((*runtime)->manifest().manifest_generation == 2);
+    GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() / glifistore::kCompactionIntentFilename));
+    GLIFI_REQUIRE(owned_text(*(*runtime)->get("sync-a")) == "alpha");
+    GLIFI_REQUIRE(owned_text(*(*runtime)->get("sync-b")) == "beta");
     runtime->reset();
 
-    auto reopened = glyphastore::DurableRuntimeCatalog::open_existing(temporary.path());
-    GLYPHA_REQUIRE(reopened.has_value());
-    GLYPHA_REQUIRE((*reopened)->namespace_audit().clean());
-    GLYPHA_REQUIRE(owned_text(*(*reopened)->get("sync-a")) == "alpha");
-    GLYPHA_REQUIRE(owned_text(*(*reopened)->get("sync-b")) == "beta");
+    auto reopened = glifistore::DurableRuntimeCatalog::open_existing(temporary.path());
+    GLIFI_REQUIRE(reopened.has_value());
+    GLIFI_REQUIRE((*reopened)->namespace_audit().clean());
+    GLIFI_REQUIRE(owned_text(*(*reopened)->get("sync-a")) == "alpha");
+    GLIFI_REQUIRE(owned_text(*(*reopened)->get("sync-b")) == "beta");
 }
 
 // GS-PERSIST-FAULT-001 / Wave 3 L4: capacity errno from FileIoHooks during pre-intent
 // compaction staging maps to storage_exhausted; Mold remains sole authority.
-GLYPHA_TEST("online compaction FileIoHooks capacity faults reject before intent") {
+GLIFI_TEST("online compaction FileIoHooks capacity faults reject before intent") {
     struct Case {
         int error_number;
         const char* label;
@@ -274,45 +274,45 @@ GLYPHA_TEST("online compaction FileIoHooks capacity faults reject before intent"
         const auto old = recovery_manifest(store_id, 1, entries);
 
         CompactionCapacityWriteIo io{.error_number = fault.error_number};
-        auto directory = glyphastore::DataDirectory::open_and_lock(
-            temporary.path(), glyphastore::FilesystemHooks{
+        auto directory = glifistore::DataDirectory::open_and_lock(
+            temporary.path(), glifistore::FilesystemHooks{
                                   .file_io = {.context = &io,
                                               .read_some_at = &CompactionCapacityWriteIo::read_some_at,
                                               .write_some_at = &CompactionCapacityWriteIo::write_some_at}});
-        GLYPHA_REQUIRE(directory.has_value());
-        auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory));
-        GLYPHA_REQUIRE(runtime.has_value());
+        GLIFI_REQUIRE(directory.has_value());
+        auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
+        GLIFI_REQUIRE(runtime.has_value());
         io.armed = true;
         const auto result = (*runtime)->compact_worker(0, 0);
-        GLYPHA_REQUIRE(io.fired);
-        GLYPHA_REQUIRE(!result.compacted());
-        GLYPHA_REQUIRE(result.error.has_value());
-        GLYPHA_REQUIRE(result.error->code == glyphastore::ErrorCode::storage_exhausted);
-        GLYPHA_REQUIRE(result.outcome == glyphastore::DurableCompactionOutcome::not_compacted);
-        GLYPHA_REQUIRE((*runtime)->healthy());
-        GLYPHA_REQUIRE((*runtime)->manifest() == old);
-        GLYPHA_REQUIRE(!std::filesystem::exists(temporary.path() / glyphastore::kCompactionIntentFilename));
+        GLIFI_REQUIRE(io.fired);
+        GLIFI_REQUIRE(!result.compacted());
+        GLIFI_REQUIRE(result.error.has_value());
+        GLIFI_REQUIRE(result.error->code == glifistore::ErrorCode::storage_exhausted);
+        GLIFI_REQUIRE(result.outcome == glifistore::DurableCompactionOutcome::not_compacted);
+        GLIFI_REQUIRE((*runtime)->healthy());
+        GLIFI_REQUIRE((*runtime)->manifest() == old);
+        GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() / glifistore::kCompactionIntentFilename));
         runtime->reset();
 
-        auto reopened = glyphastore::DurableRuntimeCatalog::open_existing(temporary.path());
-        GLYPHA_REQUIRE(reopened.has_value());
-        GLYPHA_REQUIRE((*reopened)->namespace_audit().clean());
-        GLYPHA_REQUIRE(owned_text(*(*reopened)->get(first_key)) == "first-value");
-        GLYPHA_REQUIRE(owned_text(*(*reopened)->get(second_key)) == "second-value");
+        auto reopened = glifistore::DurableRuntimeCatalog::open_existing(temporary.path());
+        GLIFI_REQUIRE(reopened.has_value());
+        GLIFI_REQUIRE((*reopened)->namespace_audit().clean());
+        GLIFI_REQUIRE(owned_text(*(*reopened)->get(first_key)) == "first-value");
+        GLIFI_REQUIRE(owned_text(*(*reopened)->get(second_key)) == "second-value");
     }
 }
 
 // GS-PERSIST-FAULT-001 / Wave 3 L4: write-path EIO / EROFS from FileIoHooks during
 // pre-intent staging reject before intent; Mold remains sole authority. E0–E2 only.
-GLYPHA_TEST("online compaction FileIoHooks write EIO and EROFS reject before intent") {
+GLIFI_TEST("online compaction FileIoHooks write EIO and EROFS reject before intent") {
     struct Case {
         int error_number;
-        glyphastore::ErrorCode expected;
+        glifistore::ErrorCode expected;
         const char* label;
     };
     const std::array cases{
-        Case{EIO, glyphastore::ErrorCode::io_error, "eio"},
-        Case{EROFS, glyphastore::ErrorCode::read_only_filesystem, "erofs"},
+        Case{EIO, glifistore::ErrorCode::io_error, "eio"},
+        Case{EROFS, glifistore::ErrorCode::read_only_filesystem, "erofs"},
     };
     for (const auto& fault : cases) {
         RecoveryTemporaryDirectory temporary;
@@ -324,37 +324,37 @@ GLYPHA_TEST("online compaction FileIoHooks write EIO and EROFS reject before int
         const auto old = recovery_manifest(store_id, 1, entries);
 
         CompactionCapacityWriteIo io{.error_number = fault.error_number};
-        auto directory = glyphastore::DataDirectory::open_and_lock(
-            temporary.path(), glyphastore::FilesystemHooks{
+        auto directory = glifistore::DataDirectory::open_and_lock(
+            temporary.path(), glifistore::FilesystemHooks{
                                   .file_io = {.context = &io,
                                               .read_some_at = &CompactionCapacityWriteIo::read_some_at,
                                               .write_some_at = &CompactionCapacityWriteIo::write_some_at}});
-        GLYPHA_REQUIRE(directory.has_value());
-        auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory));
-        GLYPHA_REQUIRE(runtime.has_value());
+        GLIFI_REQUIRE(directory.has_value());
+        auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
+        GLIFI_REQUIRE(runtime.has_value());
         io.armed = true;
         const auto result = (*runtime)->compact_worker(0, 0);
-        GLYPHA_REQUIRE(io.fired);
-        GLYPHA_REQUIRE(!result.compacted());
-        GLYPHA_REQUIRE(result.error.has_value());
-        GLYPHA_REQUIRE(result.error->code == fault.expected);
-        GLYPHA_REQUIRE(result.outcome == glyphastore::DurableCompactionOutcome::not_compacted);
-        GLYPHA_REQUIRE((*runtime)->healthy());
-        GLYPHA_REQUIRE((*runtime)->manifest() == old);
-        GLYPHA_REQUIRE(!std::filesystem::exists(temporary.path() / glyphastore::kCompactionIntentFilename));
+        GLIFI_REQUIRE(io.fired);
+        GLIFI_REQUIRE(!result.compacted());
+        GLIFI_REQUIRE(result.error.has_value());
+        GLIFI_REQUIRE(result.error->code == fault.expected);
+        GLIFI_REQUIRE(result.outcome == glifistore::DurableCompactionOutcome::not_compacted);
+        GLIFI_REQUIRE((*runtime)->healthy());
+        GLIFI_REQUIRE((*runtime)->manifest() == old);
+        GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() / glifistore::kCompactionIntentFilename));
         runtime->reset();
 
-        auto reopened = glyphastore::DurableRuntimeCatalog::open_existing(temporary.path());
-        GLYPHA_REQUIRE(reopened.has_value());
-        GLYPHA_REQUIRE((*reopened)->namespace_audit().clean());
-        GLYPHA_REQUIRE(owned_text(*(*reopened)->get(first_key)) == "first-value");
-        GLYPHA_REQUIRE(owned_text(*(*reopened)->get(second_key)) == "second-value");
+        auto reopened = glifistore::DurableRuntimeCatalog::open_existing(temporary.path());
+        GLIFI_REQUIRE(reopened.has_value());
+        GLIFI_REQUIRE((*reopened)->namespace_audit().clean());
+        GLIFI_REQUIRE(owned_text(*(*reopened)->get(first_key)) == "first-value");
+        GLIFI_REQUIRE(owned_text(*(*reopened)->get(second_key)) == "second-value");
     }
 }
 
 // GS-PERSIST-FAULT-001 / Wave 3 L4: FileIoHooks sync EIO during pre-intent staging maps to
 // io_error; Mold remains sole authority and no intent residue remains. E0–E2 only.
-GLYPHA_TEST("online compaction FileIoHooks sync EIO rejects before intent") {
+GLIFI_TEST("online compaction FileIoHooks sync EIO rejects before intent") {
     RecoveryTemporaryDirectory temporary;
     const auto store_id = recovery_store_id();
     const auto entries =
@@ -362,41 +362,41 @@ GLYPHA_TEST("online compaction FileIoHooks sync EIO rejects before intent") {
     const auto old = recovery_manifest(store_id, 1, entries);
 
     CompactionSyncEioIo io{};
-    auto directory = glyphastore::DataDirectory::open_and_lock(
+    auto directory = glifistore::DataDirectory::open_and_lock(
         temporary.path(),
-        glyphastore::FilesystemHooks{.file_io = {.context = &io,
+        glifistore::FilesystemHooks{.file_io = {.context = &io,
                                                  .read_some_at = &CompactionSyncEioIo::read_some_at,
                                                  .write_some_at = &CompactionSyncEioIo::write_some_at,
                                                  .sync_file = &CompactionSyncEioIo::sync_file}});
-    GLYPHA_REQUIRE(directory.has_value());
-    auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory));
-    GLYPHA_REQUIRE(runtime.has_value());
+    GLIFI_REQUIRE(directory.has_value());
+    auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
+    GLIFI_REQUIRE(runtime.has_value());
     io.armed = true;
     const auto result = (*runtime)->compact_worker(0, 0);
-    GLYPHA_REQUIRE(io.fired);
-    GLYPHA_REQUIRE(!result.compacted());
-    GLYPHA_REQUIRE(result.error.has_value());
-    GLYPHA_REQUIRE(result.error->code == glyphastore::ErrorCode::io_error);
-    GLYPHA_REQUIRE(result.outcome == glyphastore::DurableCompactionOutcome::not_compacted);
-    GLYPHA_REQUIRE((*runtime)->healthy());
-    GLYPHA_REQUIRE((*runtime)->manifest() == old);
-    GLYPHA_REQUIRE(!std::filesystem::exists(temporary.path() / glyphastore::kCompactionIntentFilename));
+    GLIFI_REQUIRE(io.fired);
+    GLIFI_REQUIRE(!result.compacted());
+    GLIFI_REQUIRE(result.error.has_value());
+    GLIFI_REQUIRE(result.error->code == glifistore::ErrorCode::io_error);
+    GLIFI_REQUIRE(result.outcome == glifistore::DurableCompactionOutcome::not_compacted);
+    GLIFI_REQUIRE((*runtime)->healthy());
+    GLIFI_REQUIRE((*runtime)->manifest() == old);
+    GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() / glifistore::kCompactionIntentFilename));
     runtime->reset();
 
-    auto reopened = glyphastore::DurableRuntimeCatalog::open_existing(temporary.path());
-    GLYPHA_REQUIRE(reopened.has_value());
-    GLYPHA_REQUIRE((*reopened)->namespace_audit().clean());
-    GLYPHA_REQUIRE(owned_text(*(*reopened)->get("eio-a")) == "alpha");
-    GLYPHA_REQUIRE(owned_text(*(*reopened)->get("eio-b")) == "beta");
+    auto reopened = glifistore::DurableRuntimeCatalog::open_existing(temporary.path());
+    GLIFI_REQUIRE(reopened.has_value());
+    GLIFI_REQUIRE((*reopened)->namespace_audit().clean());
+    GLIFI_REQUIRE(owned_text(*(*reopened)->get("eio-a")) == "alpha");
+    GLIFI_REQUIRE(owned_text(*(*reopened)->get("eio-b")) == "beta");
 }
 
 // GS-PERSIST-FAULT-001 / Wave 3 L4: FileIoHooks faults on compaction intent write/sync
 // (after successful staging) reject without publishing intent; Mold remains sole authority.
-GLYPHA_TEST("online compaction FileIoHooks intent write and sync faults reject cleanly") {
+GLIFI_TEST("online compaction FileIoHooks intent write and sync faults reject cleanly") {
     struct Case {
         enum class Mode { write, sync } mode;
         int write_error{EIO};
-        glyphastore::ErrorCode expected{glyphastore::ErrorCode::io_error};
+        glifistore::ErrorCode expected{glifistore::ErrorCode::io_error};
         const char* label;
     };
     struct IntentFault final {
@@ -406,14 +406,14 @@ GLYPHA_TEST("online compaction FileIoHooks intent write and sync faults reject c
         bool arm_sync{};
         bool fired{};
 
-        static auto before(void* context, const glyphastore::FilesystemOperation operation)
-            -> glyphastore::Status {
+        static auto before(void* context, const glifistore::FilesystemOperation operation)
+            -> glifistore::Status {
             auto& self = *static_cast<IntentFault*>(context);
             if (self.mode == Case::Mode::write &&
-                operation == glyphastore::FilesystemOperation::write_compaction_intent) {
+                operation == glifistore::FilesystemOperation::write_compaction_intent) {
                 self.arm_write = true;
             } else if (self.mode == Case::Mode::sync &&
-                       operation == glyphastore::FilesystemOperation::sync_compaction_intent) {
+                       operation == glifistore::FilesystemOperation::sync_compaction_intent) {
                 self.arm_sync = true;
             }
             return {};
@@ -438,7 +438,7 @@ GLYPHA_TEST("online compaction FileIoHooks intent write and sync faults reject c
                 ::pwrite(descriptor, bytes.data(), bytes.size(), static_cast<off_t>(offset)));
         }
 
-        static auto sync_file(void* context, const int descriptor, const glyphastore::FileSyncMode) -> int {
+        static auto sync_file(void* context, const int descriptor, const glifistore::FileSyncMode) -> int {
             auto& self = *static_cast<IntentFault*>(context);
             if (self.arm_sync) {
                 self.arm_sync = false;
@@ -453,13 +453,13 @@ GLYPHA_TEST("online compaction FileIoHooks intent write and sync faults reject c
     const std::vector<Case> cases{
         {.mode = Case::Mode::write,
          .write_error = EIO,
-         .expected = glyphastore::ErrorCode::io_error,
+         .expected = glifistore::ErrorCode::io_error,
          .label = "intent-eio"},
         {.mode = Case::Mode::write,
          .write_error = ENOSPC,
-         .expected = glyphastore::ErrorCode::storage_exhausted,
+         .expected = glifistore::ErrorCode::storage_exhausted,
          .label = "intent-enospc"},
-        {.mode = Case::Mode::sync, .expected = glyphastore::ErrorCode::io_error, .label = "intent-sync-eio"},
+        {.mode = Case::Mode::sync, .expected = glifistore::ErrorCode::io_error, .label = "intent-sync-eio"},
     };
     for (const auto& fault : cases) {
         RecoveryTemporaryDirectory temporary;
@@ -471,43 +471,43 @@ GLYPHA_TEST("online compaction FileIoHooks intent write and sync faults reject c
         const auto old = recovery_manifest(store_id, 1, entries);
 
         IntentFault injected{.mode = fault.mode, .write_error = fault.write_error};
-        auto directory = glyphastore::DataDirectory::open_and_lock(
+        auto directory = glifistore::DataDirectory::open_and_lock(
             temporary.path(),
-            glyphastore::FilesystemHooks{.context = &injected,
+            glifistore::FilesystemHooks{.context = &injected,
                                          .before = &IntentFault::before,
                                          .file_io = {.context = &injected,
                                                      .read_some_at = &IntentFault::read_some_at,
                                                      .write_some_at = &IntentFault::write_some_at,
                                                      .sync_file = &IntentFault::sync_file}});
-        GLYPHA_REQUIRE(directory.has_value());
-        auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory));
-        GLYPHA_REQUIRE(runtime.has_value());
+        GLIFI_REQUIRE(directory.has_value());
+        auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
+        GLIFI_REQUIRE(runtime.has_value());
         const auto result = (*runtime)->compact_worker(0, 0);
-        GLYPHA_REQUIRE(injected.fired);
-        GLYPHA_REQUIRE(!result.compacted());
-        GLYPHA_REQUIRE(result.error.has_value());
-        GLYPHA_REQUIRE(result.error->code == fault.expected);
-        GLYPHA_REQUIRE(result.outcome == glyphastore::DurableCompactionOutcome::not_compacted);
-        GLYPHA_REQUIRE((*runtime)->healthy());
-        GLYPHA_REQUIRE((*runtime)->manifest() == old);
-        GLYPHA_REQUIRE(!std::filesystem::exists(temporary.path() / glyphastore::kCompactionIntentFilename));
+        GLIFI_REQUIRE(injected.fired);
+        GLIFI_REQUIRE(!result.compacted());
+        GLIFI_REQUIRE(result.error.has_value());
+        GLIFI_REQUIRE(result.error->code == fault.expected);
+        GLIFI_REQUIRE(result.outcome == glifistore::DurableCompactionOutcome::not_compacted);
+        GLIFI_REQUIRE((*runtime)->healthy());
+        GLIFI_REQUIRE((*runtime)->manifest() == old);
+        GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() / glifistore::kCompactionIntentFilename));
         runtime->reset();
 
-        auto reopened = glyphastore::DurableRuntimeCatalog::open_existing(temporary.path());
-        GLYPHA_REQUIRE(reopened.has_value());
-        GLYPHA_REQUIRE((*reopened)->namespace_audit().clean());
-        GLYPHA_REQUIRE(owned_text(*(*reopened)->get(first_key)) == "alpha");
-        GLYPHA_REQUIRE(owned_text(*(*reopened)->get(second_key)) == "beta");
+        auto reopened = glifistore::DurableRuntimeCatalog::open_existing(temporary.path());
+        GLIFI_REQUIRE(reopened.has_value());
+        GLIFI_REQUIRE((*reopened)->namespace_audit().clean());
+        GLIFI_REQUIRE(owned_text(*(*reopened)->get(first_key)) == "alpha");
+        GLIFI_REQUIRE(owned_text(*(*reopened)->get(second_key)) == "beta");
     }
 }
 
 // GS-PERSIST-FAULT-001 / Wave 3 L4: FileIoHooks faults on Manifest write/sync during
 // post-intent promotion leave recovery_required; reopen selects one clean authority.
-GLYPHA_TEST("online compaction FileIoHooks promotion manifest faults recover cleanly") {
+GLIFI_TEST("online compaction FileIoHooks promotion manifest faults recover cleanly") {
     struct Case {
         enum class Mode { write, sync } mode;
         int write_error{EIO};
-        glyphastore::ErrorCode expected{glyphastore::ErrorCode::io_error};
+        glifistore::ErrorCode expected{glifistore::ErrorCode::io_error};
         const char* label;
     };
     struct PromotionFault final {
@@ -517,14 +517,14 @@ GLYPHA_TEST("online compaction FileIoHooks promotion manifest faults recover cle
         bool arm_sync{};
         bool fired{};
 
-        static auto before(void* context, const glyphastore::FilesystemOperation operation)
-            -> glyphastore::Status {
+        static auto before(void* context, const glifistore::FilesystemOperation operation)
+            -> glifistore::Status {
             auto& self = *static_cast<PromotionFault*>(context);
             if (self.mode == Case::Mode::write &&
-                operation == glyphastore::FilesystemOperation::write_manifest) {
+                operation == glifistore::FilesystemOperation::write_manifest) {
                 self.arm_write = true;
             } else if (self.mode == Case::Mode::sync &&
-                       operation == glyphastore::FilesystemOperation::sync_manifest) {
+                       operation == glifistore::FilesystemOperation::sync_manifest) {
                 self.arm_sync = true;
             }
             return {};
@@ -549,7 +549,7 @@ GLYPHA_TEST("online compaction FileIoHooks promotion manifest faults recover cle
                 ::pwrite(descriptor, bytes.data(), bytes.size(), static_cast<off_t>(offset)));
         }
 
-        static auto sync_file(void* context, const int descriptor, const glyphastore::FileSyncMode) -> int {
+        static auto sync_file(void* context, const int descriptor, const glifistore::FileSyncMode) -> int {
             auto& self = *static_cast<PromotionFault*>(context);
             if (self.arm_sync) {
                 self.arm_sync = false;
@@ -564,13 +564,13 @@ GLYPHA_TEST("online compaction FileIoHooks promotion manifest faults recover cle
     const std::vector<Case> cases{
         {.mode = Case::Mode::write,
          .write_error = EIO,
-         .expected = glyphastore::ErrorCode::io_error,
+         .expected = glifistore::ErrorCode::io_error,
          .label = "promo-eio"},
         {.mode = Case::Mode::write,
          .write_error = ENOSPC,
-         .expected = glyphastore::ErrorCode::storage_exhausted,
+         .expected = glifistore::ErrorCode::storage_exhausted,
          .label = "promo-enospc"},
-        {.mode = Case::Mode::sync, .expected = glyphastore::ErrorCode::io_error, .label = "promo-sync-eio"},
+        {.mode = Case::Mode::sync, .expected = glifistore::ErrorCode::io_error, .label = "promo-sync-eio"},
     };
     for (const auto& fault : cases) {
         RecoveryTemporaryDirectory temporary;
@@ -581,32 +581,32 @@ GLYPHA_TEST("online compaction FileIoHooks promotion manifest faults recover cle
                                                                 "alpha", second_key, "beta");
 
         PromotionFault injected{.mode = fault.mode, .write_error = fault.write_error};
-        auto directory = glyphastore::DataDirectory::open_and_lock(
+        auto directory = glifistore::DataDirectory::open_and_lock(
             temporary.path(),
-            glyphastore::FilesystemHooks{.context = &injected,
+            glifistore::FilesystemHooks{.context = &injected,
                                          .before = &PromotionFault::before,
                                          .file_io = {.context = &injected,
                                                      .read_some_at = &PromotionFault::read_some_at,
                                                      .write_some_at = &PromotionFault::write_some_at,
                                                      .sync_file = &PromotionFault::sync_file}});
-        GLYPHA_REQUIRE(directory.has_value());
-        auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory));
-        GLYPHA_REQUIRE(runtime.has_value());
+        GLIFI_REQUIRE(directory.has_value());
+        auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
+        GLIFI_REQUIRE(runtime.has_value());
         const auto result = (*runtime)->compact_worker(0, 0);
-        GLYPHA_REQUIRE(injected.fired);
-        GLYPHA_REQUIRE(!result.compacted());
-        GLYPHA_REQUIRE(result.error.has_value());
-        GLYPHA_REQUIRE(result.error->code == fault.expected);
+        GLIFI_REQUIRE(injected.fired);
+        GLIFI_REQUIRE(!result.compacted());
+        GLIFI_REQUIRE(result.error.has_value());
+        GLIFI_REQUIRE(result.error->code == fault.expected);
         // Intent already durable: promotion FileIoHooks faults require recovery.
-        GLYPHA_REQUIRE(result.outcome == glyphastore::DurableCompactionOutcome::recovery_required);
-        GLYPHA_REQUIRE(!(*runtime)->healthy());
+        GLIFI_REQUIRE(result.outcome == glifistore::DurableCompactionOutcome::recovery_required);
+        GLIFI_REQUIRE(!(*runtime)->healthy());
         runtime->reset();
 
-        auto reopened = glyphastore::DurableRuntimeCatalog::open_existing(temporary.path());
-        GLYPHA_REQUIRE(reopened.has_value());
-        GLYPHA_REQUIRE((*reopened)->healthy());
-        GLYPHA_REQUIRE((*reopened)->namespace_audit().clean());
-        GLYPHA_REQUIRE(owned_text(*(*reopened)->get(first_key)) == "alpha");
-        GLYPHA_REQUIRE(owned_text(*(*reopened)->get(second_key)) == "beta");
+        auto reopened = glifistore::DurableRuntimeCatalog::open_existing(temporary.path());
+        GLIFI_REQUIRE(reopened.has_value());
+        GLIFI_REQUIRE((*reopened)->healthy());
+        GLIFI_REQUIRE((*reopened)->namespace_audit().clean());
+        GLIFI_REQUIRE(owned_text(*(*reopened)->get(first_key)) == "alpha");
+        GLIFI_REQUIRE(owned_text(*(*reopened)->get(second_key)) == "beta");
     }
 }

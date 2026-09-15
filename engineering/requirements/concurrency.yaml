@@ -90,8 +90,8 @@ requirements:
   - docs/spec/concurrency-memory-model.md
   - docs/spec/mutation-lifecycle.md
   implementazione:
-  - include/glyphastore/store/paired/shard_combining_executor.hpp
-  - include/glyphastore/server/mutation_window.hpp
+  - include/glifistore/store/paired/shard_combining_executor.hpp
+  - include/glifistore/server/mutation_window.hpp
   - src/store/paired/shard_pair_runtime.cpp
   - src/server/reactor_dispatch.cpp
   - src/server/reactor_execute.cpp
@@ -166,11 +166,11 @@ requirements:
   criticita: alta
   stato: implementato
   descrizione: Adverse yield/sleep hooks at enqueue/mutate/publish/adopt/rotate/compact/close are compiled
-    only when GLYPHASTORE_FAULT_INJECTION is enabled; production builds keep hooks as no-ops.
+    only when GLIFISTORE_FAULT_INJECTION is enabled; production builds keep hooks as no-ops.
   autorita:
   - docs/spec/concurrency-memory-model.md
   implementazione:
-  - include/glyphastore/core/fault_injection.hpp
+  - include/glifistore/core/fault_injection.hpp
   - src/core/fault_injection.cpp
   - src/store/paired/shard_pair_runtime.cpp
   - src/store/store.cpp
@@ -205,7 +205,7 @@ requirements:
   implementazione:
   - src/store/paired
   - src/store/store.cpp
-  - include/glyphastore/server/bounded_mpsc_queue.hpp
+  - include/glifistore/server/bounded_mpsc_queue.hpp
   prove:
   - docs/assurance/memory-order-inventory.md
   piattaforme:
@@ -258,7 +258,7 @@ requirements:
   autorita:
   - docs/spec/concurrency-memory-model.md
   implementazione:
-  - include/glyphastore/store/config.hpp
+  - include/glifistore/store/config.hpp
   - src/store/store.cpp
   - src/store/paired/shard_pair_runtime.cpp
   prove:
@@ -289,7 +289,7 @@ requirements:
   - docs/adr/0032-paired-concurrency-embedded-store.md
   - docs/spec/concurrency-memory-model.md
   implementazione:
-  - include/glyphastore/store/config.hpp
+  - include/glifistore/store/config.hpp
   - src/store/store.cpp
   prove:
   - tests/integration/runtime_equivalence_tests.cpp

@@ -1,8 +1,8 @@
-# GlyphaStore glossary
+# GlifiStore glossary
 
 Status: normative terminology
 Applies to: current architecture, public API, persistence v1, wire protocol v2
-Owner: GlyphaStore maintainers
+Owner: GlifiStore maintainers
 Last reviewed: 2026-08-26
 
 Terms in this glossary use their exact capitalization when they name an architectural entity.
@@ -11,8 +11,8 @@ Terms in this glossary use their exact capitalization when they name an architec
 |---|---|
 | Store | One logical exact-key key-space exposed by the embedded API or daemon. |
 | Worker | The unit of key ownership and mutation serialization on disk and wire. A key has exactly one owner Worker for a routing epoch. In the 0.1.0 daemon this is one shard pair; Manifest and wire still use `worker_count` / owner Worker ids. |
-| ShardPair | One Reader role plus one serial mutation-executor/Writer role for a single owner id ([ADR 0031](adr/paired-reader-writer-shards.md), [ADR 0032](adr/0032-paired-concurrency-embedded-store.md)). Default for embedded `Store::open` and the sole `glyphastored` 0.1.x runtime. |
-| ShardPairRuntime | Library-owned paired runtime inside `glyphastore_core`: immutable generation publication, synchronous combining, and optional bounded asynchronous lanes. Embedded callers combine synchronously; the daemon enables a dedicated Writer thread. |
+| ShardPair | One Reader role plus one serial mutation-executor/Writer role for a single owner id ([ADR 0031](adr/paired-reader-writer-shards.md), [ADR 0032](adr/0032-paired-concurrency-embedded-store.md)). Default for embedded `Store::open` and the sole `glifistored` 0.1.x runtime. |
+| ShardPairRuntime | Library-owned paired runtime inside `glifistore_core`: immutable generation publication, synchronous combining, and optional bounded asynchronous lanes. Embedded callers combine synchronously; the daemon enables a dedicated Writer thread. |
 | Reader | Half of a ShardPair that serves GET from a local immutable `ReadGeneration` (daemon: readiness/Reactor; embedded: caller thread adopting the published generation). |
 | Writer | The serial mutation-executor role of a ShardPair: sole append/publication path for that owner; reached through the embedded synchronous combiner or the daemon's bounded asynchronous lane. |
 | ReadGeneration | Immutable publication descriptor for ordinary paired GET. Daemon Readers adopt it once per event-loop turn (borrowed/leased); public `Store::get` still returns an owning `OwnedValue` ([ADR 0009](adr/0009-public-read-ownership.md)). |
@@ -65,4 +65,4 @@ Terms in this glossary use their exact capitalization when they name an architec
 | secure profile | Opt-in fail-closed daemon posture: TLS 1.3 + mTLS + `--authz-map` default-deny; refuses dual cleartext (`--tls-port`); Phase 5 abuse defaults; Phase 6 auth audit JSON + optional `--tls-crl`. |
 | E2 / E3 / E4 durability | Evidence levels from [platform durability evidence](architecture/platform-durability-evidence.md). Current durable claim is **E2** (process-kill); E3/E4 sudden power-loss remain open. In-repo E3 block-reset harness is rehearsal only (`e3_certified=no`). FreeBSD CI is a **portability** signal, not storage certification. |
 | fuzz / soak smoke | CI/default fuzz and `soak_daemon.sh --profile smoke` (~45s) / weekly `long` (30m) are short gates, not multi-hour hardware proof. Optional `1h`/`4h` profiles live in `soak-extended.yml` (dispatch/monthly only). |
-| experimental paired prototype | Lab-only volatile TCP engine under `src/experimental/`; microbench/archive only. Not installed, not selectable by `glyphastored`, and not a second product runtime beside `ShardPairRuntime` ([ADR 0032](adr/0032-paired-concurrency-embedded-store.md)). |
+| experimental paired prototype | Lab-only volatile TCP engine under `src/experimental/`; microbench/archive only. Not installed, not selectable by `glifistored`, and not a second product runtime beside `ShardPairRuntime` ([ADR 0032](adr/0032-paired-concurrency-embedded-store.md)). |

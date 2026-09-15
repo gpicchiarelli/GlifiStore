@@ -1,8 +1,8 @@
 #pragma once
 
-#include "glyphastore/store/maintenance_types.hpp"
+#include "glifistore/store/maintenance_types.hpp"
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 // Pure health predicates. Collection of inputs stays with Server; this type only
 // answers live/ready from already-observed state.
@@ -15,4 +15,4 @@ class ServerHealth final {
                                     const MaintenanceSnapshot& maintenance) noexcept -> bool;
 };
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

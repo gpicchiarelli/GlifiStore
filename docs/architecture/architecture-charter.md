@@ -1,13 +1,13 @@
-# GlyphaStore architecture charter
+# GlifiStore architecture charter
 
 Status: normative architectural constraints
-Applies to: GlyphaStore 0.1.x
+Applies to: GlifiStore 0.1.x
 Owner: project maintainers
 Last reviewed: 2026-08-26
 
 ## Purpose
 
-GlyphaStore is a native-binary, many-core, memory-first key-value store. Its fast path pays only
+GlifiStore is a native-binary, many-core, memory-first key-value store. Its fast path pays only
 for exact-key operations and must remain measurable and resource-bounded.
 
 ## Fixed decisions

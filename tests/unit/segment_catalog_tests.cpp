@@ -1,4 +1,4 @@
-#include "glyphastore/segment/global_manager.hpp"
+#include "glifistore/segment/global_manager.hpp"
 #include "test.hpp"
 
 #include <string_view>
@@ -9,48 +9,48 @@ auto bytes(std::string_view value) -> std::span<const std::byte> {
 }
 } // namespace
 
-GLYPHA_TEST("segment catalog lookup and snapshot order survive rotation") {
-    glyphastore::GlobalSegmentManager manager;
-    const auto first = manager.allocate_active(glyphastore::WorkerId{1});
-    GLYPHA_REQUIRE(first != nullptr);
+GLIFI_TEST("segment catalog lookup and snapshot order survive rotation") {
+    glifistore::GlobalSegmentManager manager;
+    const auto first = manager.allocate_active(glifistore::WorkerId{1});
+    GLIFI_REQUIRE(first != nullptr);
     const auto before_rotation = manager.segments();
-    const auto rotated = manager.prepare_rotation(first, glyphastore::WorkerId{1});
-    GLYPHA_REQUIRE(rotated.has_value());
-    GLYPHA_REQUIRE(first->state() == glyphastore::SegmentState::active);
-    GLYPHA_REQUIRE(manager.find((*rotated)->id()) == nullptr);
-    GLYPHA_REQUIRE(manager.commit_rotation(first, *rotated).has_value());
-    GLYPHA_REQUIRE((*rotated)->state() == glyphastore::SegmentState::active);
-    GLYPHA_REQUIRE(first->state() == glyphastore::SegmentState::sealed);
-    GLYPHA_REQUIRE(manager.find(first->id()) == first);
-    GLYPHA_REQUIRE(manager.find((*rotated)->id()) == *rotated);
-    GLYPHA_REQUIRE(before_rotation.size() == 1);
+    const auto rotated = manager.prepare_rotation(first, glifistore::WorkerId{1});
+    GLIFI_REQUIRE(rotated.has_value());
+    GLIFI_REQUIRE(first->state() == glifistore::SegmentState::active);
+    GLIFI_REQUIRE(manager.find((*rotated)->id()) == nullptr);
+    GLIFI_REQUIRE(manager.commit_rotation(first, *rotated).has_value());
+    GLIFI_REQUIRE((*rotated)->state() == glifistore::SegmentState::active);
+    GLIFI_REQUIRE(first->state() == glifistore::SegmentState::sealed);
+    GLIFI_REQUIRE(manager.find(first->id()) == first);
+    GLIFI_REQUIRE(manager.find((*rotated)->id()) == *rotated);
+    GLIFI_REQUIRE(before_rotation.size() == 1);
     const auto after_rotation = manager.segments();
-    GLYPHA_REQUIRE(after_rotation.size() == 2);
-    GLYPHA_REQUIRE(after_rotation[0]->id() == first->id());
-    GLYPHA_REQUIRE(after_rotation[1]->id() == (*rotated)->id());
+    GLIFI_REQUIRE(after_rotation.size() == 2);
+    GLIFI_REQUIRE(after_rotation[0]->id() == first->id());
+    GLIFI_REQUIRE(after_rotation[1]->id() == (*rotated)->id());
 }
 
-GLYPHA_TEST("segment catalog releases ownership of retired segments") {
-    glyphastore::GlobalSegmentManager manager;
-    auto segment = manager.allocate_active(glyphastore::WorkerId{2});
-    GLYPHA_REQUIRE(segment != nullptr);
-    const std::weak_ptr<glyphastore::Segment> lifetime = segment;
+GLIFI_TEST("segment catalog releases ownership of retired segments") {
+    glifistore::GlobalSegmentManager manager;
+    auto segment = manager.allocate_active(glifistore::WorkerId{2});
+    GLIFI_REQUIRE(segment != nullptr);
+    const std::weak_ptr<glifistore::Segment> lifetime = segment;
     const auto ref = segment->append({
-        .sequence = glyphastore::SequenceNumber{1},
+        .sequence = glifistore::SequenceNumber{1},
         .key = bytes("k"),
         .value = bytes("v"),
     });
-    GLYPHA_REQUIRE(ref.has_value());
-    GLYPHA_REQUIRE(segment->mark_live(*ref).has_value());
-    GLYPHA_REQUIRE(segment->seal().has_value());
-    GLYPHA_REQUIRE(segment->mark_dead(*ref).has_value());
+    GLIFI_REQUIRE(ref.has_value());
+    GLIFI_REQUIRE(segment->mark_live(*ref).has_value());
+    GLIFI_REQUIRE(segment->seal().has_value());
+    GLIFI_REQUIRE(segment->mark_dead(*ref).has_value());
     const auto before_retirement = manager.retired_count();
-    GLYPHA_REQUIRE(manager.try_retire(segment->id()).has_value());
-    GLYPHA_REQUIRE(manager.find(segment->id()) == nullptr);
-    GLYPHA_REQUIRE(manager.segments().empty());
-    GLYPHA_REQUIRE(before_retirement == 0);
-    GLYPHA_REQUIRE(manager.retired_count() == 1);
-    GLYPHA_REQUIRE(!lifetime.expired());
+    GLIFI_REQUIRE(manager.try_retire(segment->id()).has_value());
+    GLIFI_REQUIRE(manager.find(segment->id()) == nullptr);
+    GLIFI_REQUIRE(manager.segments().empty());
+    GLIFI_REQUIRE(before_retirement == 0);
+    GLIFI_REQUIRE(manager.retired_count() == 1);
+    GLIFI_REQUIRE(!lifetime.expired());
     segment.reset();
-    GLYPHA_REQUIRE(lifetime.expired());
+    GLIFI_REQUIRE(lifetime.expired());
 }

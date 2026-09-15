@@ -1,4 +1,4 @@
-#include "glyphastore/server/abuse_limits.hpp"
+#include "glifistore/server/abuse_limits.hpp"
 #include "test.hpp"
 
 #include <atomic>
@@ -7,9 +7,9 @@
 #include <thread>
 #include <vector>
 
-GLYPHA_TEST("abuse controller admits within accept and request windows") {
-    using glyphastore::server::AbuseController;
-    using glyphastore::server::AbuseLimits;
+GLIFI_TEST("abuse controller admits within accept and request windows") {
+    using glifistore::server::AbuseController;
+    using glifistore::server::AbuseLimits;
 
     AbuseController controller{AbuseLimits{
         .max_accepts_per_sec = 2,
@@ -18,57 +18,57 @@ GLYPHA_TEST("abuse controller admits within accept and request windows") {
         .principal_max_bytes_per_sec = 32,
     }};
     const auto now = std::chrono::steady_clock::now();
-    GLYPHA_REQUIRE(controller.try_admit_accept(now));
-    GLYPHA_REQUIRE(controller.try_admit_accept(now));
-    GLYPHA_REQUIRE(!controller.try_admit_accept(now));
-    GLYPHA_REQUIRE(controller.stats().accepts_rejected == 1);
+    GLIFI_REQUIRE(controller.try_admit_accept(now));
+    GLIFI_REQUIRE(controller.try_admit_accept(now));
+    GLIFI_REQUIRE(!controller.try_admit_accept(now));
+    GLIFI_REQUIRE(controller.stats().accepts_rejected == 1);
 
     std::uint64_t window_start = 0;
     std::uint32_t used = 0;
-    GLYPHA_REQUIRE(controller.try_admit_connection_request(window_start, used, now));
-    GLYPHA_REQUIRE(controller.try_admit_connection_request(window_start, used, now));
-    GLYPHA_REQUIRE(!controller.try_admit_connection_request(window_start, used, now));
-    GLYPHA_REQUIRE(controller.stats().connection_rate_rejected == 1);
+    GLIFI_REQUIRE(controller.try_admit_connection_request(window_start, used, now));
+    GLIFI_REQUIRE(controller.try_admit_connection_request(window_start, used, now));
+    GLIFI_REQUIRE(!controller.try_admit_connection_request(window_start, used, now));
+    GLIFI_REQUIRE(controller.stats().connection_rate_rejected == 1);
 
-    GLYPHA_REQUIRE(controller.try_admit_principal("alice", 8, now));
-    GLYPHA_REQUIRE(controller.try_admit_principal("alice", 8, now));
-    GLYPHA_REQUIRE(!controller.try_admit_principal("alice", 8, now));
-    GLYPHA_REQUIRE(controller.stats().principal_request_rejected == 1);
+    GLIFI_REQUIRE(controller.try_admit_principal("alice", 8, now));
+    GLIFI_REQUIRE(controller.try_admit_principal("alice", 8, now));
+    GLIFI_REQUIRE(!controller.try_admit_principal("alice", 8, now));
+    GLIFI_REQUIRE(controller.stats().principal_request_rejected == 1);
 
     AbuseController bandwidth{AbuseLimits{.principal_max_bytes_per_sec = 16}};
-    GLYPHA_REQUIRE(bandwidth.try_admit_principal("bob", 16, now));
-    GLYPHA_REQUIRE(!bandwidth.try_admit_principal("bob", 1, now));
-    GLYPHA_REQUIRE(bandwidth.stats().principal_bandwidth_rejected == 1);
+    GLIFI_REQUIRE(bandwidth.try_admit_principal("bob", 16, now));
+    GLIFI_REQUIRE(!bandwidth.try_admit_principal("bob", 1, now));
+    GLIFI_REQUIRE(bandwidth.stats().principal_bandwidth_rejected == 1);
     // Anonymous / empty principal skips identity quotas.
-    GLYPHA_REQUIRE(bandwidth.try_admit_principal("", 1'000'000, now));
+    GLIFI_REQUIRE(bandwidth.try_admit_principal("", 1'000'000, now));
 }
 
-GLYPHA_TEST("abuse controller windows reset after one second") {
-    using glyphastore::server::AbuseController;
-    using glyphastore::server::AbuseLimits;
+GLIFI_TEST("abuse controller windows reset after one second") {
+    using glifistore::server::AbuseController;
+    using glifistore::server::AbuseLimits;
 
     AbuseController controller{AbuseLimits{.max_accepts_per_sec = 1}};
     auto now = std::chrono::steady_clock::now();
-    GLYPHA_REQUIRE(controller.try_admit_accept(now));
-    GLYPHA_REQUIRE(!controller.try_admit_accept(now));
+    GLIFI_REQUIRE(controller.try_admit_accept(now));
+    GLIFI_REQUIRE(!controller.try_admit_accept(now));
     now += std::chrono::seconds{1};
-    GLYPHA_REQUIRE(controller.try_admit_accept(now));
+    GLIFI_REQUIRE(controller.try_admit_accept(now));
 }
 
-GLYPHA_TEST("secure profile abuse defaults are non-zero") {
-    const auto defaults = glyphastore::server::secure_profile_abuse_defaults();
-    GLYPHA_REQUIRE(defaults.any_enabled());
-    GLYPHA_REQUIRE(defaults.max_accepts_per_sec > 0);
-    GLYPHA_REQUIRE(defaults.idle_timeout_ms > 0);
-    GLYPHA_REQUIRE(defaults.request_timeout_ms > 0);
-    GLYPHA_REQUIRE(defaults.connection_max_requests_per_sec > 0);
-    GLYPHA_REQUIRE(defaults.principal_max_requests_per_sec > 0);
-    GLYPHA_REQUIRE(defaults.principal_max_bytes_per_sec > 0);
+GLIFI_TEST("secure profile abuse defaults are non-zero") {
+    const auto defaults = glifistore::server::secure_profile_abuse_defaults();
+    GLIFI_REQUIRE(defaults.any_enabled());
+    GLIFI_REQUIRE(defaults.max_accepts_per_sec > 0);
+    GLIFI_REQUIRE(defaults.idle_timeout_ms > 0);
+    GLIFI_REQUIRE(defaults.request_timeout_ms > 0);
+    GLIFI_REQUIRE(defaults.connection_max_requests_per_sec > 0);
+    GLIFI_REQUIRE(defaults.principal_max_requests_per_sec > 0);
+    GLIFI_REQUIRE(defaults.principal_max_bytes_per_sec > 0);
 }
 
-GLYPHA_TEST("abuse controller principal quotas are process-wide under concurrency") {
-    using glyphastore::server::AbuseController;
-    using glyphastore::server::AbuseLimits;
+GLIFI_TEST("abuse controller principal quotas are process-wide under concurrency") {
+    using glifistore::server::AbuseController;
+    using glifistore::server::AbuseLimits;
 
     AbuseController controller{AbuseLimits{
         .principal_max_requests_per_sec = 32,
@@ -103,9 +103,9 @@ GLYPHA_TEST("abuse controller principal quotas are process-wide under concurrenc
 
     const auto admitted_count = admitted.load(std::memory_order_relaxed);
     const auto rejected_count = rejected.load(std::memory_order_relaxed);
-    GLYPHA_REQUIRE(admitted_count <= 32);
-    GLYPHA_REQUIRE(admitted_count > 0);
-    GLYPHA_REQUIRE(rejected_count > 0);
+    GLIFI_REQUIRE(admitted_count <= 32);
+    GLIFI_REQUIRE(admitted_count > 0);
+    GLIFI_REQUIRE(rejected_count > 0);
     const auto stats = controller.stats();
-    GLYPHA_REQUIRE(stats.principal_request_rejected + stats.principal_bandwidth_rejected == rejected_count);
+    GLIFI_REQUIRE(stats.principal_request_rejected + stats.principal_bandwidth_rejected == rejected_count);
 }

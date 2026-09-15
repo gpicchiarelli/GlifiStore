@@ -1,10 +1,10 @@
 #pragma once
 
-#include "glyphastore/persistence/recovery.hpp"
-#include "glyphastore/store/config.hpp"
+#include "glifistore/persistence/recovery.hpp"
+#include "glifistore/store/config.hpp"
 #include "persistence/recovery/recovery_scanner.hpp"
 
-namespace glyphastore::recovery {
+namespace glifistore::recovery {
 
 class RecoveryIndexBuilder final {
   public:
@@ -16,4 +16,4 @@ class RecoveryIndexBuilder final {
         -> Result<RecoveredWorkerState>;
 };
 
-} // namespace glyphastore::recovery
+} // namespace glifistore::recovery

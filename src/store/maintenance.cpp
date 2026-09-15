@@ -1,14 +1,14 @@
-#include "glyphastore/store/maintenance.hpp"
+#include "glifistore/store/maintenance.hpp"
 
-#include "glyphastore/core/integer_math.hpp"
-#include "glyphastore/core/types.hpp"
+#include "glifistore/core/integer_math.hpp"
+#include "glifistore/core/types.hpp"
 #include "maintenance_detail.hpp"
 
 #include <algorithm>
 #include <limits>
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 using maintenance_detail::aggressive_pressure;
 using maintenance_detail::ceil_percentage;
 using maintenance_detail::clamp_interval_ms;
@@ -417,4 +417,4 @@ void MaintenanceController::run() {
     }
 }
 
-} // namespace glyphastore
+} // namespace glifistore

@@ -22,7 +22,7 @@ SUBJECT_PATHS = (
     "benchmarks",
 )
 SUBJECT_EXCLUDES = (":(exclude)benchmarks/results/**",)
-FORMAT_DOMAIN = b"glyphastore-hosted-benchmark-subject-v1\0"
+FORMAT_DOMAIN = b"glifistore-hosted-benchmark-subject-v1\0"
 
 
 def tracked_subject_paths(root: Path) -> list[str]:

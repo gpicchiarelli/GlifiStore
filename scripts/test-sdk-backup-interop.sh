@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runtime BACKUP interop: durable glyphastored + typed backup() in each official SDK.
+# Runtime BACKUP interop: durable glifistored + typed backup() in each official SDK.
 # Clears the residual left by scripts/assert-sdk-backup-helpers.sh (symbol-only).
 # Soft-skips languages whose toolchain is absent unless BACKUP_INTEROP_REQUIRE_ALL=1.
 set -euo pipefail
@@ -46,23 +46,23 @@ to_hex() {
   fi
 }
 
-daemon="$(resolve_bin glyphastored "${GLYPHASTORED:-}" || true)"
+daemon="$(resolve_bin glifistored "${GLIFISTORED:-}" || true)"
 if [[ -z "$daemon" || ! -x "$daemon" ]]; then
-  echo "missing glyphastored; build a preset that produces it first" >&2
+  echo "missing glifistored; build a preset that produces it first" >&2
   exit 1
 fi
-cpp_client="$(resolve_bin glyphastore_interop_client "${GLYPHASTORE_INTEROP_CLIENT:-}" || true)"
+cpp_client="$(resolve_bin glifistore_interop_client "${GLIFISTORE_INTEROP_CLIENT:-}" || true)"
 if ! command -v lsof >/dev/null 2>&1; then
-  echo "lsof is required to discover ephemeral glyphastored ports" >&2
+  echo "lsof is required to discover ephemeral glifistored ports" >&2
   exit 1
 fi
 
-go_helper="${GLYPHASTORE_GO_INTEROP:-}"
+go_helper="${GLIFISTORE_GO_INTEROP:-}"
 if [[ -z "$go_helper" || ! -x "$go_helper" ]]; then
   if command -v "${GO:-go}" >/dev/null 2>&1; then
     mkdir -p "$root/sdk/go/bin"
-    (cd "$root/sdk/go" && "${GO:-go}" build -o bin/glyphastore-interop ./cmd/glyphastore-interop)
-    go_helper="$root/sdk/go/bin/glyphastore-interop"
+    (cd "$root/sdk/go" && "${GO:-go}" build -o bin/glifistore-interop ./cmd/glifistore-interop)
+    go_helper="$root/sdk/go/bin/glifistore-interop"
   fi
 fi
 
@@ -84,7 +84,7 @@ if command -v erl >/dev/null 2>&1 && command -v rebar3 >/dev/null 2>&1; then
   erlang_ready=1
 fi
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-backup-interop.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-backup-interop.XXXXXX")"
 daemon_pid=""
 cleanup() {
   if [[ -n "${daemon_pid:-}" ]] && kill -0 "$daemon_pid" 2>/dev/null; then
@@ -142,7 +142,7 @@ expect_ok_report() {
 run_cpp() {
   if [[ -z "$cpp_client" || ! -x "$cpp_client" ]]; then
     if [[ "$require_all" == "1" ]]; then
-      echo "missing glyphastore_interop_client for C++ backup interop" >&2
+      echo "missing glifistore_interop_client for C++ backup interop" >&2
       return 1
     fi
     echo "note: C++ backup interop soft-skipped (no interop client)" >&2
@@ -161,7 +161,7 @@ run_python() {
   local dest="$work/backup-python"
   local report
   report="$("$python" - <<PY
-from glyphastore.client import Client, ClientConfig
+from glifistore.client import Client, ClientConfig
 c = Client.connect(ClientConfig(host="127.0.0.1", port=$port))
 try:
     put = c.put(b"sdk-backup-py", b"py-value")
@@ -197,13 +197,13 @@ run_perl() {
   local dest="$work/backup-perl"
   local report
   report="$(
-    GLYPHA_BACKUP_PORT="$port" GLYPHA_BACKUP_DEST="$dest" "$perl" - <<'PERL'
+    GLIFI_BACKUP_PORT="$port" GLIFI_BACKUP_DEST="$dest" "$perl" - <<'PERL'
 use strict;
 use warnings;
-use GlyphaStore::Client;
-my $port = $ENV{GLYPHA_BACKUP_PORT};
-my $dest = $ENV{GLYPHA_BACKUP_DEST};
-my $c = GlyphaStore::Client->connect(host => '127.0.0.1', port => 0 + $port);
+use GlifiStore::Client;
+my $port = $ENV{GLIFI_BACKUP_PORT};
+my $dest = $ENV{GLIFI_BACKUP_DEST};
+my $c = GlifiStore::Client->connect(host => '127.0.0.1', port => 0 + $port);
 my $put = $c->put('sdk-backup-pl', 'pl-value');
 die 'put failed' unless $put && ($put->{outcome} // '') eq 'committed';
 print $c->backup($dest);
@@ -225,13 +225,13 @@ run_ruby() {
   local dest="$work/backup-ruby"
   local report
   report="$(
-    GLYPHA_BACKUP_PORT="$port" GLYPHA_BACKUP_DEST="$dest" "$ruby_bin" - <<'RUBY'
-require "glypha_store"
-port = Integer(ENV.fetch("GLYPHA_BACKUP_PORT"))
-dest = ENV.fetch("GLYPHA_BACKUP_DEST")
-cfg = GlyphaStore::ClientConfig.defaults
+    GLIFI_BACKUP_PORT="$port" GLIFI_BACKUP_DEST="$dest" "$ruby_bin" - <<'RUBY'
+require "glifi_store"
+port = Integer(ENV.fetch("GLIFI_BACKUP_PORT"))
+dest = ENV.fetch("GLIFI_BACKUP_DEST")
+cfg = GlifiStore::ClientConfig.defaults
 cfg.port = port
-c = GlyphaStore::Client.connect(cfg)
+c = GlifiStore::Client.connect(cfg)
 begin
   r = c.put("sdk-backup-rb", "rb-value")
   raise "put failed" unless r.committed?
@@ -255,27 +255,27 @@ run_erlang() {
   fi
   local dest="$work/backup-erlang"
   local ebin report
-  if [[ ! -d "$root/sdk/erlang/_build/default/lib/glyphastore/ebin" ]]; then
+  if [[ ! -d "$root/sdk/erlang/_build/default/lib/glifistore/ebin" ]]; then
     (cd "$root/sdk/erlang" && rebar3 compile >/dev/null)
   fi
-  ebin="$root/sdk/erlang/_build/default/lib/glyphastore/ebin"
+  ebin="$root/sdk/erlang/_build/default/lib/glifistore/ebin"
   report="$(
-    GLYPHA_BACKUP_PORT="$port" GLYPHA_BACKUP_DEST="$dest" \
+    GLIFI_BACKUP_PORT="$port" GLIFI_BACKUP_DEST="$dest" \
       erl -noshell -pa "$ebin" -eval '
-Port = list_to_integer(os:getenv("GLYPHA_BACKUP_PORT")),
-Dest = list_to_binary(os:getenv("GLYPHA_BACKUP_DEST")),
-{ok, C} = glyphastore_client:connect(#{host => "127.0.0.1", port => Port}),
-#{outcome := committed} = glyphastore_client:put(C, <<"sdk-backup-erl">>, <<"erl-value">>),
-{ok, Report} = glyphastore_client:backup(C, Dest),
+Port = list_to_integer(os:getenv("GLIFI_BACKUP_PORT")),
+Dest = list_to_binary(os:getenv("GLIFI_BACKUP_DEST")),
+{ok, C} = glifistore_client:connect(#{host => "127.0.0.1", port => Port}),
+#{outcome := committed} = glifistore_client:put(C, <<"sdk-backup-erl">>, <<"erl-value">>),
+{ok, Report} = glifistore_client:backup(C, Dest),
 io:put_chars(Report),
-ok = glyphastore_client:close(C),
+ok = glifistore_client:close(C),
 halt(0).
 '
   )"
   expect_ok_report "erlang" "$report"
 }
 
-echo "== SDK backup interop against durable glyphastored port=$port =="
+echo "== SDK backup interop against durable glifistored port=$port =="
 
 run_one() {
   local name="$1"

@@ -1,16 +1,16 @@
-#include "glyphastore/index/swiss_table.hpp"
+#include "glifistore/index/swiss_table.hpp"
 
-#include "glyphastore/core/error.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/index/index_hash_seed.hpp"
-#include "glyphastore/index/swiss_control_group.hpp"
+#include "glifistore/core/error.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/index/index_hash_seed.hpp"
+#include "glifistore/index/swiss_control_group.hpp"
 
 #include <algorithm>
 #include <cstring>
 #include <limits>
 #include <span>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 inline constexpr std::uint64_t kSwissMixConstant = 0x9E3779B97F4A7C15ULL;
@@ -546,4 +546,4 @@ auto SwissTableIndex::clone_empty() const -> SwissTableIndex {
     return SwissTableIndex{routing_, seed_};
 }
 
-} // namespace glyphastore
+} // namespace glifistore

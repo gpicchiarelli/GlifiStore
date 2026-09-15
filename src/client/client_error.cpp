@@ -1,11 +1,11 @@
-#include "glyphastore/client/client.hpp"
-#include "glyphastore/server/protocol.hpp"
+#include "glifistore/client/client.hpp"
+#include "glifistore/server/protocol.hpp"
 
 #include <cstdint>
 #include <string>
 #include <string_view>
 
-namespace glyphastore::client {
+namespace glifistore::client {
 
 auto portable_retryability(const std::string_view category, const bool mutation_sent,
                            const bool indeterminate) -> std::string {
@@ -123,4 +123,4 @@ auto error_from_wire_status(const std::uint16_t wire_status) -> Error {
     return error;
 }
 
-} // namespace glyphastore::client
+} // namespace glifistore::client

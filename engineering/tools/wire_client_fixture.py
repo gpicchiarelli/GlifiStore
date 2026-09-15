@@ -14,7 +14,7 @@ from pathlib import Path, PurePosixPath
 
 
 ARCHIVE = re.compile(
-    r"^glyphastore-wire-v([0-9]+)-client-"
+    r"^glifistore-wire-v([0-9]+)-client-"
     r"((?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))-"
     r"([a-z0-9_-]+)-([a-z0-9_-]+)\.tar\.xz$"
 )
@@ -42,7 +42,7 @@ def validate(
     if int(wire_version) != expected_wire_version or product_version != expected_version:
         raise WireClientFixtureError("wire client archive identity differs from release")
     basename = archive_path.name.removesuffix(".tar.xz")
-    binary_name = f"glyphastore-wire-v{wire_version}-client"
+    binary_name = f"glifistore-wire-v{wire_version}-client"
     expected_names = {
         basename,
         f"{basename}/{binary_name}",

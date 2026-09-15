@@ -14,11 +14,11 @@ publish-after-client-error (inverted RAW).
 ## Commands
 
 ```text
-./build/macos-release/glyphastore_tests 'paired durable Writer fail-closes'
-./build/macos-asan/glyphastore_tests 'paired durable Writer fail-closes'
-./build/macos-release/glyphastore_tests 'paired Reader refreshes'
-./build/macos-release/glyphastore_tests 'durable cold read pin'
-./build/macos-tsan/glyphastore_tests 'paired Store concurrent GET observes'
+./build/macos-release/glifistore_tests 'paired durable Writer fail-closes'
+./build/macos-asan/glifistore_tests 'paired durable Writer fail-closes'
+./build/macos-release/glifistore_tests 'paired Reader refreshes'
+./build/macos-release/glifistore_tests 'durable cold read pin'
+./build/macos-tsan/glifistore_tests 'paired Store concurrent GET observes'
 ```
 
 ## Results

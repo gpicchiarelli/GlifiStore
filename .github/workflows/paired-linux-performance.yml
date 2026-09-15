@@ -1,7 +1,7 @@
 name: Paired Linux hard-pinned A/B
 
 # Manual only. Does not run on push/PR. Hosted ubuntu-latest cannot close this
-# gate; requires a self-hosted runner labeled glyphastore-linux-perf.
+# gate; requires a self-hosted runner labeled glifistore-linux-perf.
 on:
   workflow_dispatch:
     inputs:
@@ -25,7 +25,7 @@ permissions:
 jobs:
   paired-linux-ab:
     name: Linux hard-pinned paired A/B
-    runs-on: [self-hosted, linux, glyphastore-linux-perf]
+    runs-on: [self-hosted, linux, glifistore-linux-perf]
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -51,7 +51,7 @@ jobs:
           CXX: clang++
         run: |
           cmake --preset unix-release
-          cmake --build --preset unix-release --target glyphastore_server_benchmarks
+          cmake --build --preset unix-release --target glifistore_server_benchmarks
 
       - name: Run hard-pinned matrix
         env:

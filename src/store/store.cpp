@@ -1,21 +1,21 @@
-#include "glyphastore/store/store.hpp"
+#include "glifistore/store/store.hpp"
 
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/core/types.hpp"
-#include "glyphastore/index/index.hpp"
-#include "glyphastore/persistence/bootstrap.hpp"
-#include "glyphastore/persistence/resource_limits.hpp"
-#include "glyphastore/persistence/runtime_catalog.hpp"
-#include "glyphastore/persistence/store_verify.hpp"
-#include "glyphastore/segment/global_manager.hpp"
-#include "glyphastore/store/maintenance.hpp"
-#include "glyphastore/store/paired/shard_pair_runtime.hpp"
-#include "glyphastore/store/value.hpp"
-#include "glyphastore/worker/pool.hpp"
-#include "glyphastore/worker/topology.hpp"
-#include "glyphastore/worker/worker.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/core/types.hpp"
+#include "glifistore/index/index.hpp"
+#include "glifistore/persistence/bootstrap.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
+#include "glifistore/persistence/runtime_catalog.hpp"
+#include "glifistore/persistence/store_verify.hpp"
+#include "glifistore/segment/global_manager.hpp"
+#include "glifistore/store/maintenance.hpp"
+#include "glifistore/store/paired/shard_pair_runtime.hpp"
+#include "glifistore/store/value.hpp"
+#include "glifistore/worker/pool.hpp"
+#include "glifistore/worker/topology.hpp"
+#include "glifistore/worker/worker.hpp"
 #include "store/store_impl.hpp"
 #include "store/store_internal.hpp"
 
@@ -35,7 +35,7 @@
 #include <variant>
 #include <vector>
 
-namespace glyphastore {
+namespace glifistore {
 
 [[nodiscard]] auto start_paired_runtime(Store& store, const StoreConfig& config) -> Status {
     return detail::StoreAccess::attach_paired_runtime(store, config);
@@ -376,10 +376,10 @@ auto Store::put_batch(const std::span<const PutItem> items) -> std::vector<Statu
 
     if (!impl_->pair_runtime) {
         for (const auto& entry : prepared) {
-#if defined(GLYPHASTORE_FAULT_INJECTION)
+#if defined(GLIFISTORE_FAULT_INJECTION)
             // Litmus: arm the real emergency gate after the batch-entry check so
             // later siblings exercise the per-item re-check (mid-batch TOCTOU).
-            if (glyphastore::fault::consume_fail(glyphastore::fault::Site::put_batch_gate)) {
+            if (glifistore::fault::consume_fail(glifistore::fault::Site::put_batch_gate)) {
                 if (auto* controller = impl_->maintenance.get(); controller != nullptr) {
                     controller->publish_mutations_rejected(true);
                 }
@@ -544,8 +544,8 @@ auto Store::erase_batch(const std::span<const EraseItem> items) -> std::vector<S
 
     if (!impl_->pair_runtime) {
         for (const auto& entry : prepared) {
-#if defined(GLYPHASTORE_FAULT_INJECTION)
-            if (glyphastore::fault::consume_fail(glyphastore::fault::Site::put_batch_gate)) {
+#if defined(GLIFISTORE_FAULT_INJECTION)
+            if (glifistore::fault::consume_fail(glifistore::fault::Site::put_batch_gate)) {
                 if (auto* controller = impl_->maintenance.get(); controller != nullptr) {
                     controller->publish_mutations_rejected(true);
                 }
@@ -925,4 +925,4 @@ auto Store::verify_index() const -> Status try {
     return store_detail::internal_failure();
 }
 
-} // namespace glyphastore
+} // namespace glifistore

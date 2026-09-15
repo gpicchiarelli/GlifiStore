@@ -5,7 +5,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
 
-outdir="${GLYPHASTORE_COVERAGE_OUT:-$root/build/coverage}"
+outdir="${GLIFISTORE_COVERAGE_OUT:-$root/build/coverage}"
 builddir="$root/build/unix-coverage"
 rm -rf "$outdir" "$builddir"
 mkdir -p "$outdir"
@@ -24,11 +24,11 @@ cmake -S "$root" -B "$builddir" -G Ninja \
   -DCMAKE_CXX_FLAGS="$CXXFLAGS" \
   -DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS" \
   -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS" \
-  -DGLYPHASTORE_FAULT_INJECTION=ON \
+  -DGLIFISTORE_FAULT_INJECTION=ON \
   -DBUILD_TESTING=ON
 
-cmake --build "$builddir" --target glyphastore_tests
-ctest --test-dir "$builddir" --output-on-failure --tests-regex '^glyphastore_tests$'
+cmake --build "$builddir" --target glifistore_tests
+ctest --test-dir "$builddir" --output-on-failure --tests-regex '^glifistore_tests$'
 
 if ! command -v lcov >/dev/null 2>&1; then
   echo "lcov is required to generate the diagnostic coverage report" >&2

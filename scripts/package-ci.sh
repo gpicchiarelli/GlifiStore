@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Single entry point for GlyphaStore packaging CI.
+# Single entry point for GlifiStore packaging CI.
 #
 # Resolves the release context from VERSION (never a hard-coded version), expands
 # the package matrix for a CI profile, and runs the requested backend adapters.

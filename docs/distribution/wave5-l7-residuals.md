@@ -22,7 +22,7 @@ retained tagged evidence; absence of evidence is a hard residual, not a waiver.
 First-tag runbook (do not invent digests):
 
 1. Cut annotated `vX.Y.Z` only when other release prerequisites are intentional residuals or closed.
-2. Candidate packages `glyphastore-abi-v1-consumer-…tar.xz` via `scripts/package-abi-consumer.py`.
+2. Candidate packages `glifistore-abi-v1-consumer-…tar.xz` via `scripts/package-abi-consumer.py`.
 3. Retain that asset on the GitHub Release; optionally record a pointer under
    `engineering/evidence/release/` (never hand-written SHA substitutes).
 4. The **next** tag's `abi-compatibility-evidence` job selects that prior release and runs both
@@ -63,7 +63,7 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
 - `package-upgrade` is `NOT_APPLICABLE_INITIAL_BASELINE` (no prior annotated release) and becomes
   `NOT_RUN` — never `PASS` — until a sealed N−1 package artifact is admitted and the backend's
   install→seed→upgrade→verify walk succeeds (Linux deb/rpm, FreeBSD/OpenBSD, and
-  MacPorts/Homebrew implement that walk when `GLYPHASTORE_N1_PACKAGE_DIR` is supplied).
+  MacPorts/Homebrew implement that walk when `GLIFISTORE_N1_PACKAGE_DIR` is supplied).
 - `external-consumer` against the installed package prefix is built by
   `scripts/lib/package-external-consumer.sh` inside the native FreeBSD/OpenBSD lifecycle scripts;
   a retained PASS lifts the BSD package-ci ceiling to `LIFECYCLE_VERIFIED` (upgrade and upstream
@@ -73,7 +73,7 @@ BSD package evidence separates `structural`, `native-build`, `package`, `service
   `IMPLEMENTATA`: citing a retention path is not the same as having retained a run.
 - The Linux container lifecycle (`deb`, `rpm`) is enabled from the `nightly` and `release`
   profiles only (`main` stays structural). Retained nightly
-  [`34662210614`](https://github.com/gpicchiarelli/GlyphaStore/actions/runs/34662210614) on tip
+  [`34662210614`](https://github.com/gpicchiarelli/GlifiStore/actions/runs/34662210614) on tip
   `58167e8` reaches `LIFECYCLE_VERIFIED` for deb (Debian 12) and rpm (Fedora 41 at the time;
   live rpm target is now Fedora 43):
   `service-lifecycle` PASS through systemd as PID 1, plus install, protocol, restart, config
@@ -99,14 +99,14 @@ Declarative status is generated into [package-status.md](package-status.md); the
 
 | Residual | State today | What would close it |
 | --- | --- | --- |
-| deb / rpm container lifecycle | Retained nightly [`34662210614`](https://github.com/gpicchiarelli/GlyphaStore/actions/runs/34662210614) (`58167e8`): deb+rpm `LIFECYCLE_VERIFIED` with `service-lifecycle` PASS under systemd PID 1; overall `NOT_RUN` without a sealed candidate | A sealed-candidate release-profile row that keeps `LIFECYCLE_VERIFIED` and admits publishable bytes |
+| deb / rpm container lifecycle | Retained nightly [`34662210614`](https://github.com/gpicchiarelli/GlifiStore/actions/runs/34662210614) (`58167e8`): deb+rpm `LIFECYCLE_VERIFIED` with `service-lifecycle` PASS under systemd PID 1; overall `NOT_RUN` without a sealed candidate | A sealed-candidate release-profile row that keeps `LIFECYCLE_VERIFIED` and admits publishable bytes |
 | MacPorts `launchd` startup item | Portfile declares unprivileged `startupitem.user`/`group`; native lifecycle loads/unloads it; without a retained native run it stays `OPEN_GATE` | A retained native run that exercises `port load`/`unload` |
 | Homebrew `brew services` | Native lifecycle starts/stops the declared block; without a retained native run it stays `OPEN_GATE` | A retained native run that exercises the services block |
 | MacPorts / Homebrew native rows | Opt-in only (`--allow-native`); no hosted runner may install into the host package manager | A disposable macOS host or an accepted runner policy, with retained logs |
 | `external-consumer` on BSD | Implemented in native lifecycle scripts; maps to package-ci `PASS` → `LIFECYCLE_VERIFIED` when the log is retained | A tagged/native retained run that keeps `*-external-consumer.log` |
-| `package-upgrade` anywhere | Selection is wired: `NOT_APPLICABLE_INITIAL_BASELINE` today; once a predecessor exists, `NOT_RUN` until sealed packages are supplied via `GLYPHASTORE_N1_PACKAGE_DIR` (never rebuilt from HEAD). Linux deb/rpm, FreeBSD/OpenBSD, and MacPorts/Homebrew implement install→seed→upgrade→verify when those bytes are available (macOS selects sealed `GlyphaStore-<version>.tar.xz` sources) | A sealed N−1 package artifact retained beside a published release, plus a PASS on a required backend walk |
+| `package-upgrade` anywhere | Selection is wired: `NOT_APPLICABLE_INITIAL_BASELINE` today; once a predecessor exists, `NOT_RUN` until sealed packages are supplied via `GLIFISTORE_N1_PACKAGE_DIR` (never rebuilt from HEAD). Linux deb/rpm, FreeBSD/OpenBSD, and MacPorts/Homebrew implement install→seed→upgrade→verify when those bytes are available (macOS selects sealed `GlifiStore-<version>.tar.xz` sources) | A sealed N−1 package artifact retained beside a published release, plus a PASS on a required backend walk |
 | Wave F admission tools | `run_package_admission.py` is wired into `package-ci.yml` (sealed candidate) and `release.yml` (`package-admission` job); Linux nightly now retains cross-SDK PASS | A positive `admitted: true` after sealed N−1 `package-upgrade` on required backends |
-| Cross-SDK post-install matrix | Retained nightly [`34666166603`](https://github.com/gpicchiarelli/GlyphaStore/actions/runs/34666166603) (`ebcf1fa`): deb (Debian 12 + Ubuntu 24.04) and rpm (Fedora 41 then; live target Fedora 43) `installed-sdk-matrix.json` **PASS** against package-owned `/usr/bin/glyphastored` (cpp/python/go/perl/ruby/erlang, plain) | Wire that retained PASS into a sealed-candidate admission report (`admitted: true` still needs N−1 `package-upgrade`) |
+| Cross-SDK post-install matrix | Retained nightly [`34666166603`](https://github.com/gpicchiarelli/GlifiStore/actions/runs/34666166603) (`ebcf1fa`): deb (Debian 12 + Ubuntu 24.04) and rpm (Fedora 41 then; live target Fedora 43) `installed-sdk-matrix.json` **PASS** against package-owned `/usr/bin/glifistored` (cpp/python/go/perl/ruby/erlang, plain) | Wire that retained PASS into a sealed-candidate admission report (`admitted: true` still needs N−1 `package-upgrade`) |
 | Optional backends | `deb`, `rpm`, `macports`, `homebrew` are `required_for_release: false` and cannot admit a release artifact | Retained `LIFECYCLE_VERIFIED` evidence, a release-policy artifact, an ADR and a gate update |
 | Upstream acceptance | `OPEN_GATE` for FreeBSD, OpenBSD, MacPorts and Homebrew; in-repo packaging is the project pipeline only | Actual acceptance by the upstream ports tree or tap |
 | Apple `.pkg` | Deliberately out of scope; refused by the matrix validator | An accepted ADR, an Apple signing/notarization identity and an update model |
@@ -133,7 +133,7 @@ carry READMEs only. An empty fixture directory is a residual, never an implicit 
 
 ## Candidate build profile
 
-The release candidate is built with `-DGLYPHASTORE_ENABLE_TLS=OFF` and records `--tls-backend none`
+The release candidate is built with `-DGLIFISTORE_ENABLE_TLS=OFF` and records `--tls-backend none`
 in its build metadata ([`release-candidate.yml`](../../.github/workflows/release-candidate.yml)).
 Every artifact derived from that candidate — source archive, Linux prefix, ABI and wire fixtures,
 and any package built from the sealed source — is therefore a TLS-less build. No release artifact

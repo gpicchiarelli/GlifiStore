@@ -1,13 +1,13 @@
 #pragma once
 
-#include "glyphastore/store/maintenance.hpp"
+#include "glifistore/store/maintenance.hpp"
 
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <limits>
 
-namespace glyphastore::maintenance_detail {
+namespace glifistore::maintenance_detail {
 
 [[nodiscard]] inline auto clamp_interval_ms(const MaintenanceConfig& config, const bool use_min,
                                             const bool use_max) -> std::uint32_t {
@@ -60,4 +60,4 @@ namespace glyphastore::maintenance_detail {
     return whole * percentage + (remainder * percentage + 99U) / 100U;
 }
 
-} // namespace glyphastore::maintenance_detail
+} // namespace glifistore::maintenance_detail

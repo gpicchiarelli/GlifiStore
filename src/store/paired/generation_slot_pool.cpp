@@ -1,11 +1,11 @@
-#include "glyphastore/store/paired/generation_slot_pool.hpp"
+#include "glifistore/store/paired/generation_slot_pool.hpp"
 
 #include <algorithm>
 #include <exception>
 #include <new>
 #include <utility>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 GenerationSlotPool::GenerationSlotPool(ConstructionToken,
                                        const GenerationSlotFailureHook failure_hook) noexcept
@@ -355,4 +355,4 @@ void GenerationSlotPool::cancel_reservation(const std::size_t index, const bool 
     }
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

@@ -1,4 +1,4 @@
-# GlyphaStore Perl SDK — Perl::Critic at maximum severity (--brutal / severity 1).
+# GlifiStore Perl SDK — Perl::Critic at maximum severity (--brutal / severity 1).
 # Enforced by scripts/test-perl-client.sh and CI. Only policies that conflict with
 # the documented SDK contract or with modern/hot-path Perl are disabled below.
 
@@ -24,7 +24,7 @@ only = 0
 # Public method names match the cross-language surface (connect/close).
 [-Subroutines::ProhibitBuiltinHomonyms]
 
-# The client throws GlyphaStore::Error objects via die; Carp would stringify
+# The client throws GlifiStore::Error objects via die; Carp would stringify
 # and break the documented exception contract.
 [-ErrorHandling::RequireCarping]
 

@@ -4,9 +4,9 @@
 
 - Make the interop CLI assert structured `permission_denied` and `overloaded` mutation outcomes in
   the all-SDK secure-profile prefix/quota matrix, with a bounded burst for quota exhaustion.
-- Load `glypha_store` through the gem load path and verify the installed interop executable, so the
+- Load `glifi_store` through the gem load path and verify the installed interop executable, so the
   packaged CLI cannot accidentally depend on the source-tree `lib/` layout.
-- In installed-artifact interop mode, fail if Ruby resolves `glypha_store` from the repository.
+- In installed-artifact interop mode, fail if Ruby resolves `glifi_store` from the repository.
 - Install the built gem into an isolated `GEM_HOME` for the secure-profile artifact matrix.
 
 ## 0.1.0

@@ -88,7 +88,7 @@ the immutable generation; zero-cache operation therefore remains correct. Durabl
 (mutex wait, prepare/complete hold, Index/hot/pin lookup, cold read, CRC/value copy,
 relinearization retries) is published through
 `get_path_stats()` with relaxed atomics so the Worker critical section stays short; fine-grained
-clock sampling compiles out of Release unless `GLYPHASTORE_GET_PATH_TIMING` is set. The mutable
+clock sampling compiles out of Release unless `GLIFISTORE_GET_PATH_TIMING` is set. The mutable
 `prepare_get` compatibility path holds only the Worker mutex (the catalog shared lock is taken only
 on cold-miss pin acquisition). A cache hit snapshots shared immutable ownership under the Worker
 mutex and performs the value-sized owning copy after unlocking. On an active-generation miss, the

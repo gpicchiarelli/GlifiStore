@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: GlyphaStore
+Upstream-Name: GlifiStore
 Upstream-Contact: Giacomo Picchiarelli <gpicchiarelli@gmail.com>
-Source: https://github.com/gpicchiarelli/GlyphaStore
+Source: https://github.com/gpicchiarelli/GlifiStore
 
 Files: *
 Copyright: 2026 Giacomo Picchiarelli

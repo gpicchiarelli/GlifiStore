@@ -40,9 +40,9 @@ bsd_backend_admit_candidate() {
   local archives=()
   while IFS= read -r line; do
     [[ -n "$line" ]] && archives+=("$line")
-  done < <(find "$candidate" -maxdepth 1 -type f -name "GlyphaStore-$version.tar.xz" -print)
+  done < <(find "$candidate" -maxdepth 1 -type f -name "GlifiStore-$version.tar.xz" -print)
   (( ${#archives[@]} == 1 )) || {
-    echo "expected exactly one sealed source archive GlyphaStore-$version.tar.xz"
+    echo "expected exactly one sealed source archive GlifiStore-$version.tar.xz"
     return 1
   }
   echo "sealed_source=${archives[0]} sha256=$(bsd_backend_sha256 "${archives[0]}")"
@@ -154,7 +154,7 @@ bsd_backend_run() {
     reason=""
     # Forward the release context so a sealed N-1 upgrade walk can select the
     # SemVer predecessor without rebuilding it from HEAD.
-    export GLYPHASTORE_RELEASE_CONTEXT="$release_context"
+    export GLIFISTORE_RELEASE_CONTEXT="$release_context"
     # The native producer writes its own per-step logs into this directory; the
     # status of each framework row comes from those retained logs, not from here.
     if bash "$lifecycle" "$candidate_dir" "$directory" \

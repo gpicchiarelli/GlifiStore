@@ -1,9 +1,9 @@
 #include "server/server_health.hpp"
 
-#include "glyphastore/server/server.hpp"
+#include "glifistore/server/server.hpp"
 #include "store/store_internal.hpp"
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 auto ServerHealth::live(const bool started, const bool healthy) noexcept -> bool {
     return started && healthy;
@@ -57,4 +57,4 @@ auto Server::maintenance_snapshot() const -> MaintenanceSnapshot {
     return store_->maintenance_snapshot();
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

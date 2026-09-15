@@ -1,11 +1,11 @@
 Status: descriptive operator handbook (index + incident playbooks)
-Applies to: durable `glyphastored` and offline maintenance tools
+Applies to: durable `glifistored` and offline maintenance tools
 Owner: platform / ops maintainers
 Last reviewed: 2026-08-01
 
 # Operations handbook
 
-Single entry point for running GlyphaStore in production-like deployments. Detailed procedures stay
+Single entry point for running GlifiStore in production-like deployments. Detailed procedures stay
 in the linked runbooks; this handbook orders them for day-2 operations and incidents. Normative
 contracts live in [cli.md](../cli.md), [wire protocol v2](../spec/wire-protocol-v2.md), and the
 specs under `docs/spec/`. Claim ceiling remains *architectural prototype*.
@@ -13,7 +13,7 @@ specs under `docs/spec/`. Claim ceiling remains *architectural prototype*.
 ## 1. Day-1: bring a durable daemon up
 
 1. Choose profile (`production` / `embedded`) and an absolute `--data-dir`.
-2. `glyphastored … --dump-config` and review abuse, maintenance, and queue caps.
+2. `glifistored … --dump-config` and review abuse, maintenance, and queue caps.
 3. Start the process; confirm log `listen` / `ready` (or `--log-format json` equivalents).
 4. Probe `READY` before adding to a load balancer; never use `HEALTH` alone.
 
@@ -60,7 +60,7 @@ Normative snapshot boundary: [backup-restore v1](../spec/backup-restore-v1.md). 
 
 ### 5.2 Startup / verify failure
 
-1. Stop writers; run `glyphastore_verify_store`.
+1. Stop writers; run `glifistore_verify_store`.
 2. Follow [corruption-repair](corruption-repair.md); never in-place rewrite production dirs.
 3. Restore from last verified backup into a new path; cut over only after verify.
 

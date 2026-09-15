@@ -1,4 +1,4 @@
-# GlyphaStore — Base Index compatto (2026-07-29)
+# GlifiStore — Base Index compatto (2026-07-29)
 
 ## Esito
 

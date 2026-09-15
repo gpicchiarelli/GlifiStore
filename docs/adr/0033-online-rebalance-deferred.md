@@ -15,7 +15,7 @@
 Persistence v1 and wire v2 fix ownership as `hash(key) % worker_count` (or keyed SipHash under
 ADR 0030) with a session `routing_epoch`. Clients treat `WRONG_OWNER` and epoch/count mismatch as
 unhealthy and open a **new** client; protocol v2 defines no online rebalance. Offline Worker-count
-change is already productized via `glyphastore_migrate_store` (ADR 0024).
+change is already productized via `glifistore_migrate_store` (ADR 0024).
 
 Product pressure exists to grow/shrink shard pairs without offline copy. Implementing that without a
 frozen failure model would risk dual-ownership windows, silent reopen repartition, and client

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Live HEALTH/READY/STATS interop against a real glyphastored.
+# Live HEALTH/READY/STATS interop against a real glifistored.
 # Complements fake-server unit coverage in each language SDK.
 # Soft-skips languages whose toolchain is absent unless PROBE_INTEROP_REQUIRE_ALL=1.
 set -euo pipefail
@@ -38,23 +38,23 @@ discover_port() {
     awk 'NR==2 {split($9,a,":"); print a[length(a)]}'
 }
 
-daemon="$(resolve_bin glyphastored "${GLYPHASTORED:-}" || true)"
+daemon="$(resolve_bin glifistored "${GLIFISTORED:-}" || true)"
 if [[ -z "$daemon" || ! -x "$daemon" ]]; then
-  echo "missing glyphastored; build a preset that produces it first" >&2
+  echo "missing glifistored; build a preset that produces it first" >&2
   exit 1
 fi
-cpp_client="$(resolve_bin glyphastore_interop_client "${GLYPHASTORE_INTEROP_CLIENT:-}" || true)"
+cpp_client="$(resolve_bin glifistore_interop_client "${GLIFISTORE_INTEROP_CLIENT:-}" || true)"
 if ! command -v lsof >/dev/null 2>&1; then
-  echo "lsof is required to discover ephemeral glyphastored ports" >&2
+  echo "lsof is required to discover ephemeral glifistored ports" >&2
   exit 1
 fi
 
-go_helper="${GLYPHASTORE_GO_INTEROP:-}"
+go_helper="${GLIFISTORE_GO_INTEROP:-}"
 if [[ -z "$go_helper" || ! -x "$go_helper" ]]; then
   if command -v "${GO:-go}" >/dev/null 2>&1; then
     mkdir -p "$root/sdk/go/bin"
-    (cd "$root/sdk/go" && "${GO:-go}" build -o bin/glyphastore-interop ./cmd/glyphastore-interop)
-    go_helper="$root/sdk/go/bin/glyphastore-interop"
+    (cd "$root/sdk/go" && "${GO:-go}" build -o bin/glifistore-interop ./cmd/glifistore-interop)
+    go_helper="$root/sdk/go/bin/glifistore-interop"
   fi
 fi
 
@@ -76,7 +76,7 @@ if command -v erl >/dev/null 2>&1 && command -v rebar3 >/dev/null 2>&1; then
   erlang_ready=1
 fi
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-probe-interop.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-probe-interop.XXXXXX")"
 daemon_pid=""
 cleanup() {
   if [[ -n "${daemon_pid:-}" ]] && kill -0 "$daemon_pid" 2>/dev/null; then
@@ -123,16 +123,16 @@ expect_probes() {
   local health="$2"
   local ready="$3"
   local stats="$4"
-  if [[ "$health" != "GlyphaStore/live" ]]; then
-    echo "FAIL $label health: expected GlyphaStore/live, got: $health" >&2
+  if [[ "$health" != "GlifiStore/live" ]]; then
+    echo "FAIL $label health: expected GlifiStore/live, got: $health" >&2
     return 1
   fi
-  if [[ "$ready" != "GlyphaStore/ready" ]]; then
-    echo "FAIL $label ready: expected GlyphaStore/ready, got: $ready" >&2
+  if [[ "$ready" != "GlifiStore/ready" ]]; then
+    echo "FAIL $label ready: expected GlifiStore/ready, got: $ready" >&2
     return 1
   fi
-  if [[ "$stats" != GlyphaStore/stats* ]]; then
-    echo "FAIL $label stats: expected GlyphaStore/stats prefix, got: $stats" >&2
+  if [[ "$stats" != GlifiStore/stats* ]]; then
+    echo "FAIL $label stats: expected GlifiStore/stats prefix, got: $stats" >&2
     return 1
   fi
   echo "ok: $label HEALTH/READY/STATS"
@@ -141,7 +141,7 @@ expect_probes() {
 run_python() {
   local out
   out="$("$python" - <<PY
-from glyphastore.client import Client, ClientConfig
+from glifistore.client import Client, ClientConfig
 c = Client.connect(ClientConfig(host="127.0.0.1", port=$port))
 try:
     print(c.health().decode())
@@ -196,11 +196,11 @@ run_cpp() {
 run_perl() {
   local out health ready stats
   out="$(
-    GLYPHA_PROBE_PORT="$port" "$perl" - <<'PERL'
+    GLIFI_PROBE_PORT="$port" "$perl" - <<'PERL'
 use strict;
 use warnings;
-use GlyphaStore::Client;
-my $c = GlyphaStore::Client->connect(host => '127.0.0.1', port => 0 + $ENV{GLYPHA_PROBE_PORT});
+use GlifiStore::Client;
+my $c = GlifiStore::Client->connect(host => '127.0.0.1', port => 0 + $ENV{GLIFI_PROBE_PORT});
 print $c->health(), "\n---\n", $c->ready(), "\n---\n", $c->stats();
 $c->close;
 PERL
@@ -222,11 +222,11 @@ run_ruby() {
   fi
   local out health ready stats
   out="$(
-    GLYPHA_PROBE_PORT="$port" "$ruby_bin" - <<'RUBY'
-require "glypha_store"
-cfg = GlyphaStore::ClientConfig.defaults
-cfg.port = Integer(ENV.fetch("GLYPHA_PROBE_PORT"))
-c = GlyphaStore::Client.connect(cfg)
+    GLIFI_PROBE_PORT="$port" "$ruby_bin" - <<'RUBY'
+require "glifi_store"
+cfg = GlifiStore::ClientConfig.defaults
+cfg.port = Integer(ENV.fetch("GLIFI_PROBE_PORT"))
+c = GlifiStore::Client.connect(cfg)
 begin
   print c.health
   print "\n---\n"
@@ -254,20 +254,20 @@ run_erlang() {
     return 0
   fi
   local ebin out health ready stats
-  if [[ ! -d "$root/sdk/erlang/_build/default/lib/glyphastore/ebin" ]]; then
+  if [[ ! -d "$root/sdk/erlang/_build/default/lib/glifistore/ebin" ]]; then
     (cd "$root/sdk/erlang" && rebar3 compile >/dev/null)
   fi
-  ebin="$root/sdk/erlang/_build/default/lib/glyphastore/ebin"
+  ebin="$root/sdk/erlang/_build/default/lib/glifistore/ebin"
   out="$(
-    GLYPHA_PROBE_PORT="$port" \
+    GLIFI_PROBE_PORT="$port" \
       erl -noshell -pa "$ebin" -eval '
-Port = list_to_integer(os:getenv("GLYPHA_PROBE_PORT")),
-{ok, C} = glyphastore_client:connect(#{host => "127.0.0.1", port => Port}),
-{ok, Health} = glyphastore_client:health(C),
-{ok, Ready} = glyphastore_client:ready(C),
-{ok, Stats} = glyphastore_client:stats(C),
+Port = list_to_integer(os:getenv("GLIFI_PROBE_PORT")),
+{ok, C} = glifistore_client:connect(#{host => "127.0.0.1", port => Port}),
+{ok, Health} = glifistore_client:health(C),
+{ok, Ready} = glifistore_client:ready(C),
+{ok, Stats} = glifistore_client:stats(C),
 io:format("~s~n---~n~s~n---~n~s", [Health, Ready, Stats]),
-ok = glyphastore_client:close(C),
+ok = glifistore_client:close(C),
 halt(0).
 '
   )"
@@ -277,7 +277,7 @@ halt(0).
   expect_probes "erlang" "$health" "$ready" "$stats"
 }
 
-echo "== SDK probe interop against volatile glyphastored port=$port =="
+echo "== SDK probe interop against volatile glifistored port=$port =="
 
 run_one() {
   local name="$1"

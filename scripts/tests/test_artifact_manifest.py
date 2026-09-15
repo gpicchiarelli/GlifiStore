@@ -27,14 +27,14 @@ class ArtifactManifestTests(unittest.TestCase):
         cls.context = build_context(ROOT)
 
     def setUp(self) -> None:
-        directory = tempfile.TemporaryDirectory(prefix="glyphastore-artifact-manifest-")
+        directory = tempfile.TemporaryDirectory(prefix="glifistore-artifact-manifest-")
         self.addCleanup(directory.cleanup)
         self.directory = Path(directory.name)
         self.context_path = self.directory / "release-context.json"
         self.context_path.write_text(encode_json(self.context), encoding="utf-8")
-        self.source = self.directory / "GlyphaStore-0.1.0.tar.xz"
+        self.source = self.directory / "GlifiStore-0.1.0.tar.xz"
         self.source.write_bytes(b"sealed source archive")
-        self.package = self.directory / "glyphastore-0.1.0-debian-12-amd64.deb"
+        self.package = self.directory / "glifistore-0.1.0-debian-12-amd64.deb"
         self.package.write_bytes(b"package payload")
 
     def manifest(self, *artifacts: str) -> dict:
@@ -78,7 +78,7 @@ class ArtifactManifestTests(unittest.TestCase):
             validate_manifest(manifest)
 
     def test_duplicate_identities_are_refused(self) -> None:
-        second = self.directory / "glyphastore-0.1.0-fedora-43-amd64.rpm"
+        second = self.directory / "glifistore-0.1.0-fedora-43-amd64.rpm"
         second.write_bytes(b"rpm payload")
         with self.assertRaisesRegex(ArtifactManifestError, "duplicates an artifact id"):
             self.manifest(

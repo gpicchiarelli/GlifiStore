@@ -1,7 +1,7 @@
 #pragma once
 
 #include "filesystem_detail.hpp"
-#include "glyphastore/persistence/segment_file.hpp"
+#include "glifistore/persistence/segment_file.hpp"
 #include "system_error.hpp"
 
 #include <array>
@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <utility>
 
-namespace glyphastore::segment_file_detail {
+namespace glifistore::segment_file_detail {
 
 using persistence_detail::interrupted_open;
 using persistence_detail::interrupted_open_at;
@@ -118,4 +118,4 @@ inline auto fixed_hex(std::uint64_t value, std::size_t width) -> std::string {
     return result;
 }
 
-} // namespace glyphastore::segment_file_detail
+} // namespace glifistore::segment_file_detail

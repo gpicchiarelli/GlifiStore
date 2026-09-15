@@ -1,28 +1,28 @@
 # C++ client API (wire protocol v2)
 
 Status: normative for the current installable C++ client
-Applies to: `GlyphaStore::client`, wire protocol v2
+Applies to: `GlifiStore::client`, wire protocol v2
 Owner: networking maintainers
 Last reviewed: 2026-09-12
 
 ## Purpose and ownership
 
-`glyphastore::client::Client` is the reference implementation of wire protocol v2. It is separate
-from the embedded Store and server runtime: applications link `GlyphaStore::client`, while the
-client links the small `GlyphaStore::wire` codec library and (when TLS is enabled at build time)
-`GlyphaStore::tls_layer`.
+`glifistore::client::Client` is the reference implementation of wire protocol v2. It is separate
+from the embedded Store and server runtime: applications link `GlifiStore::client`, while the
+client links the small `GlifiStore::wire` codec library and (when TLS is enabled at build time)
+`GlifiStore::tls_layer`.
 
 `Client::connect()` performs `INIT`, records the server's Worker count, routing epoch and routing
 identity (`routing()`), then opens and binds exactly one connection for every Worker. The default
 endpoint is TCP `host:port`; set `ClientConfig::unix_socket_path` to dial AF_UNIX instead (ADR 0029).
-AF_UNIX is mutually exclusive with TLS. Plain `GlyphaStore/2` selects protocol-v2 FNV-1a; the
+AF_UNIX is mutually exclusive with TLS. Plain `GlifiStore/2` selects protocol-v2 FNV-1a; the
 extended identity selects keyed SipHash-2-4 as specified by wire v2 and ADR 0030. A mutex serializes
 traffic on each connection; calls routed to different Workers can execute concurrently. A `Client`
 may therefore be shared between threads, but a single Worker has either one synchronous request or
 one ordered pipeline in flight through one client instance.
 
 Lifecycle probes `health()`, `ready()`, and `stats()` run on Worker 0. On OK, wire v2 returns ASCII
-`GlyphaStore/live`, `GlyphaStore/ready`, and a bounded `GlyphaStore/stats` report respectively —
+`GlifiStore/live`, `GlifiStore/ready`, and a bounded `GlifiStore/stats` report respectively —
 distinct from `healthy()`, which is local connection fail-closed state. Orchestrators must gate
 traffic on `READY`, not `HEALTH` alone.
 
@@ -36,9 +36,9 @@ closed with no cleartext fallback ([ADR 0020](../adr/0020-tls-outer-transport.md
 ## Basic use
 
 ```cpp
-#include <glyphastore/client/client.hpp>
+#include <glifistore/client/client.hpp>
 
-auto opened = glyphastore::client::Client::connect({
+auto opened = glifistore::client::Client::connect({
     .host = "127.0.0.1",
     .port = 7379,
 });
@@ -67,7 +67,7 @@ The client does not compensate for clock skew.
 
 ## Structured errors
 
-TCP client failures populate portable fields on `glyphastore::Error` (see
+TCP client failures populate portable fields on `glifistore::Error` (see
 [client semantics §2.1](../spec/client-semantics-v1.md)):
 
 | Field | Role |
@@ -99,13 +99,13 @@ positional response vector even when the transport fails partway through.
 
 ```cpp
 const std::array requests{
-    glyphastore::client::PipelineRequest{
-        .opcode = glyphastore::client::PipelineOpcode::put,
+    glifistore::client::PipelineRequest{
+        .opcode = glifistore::client::PipelineOpcode::put,
         .key = key,
         .value = value,
     },
-    glyphastore::client::PipelineRequest{
-        .opcode = glyphastore::client::PipelineOpcode::get,
+    glifistore::client::PipelineRequest{
+        .opcode = glifistore::client::PipelineOpcode::get,
         .key = key,
     },
 };
@@ -219,7 +219,7 @@ Secure-profile follow-ons (mTLS principals / authz) are tracked in
 | Perl | Native module under `sdk/perl` using byte strings | synchronous handles; one client per process/thread (event-loop adapter later) |
 | Go | Native module under `sdk/go` (`client` + `protocol`) | synchronous, goroutine-safe, one connection per Worker; `ExecuteBatch` fans out per Worker |
 | Ruby | Implemented under `sdk/ruby` (`Client` + optional `AsyncClient`) | sync: per-Worker mutex; async: Fiber + `async` gem; one client per forked worker process |
-| Erlang | Implemented under `sdk/erlang` (`glyphastore` OTP app) | client `gen_server` + one connection process per Worker; `execute_batch` / `execute_worker_pipelines` fan out |
+| Erlang | Implemented under `sdk/erlang` (`glifistore` OTP app) | client `gen_server` + one connection process per Worker; `execute_batch` / `execute_worker_pipelines` fan out |
 
 Every SDK must consume the canonical request/response corpus under `tests/fixtures/`, use unsigned
 little-endian fields exactly, distinguish indeterminate mutations, and pass the same malformed-frame
@@ -229,13 +229,13 @@ protocol makes straightforward to implement safely.
 
 ## Performance interpretation
 
-`glyphastore_client_benchmark` measures only the public reference client against an already-running
+`glifistore_client_benchmark` measures only the public reference client against an already-running
 daemon. It validates every positional PUT/GET response and supports `concurrent`, `sequential`, and
 mixed-owner `batch` execution. Keys are assigned through the connected client's negotiated routing
 identity, so keyed SipHash runs do not silently use an FNV workload.
 
 ```bash
-build/macos-release/glyphastore_client_benchmark --port 7379 --workers 4 \
+build/macos-release/glifistore_client_benchmark --port 7379 --workers 4 \
   --ops 100000 --pipeline 8 --warmup 1 --repeats 7 --execution concurrent
 ```
 

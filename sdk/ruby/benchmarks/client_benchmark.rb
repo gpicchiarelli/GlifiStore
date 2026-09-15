@@ -3,7 +3,7 @@
 
 require "optparse"
 require "pathname"
-require_relative "../lib/glypha_store"
+require_relative "../lib/glifi_store"
 
 options = {
   host: "127.0.0.1",
@@ -43,14 +43,14 @@ end
 candidate = 0
 while remaining.any?(&:positive?)
   key = format("ruby-bench-%012d", candidate).b
-  owner = GlyphaStore::Protocol.worker_for(key, options[:workers])
+  owner = GlifiStore::Protocol.worker_for(key, options[:workers])
   if remaining[owner].positive?
     value = ([candidate & 0xFF].pack("C") * 64)
-    requests[owner] << GlyphaStore::PipelineRequest.new(
-      opcode: GlyphaStore::PipelineOpcode::PUT, key: key, value: value
+    requests[owner] << GlifiStore::PipelineRequest.new(
+      opcode: GlifiStore::PipelineOpcode::PUT, key: key, value: value
     )
-    requests[owner] << GlyphaStore::PipelineRequest.new(
-      opcode: GlyphaStore::PipelineOpcode::GET, key: key
+    requests[owner] << GlifiStore::PipelineRequest.new(
+      opcode: GlifiStore::PipelineOpcode::GET, key: key
     )
     remaining[owner] -= 1
   end
@@ -72,11 +72,11 @@ requests.each do |worker_requests|
   batches << worker_batches
 end
 
-config = GlyphaStore::ClientConfig.defaults
+config = GlifiStore::ClientConfig.defaults
 config.host = options[:host]
 config.port = options[:port]
 config.maximum_pipeline_requests = batch_frames
-client = GlyphaStore::Client.connect(config)
+client = GlifiStore::Client.connect(config)
 abort("server Worker count does not match --workers") if client.worker_count != options[:workers]
 
 def validate_batch!(batch, responses)
@@ -85,7 +85,7 @@ def validate_batch!(batch, responses)
   batch.each_with_index do |request, index|
     raise "pipeline request failed" unless responses[index].succeeded?
 
-    next unless request.opcode == GlyphaStore::PipelineOpcode::GET
+    next unless request.opcode == GlifiStore::PipelineOpcode::GET
     raise "pipeline GET value mismatch" if responses[index].value != batch[index - 1].value
   end
 end
@@ -139,13 +139,13 @@ sorted_rates = rates.sort
 median_r = sorted_rates.length.odd? ? sorted_rates[sorted_rates.length / 2] : (sorted_rates[sorted_rates.length / 2 - 1] + sorted_rates[sorted_rates.length / 2]) / 2.0
 execution = use_concurrent ? "single-process-worker-concurrent" : "single-process-worker-sequential"
 
-puts "# glyphastore Ruby client benchmark"
-puts "# sdk_version=#{GlyphaStore::VERSION} runtime=sync execution=#{execution} " \
+puts "# glifistore Ruby client benchmark"
+puts "# sdk_version=#{GlifiStore::VERSION} runtime=sync execution=#{execution} " \
      "workers=#{options[:workers]} pipeline_pairs=#{options[:pipeline]} operations=#{operation_count}"
 printf(
   "name=ruby_client_pipeline_read_after_write sdk_version=%s runtime=sync execution=%s " \
   "workers=%d pipeline_pairs=%d operations=%d samples=%d median_seconds=%.9f min_seconds=%.9f " \
   "max_seconds=%.9f median_ops_per_second=%.3f min_ops_per_second=%.3f max_ops_per_second=%.3f\n",
-  GlyphaStore::VERSION, execution, options[:workers], options[:pipeline], operation_count,
+  GlifiStore::VERSION, execution, options[:workers], options[:pipeline], operation_count,
   samples.length, median_s, sorted.first, sorted.last, median_r, sorted_rates.first, sorted_rates.last
 )

@@ -74,8 +74,8 @@ prove sono evidenza locale, non sostituiscono le matrici CI multipiattaforma.
 ## Comandi principali
 
 ```text
-glyphastore_benchmarks --filter store-put --ops 200000 --key-size 16 --value-size 64 --workers 1
-glyphastore_benchmarks --filter store-put-batch --ops 200000 --key-size 16 --value-size 64 --workers 1
-glyphastore_benchmarks --filter store-parallel-put --ops 200000 --key-size 16 --value-size 64 \
+glifistore_benchmarks --filter store-put --ops 200000 --key-size 16 --value-size 64 --workers 1
+glifistore_benchmarks --filter store-put-batch --ops 200000 --key-size 16 --value-size 64 --workers 1
+glifistore_benchmarks --filter store-parallel-put --ops 200000 --key-size 16 --value-size 64 \
   --workers 1 --threads 1 --distribution single-worker --warmup 1 --repeats 5 --latency
 ```

@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::test {
+namespace glifistore::test {
 
 using TestFunction = void (*)();
 
@@ -34,13 +34,13 @@ inline void require(bool condition, const char* expression, const char* file, in
     }
 }
 
-} // namespace glyphastore::test
+} // namespace glifistore::test
 
-#define GLYPHA_TEST_JOIN_IMPL(a, b) a##b
-#define GLYPHA_TEST_JOIN(a, b) GLYPHA_TEST_JOIN_IMPL(a, b)
-#define GLYPHA_TEST(name)                                                                                    \
-    static void GLYPHA_TEST_JOIN(test_function_, __LINE__)();                                                \
-    static ::glyphastore::test::Register GLYPHA_TEST_JOIN(test_registration_, __LINE__){                     \
-        name, &GLYPHA_TEST_JOIN(test_function_, __LINE__)};                                                  \
-    static void GLYPHA_TEST_JOIN(test_function_, __LINE__)()
-#define GLYPHA_REQUIRE(expression) ::glyphastore::test::require((expression), #expression, __FILE__, __LINE__)
+#define GLIFI_TEST_JOIN_IMPL(a, b) a##b
+#define GLIFI_TEST_JOIN(a, b) GLIFI_TEST_JOIN_IMPL(a, b)
+#define GLIFI_TEST(name)                                                                                    \
+    static void GLIFI_TEST_JOIN(test_function_, __LINE__)();                                                \
+    static ::glifistore::test::Register GLIFI_TEST_JOIN(test_registration_, __LINE__){                     \
+        name, &GLIFI_TEST_JOIN(test_function_, __LINE__)};                                                  \
+    static void GLIFI_TEST_JOIN(test_function_, __LINE__)()
+#define GLIFI_REQUIRE(expression) ::glifistore::test::require((expression), #expression, __FILE__, __LINE__)

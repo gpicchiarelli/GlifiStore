@@ -1,6 +1,6 @@
 # macOS and Xcode development
 
-macOS on Apple Silicon is GlyphaStore's primary development environment. The repository keeps
+macOS on Apple Silicon is GlifiStore's primary development environment. The repository keeps
 build generation reproducible through CMake while Xcode supplies editing, debugging, sanitizers,
 Instruments, and source navigation.
 
@@ -14,7 +14,7 @@ Install full Xcode, open it once to accept its license, then run:
 
 The script verifies the selected Xcode developer directory and creates `.tools/venv` containing
 CMake and Ninja. This avoids requiring `sudo`, Homebrew, or MacPorts. The generated project is
-`build/xcode/GlyphaStore.xcodeproj`.
+`build/xcode/GlifiStore.xcodeproj`.
 
 The `.xcodeproj` is generated state and is intentionally not committed. CMake remains the source
 of truth, so rerunning either setup or the daily open command safely refreshes targets, schemes,
@@ -37,22 +37,22 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
 Select one of these generated schemes:
 
-- `glyphastore_demo` to inspect detected topology in Debug.
-- `glyphastored` to run the daemon on `127.0.0.1:7379` with two Workers.
-- `glyphastore_tests` to build or run the standalone test executable.
+- `glifistore_demo` to inspect detected topology in Debug.
+- `glifistored` to run the daemon on `127.0.0.1:7379` with two Workers.
+- `glifistore_tests` to build or run the standalone test executable.
 - `check` to build the test dependencies and execute the complete CTest suite.
-- `glyphastore_benchmarks` and `glyphastore_server_benchmarks` for focused Release measurements.
-- `glyphastore_inspect_segment` for read-only durable Segment validation (`--json`, `--no-scan`).
-- `glyphastore_verify_store` for Manifest + catalog Segment validation (exclusive lock).
-- `glyphastore_backup_store` for offline verified backup/restore copies.
-- `glyphastore_repair_store` for offline repair into an explicit workspace (`store/` + `quarantine/`).
-- `glyphastore_rebuild_index` permanently refuses Segment-only durable v1 input; reopen/restart
-  the Store for ordinary Index rebuild, or use `glyphastore_repair_store` for offline catalog repair.
-- Crash labels: `glyphastore_crash_persistence` (Store filesystem boundaries) and
-  `glyphastore_crash_daemon` (real `glyphastored` SIGKILL after wire acknowledgements).
+- `glifistore_benchmarks` and `glifistore_server_benchmarks` for focused Release measurements.
+- `glifistore_inspect_segment` for read-only durable Segment validation (`--json`, `--no-scan`).
+- `glifistore_verify_store` for Manifest + catalog Segment validation (exclusive lock).
+- `glifistore_backup_store` for offline verified backup/restore copies.
+- `glifistore_repair_store` for offline repair into an explicit workspace (`store/` + `quarantine/`).
+- `glifistore_rebuild_index` permanently refuses Segment-only durable v1 input; reopen/restart
+  the Store for ordinary Index rebuild, or use `glifistore_repair_store` for offline catalog repair.
+- Crash labels: `glifistore_crash_persistence` (Store filesystem boundaries) and
+  `glifistore_crash_daemon` (real `glifistored` SIGKILL after wire acknowledgements).
 
-Because GlyphaStore uses a standalone CTest executable rather than XCTest bundles, use the
-`check` scheme's **Build** action for the full suite. The `glyphastore_tests` scheme's **Run** action
+Because GlifiStore uses a standalone CTest executable rather than XCTest bundles, use the
+`check` scheme's **Build** action for the full suite. The `glifistore_tests` scheme's **Run** action
 launches the test process directly; Xcode's XCTest-specific **Test** action is intentionally not
 used.
 
@@ -72,7 +72,7 @@ To verify the complete generated project from the command line:
 ```
 
 This regenerates the project, builds `ALL_BUILD` in Debug and Release, runs the `check` scheme, and
-smoke-tests `glyphastore_demo`.
+smoke-tests `glifistore_demo`.
 
 ## Instruments
 
@@ -119,4 +119,4 @@ make benchmark
   LLVM toolchain and configure `macos-fuzz` with `CC`/`CXX` pointing at that Clang. CI builds and
   runs the fuzzers on Linux (`sanitizers.yml` `fuzz-run`) with a complete runtime and seed corpora
   under `fuzz/corpus/`. After a local fuzz build:
-  `GLYPHASTORE_FUZZ_BUILD_DIR=build/macos-fuzz ./scripts/dev.sh fuzz-run`.
+  `GLIFISTORE_FUZZ_BUILD_DIR=build/macos-fuzz ./scripts/dev.sh fuzz-run`.

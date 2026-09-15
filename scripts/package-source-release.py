@@ -25,7 +25,7 @@ REQUIRED_MEMBERS = {
     "NOTICE",
     "THIRD_PARTY_NOTICES.md",
     "VERSION",
-    "include/glyphastore/abi/glyphastore.h",
+    "include/glifistore/abi/glifistore.h",
 }
 FORBIDDEN_PARTS = {".git", ".idea", ".vscode", "__pycache__"}
 FORBIDDEN_TOP_LEVEL = {"build", "dist", ".tools"}
@@ -71,11 +71,11 @@ def validate_archive(path: Path, prefix: str) -> None:
 def build_archive(root: Path, tag: str, output_directory: Path) -> Path:
     identity = validate_release_identity(root, tag)
     output_directory.mkdir(parents=True, exist_ok=True)
-    archive_path = output_directory / f"GlyphaStore-{identity.product_version}.tar.xz"
+    archive_path = output_directory / f"GlifiStore-{identity.product_version}.tar.xz"
     if archive_path.exists():
         raise ReleaseIdentityError(f"refusing to replace existing artifact: {archive_path}")
-    prefix = f"GlyphaStore-{identity.product_version}/"
-    with tempfile.TemporaryDirectory(prefix="glyphastore-source-") as temporary:
+    prefix = f"GlifiStore-{identity.product_version}/"
+    with tempfile.TemporaryDirectory(prefix="glifistore-source-") as temporary:
         tar_path = Path(temporary) / "source.tar"
         with tar_path.open("wb") as destination:
             archived = subprocess.run(

@@ -6,7 +6,7 @@
 # proof: missing runner pins or tools force inconclusive-* / incomplete-* status.
 #
 # Absolute budgets and ACCETTATA_PER_RILASCIO remain blocked on runner label
-# glyphastore-linux-perf plus a retained pass-candidate manifest (evidence class:
+# glifistore-linux-perf plus a retained pass-candidate manifest (evidence class:
 # hardware). Physical E3 lab is a separate Wave 6 durability blocker.
 #
 # macOS advisory runs are allowed for harness smoke only and MUST be marked
@@ -65,7 +65,7 @@ check_migration="${CHECK_CPU_MIGRATION:-1}"
 min_scale_efficiency_pct="${MIN_SCALE_EFFICIENCY_PCT:-80}"
 latency_sample_stride="${LATENCY_SAMPLE_STRIDE:-1}"
 latency_split="${LATENCY_SPLIT:-1}"
-wave6_blockers="glyphastore-linux-perf;physical-E3-lab"
+wave6_blockers="glifistore-linux-perf;physical-E3-lab"
 
 mkdir -p "$output"/{samples,perf,numa,topology,scaling}
 status="pass-candidate"
@@ -186,7 +186,7 @@ if [[ -n "$client_cpu_list" ]]; then
   fi
   echo "client_cpu_list=$client_cpu_list (reserved / load-generator cores; must stay disjoint from SERVER_CPUS)" \
     >> "$output/topology/affinity-notes.txt"
-  echo "note=glyphastore_server_benchmarks is in-process; CLIENT_CPUS documents reserved cores left free of server taskset" \
+  echo "note=glifistore_server_benchmarks is in-process; CLIENT_CPUS documents reserved cores left free of server taskset" \
     >> "$output/topology/affinity-notes.txt"
 else
   client_cpu_count=0
@@ -219,8 +219,8 @@ echo "pairs_effective=${capped_pairs[*]}" >> "$output/environment.txt"
 
 if [[ -z "$new_bin" ]]; then
   "$cmake_bin" --preset "$preset"
-  "$cmake_bin" --build --preset "$preset" --target glyphastore_server_benchmarks
-  new_bin="$root/build/$preset/glyphastore_server_benchmarks"
+  "$cmake_bin" --build --preset "$preset" --target glifistore_server_benchmarks
+  new_bin="$root/build/$preset/glifistore_server_benchmarks"
 fi
 if [[ -z "$old_bin" ]]; then
   old_bin="$new_bin"
@@ -360,7 +360,7 @@ done
 {
   echo "# Scaling scaffold — evidence_class=$evidence_class"
   echo "# Placeholder threshold min_scale_efficiency_pct=$min_scale_efficiency_pct"
-  echo "# status=specified_waiting_for_runner until glyphastore-linux-perf pass-candidate"
+  echo "# status=specified_waiting_for_runner until glifistore-linux-perf pass-candidate"
   echo "pairs,label,median_ops_per_second,efficiency_vs_1pair_pct,note"
   for pairs in "${capped_pairs[@]}"; do
     for label in solo old-a new-a new-b old-b; do
@@ -395,7 +395,7 @@ done
   echo "Evidence class: \`${evidence_class}\` (see docs/assurance/evidence-taxonomy.md)."
   echo
   echo "Wave 6 blockers (honest open):"
-  echo "- Runner label \`glyphastore-linux-perf\` with retained \`pass-candidate\` manifest"
+  echo "- Runner label \`glifistore-linux-perf\` with retained \`pass-candidate\` manifest"
   echo "- Physical E3 durability lab (separate from this A/B harness)"
   echo "- Absolute budget placeholders remain \`specified_waiting_for_runner\` — not ACCETTATA"
   echo

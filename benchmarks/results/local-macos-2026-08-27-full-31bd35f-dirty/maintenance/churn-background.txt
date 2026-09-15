@@ -1,4 +1,4 @@
-# benchmark=glyphastore_concurrent_maintenance
+# benchmark=glifistore_concurrent_maintenance
 # git_sha=31bd35f-dirty
 # scenario=churn
 # warmups=0;measured_repeats=7;threads=4;operations=8192;keys=128;value_bytes=32768;reclaim_value_bytes=262144;put_percent=100;cooldown_ms=250

@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class N1PackageArtifactsTests(unittest.TestCase):
     def directory(self) -> Path:
-        temporary = tempfile.TemporaryDirectory(prefix="glyphastore-n1-")
+        temporary = tempfile.TemporaryDirectory(prefix="glifistore-n1-")
         self.addCleanup(temporary.cleanup)
         return Path(temporary.name)
 
@@ -49,113 +49,113 @@ class N1PackageArtifactsTests(unittest.TestCase):
 
     def test_linux_selection_keeps_primary_packages_for_the_requested_version(self) -> None:
         root = self.directory()
-        (root / "glyphastore_0.0.9-1_amd64.deb").write_bytes(b"a")
-        (root / "libglyphastore1_0.0.9-1_amd64.deb").write_bytes(b"b")
-        (root / "libglyphastore-dev_0.0.9-1_amd64.deb").write_bytes(b"c")
-        (root / "glyphastore_0.0.9-1_amd64.deb.debuginfo").write_bytes(b"x")
+        (root / "glifistore_0.0.9-1_amd64.deb").write_bytes(b"a")
+        (root / "libglifistore1_0.0.9-1_amd64.deb").write_bytes(b"b")
+        (root / "libglifistore-dev_0.0.9-1_amd64.deb").write_bytes(b"c")
+        (root / "glifistore_0.0.9-1_amd64.deb.debuginfo").write_bytes(b"x")
         (root / "other_0.0.9-1_amd64.deb").write_bytes(b"y")
-        (root / "glyphastore_0.1.0-1_amd64.deb").write_bytes(b"z")
+        (root / "glifistore_0.1.0-1_amd64.deb").write_bytes(b"z")
         selected = select_linux_n1_packages(root, "deb", "0.0.9")
         self.assertEqual(
             [path.name for path in selected],
             [
-                "glyphastore_0.0.9-1_amd64.deb",
-                "libglyphastore-dev_0.0.9-1_amd64.deb",
-                "libglyphastore1_0.0.9-1_amd64.deb",
+                "glifistore_0.0.9-1_amd64.deb",
+                "libglifistore-dev_0.0.9-1_amd64.deb",
+                "libglifistore1_0.0.9-1_amd64.deb",
             ],
         )
 
     def test_linux_selection_refuses_substring_version_false_positives(self) -> None:
         root = self.directory()
-        (root / "glyphastore_10.0.9-1_amd64.deb").write_bytes(b"a")
-        (root / "glyphastore_0.0.90-1_amd64.deb").write_bytes(b"b")
+        (root / "glifistore_10.0.9-1_amd64.deb").write_bytes(b"a")
+        (root / "glifistore_0.0.90-1_amd64.deb").write_bytes(b"b")
         with self.assertRaisesRegex(N1PackageError, "no sealed deb packages"):
             select_linux_n1_packages(root, "deb", "0.0.9")
 
     def test_linux_selection_refuses_partial_semver_prefix(self) -> None:
         root = self.directory()
-        (root / "glyphastore_0.1.0-1_amd64.deb").write_bytes(b"a")
+        (root / "glifistore_0.1.0-1_amd64.deb").write_bytes(b"a")
         with self.assertRaisesRegex(N1PackageError, "no sealed deb packages"):
             select_linux_n1_packages(root, "deb", "0.1")
 
     def test_linux_selection_refuses_mixed_architectures_without_a_filter(self) -> None:
         root = self.directory()
-        (root / "glyphastore_0.0.9-1_amd64.deb").write_bytes(b"a")
-        (root / "glyphastore_0.0.9-1_arm64.deb").write_bytes(b"b")
+        (root / "glifistore_0.0.9-1_amd64.deb").write_bytes(b"a")
+        (root / "glifistore_0.0.9-1_arm64.deb").write_bytes(b"b")
         with self.assertRaisesRegex(N1PackageError, "multiple architectures"):
             select_linux_n1_packages(root, "deb", "0.0.9")
         selected = select_linux_n1_packages(root, "deb", "0.0.9", arch="amd64")
-        self.assertEqual([path.name for path in selected], ["glyphastore_0.0.9-1_amd64.deb"])
+        self.assertEqual([path.name for path in selected], ["glifistore_0.0.9-1_amd64.deb"])
 
     def test_sha256sums_are_verified_when_present(self) -> None:
         root = self.directory()
-        package = root / "glyphastore_0.0.9-1_amd64.deb"
+        package = root / "glifistore_0.0.9-1_amd64.deb"
         package.write_bytes(b"sealed")
         digest = __import__("hashlib").sha256(b"sealed").hexdigest()
         (root / "SHA256SUMS").write_text(
-            f"{digest}  glyphastore_0.0.9-1_amd64.deb\n", encoding="utf-8"
+            f"{digest}  glifistore_0.0.9-1_amd64.deb\n", encoding="utf-8"
         )
         selected = select_linux_n1_packages(root, "deb", "0.0.9")
         self.assertEqual([path.name for path in selected], [package.name])
         (root / "SHA256SUMS").write_text(
-            f"{'0' * 64}  glyphastore_0.0.9-1_amd64.deb\n", encoding="utf-8"
+            f"{'0' * 64}  glifistore_0.0.9-1_amd64.deb\n", encoding="utf-8"
         )
         with self.assertRaisesRegex(N1PackageError, "digest mismatch"):
             select_linux_n1_packages(root, "deb", "0.0.9")
 
     def test_linux_selection_refuses_an_empty_match(self) -> None:
         root = self.directory()
-        (root / "glyphastore_0.1.0-1_amd64.deb").write_bytes(b"z")
+        (root / "glifistore_0.1.0-1_amd64.deb").write_bytes(b"z")
         with self.assertRaisesRegex(N1PackageError, "no sealed deb packages"):
             select_linux_n1_packages(root, "deb", "0.0.9")
 
     def test_rpm_selection_skips_debuginfo(self) -> None:
         root = self.directory()
-        (root / "glyphastore-0.0.9-1.x86_64.rpm").write_bytes(b"a")
-        (root / "glyphastore-debuginfo-0.0.9-1.x86_64.rpm").write_bytes(b"b")
+        (root / "glifistore-0.0.9-1.x86_64.rpm").write_bytes(b"a")
+        (root / "glifistore-debuginfo-0.0.9-1.x86_64.rpm").write_bytes(b"b")
         selected = select_linux_n1_packages(root, "rpm", "0.0.9")
-        self.assertEqual([path.name for path in selected], ["glyphastore-0.0.9-1.x86_64.rpm"])
+        self.assertEqual([path.name for path in selected], ["glifistore-0.0.9-1.x86_64.rpm"])
 
     def test_freebsd_selection_keeps_versioned_packages(self) -> None:
         root = self.directory()
-        (root / "glyphastore-0.0.9-freebsd14.3-amd64.pkg").write_bytes(b"a")
-        (root / "glyphastore-0.1.0-freebsd14.3-amd64.pkg").write_bytes(b"b")
+        (root / "glifistore-0.0.9-freebsd14.3-amd64.pkg").write_bytes(b"a")
+        (root / "glifistore-0.1.0-freebsd14.3-amd64.pkg").write_bytes(b"b")
         (root / "other-0.0.9.pkg").write_bytes(b"c")
         selected = select_bsd_n1_packages(root, "freebsd", "0.0.9")
         self.assertEqual(
             [path.name for path in selected],
-            ["glyphastore-0.0.9-freebsd14.3-amd64.pkg"],
+            ["glifistore-0.0.9-freebsd14.3-amd64.pkg"],
         )
 
     def test_openbsd_selection_keeps_versioned_tgz(self) -> None:
         root = self.directory()
-        (root / "glyphastore-0.0.9-openbsd7.7-amd64.tgz").write_bytes(b"a")
+        (root / "glifistore-0.0.9-openbsd7.7-amd64.tgz").write_bytes(b"a")
         selected = select_bsd_n1_packages(root, "openbsd", "0.0.9")
         self.assertEqual(
             [path.name for path in selected],
-            ["glyphastore-0.0.9-openbsd7.7-amd64.tgz"],
+            ["glifistore-0.0.9-openbsd7.7-amd64.tgz"],
         )
 
     def test_macos_selection_requires_the_exact_source_archive(self) -> None:
         root = self.directory()
-        (root / "GlyphaStore-0.0.9.tar.xz").write_bytes(b"a")
-        (root / "GlyphaStore-0.1.0.tar.xz").write_bytes(b"b")
+        (root / "GlifiStore-0.0.9.tar.xz").write_bytes(b"a")
+        (root / "GlifiStore-0.1.0.tar.xz").write_bytes(b"b")
         selected = select_macos_n1_source(root, "0.0.9")
-        self.assertEqual(selected.name, "GlyphaStore-0.0.9.tar.xz")
+        self.assertEqual(selected.name, "GlifiStore-0.0.9.tar.xz")
 
     def test_macos_selection_refuses_duplicates(self) -> None:
         root = self.directory()
         (root / "a").mkdir()
         (root / "b").mkdir()
-        (root / "a" / "GlyphaStore-0.0.9.tar.xz").write_bytes(b"a")
-        (root / "b" / "GlyphaStore-0.0.9.tar.xz").write_bytes(b"b")
+        (root / "a" / "GlifiStore-0.0.9.tar.xz").write_bytes(b"a")
+        (root / "b" / "GlifiStore-0.0.9.tar.xz").write_bytes(b"b")
         with self.assertRaisesRegex(N1PackageError, "multiple sealed macOS source"):
             select_macos_n1_source(root, "0.0.9")
 
 
 class LinuxUpgradeSelectionTests(unittest.TestCase):
     def recorder(self) -> Recorder:
-        temporary = tempfile.TemporaryDirectory(prefix="glyphastore-upgrade-")
+        temporary = tempfile.TemporaryDirectory(prefix="glifistore-upgrade-")
         self.addCleanup(temporary.cleanup)
         return Recorder(Path(temporary.name))
 
@@ -171,7 +171,7 @@ class LinuxUpgradeSelectionTests(unittest.TestCase):
 
     def test_n1_directory_without_a_predecessor_is_refused(self) -> None:
         recorder = self.recorder()
-        directory = tempfile.TemporaryDirectory(prefix="glyphastore-n1-dir-")
+        directory = tempfile.TemporaryDirectory(prefix="glifistore-n1-dir-")
         self.addCleanup(directory.cleanup)
         with mock.patch.dict(os.environ, {N1_PACKAGE_DIR_ENVIRONMENT: directory.name}):
             run_upgrade(
@@ -201,7 +201,7 @@ class LinuxUpgradeSelectionTests(unittest.TestCase):
 
     def test_sealed_bytes_defer_recording_until_the_native_walk(self) -> None:
         recorder = self.recorder()
-        directory = tempfile.TemporaryDirectory(prefix="glyphastore-n1-dir-")
+        directory = tempfile.TemporaryDirectory(prefix="glifistore-n1-dir-")
         self.addCleanup(directory.cleanup)
         context = {
             "previous": {

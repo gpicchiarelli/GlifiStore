@@ -1,15 +1,15 @@
-Revision history for Perl distribution GlyphaStore
+Revision history for Perl distribution GlifiStore
 
         - Assemble pipelines from validated request fragments, avoiding one
           complete temporary frame and payload copy per request.
         - Add installed-tarball secure-profile interop with a fail-closed check
-          that GlyphaStore::Client resolves from the isolated install prefix.
+          that GlifiStore::Client resolves from the isolated install prefix.
 
 0.1.0 2026-07-19
         - Initial CPAN-ready release of the native wire-protocol v2 client.
-        - GlyphaStore::Client with INIT/BIND bootstrap, pipelines, and
+        - GlifiStore::Client with INIT/BIND bootstrap, pipelines, and
           indeterminate mutation outcomes.
-        - GlyphaStore::Protocol bidirectional codec and FNV-1a Worker routing.
+        - GlifiStore::Protocol bidirectional codec and FNV-1a Worker routing.
         - Hot-path performance: native pack 'Q<', zero-copy octet keys,
           integer FNV-1a, buffered sysread, reused IO::Select, and
           execute_worker_pipelines for multi-Worker overlap. Pipeline results

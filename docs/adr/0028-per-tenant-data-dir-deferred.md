@@ -10,7 +10,7 @@
 
 ## Context
 
-Phase 8 lists per-tenant durable isolation. Today one `glyphastored` process owns one Store and one
+Phase 8 lists per-tenant durable isolation. Today one `glifistored` process owns one Store and one
 data directory. Prefix authz (ADR 0025) only namespaces keys inside that shared durable boundary: a
 compromised principal with write still shares segments, compaction, disk quotas, and backup
 blast radius with every other principal.

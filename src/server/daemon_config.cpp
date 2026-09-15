@@ -1,4 +1,4 @@
-#include "glyphastore/server/daemon_config.hpp"
+#include "glifistore/server/daemon_config.hpp"
 
 #include "cli/arguments.hpp"
 #include "daemon_config_detail.hpp"
@@ -11,7 +11,7 @@
 #include <string_view>
 #include <utility>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 using daemon_config_detail::apply_layer;
 using daemon_config_detail::ascii_lower;
@@ -49,7 +49,7 @@ auto storage_mode_name(const StorageMode mode) noexcept -> std::string_view {
 }
 
 auto environment_name_for_option(const std::string_view long_name) -> std::string {
-    std::string name = "GLYPHASTORE_";
+    std::string name = "GLIFISTORE_";
     name.reserve(name.size() + long_name.size());
     for (const char character : long_name) {
         name.push_back(
@@ -119,7 +119,7 @@ auto load_daemon_environment(const DaemonEnvironmentLookup& getenv_fn)
     if (settings.contains("reuse-port") && settings.at("reuse-port") == "true" &&
         settings.contains("no-reuse-port") && settings.at("no-reuse-port") == "true") {
         return fail(ErrorCode::invalid_argument,
-                    "GLYPHASTORE_REUSE_PORT and GLYPHASTORE_NO_REUSE_PORT are mutually exclusive");
+                    "GLIFISTORE_REUSE_PORT and GLIFISTORE_NO_REUSE_PORT are mutually exclusive");
     }
     return settings;
 }
@@ -151,9 +151,9 @@ auto parse_daemon_options(const int argc, char* const argv[], DaemonEnvironmentL
             return fail(ErrorCode::invalid_argument, "--config must not be empty");
         }
         config_path = std::filesystem::path{*path};
-    } else if (const auto from_env = lookup("GLYPHASTORE_CONFIG")) {
+    } else if (const auto from_env = lookup("GLIFISTORE_CONFIG")) {
         if (from_env->empty()) {
-            return fail(ErrorCode::invalid_argument, "GLYPHASTORE_CONFIG must not be empty");
+            return fail(ErrorCode::invalid_argument, "GLIFISTORE_CONFIG must not be empty");
         }
         config_path = std::filesystem::path{*from_env};
     }
@@ -179,9 +179,9 @@ auto parse_daemon_options(const int argc, char* const argv[], DaemonEnvironmentL
     if (auto from_file = take_profile_name(file_settings)) {
         resolved_profile = std::move(*from_file);
     }
-    if (const auto from_env = lookup("GLYPHASTORE_PROFILE")) {
+    if (const auto from_env = lookup("GLIFISTORE_PROFILE")) {
         if (from_env->empty()) {
-            return fail(ErrorCode::invalid_argument, "GLYPHASTORE_PROFILE must not be empty");
+            return fail(ErrorCode::invalid_argument, "GLIFISTORE_PROFILE must not be empty");
         }
         resolved_profile = *from_env;
     }
@@ -211,4 +211,4 @@ auto parse_daemon_options(const int argc, char* const argv[], DaemonEnvironmentL
     return options;
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

@@ -1,13 +1,13 @@
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/integer_math.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/index/swiss_table.hpp"
-#include "glyphastore/persistence/compaction.hpp"
-#include "glyphastore/persistence/durable_flush_coordinator.hpp"
-#include "glyphastore/persistence/resource_limits.hpp"
-#include "glyphastore/persistence/runtime_catalog.hpp"
-#include "glyphastore/persistence/segment_file.hpp"
-#include "glyphastore/segment/record.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/integer_math.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/index/swiss_table.hpp"
+#include "glifistore/persistence/compaction.hpp"
+#include "glifistore/persistence/durable_flush_coordinator.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
+#include "glifistore/persistence/runtime_catalog.hpp"
+#include "glifistore/persistence/segment_file.hpp"
+#include "glifistore/segment/record.hpp"
 #include "persistence/adaptive_batch_sizer.hpp"
 #include "persistence/hot_record_table.hpp"
 #include "persistence/runtime_catalog_detail.hpp"
@@ -26,8 +26,8 @@
 #include <string>
 #include <utility>
 
-namespace glyphastore {
-using namespace glyphastore::runtime_catalog_detail;
+namespace glifistore {
+using namespace glifistore::runtime_catalog_detail;
 
 auto DurableRuntimeCatalog::fail_closed(Error error) -> Unexpected {
     healthy_.store(false, std::memory_order_release);
@@ -275,7 +275,7 @@ auto DurableRuntimeCatalog::advance_read_catalog_revision(RuntimeWorker& worker)
 
 auto DurableRuntimeCatalog::capture_published_read(const std::size_t worker_index, const HashedKey& key)
     -> Result<PublishedReadRecord> try {
-    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::capture)) {
+    if (glifistore::fault::consume_fail(glifistore::fault::Site::capture)) {
         return fail(ErrorCode::resource_exhausted, "injected durable read publication failure");
     }
     if (worker_index >= workers_.size() || route_worker(key.hash, workers_.size()) != worker_index) {
@@ -537,4 +537,4 @@ auto DurableRuntimeCatalog::complete_get(PinnedRead read, const detail::ColdRead
     return fail(ErrorCode::internal_error, "durable cold read retry loop escaped its bound");
 }
 
-} // namespace glyphastore
+} // namespace glifistore

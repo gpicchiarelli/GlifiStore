@@ -1,4 +1,4 @@
-#include "glyphastore/segment/crc32c.hpp"
+#include "glifistore/segment/crc32c.hpp"
 
 #include <algorithm>
 #include <array>
@@ -12,7 +12,7 @@
 #include <arm_acle.h>
 #endif
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 constexpr std::uint32_t kCrc32cInit = 0xFFFFFFFFU;
@@ -140,4 +140,4 @@ auto crc32c_with_zeroed_checksum_field(const std::span<const std::byte> bytes) n
     return ~crc;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

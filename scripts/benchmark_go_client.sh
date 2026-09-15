@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Go SDK client benchmark suite against an external glyphastored.
+# Go SDK client benchmark suite against an external glifistored.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 stamp="$(date -u +%Y%m%d-%H%M%S)"
 sdk_version="$(tr -d '[:space:]' <"$root/VERSION")"
 outdir="${1:-$root/benchmark-results-go-${sdk_version}-${stamp}}"
-daemon="${GLYPHASTORED:-}"
+daemon="${GLIFISTORED:-}"
 go_bin="${GO:-go}"
 host="127.0.0.1"
 ops="${OPS:-100000}"
@@ -22,28 +22,28 @@ prefer_bins=(
 )
 if [[ -z "$daemon" ]]; then
   for dir in "${prefer_bins[@]}"; do
-    if [[ -x "$dir/glyphastored" ]]; then
-      daemon="$dir/glyphastored"
+    if [[ -x "$dir/glifistored" ]]; then
+      daemon="$dir/glifistored"
       break
     fi
   done
 fi
 if [[ -z "$daemon" || ! -x "$daemon" ]]; then
-  echo "missing glyphastored; build a release/debug preset first" >&2
+  echo "missing glifistored; build a release/debug preset first" >&2
   exit 1
 fi
 
 mkdir -p "$outdir/go" "$outdir/logs"
 mkdir -p "$root/sdk/go/bin"
-(cd "$root/sdk/go" && "$go_bin" build -o bin/glyphastore-bench ./cmd/glyphastore-bench)
-bench="$root/sdk/go/bin/glyphastore-bench"
+(cd "$root/sdk/go" && "$go_bin" build -o bin/glifistore-bench ./cmd/glifistore-bench)
+bench="$root/sdk/go/bin/glifistore-bench"
 
 {
   echo "captured_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "git_sha=$(git -C "$root" rev-parse HEAD)"
   echo "go=$($go_bin version)"
   echo "go_sdk_version=$sdk_version"
-  echo "glyphastored=$daemon"
+  echo "glifistored=$daemon"
   echo "ops=$ops warmup=$warmup repeats=$repeats"
   echo "workload=ordered PUT/GET pipeline read-after-write, value_size=64"
   echo "storage_mode=volatile"
@@ -59,7 +59,7 @@ start_server() {
   local port=""
   for _ in $(seq 1 50); do
     if ! kill -0 "$pid" 2>/dev/null; then
-      echo "glyphastored exited early; see $log_file" >&2
+      echo "glifistored exited early; see $log_file" >&2
       return 1
     fi
     port="$(lsof -nP -iTCP -sTCP:LISTEN -a -p "$pid" 2>/dev/null | awk 'NR==2 {split($9,a,":"); print a[length(a)]}')"
@@ -69,7 +69,7 @@ start_server() {
     fi
     sleep 0.1
   done
-  echo "could not discover glyphastored listen port" >&2
+  echo "could not discover glifistored listen port" >&2
   return 1
 }
 
@@ -170,12 +170,12 @@ for path in sorted(outdir.glob("go/*.txt")):
     encoding="utf-8",
 )
 lines = [
-    f"# GlyphaStore Go client benchmarks — version `{sdk_version}`",
+    f"# GlifiStore Go client benchmarks — version `{sdk_version}`",
     "",
     f"Parsed `{len(rows)}` result files from `{outdir.name}`.",
     "",
     "Workload: validated ordered `PUT`/`GET` pipeline read-after-write, value size 64 bytes,",
-    "volatile `glyphastored`, same-host loopback. Median ops/s is the comparison statistic.",
+    "volatile `glifistored`, same-host loopback. Median ops/s is the comparison statistic.",
     "",
     "| Execution | Workers | Pipeline pairs | Median ops/s | Min ops/s | Max ops/s | Median s |",
     "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",

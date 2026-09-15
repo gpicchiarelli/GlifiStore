@@ -5,7 +5,7 @@ Last reviewed: 2026-08-29
 
 # Engineering baseline (Phase A)
 
-GlyphaStore remains an **architectural prototype**. This document records the gap recon that
+GlifiStore remains an **architectural prototype**. This document records the gap recon that
 precedes the machine-readable assurance system under `engineering/`. It does not advance any
 release level.
 
@@ -39,7 +39,7 @@ generated [production-readiness view](../production-readiness.md).
 | Physical E3/E4 durability unset | High (claim honesty) | Keep open | hardware campaign | False durability confirmation |
 | Unified error taxonomy across wire/embedded/SDK | Closed (Phase B) | — | `docs/spec/error-taxonomy-v1.md` + `tests/fixtures/error_taxonomy_v1.json` | Transport/deadline vectors still narrative-only beyond wire fixture |
 | `legacy_mutex` policy formalized | Closed (Phase B) | — | `docs/architecture/legacy-mutex-policy.md` | Physical mutex removal still pending product 0.2 |
-| Performance budgets not gate-linked (Phase E: budget catalog) | Medium | P2 (Phase E) | hardware CI | Done baseline; absolute claims wait for `glyphastore-linux-perf` |
+| Performance budgets not gate-linked (Phase E: budget catalog) | Medium | P2 (Phase E) | hardware CI | Done baseline; absolute claims wait for `glifistore-linux-perf` |
 
 ## Strategy
 

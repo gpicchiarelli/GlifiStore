@@ -13,7 +13,7 @@ requirements + proofs + evidence. Evidence labels: [evidence-taxonomy.md](eviden
 Structure-debt follow-up (L0 hygiene, not a numbered wave): production TU splits under the 1600-line
 gate (`reactor_*`, `daemon_config_*`, `client_*`, `filesystem_*`, `segment_file_*`,
 `runtime_catalog_*`, `writer_sync`, `read_generation_*`, `maintenance_*`), shared
-`glyphastore::le` codecs, and Writer ACK DualPath loader unification (`load_published_generation`)
+`glifistore::le` codecs, and Writer ACK DualPath loader unification (`load_published_generation`)
 landed without changing ACK polarity or flipping `generation_slot_pool` default. Active size waivers
 remain empty (WAV-001/WAV-002/WAV-003 revoked audit trail).
 
@@ -47,7 +47,7 @@ remain empty (WAV-001/WAV-002/WAV-003 revoked audit trail).
 Wave 6 docs/scripts may prepare matrices and `specified_waiting_for_runner` placeholders, but
 **must not** invent runner results or promote gates:
 
-1. Self-hosted runner label `glyphastore-linux-perf` with retained `pass-candidate` (evidence
+1. Self-hosted runner label `glifistore-linux-perf` with retained `pass-candidate` (evidence
    class `hardware`) — see [performance-budgets.md](performance-budgets.md),
    [paired-shards-linux-p1.md](../benchmarks/paired-shards-linux-p1.md),
    harness `scripts/benchmark_paired_linux_ab.sh`.
@@ -66,7 +66,7 @@ Wave 6 docs/scripts may prepare matrices and `specified_waiting_for_runner` plac
 | **3** | Landed (partial — E3/E4 open) | In-process L4: compaction `storage_exhausted` + paced pre-intent faults; FileIoHooks EINTR/short write + sync EINTR + ENOSPC/EDQUOT/EIO/EROFS write + sync-EIO on compaction staging + backup copy; FileIoHooks intent write/sync and post-intent Manifest write/sync (promotion) faults; write-amp budget before intent (`GS-PERSIST-AMP-001`); backup ENOSPC/concurrent fence proofs; `GS-OPS-DEBT-001`; platform-durability evidence path placeholders. **Native disk-full / delayed-writeback device campaigns and E3/E4 certification remain open** (rehearsal ≠ certification). |
 | **4** | Landed (partial) | Daemon/sec: handoff exactly-once + concurrent tests; TLS `WANT_WRITE` flush litmus; abuse/audit concurrency; RST slot release + rate-limit window reconnect; adversarial soak profile stubs; Prometheus intentionally unsupported. Claim ceiling unchanged. No L1 publish/reclaim ownership. |
 | **5** | Open (residuals) | Wave 5 residuals tracked in [wave5-l7-residuals.md](../distribution/wave5-l7-residuals.md): Linux deb/rpm retain `LIFECYCLE_VERIFIED` and cross-SDK PASS; install→seed→upgrade→verify is implemented for Linux/BSD/macOS when sealed N−1 packages are supplied; positive admission, tagged N−1 fixtures, BSD/MacPorts native retention and upstream acceptance remain open. No production-claim closure from scaffolding alone. |
-| **6** | Blocked | Absolute p99 / `glyphastore-linux-perf` and hardware campaigns absent; `specified_waiting_for_runner` placeholders only. |
+| **6** | Blocked | Absolute p99 / `glifistore-linux-perf` and hardware campaigns absent; `specified_waiting_for_runner` placeholders only. |
 
 Wave 4 detail (historically `debt/l5l6-wave4-daemon-sec`): handoff exactly-once + concurrent
 tests; TLS `WANT_WRITE` flush litmus; abuse/audit concurrency; RST slot release + rate-limit
@@ -79,7 +79,7 @@ No L1 publish/reclaim ownership in this wave.
 
 1. **L1 merge lock** on publication/reclaim APIs; other lanes rebase or wait.
 2. **L1 publish PRs** need L2 litmus + L3 non-regression before main.
-3. Reject PRs that cite only macOS unpinned median for scaling, or that install experimental into `glyphastored` without ADR accept.
+3. Reject PRs that cite only macOS unpinned median for scaling, or that install experimental into `glifistored` without ADR accept.
 4. One purpose per PR; link requirement IDs + evidence dir; Conventional Commits on `debt/<lane>-…` branches.
 5. Do not reopen closed 0037 Phase C window residual without an explicit remaining-windows gap requirement.
 

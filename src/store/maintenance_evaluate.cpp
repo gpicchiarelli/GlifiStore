@@ -1,13 +1,13 @@
-#include "glyphastore/core/integer_math.hpp"
-#include "glyphastore/core/types.hpp"
-#include "glyphastore/store/maintenance.hpp"
+#include "glifistore/core/integer_math.hpp"
+#include "glifistore/core/types.hpp"
+#include "glifistore/store/maintenance.hpp"
 #include "maintenance_detail.hpp"
 
 #include <algorithm>
 #include <limits>
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 using maintenance_detail::aggressive_pressure;
 using maintenance_detail::elapsed_ns;
 
@@ -388,4 +388,4 @@ void MaintenanceController::evaluate_once() {
     }
 }
 
-} // namespace glyphastore
+} // namespace glifistore

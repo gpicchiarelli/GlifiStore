@@ -1,4 +1,4 @@
-#include "glyphastore/abi/glyphastore.h"
+#include "glifistore/abi/glifistore.h"
 
 #include <stddef.h>
 #include <stdint.h>

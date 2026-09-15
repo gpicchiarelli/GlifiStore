@@ -43,9 +43,9 @@ from engineering.tools.validate_package_evidence import (  # noqa: E402
 
 GIT_IDENTITY = (
     "-c",
-    "user.email=tests@glyphastore.invalid",
+    "user.email=tests@glifistore.invalid",
     "-c",
-    "user.name=GlyphaStore Tests",
+    "user.name=GlifiStore Tests",
     "-c",
     "commit.gpgsign=false",
     "-c",
@@ -69,7 +69,7 @@ def sdk_matrix_report(
         "generated_at": "2026-01-01T00:00:00Z",
         "result": result,
         "package_installed": package_installed,
-        "daemon": "/usr/local/bin/glyphastored" if package_installed else None,
+        "daemon": "/usr/local/bin/glifistored" if package_installed else None,
         "prefix": "/usr/local" if package_installed else None,
         "file_list": "/tmp/pkg-contents.txt" if package_installed else None,
         "languages": (
@@ -88,11 +88,11 @@ class AdmissionFixture(unittest.TestCase):
     predecessors: tuple[str, ...] = ()
 
     def setUp(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="glyphastore-package-admission-")
+        temporary = tempfile.TemporaryDirectory(prefix="glifistore-package-admission-")
         self.addCleanup(temporary.cleanup)
         self.work = Path(temporary.name)
         self.matrix = load_matrix()
-        self.package = f"glyphastore-{self.version}-freebsd14.3-amd64.pkg"
+        self.package = f"glifistore-{self.version}-freebsd14.3-amd64.pkg"
 
         self.repository = self.work / "repository"
         self.repository.mkdir()
@@ -115,7 +115,7 @@ class AdmissionFixture(unittest.TestCase):
 
         self.candidate = self.work / "candidate"
         self.candidate.mkdir()
-        (self.candidate / f"GlyphaStore-{self.version}.tar.xz").write_bytes(b"sealed source bytes")
+        (self.candidate / f"GlifiStore-{self.version}.tar.xz").write_bytes(b"sealed source bytes")
         seal(self.candidate, "candidate-seal.json", "candidate")
 
         self.out = self.work / "out"
@@ -142,7 +142,7 @@ class AdmissionFixture(unittest.TestCase):
         value = build_manifest(
             context_path=self.context_path,
             profile=profile,
-            parent_source=parent or self.candidate / f"GlyphaStore-{self.version}.tar.xz",
+            parent_source=parent or self.candidate / f"GlifiStore-{self.version}.tar.xz",
             artifacts=[
                 f"id=freebsd-pkg,kind=freebsd_pkg,platform=freebsd-14,arch=amd64,"
                 f"backend=freebsd,path={self.out / self.package}"
@@ -245,7 +245,7 @@ class FirstReleaseAdmissionTests(AdmissionFixture):
             },
         )
         self.assertEqual(report["evidence"][0]["upgrade_status"], "NOT_APPLICABLE_INITIAL_BASELINE")
-        self.assertEqual(report["candidate"]["source_name"], f"GlyphaStore-{self.version}.tar.xz")
+        self.assertEqual(report["candidate"]["source_name"], f"GlifiStore-{self.version}.tar.xz")
         self.assertEqual(
             report["artifact_manifest"]["parent_source_sha256"],
             report["candidate"]["source_sha256"],
@@ -270,13 +270,13 @@ class ExactArtifactAdmissionTests(AdmissionFixture):
     def test_a_manifest_derived_from_unsealed_bytes_is_refused(self) -> None:
         rebuild = self.work / "rebuild"
         rebuild.mkdir()
-        source = rebuild / f"GlyphaStore-{self.version}.tar.xz"
+        source = rebuild / f"GlifiStore-{self.version}.tar.xz"
         source.write_bytes(b"locally rebuilt source bytes")
         report = self.report(manifest_path=self.manifest(parent=source))
         self.assertEqual(self.blocking(report), ["candidate-source-mismatch"])
 
     def test_an_evidence_subject_outside_the_artifact_graph_is_refused(self) -> None:
-        stray = self.out / "glyphastore-0.1.0-freebsd14.3-amd64-stray.pkg"
+        stray = self.out / "glifistore-0.1.0-freebsd14.3-amd64-stray.pkg"
         stray.write_bytes(b"unrecorded bytes")
         report = self.report(
             evidence_paths=[

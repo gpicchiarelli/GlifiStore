@@ -25,11 +25,11 @@ backpressure, fail-closed behaviour, RAW semantics, or memory bounds.
 
 ## Phase instrumentation
 
-Optional compile-time counters (`-DGLYPHASTORE_HOT_PATH_PHASES=ON`):
+Optional compile-time counters (`-DGLIFISTORE_HOT_PATH_PHASES=ON`):
 
-- Header: `include/glyphastore/core/hot_path_phases.hpp`
+- Header: `include/glifistore/core/hot_path_phases.hpp`
 - Preallocated `alignas(64)` atomic buckets; no global mutex; no hot-path logging
-- Dump via `GLYPHASTORE_HOT_PATH_PHASE_REPORT=1` at process exit
+- Dump via `GLIFISTORE_HOT_PATH_PHASE_REPORT=1` at process exit
 - Default builds keep macros as no-ops
 - TCP reports only additive leaf spans: decode, route, store operation, response
   encode, transport write call, and poller update. In particular, `socket_write`
@@ -309,7 +309,7 @@ under `benchmarks/results/local-macos-2026-08-27-put-census-o1/`.
   the same allocation: lab `store_put` ~370–378 k (vs ~344 k plain same day).
   Affine stays in prior interleaved noise; still far from 600 k single-op target.
 - Writer sync volatile path attributes `worker_apply` vs `publish` when
-  `GLYPHASTORE_HOT_PATH_PHASES` is on. Lab: apply ~381 ns, publish ~640 ns,
+  `GLIFISTORE_HOT_PATH_PHASES` is on. Lab: apply ~381 ns, publish ~640 ns,
   caller `ack` ~3.0 µs (wake/schedule dominates the residual). Rejected:
   post-sync Writer busy-spin (−50% `store_put`), sync-before-merge reorder
   (no reliable 1t win), and conditional `writer_waiting` notify (A/B within

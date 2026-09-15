@@ -43,11 +43,11 @@ if ! command -v lsof >/dev/null 2>&1; then
   exit 1
 fi
 
-daemon="$prefix/bin/glyphastored"
-verify="$prefix/bin/glyphastore_verify_store"
-backup="$prefix/bin/glyphastore_backup_store"
-migrate="$prefix/bin/glyphastore_migrate_store"
-repair="$prefix/bin/glyphastore_repair_store"
+daemon="$prefix/bin/glifistored"
+verify="$prefix/bin/glifistore_verify_store"
+backup="$prefix/bin/glifistore_backup_store"
+migrate="$prefix/bin/glifistore_migrate_store"
+repair="$prefix/bin/glifistore_repair_store"
 for binary in "$daemon" "$verify" "$backup" "$migrate" "$repair"; do
   if [[ ! -x "$binary" ]]; then
     echo "candidate prefix is missing executable: $binary" >&2
@@ -56,7 +56,7 @@ for binary in "$daemon" "$verify" "$backup" "$migrate" "$repair"; do
 done
 
 candidate_version="$($daemon --version)"
-candidate_version="${candidate_version#glyphastored }"
+candidate_version="${candidate_version#glifistored }"
 python3 "$root/engineering/tools/persistence_fixture.py" validate \
   "$fixture" --before-version "$candidate_version" --repository "$root"
 
@@ -74,7 +74,7 @@ PY
 workers="$(read_metadata worker_count)"
 key_hex="$(read_metadata key_hex)"
 value_hex="$(read_metadata value_hex)"
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-persistence-compat.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-persistence-compat.XXXXXX")"
 daemon_pid=""
 cleanup() {
   if [[ -n "$daemon_pid" ]] && kill -0 "$daemon_pid" 2>/dev/null; then
@@ -187,8 +187,8 @@ case "$check" in
     open_and_probe "$restored_store" "$workers" "restore-open"
     mkdir -p "$corrupt_store"
     cp -R "$source_store/." "$corrupt_store/"
-    printf 'orphan-bytes' >"$corrupt_store/segment-00000000000000ff-0000000a.glypha"
-    chmod 600 "$corrupt_store/segment-00000000000000ff-0000000a.glypha"
+    printf 'orphan-bytes' >"$corrupt_store/segment-00000000000000ff-0000000a.glifi"
+    chmod 600 "$corrupt_store/segment-00000000000000ff-0000000a.glifi"
     "$repair" -- "$corrupt_store" "$repair_workspace"
     "$verify" -- "$repair_workspace/store"
     open_and_probe "$repair_workspace/store" "$workers" "repair-open"

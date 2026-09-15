@@ -1,4 +1,4 @@
-# GlyphaStore Test Strategy
+# GlifiStore Test Strategy
 
 Status: maintained quality policy
 Applies to: all supported builds
@@ -101,13 +101,13 @@ Line coverage is diagnostic, not the acceptance metric. Review must map each nor
 ./scripts/dev.sh test-lto
 ```
 
-Deprecated `legacy_mutex` open mode is exercised inside `glyphastore_tests` by white-box and
+Deprecated `legacy_mutex` open mode is exercised inside `glifistore_tests` by white-box and
 concurrency cases that set `StoreConfig::concurrency = StoreConcurrencyMode::legacy_mutex`
 (`tests/integration/concurrency_tests.cpp`, `optimization_regression_tests.cpp`, and selected
 `store_tests.cpp` cases):
 
 ```sh
-ctest --preset macos-debug -R '^glyphastore_tests$' --output-on-failure
+ctest --preset macos-debug -R '^glifistore_tests$' --output-on-failure
 ```
 
 On Linux CI presets use the matching configure preset (`unix-debug`, `unix-asan`, …). No separate
@@ -123,7 +123,7 @@ attributable in the retained log.
 
 `fuzz-run` expects a prior `fuzz-build` (or an equivalent `unix-fuzz` / `macos-fuzz` build) and
 defaults to 60s per target via `scripts/run-fuzzers.sh`. Override with
-`GLYPHASTORE_FUZZ_SECONDS`.
+`GLIFISTORE_FUZZ_SECONDS`.
 
 Run focused binaries while iterating, then the repository workflow appropriate to the change before handoff.
 
@@ -134,13 +134,13 @@ TLA2TOOLS_JAR=/path/to/tla2tools.jar engineering/formal/shard_pair/run-tlc.sh
 TLA2TOOLS_JAR=/path/to/tla2tools.jar engineering/formal/persistence/run-tlc.sh
 ```
 
-Run the long multi-output profile separately; together with `glyphastore_crash_sync`, it covers all
+Run the long multi-output profile separately; together with `glifistore_crash_sync`, it covers all
 152 persistence checkpoints and every one of the 64 Record copies:
 
 ```sh
-build/macos-debug/glyphastore_crash_persistence --mode copy-matrix
-build/macos-debug/glyphastore_crash_persistence --mode random-matrix
-build/macos-debug/glyphastore_crash_persistence \
+build/macos-debug/glifistore_crash_persistence --mode copy-matrix
+build/macos-debug/glifistore_crash_persistence --mode random-matrix
+build/macos-debug/glifistore_crash_persistence \
   --mode random-campaign --campaign-seed 42 --iterations 1000 \
   --report /path/to/new-report.tsv
 ```

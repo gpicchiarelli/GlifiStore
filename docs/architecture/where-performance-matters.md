@@ -3,7 +3,7 @@ Applies to: product positioning and benchmark interpretation (not a wire or disk
 Owner: maintainer
 Last reviewed: 2026-08-01
 
-# Where GlyphaStore performance matters
+# Where GlifiStore performance matters
 
 A faster key-value path does not accelerate every request equally. Value depends on how much of the
 request is spent on small, frequent lookups versus business logic or remote calls.
@@ -14,10 +14,10 @@ request is spent on small, frequent lookups versus business logic or remote call
 Browser
   → reverse proxy
   → application
-  → GlyphaStore   (session, cache, flags, quotas, …)
+  → GlifiStore   (session, cache, flags, quotas, …)
 ```
 
-One HTTP request may touch GlyphaStore for authentication material, session state, cached profiles,
+One HTTP request may touch GlifiStore for authentication material, session state, cached profiles,
 permissions, rate limits, configuration, tokens, and similar. When those operations are cheap:
 
 - mean latency falls;
@@ -49,7 +49,7 @@ HTTP request
   → 100 ms external API
 ```
 
-If GlyphaStore spends 0.15 ms instead of 0.30 ms, the end-user latency is unchanged. Use GlyphaStore
+If GlifiStore spends 0.15 ms instead of 0.30 ms, the end-user latency is unchanged. Use GlifiStore
 where the hot path is lookup-heavy; it does not hide slow dependencies.
 
 ## Engine vs SDK

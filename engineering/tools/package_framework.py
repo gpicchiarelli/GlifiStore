@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared fail-closed primitives for the GlyphaStore package CI framework."""
+"""Shared fail-closed primitives for the GlifiStore package CI framework."""
 
 from __future__ import annotations
 

@@ -1,13 +1,13 @@
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/integer_math.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/index/swiss_table.hpp"
-#include "glyphastore/persistence/compaction.hpp"
-#include "glyphastore/persistence/durable_flush_coordinator.hpp"
-#include "glyphastore/persistence/resource_limits.hpp"
-#include "glyphastore/persistence/runtime_catalog.hpp"
-#include "glyphastore/persistence/segment_file.hpp"
-#include "glyphastore/segment/record.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/integer_math.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/index/swiss_table.hpp"
+#include "glifistore/persistence/compaction.hpp"
+#include "glifistore/persistence/durable_flush_coordinator.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
+#include "glifistore/persistence/runtime_catalog.hpp"
+#include "glifistore/persistence/segment_file.hpp"
+#include "glifistore/segment/record.hpp"
 #include "persistence/adaptive_batch_sizer.hpp"
 #include "persistence/hot_record_table.hpp"
 #include "persistence/runtime_catalog_detail.hpp"
@@ -25,8 +25,8 @@
 #include <string>
 #include <utility>
 
-namespace glyphastore {
-using namespace glyphastore::runtime_catalog_detail;
+namespace glifistore {
+using namespace glifistore::runtime_catalog_detail;
 
 auto DurableRuntimeCatalog::healthy() const noexcept -> bool {
     return !closed_.load(std::memory_order_acquire) && healthy_.load(std::memory_order_acquire) &&
@@ -504,4 +504,4 @@ auto DurableRuntimeCatalog::verify_index() -> Status {
     return {};
 }
 
-} // namespace glyphastore
+} // namespace glifistore

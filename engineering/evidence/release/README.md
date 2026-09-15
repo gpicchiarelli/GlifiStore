@@ -41,7 +41,7 @@ Do **not** invent signatures or provenance files to satisfy a checklist cell.
 | --- | --- | --- |
 | Codec N−1 | `tests/fixtures/released/<label>/` | Policy + `self-v1` harness exist; permanent tag trees absent |
 | Store N−1 | `tests/fixtures/released-stores/<semver>/` | Empty of semver drops; fail-closed producer |
-| ABI consumer | Release asset `glyphastore-abi-v1-consumer-…tar.xz` | Packager/validator exist; old-binary×new-library row blocked |
+| ABI consumer | Release asset `glifistore-abi-v1-consumer-…tar.xz` | Packager/validator exist; old-binary×new-library row blocked |
 | Wire client | Release asset sealed wire-v2 client | Same residual as ABI |
 
 ## Related

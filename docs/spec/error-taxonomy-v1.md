@@ -1,4 +1,4 @@
-Status: normative for official GlyphaStore TCP clients and embedded ErrorCode mapping
+Status: normative for official GlifiStore TCP clients and embedded ErrorCode mapping
 Applies to: wire protocol v2, C++ client, Python/Go/Perl/Ruby/Erlang SDKs, embedded Store errors that surface as wire statuses
 Owner: networking maintainers
 Last reviewed: 2026-08-02
@@ -62,7 +62,7 @@ Notes:
 
 ## 3. Embedded `ErrorCode` → portable category (C++ TCP client)
 
-When the C++ TCP client maps a wire status or local failure into `glyphastore::Error`, the portable
+When the C++ TCP client maps a wire status or local failure into `glifistore::Error`, the portable
 `Error::category` must be one of the §1 names. Normative collapses used by the official client:
 
 | `ErrorCode` | Portable category |
@@ -90,7 +90,7 @@ Official SDKs and the C++ client must pass the shared fixture matrix:
 | Go | `sdk/go/client/error_taxonomy_test.go` |
 | Perl | `sdk/perl/t/03-error-taxonomy.t` |
 | Ruby | `sdk/ruby/test/test_error_taxonomy.rb` |
-| Erlang | `sdk/erlang/test/glyphastore_error_taxonomy_SUITE.erl` |
+| Erlang | `sdk/erlang/test/glifistore_error_taxonomy_SUITE.erl` |
 
 Fixture copies under `sdk/*/…/fixtures/` (or Go `testdata/`) are synced from
 `tests/fixtures/error_taxonomy_v1.json` via `scripts/sync-sdk-fixtures.sh`.

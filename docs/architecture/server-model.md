@@ -1,6 +1,6 @@
 # Server model
 
-`glyphastored` is the network process around the embedded Store. For 0.1.0 its sole data-plane
+`glifistored` is the network process around the embedded Store. For 0.1.0 its sole data-plane
 runtime is the paired Reader–Writer model ([ADR 0031](../adr/paired-reader-writer-shards.md)): one
 Reader/Reactor and one serial Writer per shard pair, connected by bounded SPSC lanes. The initial
 transport is non-blocking IPv4 TCP. Optional TLS 1.3 wraps the same protocol when
@@ -30,7 +30,7 @@ Reader / Reactor  ──GET──>  ReadGeneration (immutable, adopted once per 
   generation. Mutations and durable cold-read refresh requests arrive only through the pair’s
   bounded SPSC lanes (`PairWriterPool`).
 - There is no second selectable daemon runtime and no dual-select switch. The lab-only volatile
-  prototype under `src/experimental/` is not linked into `glyphastored`.
+  prototype under `src/experimental/` is not linked into `glifistored`.
 
 Public embedded `Store::get` still returns an owning value (ADR 0009). Daemon GET is a separate path:
 it borrows from the Reader-local `ReadGeneration` for the response lifetime and must not be treated
@@ -194,7 +194,7 @@ admission (including paired Writer health). Client disconnect does not cancel ad
 storage work: a stale `(slot, generation)` completion is discarded, and the client must classify the
 mutation as indeterminate.
 
-`glyphastore_server_benchmarks` measures the real loopback TCP protocol using one owner-bound
+`glifistore_server_benchmarks` measures the real loopback TCP protocol using one owner-bound
 connection per client. Server startup, `INIT`, `BIND_WORKER`, connection establishment, request
 encoding, and client thread creation are outside the timed region; every response is decoded and
 validated. Traffic counters report the exact timed protocol-frame bytes sent into and returned by

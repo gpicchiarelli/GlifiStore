@@ -1,16 +1,16 @@
 # Homebrew formula (reference packaging)
 
-Upstream-submittable material for a `glyphastore` Homebrew formula. It is **not**
-in `homebrew/core` and there is no official GlyphaStore tap; the
+Upstream-submittable material for a `glifistore` Homebrew formula. It is **not**
+in `homebrew/core` and there is no official GlifiStore tap; the
 `upstream-ports-acceptance` check stays `OPEN_GATE` until one exists.
 
 ## Contents
 
 | Path | Role |
 | --- | --- |
-| [`glyphastore.rb.in`](glyphastore.rb.in) | Formula template; carries no version, url or sha256 |
+| [`glifistore.rb.in`](glifistore.rb.in) | Formula template; carries no version, url or sha256 |
 
-A usable `glyphastore.rb` is produced by
+A usable `glifistore.rb` is produced by
 [`engineering/tools/render_macos_packaging.py`](../../engineering/tools/render_macos_packaging.py),
 which injects the version from the `VERSION` authority through the release context
 and the source identity from the archive it is given. Nothing is checked in already
@@ -22,10 +22,10 @@ rendered, so the formula version can never drift from `VERSION`.
 python3 engineering/tools/generate_release_context.py --output /tmp/ctx.json
 python3 engineering/tools/render_macos_packaging.py --backend homebrew --profile main \
   --release-context /tmp/ctx.json \
-  --source-url "file:///path/to/GlyphaStore-<version>.tar.xz" \
+  --source-url "file:///path/to/GlifiStore-<version>.tar.xz" \
   --source-sha256 "<sha256>" --output-dir /tmp/formula
 
-brew audit --strict --formula /tmp/formula/glyphastore.rb
+brew audit --strict --formula /tmp/formula/glifistore.rb
 ```
 
 `scripts/package-ci.sh --profile main --backend homebrew` does the same thing and
@@ -45,8 +45,8 @@ with a reason, into `packaging/homebrew/prefix-exceptions.txt`
 
 ## Service integration
 
-The formula declares a `service do` block. When `GLYPHASTORE_PACKAGE_CI_NATIVE=1`,
-the packaging lifecycle starts, health-checks and stops GlyphaStore through
+The formula declares a `service do` block. When `GLIFISTORE_PACKAGE_CI_NATIVE=1`,
+the packaging lifecycle starts, health-checks and stops GlifiStore through
 `brew services`. Without a retained native run, `service-lifecycle` stays
 `OPEN_GATE` and the backend cannot report `PASS`.
 
@@ -58,24 +58,24 @@ exercise rather than an init-system managed service run.
 
 `package-upgrade` stays `NOT_APPLICABLE_INITIAL_BASELINE` or `NOT_RUN` until a
 sealed SemVer predecessor exists and sealed N−1 source archives are supplied via
-`GLYPHASTORE_N1_PACKAGE_DIR`. The native lifecycle then runs
+`GLIFISTORE_N1_PACKAGE_DIR`. The native lifecycle then runs
 install→seed→upgrade→verify against those bytes (never rebuilt from HEAD).
 Supplying the directory alone does not invent a PASS without a retained native run.
 
 ## Configuration and data
 
 `cmake --install` writes a sample whose `data-dir` points inside the versioned keg,
-so the formula rewrites it to `#{var}/glyphastore` and installs it as
-`#{etc}/glyphastore/glyphastored.conf.sample`. Homebrew preserves `etc` files
+so the formula rewrites it to `#{var}/glifistore` and installs it as
+`#{etc}/glifistore/glifistored.conf.sample`. Homebrew preserves `etc` files
 across upgrades, and `brew uninstall` never touches `var`, which is what the shared
 [configuration and data policy](../common/config-data-policy.md) requires.
 
 ## Release sources
 
 The release profile refuses anything that is not a sealed source archive: the URL
-must be `https`, must be named `GlyphaStore-<version>.tar.xz`, and must not look
-like a git ref or checkout tarball. Set `GLYPHASTORE_SOURCE_ARCHIVE_URL` and
-`GLYPHASTORE_SOURCE_ARCHIVE_SHA256`. For `main` and `nightly` the adapter may build
+must be `https`, must be named `GlifiStore-<version>.tar.xz`, and must not look
+like a git ref or checkout tarball. Set `GLIFISTORE_SOURCE_ARCHIVE_URL` and
+`GLIFISTORE_SOURCE_ARCHIVE_SHA256`. For `main` and `nightly` the adapter may build
 from a `file://` archive of `HEAD`, whose digest it verifies before pinning it.
 
 ## Native lifecycle
@@ -83,6 +83,6 @@ from a `file://` archive of `HEAD`, whose digest it verifies before pinning it.
 `brew audit`, `brew install --build-from-source`, `brew list`, the external consumer
 build, `brew test`, `brew services` start/stop, the daemon exercise, `brew uninstall`
 and `brew cleanup` only run on a macOS host with Homebrew **and**
-`GLYPHASTORE_PACKAGE_CI_NATIVE=1`, because they mutate the host package manager.
+`GLIFISTORE_PACKAGE_CI_NATIVE=1`, because they mutate the host package manager.
 Everything that did not run is reported as
 `NOT_RUN` or `BLOCKED`, never as `PASS`.

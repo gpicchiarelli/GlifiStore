@@ -1,11 +1,11 @@
 #include "experimental/paired_reactor.hpp"
 
-#include "glyphastore/core/worker_routing.hpp"
-#include "glyphastore/server/connection_token.hpp"
-#include "glyphastore/server/poller.hpp"
-#include "glyphastore/server/protocol.hpp"
-#include "glyphastore/server/socket.hpp"
-#include "glyphastore/server/wakeup.hpp"
+#include "glifistore/core/worker_routing.hpp"
+#include "glifistore/server/connection_token.hpp"
+#include "glifistore/server/poller.hpp"
+#include "glifistore/server/protocol.hpp"
+#include "glifistore/server/socket.hpp"
+#include "glifistore/server/wakeup.hpp"
 #include "server/system_error.hpp"
 
 #include <algorithm>
@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::experimental {
+namespace glifistore::experimental {
 namespace {
 
 using server::advance_connection_generation;
@@ -395,8 +395,8 @@ struct PairedReactorPrototype::Impl final {
             case RequestOpcode::health:
             case RequestOpcode::ready:
                 response.value = request.opcode == RequestOpcode::health
-                                     ? std::as_bytes(std::span{"GlyphaStore/live", 16})
-                                     : std::as_bytes(std::span{"GlyphaStore/ready", 17});
+                                     ? std::as_bytes(std::span{"GlifiStore/live", 16})
+                                     : std::as_bytes(std::span{"GlifiStore/ready", 17});
                 break;
             case RequestOpcode::stats:
             case RequestOpcode::backup:
@@ -826,4 +826,4 @@ auto PairedReactorPrototype::pair_stats() const noexcept -> PrototypePairStats {
     return published_pair_stats_;
 }
 
-} // namespace glyphastore::experimental
+} // namespace glifistore::experimental

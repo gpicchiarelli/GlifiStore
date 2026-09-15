@@ -4,7 +4,7 @@
 The driver renders the packaging metadata from the release context and, when the
 environment can actually do it, walks the lifecycle: lint, build, inspect,
 prefix isolation, install (or sealed N-1 install→seed→upgrade→verify when
-GLYPHASTORE_N1_PACKAGE_DIR supplies predecessor packages), external consumer,
+GLIFISTORE_N1_PACKAGE_DIR supplies predecessor packages), external consumer,
 systemd service, protocol exercise, durable restart, configuration preservation
 and removal. Every check that did not run says so, with the reason.
 
@@ -15,10 +15,10 @@ Three execution modes, in decreasing order of preference:
 * container dispatch: re-runs this driver inside the digest-pinned image the
   package matrix declares for the target, with systemd as PID 1 when the host
   can offer cgroup + privileged (so service-lifecycle can start the unit). Opt
-  in with ``GLYPHASTORE_PACKAGE_CI_CONTAINER=1``. Falls back to a one-shot entry
+  in with ``GLIFISTORE_PACKAGE_CI_CONTAINER=1``. Falls back to a one-shot entry
   (service-lifecycle BLOCKED) when systemd cannot become PID 1.
 * native dispatch on the caller's host: installs and removes system packages, so
-  it needs root and ``GLYPHASTORE_PACKAGE_CI_NATIVE=1``.
+  it needs root and ``GLIFISTORE_PACKAGE_CI_NATIVE=1``.
 
 Without any of those the backend reports the metadata rows it genuinely resolved
 and BLOCKED or NOT_RUN for the rest. Nothing here fabricates a PASS.
@@ -78,9 +78,9 @@ from engineering.tools.validate_package_evidence import (
 )
 
 LINUX_BACKENDS = ("deb", "rpm")
-NATIVE_ENVIRONMENT = "GLYPHASTORE_PACKAGE_CI_NATIVE"
-CONTAINER_ENVIRONMENT = "GLYPHASTORE_PACKAGE_CI_CONTAINER"
-CANDIDATE_ENVIRONMENT = "GLYPHASTORE_CANDIDATE_DIR"
+NATIVE_ENVIRONMENT = "GLIFISTORE_PACKAGE_CI_NATIVE"
+CONTAINER_ENVIRONMENT = "GLIFISTORE_PACKAGE_CI_CONTAINER"
+CANDIDATE_ENVIRONMENT = "GLIFISTORE_CANDIDATE_DIR"
 SEAL_ENVIRONMENT = "CANDIDATE_SEAL_SHA256"
 # Forwarded into the container so the evidence it emits carries the producer identity
 # of this run (engineering/tools/package_framework.py::producer_identity).
@@ -358,7 +358,7 @@ class SourceArchive:
 def working_source_archive(root: Path, directory: Path, product_version: str) -> Path:
     """An archive of HEAD for the build-from-tree profiles; never a release source."""
     directory.mkdir(parents=True, exist_ok=True)
-    archive = directory / f"GlyphaStore-{product_version}.tar.xz"
+    archive = directory / f"GlifiStore-{product_version}.tar.xz"
     if archive.is_file():
         return archive
     tarball = archive.with_suffix("")
@@ -373,7 +373,7 @@ def working_source_archive(root: Path, directory: Path, product_version: str) ->
                     str(root),
                     "archive",
                     "--format=tar",
-                    f"--prefix=GlyphaStore-{product_version}/",
+                    f"--prefix=GlifiStore-{product_version}/",
                     "HEAD",
                 ],
                 check=False,
@@ -405,7 +405,7 @@ def admit_source(
     """Admit the sealed candidate when there is one; refuse HEAD in the release profile."""
     log = recorder.directory / "sealed-source-admission.log"
     candidate = os.environ.get(CANDIDATE_ENVIRONMENT, "").strip()
-    archive_name = f"GlyphaStore-{product_version}.tar.xz"
+    archive_name = f"GlifiStore-{product_version}.tar.xz"
 
     if candidate:
         directory = Path(candidate)
@@ -668,7 +668,7 @@ def container_create_arguments(
         ci_identity=ci_identity,
     )
     # cgroup + privileged: stock Debian/Fedora images need a real systemd PID 1
-    # for systemctl enable/start of glyphastored.service. Without them the
+    # for systemctl enable/start of glifistored.service. Without them the
     # dispatcher falls back to the one-shot entry and service-lifecycle stays BLOCKED.
     # Two host layouts are tried: cgroupns=host (common on GHA) and private +
     # docker.slice parent (cgroup v2 runners that refuse host namespace).
@@ -805,7 +805,7 @@ def dispatch_container(
         name: os.environ.get(name, "").strip() for name in CI_IDENTITY_ENVIRONMENT
     }
     seal = os.environ.get(SEAL_ENVIRONMENT, "")
-    name = f"glyphastore-{backend}-{os.getpid()}-{int(time.time())}"
+    name = f"glifistore-{backend}-{os.getpid()}-{int(time.time())}"
     _note(log, f"target={target.identifier} runtime={runtime} image={image}")
     _note(log, f"host_uid={os.getuid()} host_gid={os.getgid()}")
     _note(log, f"systemd container name={name}")
@@ -999,7 +999,7 @@ def run_build(lifecycle: Lifecycle, source: SourceArchive) -> None:
         for name in ("SOURCES", "SPECS", "BUILD", "BUILDROOT", "RPMS", "SRPMS"):
             (top / name).mkdir(parents=True)
         shutil.copy2(source.path, top / "SOURCES" / tokens["SOURCE_ARCHIVE"])
-        shutil.copy2(lifecycle.metadata / "glyphastored.service", top / "SOURCES")
+        shutil.copy2(lifecycle.metadata / "glifistored.service", top / "SOURCES")
         spec = next(lifecycle.metadata.glob("*.spec"))
         shutil.copy2(spec, top / "SPECS" / spec.name)
         built = _run(
@@ -1030,7 +1030,7 @@ def run_build(lifecycle: Lifecycle, source: SourceArchive) -> None:
 
 
 def _primary_packages(lifecycle: Lifecycle) -> list[Path]:
-    """The three GlyphaStore packages, without RPM's debuginfo and debugsource."""
+    """The three GlifiStore packages, without RPM's debuginfo and debugsource."""
     excluded = ("debuginfo", "debugsource", "-dbgsym")
     return [
         package
@@ -1106,8 +1106,8 @@ def run_prefix_isolation(lifecycle: Lifecycle) -> None:
         return
     libdir = lifecycle.layout["libdir"].lstrip("/")
     binaries = [
-        root / lifecycle.layout["bindir"].lstrip("/") / "glyphastored",
-        root / libdir / f"libglyphastore.so.{lifecycle.tokens['ABI_VERSION']}",
+        root / lifecycle.layout["bindir"].lstrip("/") / "glifistored",
+        root / libdir / f"libglifistore.so.{lifecycle.tokens['ABI_VERSION']}",
     ]
     ok = True
     for binary in binaries:
@@ -1141,8 +1141,8 @@ def run_prefix_isolation(lifecycle: Lifecycle) -> None:
             _note(log, "note: BIND_NOW is absent; recorded, not gated by this check")
 
     metadata_files = [
-        root / libdir / "pkgconfig/glyphastore-abi.pc",
-        *sorted((root / libdir / "cmake/GlyphaStore").glob("*.cmake")),
+        root / libdir / "pkgconfig/glifistore-abi.pc",
+        *sorted((root / libdir / "cmake/GlifiStore").glob("*.cmake")),
     ]
     present = [str(path) for path in metadata_files if path.is_file()]
     isolated = _run(
@@ -1280,7 +1280,7 @@ def run_installed_sdk_matrix(lifecycle: Lifecycle) -> None:
     bindir = Path(lifecycle.layout["bindir"])
     if not bindir.is_absolute():
         bindir = Path("/") / bindir
-    daemon = bindir / "glyphastored"
+    daemon = bindir / "glifistored"
     prefix = Path(lifecycle.layout["prefix"])
     if not prefix.is_absolute():
         prefix = Path("/") / prefix
@@ -1304,9 +1304,9 @@ def run_installed_sdk_matrix(lifecycle: Lifecycle) -> None:
     )
     environment.update(
         {
-            "GLYPHASTORE_PACKAGE_DAEMON": str(daemon),
-            "GLYPHASTORE_PACKAGE_FILE_LIST": str(inventory),
-            "GLYPHASTORE_PACKAGE_PREFIX": str(prefix),
+            "GLIFISTORE_PACKAGE_DAEMON": str(daemon),
+            "GLIFISTORE_PACKAGE_FILE_LIST": str(inventory),
+            "GLIFISTORE_PACKAGE_PREFIX": str(prefix),
             "INSTALLED_INTEROP_PROFILE": "plain",
             # Docker --tmpfs /tmp defaults to noexec; keep scratch under /out.
             "TMPDIR": str(lifecycle.recorder.directory / "tmp"),
@@ -1372,7 +1372,7 @@ def run_external_consumer(lifecycle: Lifecycle) -> None:
 
 
 class InstalledDaemon:
-    """The installed glyphastored, started from the installed configuration."""
+    """The installed glifistored, started from the installed configuration."""
 
     def __init__(self, lifecycle: Lifecycle, log: Path) -> None:
         self.lifecycle = lifecycle
@@ -1383,7 +1383,7 @@ class InstalledDaemon:
 
     def start(self) -> bool:
         if self.systemd:
-            if not _run(["systemctl", "start", "glyphastored.service"], log=self.log):
+            if not _run(["systemctl", "start", "glifistored.service"], log=self.log):
                 return False
         else:
             _note(self.log, "no systemd; starting the installed daemon as the service account")
@@ -1395,7 +1395,7 @@ class InstalledDaemon:
                         "-u",
                         self.lifecycle.tokens["SERVICE_USER"],
                         "--",
-                        self.lifecycle.tool("glyphastored"),
+                        self.lifecycle.tool("glifistored"),
                         "--config",
                         str(self.lifecycle.configuration),
                     ],
@@ -1411,7 +1411,7 @@ class InstalledDaemon:
 
     def stop(self) -> bool:
         if self.systemd:
-            stopped = _run(["systemctl", "stop", "glyphastored.service"], log=self.log)
+            stopped = _run(["systemctl", "stop", "glifistored.service"], log=self.log)
         elif self.process is None:
             return True
         else:
@@ -1439,7 +1439,7 @@ class InstalledDaemon:
             return False
         return _run(
             [
-                str(build / "glyphastore_daemon_smoke"),
+                str(build / "glifistore_daemon_smoke"),
                 "--port",
                 str(self.port),
                 *arguments,
@@ -1452,7 +1452,7 @@ class InstalledDaemon:
 def run_service_lifecycle(lifecycle: Lifecycle) -> None:
     """Start, health-check and stop the packaged unit through systemd itself."""
     recorder, log = lifecycle.recorder, lifecycle.log("service-lifecycle")
-    unit = f"{lifecycle.layout['unitdir']}/glyphastored.service"
+    unit = f"{lifecycle.layout['unitdir']}/glifistored.service"
     # Always retain a non-empty log: emit_evidence refuses an empty evidence_ref, and
     # containers without systemd-analyze previously recorded BLOCKED with a missing file.
     _note(log, f"unit={unit}")
@@ -1473,25 +1473,25 @@ def run_service_lifecycle(lifecycle: Lifecycle) -> None:
         )
         recorder.residuals.append(
             "linux-systemd-service-run=No retained run has started, health-checked and stopped "
-            "glyphastored.service through systemd|a systemd-enabled packaging target in CI"
+            "glifistored.service through systemd|a systemd-enabled packaging target in CI"
         )
         return
     port = configured_port(lifecycle.configuration)
     started = (
         _run(["systemctl", "daemon-reload"], log=log)
-        and _run(["systemctl", "enable", "--now", "glyphastored.service"], log=log)
+        and _run(["systemctl", "enable", "--now", "glifistored.service"], log=log)
         and wait_for_port(port, time.monotonic() + DAEMON_READY_TIMEOUT)
-        and _run(["systemctl", "is-active", "--quiet", "glyphastored.service"], log=log)
+        and _run(["systemctl", "is-active", "--quiet", "glifistored.service"], log=log)
     )
     _note(log, f"service reached 127.0.0.1:{port}: {started}")
     stopped = (
-        _run(["systemctl", "stop", "glyphastored.service"], log=log)
+        _run(["systemctl", "stop", "glifistored.service"], log=log)
         and _run(
-            ["systemctl", "is-active", "--quiet", "glyphastored.service"],
+            ["systemctl", "is-active", "--quiet", "glifistored.service"],
             log=log,
             expect_failure=True,
         )
-        and _run(["systemctl", "disable", "glyphastored.service"], log=log)
+        and _run(["systemctl", "disable", "glifistored.service"], log=log)
     )
     recorder.record("service-lifecycle", "PASS" if started and stopped else "FAIL", log=log.name)
 
@@ -1543,7 +1543,7 @@ def run_restart_recovery(lifecycle: Lifecycle) -> None:
             "-u",
             lifecycle.tokens["SERVICE_USER"],
             "--",
-            lifecycle.tool("glyphastore_verify_store"),
+            lifecycle.tool("glifistore_verify_store"),
             "--",
             str(lifecycle.state_directory),
         ],
@@ -1724,7 +1724,7 @@ UPGRADE_SEED_VALUE = "durable-across-n1-upgrade"
 def run_upgrade(recorder: Recorder, context: dict[str, Any]) -> None:
     """Record pre-exercise upgrade status when the install walk will not run here.
 
-    When a SemVer predecessor exists and GLYPHASTORE_N1_PACKAGE_DIR supplies sealed
+    When a SemVer predecessor exists and GLIFISTORE_N1_PACKAGE_DIR supplies sealed
     packages, recording is deferred to ``run_upgrade_exercise`` inside the native
     lifecycle. N-1 is never rebuilt from HEAD.
     """

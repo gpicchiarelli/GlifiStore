@@ -1,7 +1,7 @@
-# Gitleaks config for GlyphaStore.
+# Gitleaks config for GlifiStore.
 # After a single-commit history rewrite, push scans see the whole tree as new
 # additions; allow only documented public constants / phrasing false positives.
-title = "GlyphaStore"
+title = "GlifiStore"
 
 [extend]
 useDefault = true

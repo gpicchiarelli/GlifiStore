@@ -1,7 +1,7 @@
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/server/protocol.hpp"
-#include "glyphastore/server/server.hpp"
-#include "glyphastore/server/tls.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/server/protocol.hpp"
+#include "glifistore/server/server.hpp"
+#include "glifistore/server/tls.hpp"
 #include "test.hpp"
 
 #include <algorithm>
@@ -16,7 +16,7 @@
 #include <thread>
 #include <vector>
 
-#if defined(GLYPHASTORE_HAS_TLS) && GLYPHASTORE_HAS_TLS
+#if defined(GLIFISTORE_HAS_TLS) && GLIFISTORE_HAS_TLS
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <openssl/err.h>
@@ -27,16 +27,16 @@
 
 namespace {
 
-#if defined(GLYPHASTORE_HAS_TLS) && GLYPHASTORE_HAS_TLS
+#if defined(GLIFISTORE_HAS_TLS) && GLIFISTORE_HAS_TLS
 
 class TemporaryDirectory final {
   public:
     TemporaryDirectory() {
-        auto pattern = (std::filesystem::temp_directory_path() / "glyphastore-tls-XXXXXX").string();
+        auto pattern = (std::filesystem::temp_directory_path() / "glifistore-tls-XXXXXX").string();
         std::vector<char> writable(pattern.begin(), pattern.end());
         writable.push_back('\0');
         const auto* created = ::mkdtemp(writable.data());
-        GLYPHA_REQUIRE(created != nullptr);
+        GLIFI_REQUIRE(created != nullptr);
         path_ = created;
     }
     ~TemporaryDirectory() {
@@ -87,7 +87,7 @@ auto receive_exact_ssl(SSL* ssl, const std::span<std::byte> output) -> bool {
 }
 
 auto receive_response_ssl(SSL* ssl) -> std::vector<std::byte> {
-    std::array<std::byte, glyphastore::server::kResponseHeaderBytes> header{};
+    std::array<std::byte, glifistore::server::kResponseHeaderBytes> header{};
     if (!receive_exact_ssl(ssl, header)) {
         return {};
     }
@@ -95,7 +95,7 @@ auto receive_response_ssl(SSL* ssl) -> std::vector<std::byte> {
     for (std::size_t byte = 0; byte < 4; ++byte) {
         frame_size |= static_cast<std::uint32_t>(std::to_integer<std::uint8_t>(header[byte])) << (byte * 8U);
     }
-    if (frame_size < header.size() || frame_size > glyphastore::server::kMaxFrameBytes) {
+    if (frame_size < header.size() || frame_size > glifistore::server::kMaxFrameBytes) {
         return {};
     }
     std::vector<std::byte> frame(frame_size);
@@ -110,74 +110,74 @@ auto receive_response_ssl(SSL* ssl) -> std::vector<std::byte> {
 
 } // namespace
 
-GLYPHA_TEST("tls config validation fails closed without cert and key") {
-    glyphastore::server::TlsConfig incomplete{.certificate_file = "cert.pem"};
-    const auto missing_key = glyphastore::server::validate_tls_config(incomplete);
-    GLYPHA_REQUIRE(!missing_key.has_value());
+GLIFI_TEST("tls config validation fails closed without cert and key") {
+    glifistore::server::TlsConfig incomplete{.certificate_file = "cert.pem"};
+    const auto missing_key = glifistore::server::validate_tls_config(incomplete);
+    GLIFI_REQUIRE(!missing_key.has_value());
 
-    glyphastore::server::TlsConfig ca_only{.client_ca_file = "ca.pem"};
-    const auto missing_pair = glyphastore::server::validate_tls_config(ca_only);
-    GLYPHA_REQUIRE(!missing_pair.has_value());
+    glifistore::server::TlsConfig ca_only{.client_ca_file = "ca.pem"};
+    const auto missing_pair = glifistore::server::validate_tls_config(ca_only);
+    GLIFI_REQUIRE(!missing_pair.has_value());
 
-    GLYPHA_REQUIRE(glyphastore::server::validate_tls_config({}).has_value());
+    GLIFI_REQUIRE(glifistore::server::validate_tls_config({}).has_value());
 }
 
-GLYPHA_TEST("dual listen rejects identical cleartext and tls ports") {
-    glyphastore::server::ReactorConfig config{
+GLIFI_TEST("dual listen rejects identical cleartext and tls ports") {
+    glifistore::server::ReactorConfig config{
         .port = 7379,
         .tls_port = 7379,
         .tls =
             {
-                .certificate_file = "/tmp/glyphastore-missing-cert.pem",
-                .private_key_file = "/tmp/glyphastore-missing-key.pem",
+                .certificate_file = "/tmp/glifistore-missing-cert.pem",
+                .private_key_file = "/tmp/glifistore-missing-key.pem",
             },
     };
-    const auto server = glyphastore::server::Server::create(config);
-    GLYPHA_REQUIRE(!server.has_value());
-    GLYPHA_REQUIRE(server.error().message.find("must differ") != std::string::npos);
+    const auto server = glifistore::server::Server::create(config);
+    GLIFI_REQUIRE(!server.has_value());
+    GLIFI_REQUIRE(server.error().message.find("must differ") != std::string::npos);
 }
 
-GLYPHA_TEST("tls_port without TLS certificate configuration fails closed") {
-    glyphastore::server::ReactorConfig config{
+GLIFI_TEST("tls_port without TLS certificate configuration fails closed") {
+    glifistore::server::ReactorConfig config{
         .port = 0,
         .tls_port = 0,
     };
-    const auto server = glyphastore::server::Server::create(config);
-    GLYPHA_REQUIRE(!server.has_value());
-    GLYPHA_REQUIRE(server.error().message.find("tls_port requires") != std::string::npos);
+    const auto server = glifistore::server::Server::create(config);
+    GLIFI_REQUIRE(!server.has_value());
+    GLIFI_REQUIRE(server.error().message.find("tls_port requires") != std::string::npos);
 }
 
-GLYPHA_TEST("tls build reports backend availability") {
-    const auto backend = glyphastore::server::tls_backend_name();
-    GLYPHA_REQUIRE(!backend.empty());
-    if (glyphastore::server::tls_build_enabled()) {
-        GLYPHA_REQUIRE(backend != "disabled");
+GLIFI_TEST("tls build reports backend availability") {
+    const auto backend = glifistore::server::tls_backend_name();
+    GLIFI_REQUIRE(!backend.empty());
+    if (glifistore::server::tls_build_enabled()) {
+        GLIFI_REQUIRE(backend != "disabled");
 #if defined(__OpenBSD__)
         // ADR 0020 / Phase 2.6: OpenBSD secure-profile builds must use system LibreSSL.
-        GLYPHA_REQUIRE(backend == "LibreSSL");
+        GLIFI_REQUIRE(backend == "LibreSSL");
 #endif
     } else {
-        GLYPHA_REQUIRE(backend == "disabled");
-        glyphastore::server::TlsConfig requested{
+        GLIFI_REQUIRE(backend == "disabled");
+        glifistore::server::TlsConfig requested{
             .certificate_file = "/tmp/missing-cert.pem",
             .private_key_file = "/tmp/missing-key.pem",
         };
-        const auto status = glyphastore::server::validate_tls_config(requested);
-        GLYPHA_REQUIRE(!status.has_value());
-        GLYPHA_REQUIRE(status.error().message.find("without TLS") != std::string::npos);
+        const auto status = glifistore::server::validate_tls_config(requested);
+        GLIFI_REQUIRE(!status.has_value());
+        GLIFI_REQUIRE(status.error().message.find("without TLS") != std::string::npos);
     }
 }
 
-#if defined(GLYPHASTORE_HAS_TLS) && GLYPHASTORE_HAS_TLS
+#if defined(GLIFISTORE_HAS_TLS) && GLIFISTORE_HAS_TLS
 
-GLYPHA_TEST("tls server accepts handshake and serves protocol ping") {
+GLIFI_TEST("tls server accepts handshake and serves protocol ping") {
     TemporaryDirectory directory;
     if (!write_self_signed_material(directory.path())) {
         // OpenSSL CLI unavailable in the environment; skip without failing the suite.
         return;
     }
 
-    glyphastore::server::ReactorConfig config{
+    glifistore::server::ReactorConfig config{
         .port = 0,
         .worker_count = 1,
         .tls =
@@ -186,11 +186,11 @@ GLYPHA_TEST("tls server accepts handshake and serves protocol ping") {
                 .private_key_file = directory.path() / "server.key",
             },
     };
-    auto server = glyphastore::server::Server::create(config);
-    GLYPHA_REQUIRE(server.has_value());
-    GLYPHA_REQUIRE((*server)->start().has_value());
+    auto server = glifistore::server::Server::create(config);
+    GLIFI_REQUIRE(server.has_value());
+    GLIFI_REQUIRE((*server)->start().has_value());
     const auto port = (*server)->port();
-    GLYPHA_REQUIRE(port != 0);
+    GLIFI_REQUIRE(port != 0);
 
     SSL_library_init();
     OpenSSL_add_all_algorithms();
@@ -200,47 +200,47 @@ GLYPHA_TEST("tls server accepts handshake and serves protocol ping") {
 #else
     auto* ctx = SSL_CTX_new(SSLv23_client_method());
 #endif
-    GLYPHA_REQUIRE(ctx != nullptr);
+    GLIFI_REQUIRE(ctx != nullptr);
 #if defined(TLS1_3_VERSION)
-    GLYPHA_REQUIRE(SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION) == 1);
+    GLIFI_REQUIRE(SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION) == 1);
 #endif
     SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, nullptr);
 
     const auto fd = ::socket(AF_INET, SOCK_STREAM, 0);
-    GLYPHA_REQUIRE(fd >= 0);
+    GLIFI_REQUIRE(fd >= 0);
     timeval timeout{.tv_sec = 2, .tv_usec = 0};
     static_cast<void>(::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
     sockaddr_in endpoint{};
     endpoint.sin_family = AF_INET;
     endpoint.sin_port = htons(port);
     static_cast<void>(::inet_pton(AF_INET, "127.0.0.1", &endpoint.sin_addr));
-    GLYPHA_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
+    GLIFI_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
 
     auto* ssl = SSL_new(ctx);
-    GLYPHA_REQUIRE(ssl != nullptr);
-    GLYPHA_REQUIRE(SSL_set_fd(ssl, fd) == 1);
-    GLYPHA_REQUIRE(SSL_connect(ssl) == 1);
+    GLIFI_REQUIRE(ssl != nullptr);
+    GLIFI_REQUIRE(SSL_set_fd(ssl, fd) == 1);
+    GLIFI_REQUIRE(SSL_connect(ssl) == 1);
 
-    const auto ping = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::ping,
+    const auto ping = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::ping,
         .request_id = 42,
     });
-    GLYPHA_REQUIRE(ping.has_value());
-    GLYPHA_REQUIRE(send_all_ssl(ssl, *ping));
+    GLIFI_REQUIRE(ping.has_value());
+    GLIFI_REQUIRE(send_all_ssl(ssl, *ping));
     const auto frame = receive_response_ssl(ssl);
-    const auto decoded = glyphastore::server::decode_response(frame);
-    GLYPHA_REQUIRE(decoded.has_value());
-    GLYPHA_REQUIRE(decoded->frame.status == glyphastore::server::ResponseStatus::ok);
-    GLYPHA_REQUIRE(decoded->frame.request_id == 42);
+    const auto decoded = glifistore::server::decode_response(frame);
+    GLIFI_REQUIRE(decoded.has_value());
+    GLIFI_REQUIRE(decoded->frame.status == glifistore::server::ResponseStatus::ok);
+    GLIFI_REQUIRE(decoded->frame.request_id == 42);
 
     SSL_free(ssl);
     static_cast<void>(::close(fd));
     SSL_CTX_free(ctx);
     (*server)->request_stop();
-    GLYPHA_REQUIRE((*server)->join().has_value());
+    GLIFI_REQUIRE((*server)->join().has_value());
 }
 
-GLYPHA_TEST("tls post-accept drain serves coalesced INIT without a second client kick") {
+GLIFI_TEST("tls post-accept drain serves coalesced INIT without a second client kick") {
     // After SSL_accept, INIT bytes may already sit in OpenSSL with no fresh ET
     // readable edge. adopt_connection must SSL_read once or bootstrap hangs.
     TemporaryDirectory directory;
@@ -248,7 +248,7 @@ GLYPHA_TEST("tls post-accept drain serves coalesced INIT without a second client
         return;
     }
 
-    glyphastore::server::ReactorConfig config{
+    glifistore::server::ReactorConfig config{
         .port = 0,
         .worker_count = 1,
         .tls =
@@ -257,11 +257,11 @@ GLYPHA_TEST("tls post-accept drain serves coalesced INIT without a second client
                 .private_key_file = directory.path() / "server.key",
             },
     };
-    auto server = glyphastore::server::Server::create(config);
-    GLYPHA_REQUIRE(server.has_value());
-    GLYPHA_REQUIRE((*server)->start().has_value());
+    auto server = glifistore::server::Server::create(config);
+    GLIFI_REQUIRE(server.has_value());
+    GLIFI_REQUIRE((*server)->start().has_value());
     const auto port = (*server)->port();
-    GLYPHA_REQUIRE(port != 0);
+    GLIFI_REQUIRE(port != 0);
 
     SSL_library_init();
     OpenSSL_add_all_algorithms();
@@ -271,51 +271,51 @@ GLYPHA_TEST("tls post-accept drain serves coalesced INIT without a second client
 #else
     auto* ctx = SSL_CTX_new(SSLv23_client_method());
 #endif
-    GLYPHA_REQUIRE(ctx != nullptr);
+    GLIFI_REQUIRE(ctx != nullptr);
 #if defined(TLS1_3_VERSION)
-    GLYPHA_REQUIRE(SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION) == 1);
+    GLIFI_REQUIRE(SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION) == 1);
 #endif
     SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, nullptr);
 
     const auto fd = ::socket(AF_INET, SOCK_STREAM, 0);
-    GLYPHA_REQUIRE(fd >= 0);
+    GLIFI_REQUIRE(fd >= 0);
     timeval timeout{.tv_sec = 2, .tv_usec = 0};
     static_cast<void>(::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
     sockaddr_in endpoint{};
     endpoint.sin_family = AF_INET;
     endpoint.sin_port = htons(port);
     static_cast<void>(::inet_pton(AF_INET, "127.0.0.1", &endpoint.sin_addr));
-    GLYPHA_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
+    GLIFI_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
 
     auto* ssl = SSL_new(ctx);
-    GLYPHA_REQUIRE(ssl != nullptr);
-    GLYPHA_REQUIRE(SSL_set_fd(ssl, fd) == 1);
+    GLIFI_REQUIRE(ssl != nullptr);
+    GLIFI_REQUIRE(SSL_set_fd(ssl, fd) == 1);
 
-    const auto init = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::init,
+    const auto init = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::init,
         .request_id = 1,
     });
-    GLYPHA_REQUIRE(init.has_value());
+    GLIFI_REQUIRE(init.has_value());
 
     // Drive handshake then immediately push INIT (and often the same flight as
     // the client Finished under TLS 1.3). Do not write a second kick afterward.
-    GLYPHA_REQUIRE(SSL_connect(ssl) == 1);
-    GLYPHA_REQUIRE(send_all_ssl(ssl, *init));
+    GLIFI_REQUIRE(SSL_connect(ssl) == 1);
+    GLIFI_REQUIRE(send_all_ssl(ssl, *init));
 
     const auto frame = receive_response_ssl(ssl);
-    const auto decoded = glyphastore::server::decode_response(frame);
-    GLYPHA_REQUIRE(decoded.has_value());
-    GLYPHA_REQUIRE(decoded->frame.request_id == 1);
-    GLYPHA_REQUIRE(decoded->frame.status == glyphastore::server::ResponseStatus::ok);
+    const auto decoded = glifistore::server::decode_response(frame);
+    GLIFI_REQUIRE(decoded.has_value());
+    GLIFI_REQUIRE(decoded->frame.request_id == 1);
+    GLIFI_REQUIRE(decoded->frame.status == glifistore::server::ResponseStatus::ok);
 
     SSL_free(ssl);
     static_cast<void>(::close(fd));
     SSL_CTX_free(ctx);
     (*server)->request_stop();
-    GLYPHA_REQUIRE((*server)->join().has_value());
+    GLIFI_REQUIRE((*server)->join().has_value());
 }
 
-GLYPHA_TEST("tls WANT_READ during response flush still delivers PUT OK") {
+GLIFI_TEST("tls WANT_READ during response flush still delivers PUT OK") {
     // Injected SSL_write WANT_READ must not leave a committed ACK stranded on an
     // edge-triggered poller (especially if write-only interest was armed).
     TemporaryDirectory directory;
@@ -323,7 +323,7 @@ GLYPHA_TEST("tls WANT_READ during response flush still delivers PUT OK") {
         return;
     }
 
-    glyphastore::server::ReactorConfig config{
+    glifistore::server::ReactorConfig config{
         .port = 0,
         .worker_count = 1,
         .tls =
@@ -332,11 +332,11 @@ GLYPHA_TEST("tls WANT_READ during response flush still delivers PUT OK") {
                 .private_key_file = directory.path() / "server.key",
             },
     };
-    auto server = glyphastore::server::Server::create(config);
-    GLYPHA_REQUIRE(server.has_value());
-    GLYPHA_REQUIRE((*server)->start().has_value());
+    auto server = glifistore::server::Server::create(config);
+    GLIFI_REQUIRE(server.has_value());
+    GLIFI_REQUIRE((*server)->start().has_value());
     const auto port = (*server)->port();
-    GLYPHA_REQUIRE(port != 0);
+    GLIFI_REQUIRE(port != 0);
 
     SSL_library_init();
     OpenSSL_add_all_algorithms();
@@ -346,82 +346,82 @@ GLYPHA_TEST("tls WANT_READ during response flush still delivers PUT OK") {
 #else
     auto* ctx = SSL_CTX_new(SSLv23_client_method());
 #endif
-    GLYPHA_REQUIRE(ctx != nullptr);
+    GLIFI_REQUIRE(ctx != nullptr);
 #if defined(TLS1_3_VERSION)
-    GLYPHA_REQUIRE(SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION) == 1);
+    GLIFI_REQUIRE(SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION) == 1);
 #endif
     SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, nullptr);
 
     const auto fd = ::socket(AF_INET, SOCK_STREAM, 0);
-    GLYPHA_REQUIRE(fd >= 0);
+    GLIFI_REQUIRE(fd >= 0);
     timeval timeout{.tv_sec = 2, .tv_usec = 0};
     static_cast<void>(::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
     sockaddr_in endpoint{};
     endpoint.sin_family = AF_INET;
     endpoint.sin_port = htons(port);
     static_cast<void>(::inet_pton(AF_INET, "127.0.0.1", &endpoint.sin_addr));
-    GLYPHA_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
+    GLIFI_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
 
     auto* ssl = SSL_new(ctx);
-    GLYPHA_REQUIRE(ssl != nullptr);
-    GLYPHA_REQUIRE(SSL_set_fd(ssl, fd) == 1);
-    GLYPHA_REQUIRE(SSL_connect(ssl) == 1);
+    GLIFI_REQUIRE(ssl != nullptr);
+    GLIFI_REQUIRE(SSL_set_fd(ssl, fd) == 1);
+    GLIFI_REQUIRE(SSL_connect(ssl) == 1);
 
-    const auto init = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::init,
+    const auto init = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::init,
         .request_id = 1,
     });
-    GLYPHA_REQUIRE(init.has_value());
-    GLYPHA_REQUIRE(send_all_ssl(ssl, *init));
+    GLIFI_REQUIRE(init.has_value());
+    GLIFI_REQUIRE(send_all_ssl(ssl, *init));
     const auto init_frame = receive_response_ssl(ssl);
-    const auto init_decoded = glyphastore::server::decode_response(init_frame);
-    GLYPHA_REQUIRE(init_decoded.has_value());
-    GLYPHA_REQUIRE(init_decoded->frame.status == glyphastore::server::ResponseStatus::ok);
+    const auto init_decoded = glifistore::server::decode_response(init_frame);
+    GLIFI_REQUIRE(init_decoded.has_value());
+    GLIFI_REQUIRE(init_decoded->frame.status == glifistore::server::ResponseStatus::ok);
 
-    const auto bind = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::bind_worker,
+    const auto bind = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::bind_worker,
         .request_id = 2,
         .target_worker = 0,
     });
-    GLYPHA_REQUIRE(bind.has_value());
-    GLYPHA_REQUIRE(send_all_ssl(ssl, *bind));
+    GLIFI_REQUIRE(bind.has_value());
+    GLIFI_REQUIRE(send_all_ssl(ssl, *bind));
     const auto bind_frame = receive_response_ssl(ssl);
-    const auto bind_decoded = glyphastore::server::decode_response(bind_frame);
-    GLYPHA_REQUIRE(bind_decoded.has_value());
-    GLYPHA_REQUIRE(bind_decoded->frame.status == glyphastore::server::ResponseStatus::ok);
+    const auto bind_decoded = glifistore::server::decode_response(bind_frame);
+    GLIFI_REQUIRE(bind_decoded.has_value());
+    GLIFI_REQUIRE(bind_decoded->frame.status == glifistore::server::ResponseStatus::ok);
 
-    glyphastore::fault::reset();
-    glyphastore::fault::fail_once(glyphastore::fault::Site::tls_write_want_read);
+    glifistore::fault::reset();
+    glifistore::fault::fail_once(glifistore::fault::Site::tls_write_want_read);
     const std::string_view key = "tls-want-read-key";
     const std::string_view value = "tls-want-read-value";
-    const auto put = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::put,
+    const auto put = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::put,
         .request_id = 3,
         .key = {reinterpret_cast<const std::byte*>(key.data()), key.size()},
         .value = {reinterpret_cast<const std::byte*>(value.data()), value.size()},
     });
-    GLYPHA_REQUIRE(put.has_value());
-    GLYPHA_REQUIRE(send_all_ssl(ssl, *put));
+    GLIFI_REQUIRE(put.has_value());
+    GLIFI_REQUIRE(send_all_ssl(ssl, *put));
 
     const auto put_frame = receive_response_ssl(ssl);
-    glyphastore::fault::reset();
-    const auto put_decoded = glyphastore::server::decode_response(put_frame);
-    GLYPHA_REQUIRE(put_decoded.has_value());
-    GLYPHA_REQUIRE(put_decoded->frame.request_id == 3);
-    GLYPHA_REQUIRE(put_decoded->frame.status == glyphastore::server::ResponseStatus::ok);
+    glifistore::fault::reset();
+    const auto put_decoded = glifistore::server::decode_response(put_frame);
+    GLIFI_REQUIRE(put_decoded.has_value());
+    GLIFI_REQUIRE(put_decoded->frame.request_id == 3);
+    GLIFI_REQUIRE(put_decoded->frame.status == glifistore::server::ResponseStatus::ok);
 
     // Half-close after ACK: confirms the connection survived WANT_READ without
     // write-only arming that would strand a later flush.
-    GLYPHA_REQUIRE(::shutdown(fd, SHUT_WR) == 0);
+    GLIFI_REQUIRE(::shutdown(fd, SHUT_WR) == 0);
 
     SSL_free(ssl);
     static_cast<void>(::close(fd));
     SSL_CTX_free(ctx);
     (*server)->request_stop();
-    GLYPHA_REQUIRE((*server)->join().has_value());
+    GLIFI_REQUIRE((*server)->join().has_value());
 }
 
-GLYPHA_TEST("tls WANT_WRITE during response flush still delivers PUT OK") {
+GLIFI_TEST("tls WANT_WRITE during response flush still delivers PUT OK") {
     // Injected SSL_write WANT_WRITE must not leave a committed ACK stranded on an
     // edge-triggered poller (especially if write interest was not re-armed).
     TemporaryDirectory directory;
@@ -429,7 +429,7 @@ GLYPHA_TEST("tls WANT_WRITE during response flush still delivers PUT OK") {
         return;
     }
 
-    glyphastore::server::ReactorConfig config{
+    glifistore::server::ReactorConfig config{
         .port = 0,
         .worker_count = 1,
         .tls =
@@ -438,11 +438,11 @@ GLYPHA_TEST("tls WANT_WRITE during response flush still delivers PUT OK") {
                 .private_key_file = directory.path() / "server.key",
             },
     };
-    auto server = glyphastore::server::Server::create(config);
-    GLYPHA_REQUIRE(server.has_value());
-    GLYPHA_REQUIRE((*server)->start().has_value());
+    auto server = glifistore::server::Server::create(config);
+    GLIFI_REQUIRE(server.has_value());
+    GLIFI_REQUIRE((*server)->start().has_value());
     const auto port = (*server)->port();
-    GLYPHA_REQUIRE(port != 0);
+    GLIFI_REQUIRE(port != 0);
 
     SSL_library_init();
     OpenSSL_add_all_algorithms();
@@ -452,101 +452,101 @@ GLYPHA_TEST("tls WANT_WRITE during response flush still delivers PUT OK") {
 #else
     auto* ctx = SSL_CTX_new(SSLv23_client_method());
 #endif
-    GLYPHA_REQUIRE(ctx != nullptr);
+    GLIFI_REQUIRE(ctx != nullptr);
 #if defined(TLS1_3_VERSION)
-    GLYPHA_REQUIRE(SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION) == 1);
+    GLIFI_REQUIRE(SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION) == 1);
 #endif
     SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, nullptr);
 
     const auto fd = ::socket(AF_INET, SOCK_STREAM, 0);
-    GLYPHA_REQUIRE(fd >= 0);
+    GLIFI_REQUIRE(fd >= 0);
     timeval timeout{.tv_sec = 2, .tv_usec = 0};
     static_cast<void>(::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
     sockaddr_in endpoint{};
     endpoint.sin_family = AF_INET;
     endpoint.sin_port = htons(port);
     static_cast<void>(::inet_pton(AF_INET, "127.0.0.1", &endpoint.sin_addr));
-    GLYPHA_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
+    GLIFI_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
 
     auto* ssl = SSL_new(ctx);
-    GLYPHA_REQUIRE(ssl != nullptr);
-    GLYPHA_REQUIRE(SSL_set_fd(ssl, fd) == 1);
-    GLYPHA_REQUIRE(SSL_connect(ssl) == 1);
+    GLIFI_REQUIRE(ssl != nullptr);
+    GLIFI_REQUIRE(SSL_set_fd(ssl, fd) == 1);
+    GLIFI_REQUIRE(SSL_connect(ssl) == 1);
 
-    const auto init = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::init,
+    const auto init = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::init,
         .request_id = 1,
     });
-    GLYPHA_REQUIRE(init.has_value());
-    GLYPHA_REQUIRE(send_all_ssl(ssl, *init));
+    GLIFI_REQUIRE(init.has_value());
+    GLIFI_REQUIRE(send_all_ssl(ssl, *init));
     const auto init_frame = receive_response_ssl(ssl);
-    const auto init_decoded = glyphastore::server::decode_response(init_frame);
-    GLYPHA_REQUIRE(init_decoded.has_value());
-    GLYPHA_REQUIRE(init_decoded->frame.status == glyphastore::server::ResponseStatus::ok);
+    const auto init_decoded = glifistore::server::decode_response(init_frame);
+    GLIFI_REQUIRE(init_decoded.has_value());
+    GLIFI_REQUIRE(init_decoded->frame.status == glifistore::server::ResponseStatus::ok);
 
-    const auto bind = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::bind_worker,
+    const auto bind = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::bind_worker,
         .request_id = 2,
         .target_worker = 0,
     });
-    GLYPHA_REQUIRE(bind.has_value());
-    GLYPHA_REQUIRE(send_all_ssl(ssl, *bind));
+    GLIFI_REQUIRE(bind.has_value());
+    GLIFI_REQUIRE(send_all_ssl(ssl, *bind));
     const auto bind_frame = receive_response_ssl(ssl);
-    const auto bind_decoded = glyphastore::server::decode_response(bind_frame);
-    GLYPHA_REQUIRE(bind_decoded.has_value());
-    GLYPHA_REQUIRE(bind_decoded->frame.status == glyphastore::server::ResponseStatus::ok);
+    const auto bind_decoded = glifistore::server::decode_response(bind_frame);
+    GLIFI_REQUIRE(bind_decoded.has_value());
+    GLIFI_REQUIRE(bind_decoded->frame.status == glifistore::server::ResponseStatus::ok);
 
-    glyphastore::fault::reset();
-    glyphastore::fault::fail_once(glyphastore::fault::Site::tls_write_want_write);
+    glifistore::fault::reset();
+    glifistore::fault::fail_once(glifistore::fault::Site::tls_write_want_write);
     const std::string_view key = "tls-want-write-key";
     const std::string_view value = "tls-want-write-value";
-    const auto put = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::put,
+    const auto put = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::put,
         .request_id = 3,
         .key = {reinterpret_cast<const std::byte*>(key.data()), key.size()},
         .value = {reinterpret_cast<const std::byte*>(value.data()), value.size()},
     });
-    GLYPHA_REQUIRE(put.has_value());
-    GLYPHA_REQUIRE(send_all_ssl(ssl, *put));
+    GLIFI_REQUIRE(put.has_value());
+    GLIFI_REQUIRE(send_all_ssl(ssl, *put));
 
     const auto put_frame = receive_response_ssl(ssl);
-    glyphastore::fault::reset();
-    const auto put_decoded = glyphastore::server::decode_response(put_frame);
-    GLYPHA_REQUIRE(put_decoded.has_value());
-    GLYPHA_REQUIRE(put_decoded->frame.request_id == 3);
-    GLYPHA_REQUIRE(put_decoded->frame.status == glyphastore::server::ResponseStatus::ok);
+    glifistore::fault::reset();
+    const auto put_decoded = glifistore::server::decode_response(put_frame);
+    GLIFI_REQUIRE(put_decoded.has_value());
+    GLIFI_REQUIRE(put_decoded->frame.request_id == 3);
+    GLIFI_REQUIRE(put_decoded->frame.status == glifistore::server::ResponseStatus::ok);
 
     // Half-close after ACK: confirms the connection survived WANT_WRITE without
     // stranding a later flush.
-    GLYPHA_REQUIRE(::shutdown(fd, SHUT_WR) == 0);
+    GLIFI_REQUIRE(::shutdown(fd, SHUT_WR) == 0);
 
     SSL_free(ssl);
     static_cast<void>(::close(fd));
     SSL_CTX_free(ctx);
     (*server)->request_stop();
-    GLYPHA_REQUIRE((*server)->join().has_value());
+    GLIFI_REQUIRE((*server)->join().has_value());
 }
 
-GLYPHA_TEST("tls server create rejects missing certificate files") {
-    glyphastore::server::ReactorConfig config{
+GLIFI_TEST("tls server create rejects missing certificate files") {
+    glifistore::server::ReactorConfig config{
         .port = 0,
         .tls =
             {
-                .certificate_file = "/tmp/glyphastore-missing-cert.pem",
-                .private_key_file = "/tmp/glyphastore-missing-key.pem",
+                .certificate_file = "/tmp/glifistore-missing-cert.pem",
+                .private_key_file = "/tmp/glifistore-missing-key.pem",
             },
     };
-    const auto server = glyphastore::server::Server::create(config);
-    GLYPHA_REQUIRE(!server.has_value());
+    const auto server = glifistore::server::Server::create(config);
+    GLIFI_REQUIRE(!server.has_value());
 }
 
-GLYPHA_TEST("dual cleartext and TLS listeners serve protocol independently") {
+GLIFI_TEST("dual cleartext and TLS listeners serve protocol independently") {
     TemporaryDirectory directory;
     if (!write_self_signed_material(directory.path())) {
         return;
     }
 
-    glyphastore::server::ReactorConfig config{
+    glifistore::server::ReactorConfig config{
         .port = 0,
         .worker_count = 1,
         .tls_port = 0,
@@ -556,46 +556,46 @@ GLYPHA_TEST("dual cleartext and TLS listeners serve protocol independently") {
                 .private_key_file = directory.path() / "server.key",
             },
     };
-    auto server = glyphastore::server::Server::create(config);
-    GLYPHA_REQUIRE(server.has_value());
-    GLYPHA_REQUIRE((*server)->start().has_value());
+    auto server = glifistore::server::Server::create(config);
+    GLIFI_REQUIRE(server.has_value());
+    GLIFI_REQUIRE((*server)->start().has_value());
     const auto cleartext_port = (*server)->cleartext_port();
     const auto tls_port = (*server)->tls_port();
-    GLYPHA_REQUIRE(cleartext_port != 0);
-    GLYPHA_REQUIRE(tls_port != 0);
-    GLYPHA_REQUIRE(cleartext_port != tls_port);
-    GLYPHA_REQUIRE((*server)->port() == cleartext_port);
+    GLIFI_REQUIRE(cleartext_port != 0);
+    GLIFI_REQUIRE(tls_port != 0);
+    GLIFI_REQUIRE(cleartext_port != tls_port);
+    GLIFI_REQUIRE((*server)->port() == cleartext_port);
 
     // Cleartext PING on --port.
     {
         const auto fd = ::socket(AF_INET, SOCK_STREAM, 0);
-        GLYPHA_REQUIRE(fd >= 0);
+        GLIFI_REQUIRE(fd >= 0);
         timeval timeout{.tv_sec = 2, .tv_usec = 0};
         static_cast<void>(::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
         sockaddr_in endpoint{};
         endpoint.sin_family = AF_INET;
         endpoint.sin_port = htons(cleartext_port);
         static_cast<void>(::inet_pton(AF_INET, "127.0.0.1", &endpoint.sin_addr));
-        GLYPHA_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
+        GLIFI_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
 
-        const auto ping = glyphastore::server::encode_request({
-            .opcode = glyphastore::server::RequestOpcode::ping,
+        const auto ping = glifistore::server::encode_request({
+            .opcode = glifistore::server::RequestOpcode::ping,
             .request_id = 7,
         });
-        GLYPHA_REQUIRE(ping.has_value());
+        GLIFI_REQUIRE(ping.has_value());
         std::size_t sent = 0;
         while (sent < ping->size()) {
             const auto written =
                 ::send(fd, ping->data() + static_cast<std::ptrdiff_t>(sent), ping->size() - sent, 0);
-            GLYPHA_REQUIRE(written > 0);
+            GLIFI_REQUIRE(written > 0);
             sent += static_cast<std::size_t>(written);
         }
-        std::array<std::byte, glyphastore::server::kResponseHeaderBytes> header{};
+        std::array<std::byte, glifistore::server::kResponseHeaderBytes> header{};
         std::size_t received = 0;
         while (received < header.size()) {
             const auto count = ::recv(fd, header.data() + static_cast<std::ptrdiff_t>(received),
                                       header.size() - received, 0);
-            GLYPHA_REQUIRE(count > 0);
+            GLIFI_REQUIRE(count > 0);
             received += static_cast<std::size_t>(count);
         }
         std::uint32_t frame_size = 0;
@@ -609,13 +609,13 @@ GLYPHA_TEST("dual cleartext and TLS listeners serve protocol independently") {
         while (received < frame.size()) {
             const auto count =
                 ::recv(fd, frame.data() + static_cast<std::ptrdiff_t>(received), frame.size() - received, 0);
-            GLYPHA_REQUIRE(count > 0);
+            GLIFI_REQUIRE(count > 0);
             received += static_cast<std::size_t>(count);
         }
-        const auto decoded = glyphastore::server::decode_response(frame);
-        GLYPHA_REQUIRE(decoded.has_value());
-        GLYPHA_REQUIRE(decoded->frame.status == glyphastore::server::ResponseStatus::ok);
-        GLYPHA_REQUIRE(decoded->frame.request_id == 7);
+        const auto decoded = glifistore::server::decode_response(frame);
+        GLIFI_REQUIRE(decoded.has_value());
+        GLIFI_REQUIRE(decoded->frame.status == glifistore::server::ResponseStatus::ok);
+        GLIFI_REQUIRE(decoded->frame.request_id == 7);
         static_cast<void>(::close(fd));
     }
 
@@ -628,47 +628,47 @@ GLYPHA_TEST("dual cleartext and TLS listeners serve protocol independently") {
 #else
     auto* ctx = SSL_CTX_new(SSLv23_client_method());
 #endif
-    GLYPHA_REQUIRE(ctx != nullptr);
+    GLIFI_REQUIRE(ctx != nullptr);
 #if defined(TLS1_3_VERSION)
-    GLYPHA_REQUIRE(SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION) == 1);
+    GLIFI_REQUIRE(SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION) == 1);
 #endif
     SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, nullptr);
 
     const auto fd = ::socket(AF_INET, SOCK_STREAM, 0);
-    GLYPHA_REQUIRE(fd >= 0);
+    GLIFI_REQUIRE(fd >= 0);
     timeval timeout{.tv_sec = 2, .tv_usec = 0};
     static_cast<void>(::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
     sockaddr_in endpoint{};
     endpoint.sin_family = AF_INET;
     endpoint.sin_port = htons(tls_port);
     static_cast<void>(::inet_pton(AF_INET, "127.0.0.1", &endpoint.sin_addr));
-    GLYPHA_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
+    GLIFI_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
 
     auto* ssl = SSL_new(ctx);
-    GLYPHA_REQUIRE(ssl != nullptr);
-    GLYPHA_REQUIRE(SSL_set_fd(ssl, fd) == 1);
-    GLYPHA_REQUIRE(SSL_connect(ssl) == 1);
+    GLIFI_REQUIRE(ssl != nullptr);
+    GLIFI_REQUIRE(SSL_set_fd(ssl, fd) == 1);
+    GLIFI_REQUIRE(SSL_connect(ssl) == 1);
 
-    const auto ping = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::ping,
+    const auto ping = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::ping,
         .request_id = 8,
     });
-    GLYPHA_REQUIRE(ping.has_value());
-    GLYPHA_REQUIRE(send_all_ssl(ssl, *ping));
+    GLIFI_REQUIRE(ping.has_value());
+    GLIFI_REQUIRE(send_all_ssl(ssl, *ping));
     const auto frame = receive_response_ssl(ssl);
-    const auto decoded = glyphastore::server::decode_response(frame);
-    GLYPHA_REQUIRE(decoded.has_value());
-    GLYPHA_REQUIRE(decoded->frame.status == glyphastore::server::ResponseStatus::ok);
-    GLYPHA_REQUIRE(decoded->frame.request_id == 8);
+    const auto decoded = glifistore::server::decode_response(frame);
+    GLIFI_REQUIRE(decoded.has_value());
+    GLIFI_REQUIRE(decoded->frame.status == glifistore::server::ResponseStatus::ok);
+    GLIFI_REQUIRE(decoded->frame.request_id == 8);
 
     SSL_free(ssl);
     static_cast<void>(::close(fd));
     SSL_CTX_free(ctx);
     (*server)->request_stop();
-    GLYPHA_REQUIRE((*server)->join().has_value());
+    GLIFI_REQUIRE((*server)->join().has_value());
 }
 
-GLYPHA_TEST("tls CRL config fails closed without mTLS and rejects empty CRL") {
+GLIFI_TEST("tls CRL config fails closed without mTLS and rejects empty CRL") {
     TemporaryDirectory directory;
     if (!write_self_signed_material(directory.path())) {
         return;
@@ -679,40 +679,40 @@ GLYPHA_TEST("tls CRL config fails closed without mTLS and rejects empty CRL") {
         out << "not-a-pem-crl\n";
     }
 
-    glyphastore::server::TlsConfig missing_ca{
+    glifistore::server::TlsConfig missing_ca{
         .certificate_file = directory.path() / "server.crt",
         .private_key_file = directory.path() / "server.key",
         .crl_file = crl_path,
     };
-    const auto need_ca = glyphastore::server::validate_tls_config(missing_ca);
-    GLYPHA_REQUIRE(!need_ca.has_value());
-    GLYPHA_REQUIRE(need_ca.error().message.find("tls-client-ca") != std::string::npos);
+    const auto need_ca = glifistore::server::validate_tls_config(missing_ca);
+    GLIFI_REQUIRE(!need_ca.has_value());
+    GLIFI_REQUIRE(need_ca.error().message.find("tls-client-ca") != std::string::npos);
 
-    glyphastore::server::TlsConfig ocsp_only{
+    glifistore::server::TlsConfig ocsp_only{
         .certificate_file = directory.path() / "server.crt",
         .private_key_file = directory.path() / "server.key",
         .client_ca_file = directory.path() / "server.crt",
         .ocsp_fail_closed = true,
     };
-    const auto need_crl = glyphastore::server::validate_tls_config(ocsp_only);
-    GLYPHA_REQUIRE(!need_crl.has_value());
-    GLYPHA_REQUIRE(need_crl.error().message.find("tls-crl") != std::string::npos);
+    const auto need_crl = glifistore::server::validate_tls_config(ocsp_only);
+    GLIFI_REQUIRE(!need_crl.has_value());
+    GLIFI_REQUIRE(need_crl.error().message.find("tls-crl") != std::string::npos);
 
-    glyphastore::server::TlsConfig with_bad_crl{
+    glifistore::server::TlsConfig with_bad_crl{
         .certificate_file = directory.path() / "server.crt",
         .private_key_file = directory.path() / "server.key",
         .client_ca_file = directory.path() / "server.crt",
         .crl_file = crl_path,
         .ocsp_fail_closed = true,
     };
-    const auto valid_paths = glyphastore::server::validate_tls_config(with_bad_crl);
-    GLYPHA_REQUIRE(valid_paths.has_value());
-    const auto created = glyphastore::server::TlsContext::create(with_bad_crl);
-    GLYPHA_REQUIRE(!created.has_value());
-    GLYPHA_REQUIRE(created.error().message.find("CRL") != std::string::npos);
+    const auto valid_paths = glifistore::server::validate_tls_config(with_bad_crl);
+    GLIFI_REQUIRE(valid_paths.has_value());
+    const auto created = glifistore::server::TlsContext::create(with_bad_crl);
+    GLIFI_REQUIRE(!created.has_value());
+    GLIFI_REQUIRE(created.error().message.find("CRL") != std::string::npos);
 }
 
-GLYPHA_TEST("tls CRL rejects revoked mTLS client certificate") {
+GLIFI_TEST("tls CRL rejects revoked mTLS client certificate") {
     TemporaryDirectory directory;
     const auto root = directory.path();
     const auto ca_key = root / "ca.key";
@@ -763,7 +763,7 @@ GLYPHA_TEST("tls CRL rejects revoked mTLS client certificate") {
 
     const auto run = [](const std::string& command) -> bool { return std::system(command.c_str()) == 0; };
     if (!run("openssl req -x509 -newkey rsa:2048 -nodes -keyout '" + ca_key.string() + "' -out '" +
-             ca_crt.string() + "' -days 1 -subj '/CN=glyphastore-test-ca' >/dev/null 2>&1")) {
+             ca_crt.string() + "' -days 1 -subj '/CN=glifistore-test-ca' >/dev/null 2>&1")) {
         return;
     }
     if (!run("openssl req -newkey rsa:2048 -nodes -keyout '" + server_key.string() + "' -out '" +
@@ -793,7 +793,7 @@ GLYPHA_TEST("tls CRL rejects revoked mTLS client certificate") {
         return;
     }
 
-    glyphastore::server::ReactorConfig config{
+    glifistore::server::ReactorConfig config{
         .port = 0,
         .worker_count = 1,
         .tls =
@@ -806,11 +806,11 @@ GLYPHA_TEST("tls CRL rejects revoked mTLS client certificate") {
             },
         .security_audit_events = true,
     };
-    auto server = glyphastore::server::Server::create(config);
-    GLYPHA_REQUIRE(server.has_value());
-    GLYPHA_REQUIRE((*server)->start().has_value());
+    auto server = glifistore::server::Server::create(config);
+    GLIFI_REQUIRE(server.has_value());
+    GLIFI_REQUIRE((*server)->start().has_value());
     const auto port = (*server)->port();
-    GLYPHA_REQUIRE(port != 0);
+    GLIFI_REQUIRE(port != 0);
 
     SSL_library_init();
     OpenSSL_add_all_algorithms();
@@ -820,40 +820,40 @@ GLYPHA_TEST("tls CRL rejects revoked mTLS client certificate") {
 #else
     auto* ctx = SSL_CTX_new(SSLv23_client_method());
 #endif
-    GLYPHA_REQUIRE(ctx != nullptr);
+    GLIFI_REQUIRE(ctx != nullptr);
 #if defined(TLS1_3_VERSION)
-    GLYPHA_REQUIRE(SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION) == 1);
+    GLIFI_REQUIRE(SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION) == 1);
 #endif
     SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, nullptr);
-    GLYPHA_REQUIRE(SSL_CTX_use_certificate_file(ctx, client_crt.string().c_str(), SSL_FILETYPE_PEM) == 1);
-    GLYPHA_REQUIRE(SSL_CTX_use_PrivateKey_file(ctx, client_key.string().c_str(), SSL_FILETYPE_PEM) == 1);
+    GLIFI_REQUIRE(SSL_CTX_use_certificate_file(ctx, client_crt.string().c_str(), SSL_FILETYPE_PEM) == 1);
+    GLIFI_REQUIRE(SSL_CTX_use_PrivateKey_file(ctx, client_key.string().c_str(), SSL_FILETYPE_PEM) == 1);
 
     const auto fd = ::socket(AF_INET, SOCK_STREAM, 0);
-    GLYPHA_REQUIRE(fd >= 0);
+    GLIFI_REQUIRE(fd >= 0);
     timeval timeout{.tv_sec = 2, .tv_usec = 0};
     static_cast<void>(::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
     sockaddr_in endpoint{};
     endpoint.sin_family = AF_INET;
     endpoint.sin_port = htons(port);
     static_cast<void>(::inet_pton(AF_INET, "127.0.0.1", &endpoint.sin_addr));
-    GLYPHA_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
+    GLIFI_REQUIRE(::connect(fd, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
 
     auto* ssl = SSL_new(ctx);
-    GLYPHA_REQUIRE(ssl != nullptr);
-    GLYPHA_REQUIRE(SSL_set_fd(ssl, fd) == 1);
+    GLIFI_REQUIRE(ssl != nullptr);
+    GLIFI_REQUIRE(SSL_set_fd(ssl, fd) == 1);
     const auto connected = SSL_connect(ssl);
     // Server fail-closes revoked peers; the client handshake may fail or the
     // first read/write may fail depending on TLS stack timing.
     if (connected == 1) {
-        const auto ping = glyphastore::server::encode_request({
-            .opcode = glyphastore::server::RequestOpcode::ping,
+        const auto ping = glifistore::server::encode_request({
+            .opcode = glifistore::server::RequestOpcode::ping,
             .request_id = 99,
         });
-        GLYPHA_REQUIRE(ping.has_value());
+        GLIFI_REQUIRE(ping.has_value());
         const auto sent = send_all_ssl(ssl, *ping);
         if (sent) {
             const auto frame = receive_response_ssl(ssl);
-            GLYPHA_REQUIRE(frame.empty());
+            GLIFI_REQUIRE(frame.empty());
         }
     }
 
@@ -864,13 +864,13 @@ GLYPHA_TEST("tls CRL rejects revoked mTLS client certificate") {
     // Give the acceptor a moment to record the auth deny.
     std::this_thread::sleep_for(std::chrono::milliseconds{50});
     auto stats = (*server)->stats_report();
-    GLYPHA_REQUIRE(stats.has_value());
-    GLYPHA_REQUIRE(stats->find("tls_crl=1") != std::string::npos);
-    GLYPHA_REQUIRE(stats->find("tls_ocsp_fail_closed=1") != std::string::npos);
-    GLYPHA_REQUIRE(stats->find("auth_denies=") != std::string::npos);
+    GLIFI_REQUIRE(stats.has_value());
+    GLIFI_REQUIRE(stats->find("tls_crl=1") != std::string::npos);
+    GLIFI_REQUIRE(stats->find("tls_ocsp_fail_closed=1") != std::string::npos);
+    GLIFI_REQUIRE(stats->find("auth_denies=") != std::string::npos);
 
     (*server)->request_stop();
-    GLYPHA_REQUIRE((*server)->join().has_value());
+    GLIFI_REQUIRE((*server)->join().has_value());
 }
 
 #endif

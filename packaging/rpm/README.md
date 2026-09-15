@@ -1,6 +1,6 @@
 # Fedora / RPM packaging
 
-[`templates/glyphastore.spec.in`](templates/glyphastore.spec.in) is the spec
+[`templates/glifistore.spec.in`](templates/glifistore.spec.in) is the spec
 template. There is no checked-in `.spec`, because `Version`, `Release`, the ABI
 suffix of the library subpackage, the `%changelog` entry and the source archive name
 all come from the release context, which derives the version from `VERSION` plus the
@@ -16,7 +16,7 @@ python3 engineering/tools/render_package_metadata.py \
     --backend rpm --release-context /tmp/release-context.json --output /tmp/rpm-metadata
 ```
 
-It writes `glyphastore.spec`, the systemd unit as `Source1`, a
+It writes `glifistore.spec`, the systemd unit as `Source1`, a
 `rendered-metadata.json` manifest (tokens, layout, per-file sha256) and a
 `layout.env` for the shell steps that run before Python exists in a container. It
 refuses a template containing a literal product version, an unknown `@TOKEN@`, and
@@ -30,13 +30,13 @@ payload check and the spec agree on a system where those macros differ.
 
 | Subpackage | Contents |
 | --- | --- |
-| `glyphastore` | daemon, operator tools, systemd unit, `%config(noreplace) /etc/glyphastore/glyphastored.conf` |
-| `glyphastore-libs` | `libglyphastore.so.<abi-major>` — the ABI-major soname |
-| `glyphastore-devel` | headers, static libraries, the `.so` link, pkg-config and CMake package files |
+| `glifistore` | daemon, operator tools, systemd unit, `%config(noreplace) /etc/glifistore/glifistored.conf` |
+| `glifistore-libs` | `libglifistore.so.<abi-major>` — the ABI-major soname |
+| `glifistore-devel` | headers, static libraries, the `.so` link, pkg-config and CMake package files |
 
 The spec builds with the distribution `%cmake` macros, uses
 `%systemd_post`/`%systemd_preun`/`%systemd_postun_with_restart` for the unit and
-`%ldconfig_scriptlets` for the library, and creates the `glyphastore` system account
+`%ldconfig_scriptlets` for the library, and creates the `glifistore` system account
 in `%pre` from the shared snippet in
 [`../common/service/service-account.sh.in`](../common/service/service-account.sh.in) —
 the same snippet the Debian `postinst` uses.
@@ -48,12 +48,12 @@ the same snippet the Debian `postinst` uses.
 scripts/package-ci.sh --profile main --backend rpm --output-dir build/package-ci
 
 # Full lifecycle inside the digest-pinned image from the package matrix.
-GLYPHASTORE_PACKAGE_CI_CONTAINER=1 \
+GLIFISTORE_PACKAGE_CI_CONTAINER=1 \
     scripts/package-ci.sh --profile main --backend rpm --output-dir build/package-ci
 
 # Full lifecycle on this host. Installs and removes system packages; needs root
 # and a machine you are willing to lose.
-sudo GLYPHASTORE_PACKAGE_CI_NATIVE=1 \
+sudo GLIFISTORE_PACKAGE_CI_NATIVE=1 \
     scripts/package-ci.sh --profile main --backend rpm --output-dir build/package-ci
 ```
 
@@ -77,12 +77,12 @@ then runs
 [`../../engineering/tools/assert_consumer_isolation.py`](../../engineering/tools/assert_consumer_isolation.py)
 over its `compile_commands.json`, logs and the installed `.pc`/`.cmake` files.
 `put-get-erase` and `restart-recovery` speak wire protocol v2 to the **installed**
-`glyphastored`, not to a build-tree binary.
+`glifistored`, not to a build-tree binary.
 
 ## Residuals
 
 `package-upgrade` stays `NOT_APPLICABLE_INITIAL_BASELINE` or `NOT_RUN` until sealed N−1
-packages are supplied via `GLYPHASTORE_N1_PACKAGE_DIR`. The container lifecycle then runs
+packages are supplied via `GLIFISTORE_N1_PACKAGE_DIR`. The container lifecycle then runs
 install→seed→upgrade→verify against those `.rpm` bytes (never rebuilt from HEAD). It is not
 a pass, and it does not promote the backend to `UPGRADE_VERIFIED`.
 

@@ -5,7 +5,7 @@ Applies to: persistence v1 and every storage mode that claims restart durability
 Owner: release and storage maintainers
 Last reviewed: 2026-08-30
 
-This document records what each kind of test can establish and what GlyphaStore has established on
+This document records what each kind of test can establish and what GlifiStore has established on
 each platform/filesystem row. A hosted runner whose filesystem, mount options, cache path, and
 reset mechanism are unknown is useful regression evidence, but it is not storage certification.
 
@@ -114,7 +114,7 @@ the worker instead of using the ordinary E2 `SIGKILL`. The controller independen
 stopped state before faulting or detaching the row; a missing confirmation is `INCONCLUSIVE`. It then
 kills the stopped worker, runs an offline filesystem check without repair (`-n`; APFS is temporarily
 reattached and unmounted for this step), remounts, and evaluates the same recovery oracle as
-`glyphastore_crash_persistence`.
+`glifistore_crash_persistence`.
 
 Preferred first-row paths:
 
@@ -157,7 +157,7 @@ default 256 MiB free-space reserve plus Segment preallocate.
 Every harness artifact sets `e3_certified=no` and `physical_power_cut=no`. Per-case results retain
 the requested checkpoint action, independent worker-stop confirmation, reset mechanism, dm-flakey
 mode, reset confirmation, fsck status, recovery result, and outcome. A green CI job means the
-harness and recovery oracle rehearsed successfully on that disposable row, not that GlyphaStore is
+harness and recovery oracle rehearsed successfully on that disposable row, not that GlifiStore is
 certified for sudden power loss on production hardware.
 
 ### dm-flakey notes (Linux)
@@ -287,5 +287,5 @@ campaign. Kernel/filesystem/device changes require review and usually a new camp
 CI may archive E2 collector output for every change, E3 harness smoke for the linux-ext4 rehearsal
 row on PRs, and weekly campaign-profile / orchestrator rehearsal artifacts. E3 certification
 campaigns should run on dedicated lab pins (not hosted-ci), and E4 is a reviewed release campaign.
-Until those gates exist, GlyphaStore remains experimental for durable deployment even when every
+Until those gates exist, GlifiStore remains experimental for durable deployment even when every
 process-kill and harness-smoke test passes.

@@ -1,6 +1,6 @@
-#include "glyphastore/persistence/namespace_audit.hpp"
+#include "glifistore/persistence/namespace_audit.hpp"
 
-#include "glyphastore/persistence/segment_file.hpp"
+#include "glifistore/persistence/segment_file.hpp"
 #include "system_error.hpp"
 
 #include <algorithm>
@@ -15,13 +15,13 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 inline constexpr std::string_view kSegmentPrefix = "segment-";
-inline constexpr std::string_view kSegmentSuffix = ".glypha";
+inline constexpr std::string_view kSegmentSuffix = ".glifi";
 inline constexpr std::string_view kTemporaryPrefix = ".segment-";
-inline constexpr std::string_view kTemporarySuffix = ".glypha.tmp";
+inline constexpr std::string_view kTemporarySuffix = ".glifi.tmp";
 inline constexpr std::size_t kFinalSegmentFilenameBytes = 40;
 inline constexpr std::size_t kTemporarySegmentFilenameBytes = 45;
 
@@ -54,7 +54,7 @@ template <typename Integer> auto parse_fixed_hex(const std::string_view text) ->
 
 auto looks_engine_owned(const std::string_view name) noexcept -> bool {
     return name.starts_with("segment-") || name.starts_with(".segment-") || name.starts_with("manifest") ||
-           name.starts_with(".manifest") || name.starts_with(".glyphastore");
+           name.starts_with(".manifest") || name.starts_with(".glifistore");
 }
 
 auto private_regular(const struct stat& status) noexcept -> bool {
@@ -393,4 +393,4 @@ auto validate_namespace_for_compaction_recovery(const NamespaceAuditReport& repo
     return {};
 }
 
-} // namespace glyphastore
+} // namespace glifistore

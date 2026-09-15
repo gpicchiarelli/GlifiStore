@@ -12,184 +12,184 @@
 
 // Blocked durable I/O must not hold Worker/catalog mutexes (split for structure budget).
 
-GLYPHA_TEST("blocked durable append holds no Worker or catalog mutex") {
+GLIFI_TEST("blocked durable append holds no Worker or catalog mutex") {
     RecoveryTemporaryDirectory temporary;
     const auto store_id = recovery_store_id();
-    const glyphastore::ManifestSegmentEntry active{
-        .segment_id = glyphastore::SegmentId{1},
-        .generation = glyphastore::GenerationId{1},
-        .owner_worker = glyphastore::WorkerId{0},
-        .role = glyphastore::ManifestSegmentRole::active,
+    const glifistore::ManifestSegmentEntry active{
+        .segment_id = glifistore::SegmentId{1},
+        .generation = glifistore::GenerationId{1},
+        .owner_worker = glifistore::WorkerId{0},
+        .role = glifistore::ManifestSegmentRole::active,
     };
     {
-        auto directory = glyphastore::DataDirectory::open_and_lock(temporary.path());
-        GLYPHA_REQUIRE(directory.has_value());
+        auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());
+        GLIFI_REQUIRE(directory.has_value());
         static_cast<void>(create_segment(*directory, store_id, active));
-        GLYPHA_REQUIRE(directory->publish_manifest(recovery_manifest(store_id, 1, {active})).durable());
+        GLIFI_REQUIRE(directory->publish_manifest(recovery_manifest(store_id, 1, {active})).durable());
     }
 
-    BlockingFilesystemOperation blocker{glyphastore::FilesystemOperation::sync_record, false};
-    auto directory = glyphastore::DataDirectory::open_and_lock(
+    BlockingFilesystemOperation blocker{glifistore::FilesystemOperation::sync_record, false};
+    auto directory = glifistore::DataDirectory::open_and_lock(
         temporary.path(), {.context = &blocker, .before = &BlockingFilesystemOperation::before});
-    GLYPHA_REQUIRE(directory.has_value());
-    glyphastore::DurableRuntimeOptions options;
+    GLIFI_REQUIRE(directory.has_value());
+    glifistore::DurableRuntimeOptions options;
     options.limits.hot_cache_enabled = false;
-    auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory), 0, options);
-    GLYPHA_REQUIRE(runtime.has_value());
+    auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory), 0, options);
+    GLIFI_REQUIRE(runtime.has_value());
     const std::string old_key{"append-readable"};
     const std::string new_key{"append-writer"};
     const std::string value{"value"};
-    GLYPHA_REQUIRE(
+    GLIFI_REQUIRE(
         (*runtime)->put(std::as_bytes(std::span{old_key}), std::as_bytes(std::span{value})).committed());
 
     blocker.arm();
-    glyphastore::DurableMutationResult appended;
+    glifistore::DurableMutationResult appended;
     std::thread writer{[&] {
         appended = (*runtime)->put(std::as_bytes(std::span{new_key}), std::as_bytes(std::span{value}));
     }};
-    GLYPHA_REQUIRE(blocker.wait_until_blocked());
+    GLIFI_REQUIRE(blocker.wait_until_blocked());
 
     const auto visible = (*runtime)->get(old_key);
     blocker.release();
     writer.join();
-    GLYPHA_REQUIRE(visible.has_value());
-    GLYPHA_REQUIRE(owned_text(*visible) == value);
-    GLYPHA_REQUIRE(appended.committed());
-    GLYPHA_REQUIRE((*runtime)->get(new_key).has_value());
+    GLIFI_REQUIRE(visible.has_value());
+    GLIFI_REQUIRE(owned_text(*visible) == value);
+    GLIFI_REQUIRE(appended.committed());
+    GLIFI_REQUIRE((*runtime)->get(new_key).has_value());
 }
 
-GLYPHA_TEST("blocked group commit holds no Worker or catalog mutex") {
+GLIFI_TEST("blocked group commit holds no Worker or catalog mutex") {
     RecoveryTemporaryDirectory temporary;
     const auto store_id = recovery_store_id();
-    const glyphastore::ManifestSegmentEntry active{
-        .segment_id = glyphastore::SegmentId{1},
-        .generation = glyphastore::GenerationId{1},
-        .owner_worker = glyphastore::WorkerId{0},
-        .role = glyphastore::ManifestSegmentRole::active,
+    const glifistore::ManifestSegmentEntry active{
+        .segment_id = glifistore::SegmentId{1},
+        .generation = glifistore::GenerationId{1},
+        .owner_worker = glifistore::WorkerId{0},
+        .role = glifistore::ManifestSegmentRole::active,
     };
     {
-        auto directory = glyphastore::DataDirectory::open_and_lock(temporary.path());
-        GLYPHA_REQUIRE(directory.has_value());
+        auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());
+        GLIFI_REQUIRE(directory.has_value());
         static_cast<void>(create_segment(*directory, store_id, active));
-        GLYPHA_REQUIRE(directory->publish_manifest(recovery_manifest(store_id, 1, {active})).durable());
+        GLIFI_REQUIRE(directory->publish_manifest(recovery_manifest(store_id, 1, {active})).durable());
     }
 
-    BlockingFilesystemOperation blocker{glyphastore::FilesystemOperation::sync_record, false};
-    auto directory = glyphastore::DataDirectory::open_and_lock(
+    BlockingFilesystemOperation blocker{glifistore::FilesystemOperation::sync_record, false};
+    auto directory = glifistore::DataDirectory::open_and_lock(
         temporary.path(), {.context = &blocker, .before = &BlockingFilesystemOperation::before});
-    GLYPHA_REQUIRE(directory.has_value());
-    glyphastore::DurableRuntimeOptions options;
+    GLIFI_REQUIRE(directory.has_value());
+    glifistore::DurableRuntimeOptions options;
     options.limits.hot_cache_enabled = false;
     options.batch =
-        glyphastore::DurableGroupConfig{.max_records = 1, .max_bytes = 1U << 20U, .max_wait_ms = 1000};
+        glifistore::DurableGroupConfig{.max_records = 1, .max_bytes = 1U << 20U, .max_wait_ms = 1000};
     options.strict_ack = true;
-    auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory), 0, options);
-    GLYPHA_REQUIRE(runtime.has_value());
+    auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory), 0, options);
+    GLIFI_REQUIRE(runtime.has_value());
     const std::string old_key{"batch-readable"};
     const std::string new_key{"batch-writer"};
     const std::string value{"value"};
-    GLYPHA_REQUIRE(
+    GLIFI_REQUIRE(
         (*runtime)->put(std::as_bytes(std::span{old_key}), std::as_bytes(std::span{value})).committed());
 
     blocker.arm();
-    glyphastore::DurableMutationResult committed;
+    glifistore::DurableMutationResult committed;
     std::thread writer{[&] {
         committed = (*runtime)->put(std::as_bytes(std::span{new_key}), std::as_bytes(std::span{value}));
     }};
-    GLYPHA_REQUIRE(blocker.wait_until_blocked());
+    GLIFI_REQUIRE(blocker.wait_until_blocked());
     const auto visible = (*runtime)->get(old_key);
     blocker.release();
     writer.join();
-    GLYPHA_REQUIRE(visible.has_value());
-    GLYPHA_REQUIRE(owned_text(*visible) == value);
-    GLYPHA_REQUIRE(committed.committed());
+    GLIFI_REQUIRE(visible.has_value());
+    GLIFI_REQUIRE(owned_text(*visible) == value);
+    GLIFI_REQUIRE(committed.committed());
 }
 
-GLYPHA_TEST("blocked deferred dirty sync holds no Worker or catalog mutex") {
+GLIFI_TEST("blocked deferred dirty sync holds no Worker or catalog mutex") {
     RecoveryTemporaryDirectory temporary;
     const auto store_id = recovery_store_id();
-    const glyphastore::ManifestSegmentEntry active{
-        .segment_id = glyphastore::SegmentId{1},
-        .generation = glyphastore::GenerationId{1},
-        .owner_worker = glyphastore::WorkerId{0},
-        .role = glyphastore::ManifestSegmentRole::active,
+    const glifistore::ManifestSegmentEntry active{
+        .segment_id = glifistore::SegmentId{1},
+        .generation = glifistore::GenerationId{1},
+        .owner_worker = glifistore::WorkerId{0},
+        .role = glifistore::ManifestSegmentRole::active,
     };
     {
-        auto directory = glyphastore::DataDirectory::open_and_lock(temporary.path());
-        GLYPHA_REQUIRE(directory.has_value());
+        auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());
+        GLIFI_REQUIRE(directory.has_value());
         static_cast<void>(create_segment(*directory, store_id, active));
-        GLYPHA_REQUIRE(directory->publish_manifest(recovery_manifest(store_id, 1, {active})).durable());
+        GLIFI_REQUIRE(directory->publish_manifest(recovery_manifest(store_id, 1, {active})).durable());
     }
 
-    BlockingFilesystemOperation blocker{glyphastore::FilesystemOperation::sync_commit_slot, false};
-    auto directory = glyphastore::DataDirectory::open_and_lock(
+    BlockingFilesystemOperation blocker{glifistore::FilesystemOperation::sync_commit_slot, false};
+    auto directory = glifistore::DataDirectory::open_and_lock(
         temporary.path(), {.context = &blocker, .before = &BlockingFilesystemOperation::before});
-    GLYPHA_REQUIRE(directory.has_value());
-    glyphastore::DurableRuntimeOptions options;
+    GLIFI_REQUIRE(directory.has_value());
+    glifistore::DurableRuntimeOptions options;
     options.limits.hot_cache_enabled = false;
-    options.commit_sync = glyphastore::SegmentCommitSync::deferred;
+    options.commit_sync = glifistore::SegmentCommitSync::deferred;
     options.sync_interval_ms = 60'000;
-    auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory), 0, options);
-    GLYPHA_REQUIRE(runtime.has_value());
+    auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory), 0, options);
+    GLIFI_REQUIRE(runtime.has_value());
     const std::string key{"dirty-sync-readable"};
     const std::string value{"value"};
-    GLYPHA_REQUIRE(
+    GLIFI_REQUIRE(
         (*runtime)->put(std::as_bytes(std::span{key}), std::as_bytes(std::span{value})).committed());
 
     blocker.arm();
-    std::optional<glyphastore::Status> flushed;
+    std::optional<glifistore::Status> flushed;
     std::thread flusher{[&] { flushed.emplace((*runtime)->flush()); }};
-    GLYPHA_REQUIRE(blocker.wait_until_blocked());
+    GLIFI_REQUIRE(blocker.wait_until_blocked());
     const auto visible = (*runtime)->get(key);
     blocker.release();
     flusher.join();
-    GLYPHA_REQUIRE(visible.has_value());
-    GLYPHA_REQUIRE(owned_text(*visible) == value);
-    GLYPHA_REQUIRE(flushed.has_value());
-    GLYPHA_REQUIRE(flushed->has_value());
+    GLIFI_REQUIRE(visible.has_value());
+    GLIFI_REQUIRE(owned_text(*visible) == value);
+    GLIFI_REQUIRE(flushed.has_value());
+    GLIFI_REQUIRE(flushed->has_value());
 }
 
-GLYPHA_TEST("blocked rotation seal holds no Worker or catalog mutex") {
+GLIFI_TEST("blocked rotation seal holds no Worker or catalog mutex") {
     RecoveryTemporaryDirectory temporary;
     const auto store_id = recovery_store_id();
-    const glyphastore::ManifestSegmentEntry active{
-        .segment_id = glyphastore::SegmentId{1},
-        .generation = glyphastore::GenerationId{1},
-        .owner_worker = glyphastore::WorkerId{0},
-        .role = glyphastore::ManifestSegmentRole::active,
+    const glifistore::ManifestSegmentEntry active{
+        .segment_id = glifistore::SegmentId{1},
+        .generation = glifistore::GenerationId{1},
+        .owner_worker = glifistore::WorkerId{0},
+        .role = glifistore::ManifestSegmentRole::active,
     };
     {
-        auto directory = glyphastore::DataDirectory::open_and_lock(temporary.path());
-        GLYPHA_REQUIRE(directory.has_value());
+        auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());
+        GLIFI_REQUIRE(directory.has_value());
         static_cast<void>(create_segment(*directory, store_id, active));
-        GLYPHA_REQUIRE(directory->publish_manifest(recovery_manifest(store_id, 1, {active})).durable());
+        GLIFI_REQUIRE(directory->publish_manifest(recovery_manifest(store_id, 1, {active})).durable());
     }
 
     BlockingRotationSeal blocker;
-    auto directory = glyphastore::DataDirectory::open_and_lock(
+    auto directory = glifistore::DataDirectory::open_and_lock(
         temporary.path(), {.context = &blocker, .before = &BlockingRotationSeal::before});
-    GLYPHA_REQUIRE(directory.has_value());
-    glyphastore::DurableRuntimeOptions options;
+    GLIFI_REQUIRE(directory.has_value());
+    glifistore::DurableRuntimeOptions options;
     options.limits.hot_cache_enabled = false;
-    auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory), 0, options);
-    GLYPHA_REQUIRE(runtime.has_value());
+    auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory), 0, options);
+    GLIFI_REQUIRE(runtime.has_value());
     const std::string old_key{"rotation-readable"};
     const std::string new_key{"rotation-writer"};
     const std::string value{"value"};
-    GLYPHA_REQUIRE(
+    GLIFI_REQUIRE(
         (*runtime)->put(std::as_bytes(std::span{old_key}), std::as_bytes(std::span{value})).committed());
 
     blocker.arm();
-    glyphastore::DurableMutationResult rotated;
+    glifistore::DurableMutationResult rotated;
     std::thread writer{[&] {
         rotated = (*runtime)->put(std::as_bytes(std::span{new_key}), std::as_bytes(std::span{value}));
     }};
-    GLYPHA_REQUIRE(blocker.wait_until_blocked());
+    GLIFI_REQUIRE(blocker.wait_until_blocked());
 
     std::mutex completion_mutex;
     std::condition_variable completion;
     bool read_finished{};
-    std::optional<glyphastore::Result<glyphastore::OwnedValue>> read;
+    std::optional<glifistore::Result<glifistore::OwnedValue>> read;
     std::thread reader{[&] {
         read.emplace((*runtime)->get(old_key));
         {
@@ -208,11 +208,11 @@ GLYPHA_TEST("blocked rotation seal holds no Worker or catalog mutex") {
     blocker.release();
     reader.join();
     writer.join();
-    GLYPHA_REQUIRE(completed_while_seal_blocked);
-    GLYPHA_REQUIRE(read.has_value());
-    GLYPHA_REQUIRE(read->has_value());
-    GLYPHA_REQUIRE(owned_text(**read) == value);
-    GLYPHA_REQUIRE(rotated.committed());
-    GLYPHA_REQUIRE((*runtime)->get(new_key).has_value());
-    GLYPHA_REQUIRE((*runtime)->manifest().segments.size() == 2);
+    GLIFI_REQUIRE(completed_while_seal_blocked);
+    GLIFI_REQUIRE(read.has_value());
+    GLIFI_REQUIRE(read->has_value());
+    GLIFI_REQUIRE(owned_text(**read) == value);
+    GLIFI_REQUIRE(rotated.committed());
+    GLIFI_REQUIRE((*runtime)->get(new_key).has_value());
+    GLIFI_REQUIRE((*runtime)->manifest().segments.size() == 2);
 }

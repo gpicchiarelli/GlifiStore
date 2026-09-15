@@ -1,10 +1,10 @@
-#include "glyphastore/server/reactor.hpp"
+#include "glifistore/server/reactor.hpp"
 
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/core/worker_routing.hpp"
-#include "glyphastore/server/connection_lifecycle.hpp"
-#include "glyphastore/server/peercred.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/core/worker_routing.hpp"
+#include "glifistore/server/connection_lifecycle.hpp"
+#include "glifistore/server/peercred.hpp"
 #include "server/reactor_detail.hpp"
 #include "store/store_internal.hpp"
 #include "system_error.hpp"
@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 Reactor::Reactor(ReactorConfig config, const std::size_t executor_id, TcpListener cleartext_listener,
                  TcpListener tls_listener, UnixListener unix_listener, Poller poller, Wakeup wakeup,
@@ -576,7 +576,7 @@ auto Reactor::queue_response(const ConnectionToken token, const ResponseView& re
         return fail(ErrorCode::record_too_large, "connection output high watermark exceeded");
     }
     try {
-        if (glyphastore::fault::consume_fail(glyphastore::fault::Site::response_queue)) {
+        if (glifistore::fault::consume_fail(glifistore::fault::Site::response_queue)) {
             throw std::bad_alloc{};
         }
         prepare_output_append(*current, *encoded_size);
@@ -628,7 +628,7 @@ auto Reactor::queue_owned_response(const ConnectionToken token, ResponseView res
         return fail(ErrorCode::record_too_large, "connection output high watermark exceeded");
     }
     try {
-        if (glyphastore::fault::consume_fail(glyphastore::fault::Site::response_queue)) {
+        if (glifistore::fault::consume_fail(glifistore::fault::Site::response_queue)) {
             throw std::bad_alloc{};
         }
         LeasedOutput leased;
@@ -900,4 +900,4 @@ auto Reactor::next_timeout_ms(const std::chrono::steady_clock::time_point now) c
     return static_cast<int>(millis);
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

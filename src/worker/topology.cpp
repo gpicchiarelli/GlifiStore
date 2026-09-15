@@ -1,6 +1,6 @@
-#include "glyphastore/worker/topology.hpp"
+#include "glifistore/worker/topology.hpp"
 
-#include "glyphastore/core/types.hpp"
+#include "glifistore/core/types.hpp"
 
 #include <algorithm>
 #include <thread>
@@ -17,7 +17,7 @@
 #include <unistd.h>
 #endif
 
-namespace glyphastore {
+namespace glifistore {
 
 static_assert(kDefaultMinimumMemoryPerWorker == kSegmentSizeBytes);
 
@@ -81,4 +81,4 @@ auto detect_worker_topology() noexcept -> WorkerTopology {
     return result;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

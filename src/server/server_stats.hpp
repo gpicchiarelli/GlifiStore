@@ -1,11 +1,11 @@
 #pragma once
 
-#include "glyphastore/core/error.hpp"
-#include "glyphastore/persistence/runtime_catalog.hpp"
-#include "glyphastore/server/abuse_limits.hpp"
-#include "glyphastore/server/pair_writer.hpp"
-#include "glyphastore/server/security_audit.hpp"
-#include "glyphastore/store/maintenance_types.hpp"
+#include "glifistore/core/error.hpp"
+#include "glifistore/persistence/runtime_catalog.hpp"
+#include "glifistore/server/abuse_limits.hpp"
+#include "glifistore/server/pair_writer.hpp"
+#include "glifistore/server/security_audit.hpp"
+#include "glifistore/store/maintenance_types.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -13,7 +13,7 @@
 #include <string_view>
 #include <vector>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 struct ExecutorStats final {
     std::size_t active_connections{};
@@ -64,4 +64,4 @@ class ServerStatsReporter final {
         -> std::string_view;
 };
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

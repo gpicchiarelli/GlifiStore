@@ -1,19 +1,19 @@
 #pragma once
 
-#include "glyphastore/core/error.hpp"
-#include "glyphastore/server/abuse_limits.hpp"
-#include "glyphastore/server/connection_handoff.hpp"
-#include "glyphastore/server/disk_read_executor.hpp"
-#include "glyphastore/server/pair_writer.hpp"
-#include "glyphastore/server/reactor.hpp"
-#include "glyphastore/server/security_audit.hpp"
-#include "glyphastore/server/tls.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/core/error.hpp"
+#include "glifistore/server/abuse_limits.hpp"
+#include "glifistore/server/connection_handoff.hpp"
+#include "glifistore/server/disk_read_executor.hpp"
+#include "glifistore/server/pair_writer.hpp"
+#include "glifistore/server/reactor.hpp"
+#include "glifistore/server/security_audit.hpp"
+#include "glifistore/server/tls.hpp"
+#include "glifistore/store/store.hpp"
 
 #include <memory>
 #include <vector>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 class ReactorFactory final {
   public:
@@ -28,4 +28,4 @@ class ReactorFactory final {
         -> Result<std::vector<std::unique_ptr<Reactor>>>;
 };
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

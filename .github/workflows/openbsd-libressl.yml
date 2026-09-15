@@ -47,9 +47,9 @@ jobs:
             set -e
             mkdir -p engineering/evidence/native-ci
             chmod +x scripts/ci-openbsd-libressl.sh
-            export GLYPHASTORE_TEST_SHARD_COUNT=2
-            export GLYPHASTORE_TEST_SHARD_INDEX=${{ matrix.shard_index }}
-            export GLYPHASTORE_SKIP_GO_SMOKE=${{ matrix.skip_go_smoke }}
+            export GLIFISTORE_TEST_SHARD_COUNT=2
+            export GLIFISTORE_TEST_SHARD_INDEX=${{ matrix.shard_index }}
+            export GLIFISTORE_SKIP_GO_SMOKE=${{ matrix.skip_go_smoke }}
             native_status=0
             bash -o pipefail -c \
               'bash scripts/ci-openbsd-libressl.sh 2>&1 | tee engineering/evidence/native-ci/openbsd-${{ matrix.shard_label }}.log' \

@@ -1,16 +1,16 @@
 #pragma once
 
-#include "glyphastore/core/error.hpp"
-#include "glyphastore/server/reactor.hpp"
-#include "glyphastore/server/security_audit.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/core/error.hpp"
+#include "glifistore/server/reactor.hpp"
+#include "glifistore/server/security_audit.hpp"
+#include "glifistore/store/store.hpp"
 #include "server/server_runtime.hpp"
 
 #include <memory>
 #include <utility>
 #include <vector>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 class ServerBuilder final {
   public:
@@ -33,4 +33,4 @@ class ServerBuilder final {
     std::shared_ptr<SecurityAudit> security_audit_;
 };
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

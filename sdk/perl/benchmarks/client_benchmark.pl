@@ -7,8 +7,8 @@ use Getopt::Long qw(GetOptions);
 use Time::HiRes qw(time);
 
 use lib "$FindBin::Bin/../lib";
-use GlyphaStore;
-use GlyphaStore::Client;
+use GlifiStore;
+use GlifiStore::Client;
 
 my %options = (
     host       => '127.0.0.1',
@@ -41,7 +41,7 @@ my $use_concurrent = defined($options{concurrent})
     ? ($options{concurrent} ? 1 : 0)
     : ($options{workers} > 1 ? 1 : 0);
 
-my $client = GlyphaStore::Client->connect(
+my $client = GlifiStore::Client->connect(
     host                      => $options{host},
     port                      => $options{port},
     maximum_pipeline_requests => $options{pipeline} * 2,
@@ -161,10 +161,10 @@ $run_once->() for 1 .. $options{warmup};
 my @samples = map { $run_once->() } 1 .. $options{repeats};
 $client->close;
 
-my $sdk_version = $GlyphaStore::VERSION;
+my $sdk_version = $GlifiStore::VERSION;
 my $operation_count = $options{ops} * 2;
 my @rates = map { $operation_count / $_ } @samples;
-printf "# glyphastore Perl client benchmark\n";
+printf "# glifistore Perl client benchmark\n";
 printf "# sdk_version=%s runtime=sync execution=%s "
     . "workers=%d pipeline_pairs=%d operations=%d\n",
     $sdk_version, $execution, $options{workers}, $options{pipeline}, $operation_count;

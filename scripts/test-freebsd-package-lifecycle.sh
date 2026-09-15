@@ -45,41 +45,41 @@ python3 "$root/engineering/tools/release_bundle.py" verify-seal \
   --directory "$candidate" --seal candidate-seal.json
 python3 "$root/engineering/tools/validate_bsd_packaging.py" --root "$root" --release
 
-grep -Eq '^glyphastore:' "$ports_root/UIDs" || {
-  echo "error: glyphastore is not registered in the native FreeBSD ports UIDs authority" >&2
+grep -Eq '^glifistore:' "$ports_root/UIDs" || {
+  echo "error: glifistore is not registered in the native FreeBSD ports UIDs authority" >&2
   exit 1
 }
-grep -Eq '^glyphastore:' "$ports_root/GIDs" || {
-  echo "error: glyphastore is not registered in the native FreeBSD ports GIDs authority" >&2
+grep -Eq '^glifistore:' "$ports_root/GIDs" || {
+  echo "error: glifistore is not registered in the native FreeBSD ports GIDs authority" >&2
   exit 1
 }
 
 mapfile -t source_archives < <(
-  find "$candidate" -maxdepth 1 -type f -name "GlyphaStore-$version.tar.xz" -print
+  find "$candidate" -maxdepth 1 -type f -name "GlifiStore-$version.tar.xz" -print
 )
 [[ ${#source_archives[@]} -eq 1 ]] || {
   echo "error: expected exactly one sealed source archive" >&2
   exit 1
 }
 
-work="$(mktemp -d /tmp/glyphastore-freebsd-package.XXXXXX)"
+work="$(mktemp -d /tmp/glifistore-freebsd-package.XXXXXX)"
 cleanup() {
-  service glyphastored stop >/dev/null 2>&1 || true
-  if pkg info -e glyphastore >/dev/null 2>&1; then
-    pkg delete -y glyphastore >/dev/null 2>&1 || true
+  service glifistored stop >/dev/null 2>&1 || true
+  if pkg info -e glifistore >/dev/null 2>&1; then
+    pkg delete -y glifistore >/dev/null 2>&1 || true
   fi
   rm -rf "$work"
 }
 trap cleanup EXIT
 
-if pkg info -e glyphastore >/dev/null 2>&1; then
-  echo "error: lifecycle proof requires a clean host without glyphastore installed" >&2
+if pkg info -e glifistore >/dev/null 2>&1; then
+  echo "error: lifecycle proof requires a clean host without glifistore installed" >&2
   exit 1
 fi
 
 mkdir -p "$work/port" "$work/distfiles" "$work/packages"
 cp -R "$root/packaging/freebsd/." "$work/port/"
-cp "${source_archives[0]}" "$work/distfiles/GlyphaStore-$version.tar.xz"
+cp "${source_archives[0]}" "$work/distfiles/GlifiStore-$version.tar.xz"
 
 package_build_log="$output/freebsd-package-build.log"
 {
@@ -100,7 +100,7 @@ mapfile -t built_packages < <(find "$work/packages" -type f -name '*.pkg' -print
 }
 freebsd_version="$(freebsd-version -u | cut -d- -f1)"
 architecture="$(uname -p)"
-package="$output/glyphastore-$version-freebsd$freebsd_version-$architecture.pkg"
+package="$output/glifistore-$version-freebsd$freebsd_version-$architecture.pkg"
 cp "${built_packages[0]}" "$package"
 
 # shellcheck source=scripts/lib/bsd-package-upgrade.sh
@@ -118,17 +118,17 @@ if [[ -n "$previous_version" ]]; then
   client=(python3 "$root/scripts/sdk_interop_py.py" --host 127.0.0.1 --port 7379)
   {
     echo "previous_version=$previous_version"
-    echo "GLYPHASTORE_N1_PACKAGE_DIR=$GLYPHASTORE_N1_PACKAGE_DIR"
+    echo "GLIFISTORE_N1_PACKAGE_DIR=$GLIFISTORE_N1_PACKAGE_DIR"
     printf 'n1_packages=%s\n' "${n1_packages[*]}"
     echo "n_package=$package"
     echo "installing sealed N-1 before N"
     for n1_package in "${n1_packages[@]}"; do
       pkg add -y "$n1_package"
     done
-    pkg info -e "glyphastore-$previous_version"
-    id glyphastore
-    sysrc glyphastored_enable=YES
-    service glyphastored start
+    pkg info -e "glifistore-$previous_version"
+    id glifistore
+    sysrc glifistored_enable=YES
+    service glifistored start
     for _ in $(jot 50 1); do
       sockstat -4 -l | grep -Eq '127\.0\.0\.1:7379' && break
       sleep 1
@@ -136,12 +136,12 @@ if [[ -n "$previous_version" ]]; then
     sockstat -4 -l | grep -Eq '127\.0\.0\.1:7379'
     PYTHONPATH="$root/sdk/python/src" "${client[@]}" put \
       --key-hex "$upgrade_seed_key_hex" --value-hex "$upgrade_seed_value_hex"
-    service glyphastored stop
+    service glifistored stop
     echo "seeded durable value under N-1"
     echo "upgrading to N package: $package"
     pkg add -y "$package"
-    pkg info -e "glyphastore-$version"
-    service glyphastored start
+    pkg info -e "glifistore-$version"
+    service glifistored start
     for _ in $(jot 50 1); do
       sockstat -4 -l | grep -Eq '127\.0\.0\.1:7379' && break
       sleep 1
@@ -150,14 +150,14 @@ if [[ -n "$previous_version" ]]; then
     got="$(PYTHONPATH="$root/sdk/python/src" "${client[@]}" get \
       --key-hex "$upgrade_seed_key_hex")"
     [[ "$got" == "$upgrade_seed_value_hex" ]]
-    service glyphastored stop
+    service glifistored stop
     echo "seeded value recovered byte-exact after upgrade to N"
     echo "FREEBSD-PACKAGE package-upgrade PASSED"
   } 2>&1 | tee "$output/freebsd-package-upgrade.log"
   {
     echo "upgrade path installed N from sealed N-1 ($previous_version)"
-    pkg info -e "glyphastore-$version"
-    id glyphastore
+    pkg info -e "glifistore-$version"
+    id glifistore
     echo "FREEBSD-PACKAGE package-install PASSED"
   } 2>&1 | tee "$output/freebsd-package-install.log"
   upgrade_exercised=1
@@ -166,20 +166,20 @@ fi
 if [[ "$upgrade_exercised" -eq 0 ]]; then
 {
   pkg add -y "$package"
-  pkg info -e "glyphastore-$version"
-  id glyphastore
+  pkg info -e "glifistore-$version"
+  id glifistore
   echo "FREEBSD-PACKAGE package-install PASSED"
 } 2>&1 | tee "$output/freebsd-package-install.log"
 fi
 
 {
-  pkg info -l glyphastore
-  pkg check -s glyphastore
-  test -x /usr/local/bin/glyphastored
-  test -f /usr/local/etc/glyphastored.conf
-  test -f /usr/local/lib/libglyphastore.so.1
+  pkg info -l glifistore
+  pkg check -s glifistore
+  test -x /usr/local/bin/glifistored
+  test -f /usr/local/etc/glifistored.conf
+  test -f /usr/local/lib/libglifistore.so.1
   python3 "$root/engineering/tools/check_abi_symbols.py" \
-    --library /usr/local/lib/libglyphastore.so.1 \
+    --library /usr/local/lib/libglifistore.so.1 \
     --allowlist "$root/abi/symbols-v1.txt"
   echo "FREEBSD-PACKAGE file-inventory PASSED"
 } 2>&1 | tee "$output/freebsd-file-inventory.log"
@@ -192,14 +192,14 @@ fi
 } 2>&1 | tee "$output/freebsd-external-consumer.log"
 
 {
-  sysrc glyphastored_enable=YES
-  service glyphastored start
+  sysrc glifistored_enable=YES
+  service glifistored start
   for _ in $(jot 50 1); do
     sockstat -4 -l | grep -Eq '127\.0\.0\.1:7379' && break
     sleep 1
   done
   sockstat -4 -l | grep -Eq '127\.0\.0\.1:7379'
-  pgrep -U glyphastore -f '/usr/local/bin/glyphastored' >/dev/null
+  pgrep -U glifistore -f '/usr/local/bin/glifistored' >/dev/null
   echo "FREEBSD-PACKAGE service-start PASSED"
 } 2>&1 | tee "$output/freebsd-service-start.log"
 
@@ -221,14 +221,14 @@ client=(python3 "$root/scripts/sdk_interop_py.py" --host 127.0.0.1 --port 7379)
 {
   PYTHONPATH="$root/sdk/python/src" "${client[@]}" put \
     --key-hex "$recovery_key_hex" --value-hex "$recovery_value_hex"
-  service glyphastored stop
-  ! pgrep -U glyphastore -f '/usr/local/bin/glyphastored' >/dev/null
-  /usr/local/bin/glyphastore_verify_store -- /var/db/glyphastore
+  service glifistored stop
+  ! pgrep -U glifistore -f '/usr/local/bin/glifistored' >/dev/null
+  /usr/local/bin/glifistore_verify_store -- /var/db/glifistore
   echo "FREEBSD-PACKAGE graceful-shutdown PASSED"
 } 2>&1 | tee "$output/freebsd-graceful-shutdown.log"
 
 {
-  service glyphastored start
+  service glifistored start
   for _ in $(jot 50 1); do
     sockstat -4 -l | grep -Eq '127\.0\.0\.1:7379' && break
     sleep 1
@@ -236,24 +236,24 @@ client=(python3 "$root/scripts/sdk_interop_py.py" --host 127.0.0.1 --port 7379)
   got="$(PYTHONPATH="$root/sdk/python/src" "${client[@]}" get \
     --key-hex "$recovery_key_hex")"
   [[ "$got" == "$recovery_value_hex" ]]
-  service glyphastored stop
+  service glifistored stop
   echo "FREEBSD-PACKAGE restart-recovery PASSED"
 } 2>&1 | tee "$output/freebsd-restart-recovery.log"
 
 config_marker="# retained-config-${GITHUB_RUN_ID:-local}"
 {
-  echo "$config_marker" >>/usr/local/etc/glyphastored.conf
+  echo "$config_marker" >>/usr/local/etc/glifistored.conf
   pkg add -f -y "$package"
-  grep -Fqx "$config_marker" /usr/local/etc/glyphastored.conf
+  grep -Fqx "$config_marker" /usr/local/etc/glifistored.conf
   echo "FREEBSD-PACKAGE config-preservation PASSED"
 } 2>&1 | tee "$output/freebsd-config-preservation.log"
 
 {
-  pkg delete -y glyphastore
-  ! pkg info -e glyphastore >/dev/null 2>&1
-  test ! -e /usr/local/bin/glyphastored
-  grep -Fqx "$config_marker" /usr/local/etc/glyphastored.conf
-  test -d /var/db/glyphastore
+  pkg delete -y glifistore
+  ! pkg info -e glifistore >/dev/null 2>&1
+  test ! -e /usr/local/bin/glifistored
+  grep -Fqx "$config_marker" /usr/local/etc/glifistored.conf
+  test -d /var/db/glifistore
   echo "FREEBSD-PACKAGE uninstall PASSED"
 } 2>&1 | tee "$output/freebsd-uninstall.log"
 
@@ -266,7 +266,7 @@ plan = [
   {"id":"package-install","command":"pkg add the native package and prove the dedicated service account","evidence_ref":"freebsd-package-install.log"},
   {"id":"file-inventory","command":"pkg inventory/checksum closure plus exact C ABI symbol allowlist","evidence_ref":"freebsd-file-inventory.log"},
   {"id":"external-consumer","command":"cmake/ctest packaging/common/consumer against /usr/local outside the checkout with isolation refused","evidence_ref":"freebsd-external-consumer.log"},
-  {"id":"service-start","command":"enable and start the rc.subr service as glyphastore on loopback","evidence_ref":"freebsd-service-start.log"},
+  {"id":"service-start","command":"enable and start the rc.subr service as glifistore on loopback","evidence_ref":"freebsd-service-start.log"},
   {"id":"put-get-erase","command":"protocol-v2 PUT, exact GET, ERASE and NOT_FOUND through the packaged service","evidence_ref":"freebsd-put-get-erase.log"},
   {"id":"graceful-shutdown","command":"persist a recovery key, stop through rc.subr, prove process exit and verify the Store","evidence_ref":"freebsd-graceful-shutdown.log"},
   {"id":"restart-recovery","command":"restart the packaged service and recover the exact durable value","evidence_ref":"freebsd-restart-recovery.log"},

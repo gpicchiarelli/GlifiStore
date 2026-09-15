@@ -1,27 +1,27 @@
-#include "glyphastore/store/paired/shard_pair_runtime.hpp"
+#include "glifistore/store/paired/shard_pair_runtime.hpp"
 
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/store/paired/bounded_spsc_queue.hpp"
-#include "glyphastore/store/paired/completion_policy.hpp"
-#include "glyphastore/store/paired/fail_closed_state.hpp"
-#include "glyphastore/store/paired/lane_publication.hpp"
-#include "glyphastore/store/paired/lane_state.hpp"
-#include "glyphastore/store/paired/mutation_batch.hpp"
-#include "glyphastore/store/paired/mutation_execution.hpp"
-#include "glyphastore/store/paired/mutation_recovery.hpp"
-#include "glyphastore/store/paired/mutation_slot_pool.hpp"
-#include "glyphastore/store/paired/mutation_state.hpp"
-#include "glyphastore/store/paired/publication_coordinator.hpp"
-#include "glyphastore/store/paired/shard_combining_executor.hpp"
-#include "glyphastore/store/paired/volatile_sync_chunk.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/store/paired/bounded_spsc_queue.hpp"
+#include "glifistore/store/paired/completion_policy.hpp"
+#include "glifistore/store/paired/fail_closed_state.hpp"
+#include "glifistore/store/paired/lane_publication.hpp"
+#include "glifistore/store/paired/lane_state.hpp"
+#include "glifistore/store/paired/mutation_batch.hpp"
+#include "glifistore/store/paired/mutation_execution.hpp"
+#include "glifistore/store/paired/mutation_recovery.hpp"
+#include "glifistore/store/paired/mutation_slot_pool.hpp"
+#include "glifistore/store/paired/mutation_state.hpp"
+#include "glifistore/store/paired/publication_coordinator.hpp"
+#include "glifistore/store/paired/shard_combining_executor.hpp"
+#include "glifistore/store/paired/volatile_sync_chunk.hpp"
 #include "store/paired/shard_pair_runtime_impl.hpp"
 #include "store/store_internal.hpp"
 
 #include <type_traits>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 ShardPairRuntime::ShardPairRuntime(Store& store, PairedConcurrencyConfig config,
                                    std::vector<std::shared_ptr<const PairReadGeneration>> initial_generations,
@@ -803,4 +803,4 @@ ShardPairRuntime::ReadLease::~ReadLease() {
     }
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

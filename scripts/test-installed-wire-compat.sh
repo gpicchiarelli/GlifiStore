@@ -50,7 +50,7 @@ prior_client="$(cd "$(dirname "$prior_client")" && pwd -P)/$(basename "$prior_cl
 mkdir -p "$work"
 work="$(cd "$work" && pwd -P)"
 for prefix in "$candidate_prefix" "$prior_prefix"; do
-  test -x "$prefix/bin/glyphastored"
+  test -x "$prefix/bin/glifistored"
 done
 for client in "$candidate_client" "$prior_client"; do
   test -x "$client"
@@ -81,7 +81,7 @@ run_direction() {
   local server_prefix="$1"
   local client="$2"
   local label="$3"
-  local daemon="$server_prefix/bin/glyphastored"
+  local daemon="$server_prefix/bin/glifistored"
   local log="$work/$label.daemon.log"
   "$daemon" --quiet --bind 127.0.0.1 --port 0 --workers 1 \
     --storage-mode volatile --shutdown-drain-ms 2000 --maintenance-mode cooperative \

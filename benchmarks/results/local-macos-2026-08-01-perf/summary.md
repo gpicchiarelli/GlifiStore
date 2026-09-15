@@ -1,4 +1,4 @@
-# GlyphaStore hot-path performance lab results
+# GlifiStore hot-path performance lab results
 
 Generated locally on 2026-08-01 (Apple M4, `macos-release`).
 

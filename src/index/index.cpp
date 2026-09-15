@@ -1,11 +1,11 @@
-#include "glyphastore/index/index.hpp"
+#include "glifistore/index/index.hpp"
 
-#include "glyphastore/segment/record.hpp"
+#include "glifistore/segment/record.hpp"
 
 #include <unordered_map>
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 struct LatestRecord {
@@ -134,4 +134,4 @@ auto rebuild_index_from_segments(const std::span<const SegmentPtr> segments, con
     return RebuildResult{.index = std::move(index), .stats = stats};
 }
 
-} // namespace glyphastore
+} // namespace glifistore

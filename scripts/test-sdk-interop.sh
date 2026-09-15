@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Cross-SDK interoperability matrix against a real volatile glyphastored.
+# Cross-SDK interoperability matrix against a real volatile glifistored.
 # Runs cleartext by default, then an opt-in TLS 1.3 matrix (Phase 2.4) when the
 # daemon was built with TLS and openssl is available. Erlang is included in both
 # matrices when OTP/rebar3 are available. Ruby ships the same TLS train as peers.
 #
-# Default routing is FNV (plain GlyphaStore/2 INIT). With INTEROP_KEYED=1 (default),
+# Default routing is FNV (plain GlifiStore/2 INIT). With INTEROP_KEYED=1 (default),
 # also runs a smaller SipHash matrix (--worker-hash-seed) so every official SDK
 # parses extended INIT and routes identically (ADR 0030).
 # With INTEROP_SECURE=1 (default), also runs a secure-profile matrix: mTLS +
@@ -14,15 +14,15 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 python="${PYTHON:-python3}"
 perl="${PERL:-perl}"
-daemon="${GLYPHASTORED:-}"
-cpp_client="${GLYPHASTORE_INTEROP_CLIENT:-}"
-use_installed="${GLYPHASTORE_INTEROP_USE_INSTALLED:-0}"
+daemon="${GLIFISTORED:-}"
+cpp_client="${GLIFISTORE_INTEROP_CLIENT:-}"
+use_installed="${GLIFISTORE_INTEROP_USE_INSTALLED:-0}"
 if [[ "$use_installed" != "0" && "$use_installed" != "1" ]]; then
-  echo "GLYPHASTORE_INTEROP_USE_INSTALLED must be 0 or 1" >&2
+  echo "GLIFISTORE_INTEROP_USE_INSTALLED must be 0 or 1" >&2
   exit 1
 fi
-export GLYPHASTORE_INTEROP_USE_INSTALLED="$use_installed"
-export GLYPHASTORE_SOURCE_ROOT="$root"
+export GLIFISTORE_INTEROP_USE_INSTALLED="$use_installed"
+export GLIFISTORE_SOURCE_ROOT="$root"
 
 prefer_bins=(
   "$root/build/macos-debug"
@@ -34,17 +34,17 @@ prefer_bins=(
 
 if [[ -z "$daemon" ]]; then
   for dir in "${prefer_bins[@]}"; do
-    if [[ -x "$dir/glyphastored" ]]; then
-      daemon="$dir/glyphastored"
+    if [[ -x "$dir/glifistored" ]]; then
+      daemon="$dir/glifistored"
       break
     fi
   done
 fi
-# Prefer a TLS-capable glyphastored when available (Phase 2.4 matrix).
-if [[ -z "${GLYPHASTORED:-}" ]]; then
+# Prefer a TLS-capable glifistored when available (Phase 2.4 matrix).
+if [[ -z "${GLIFISTORED:-}" ]]; then
   for dir in "${prefer_bins[@]}"; do
-    if [[ -x "$dir/glyphastored" ]] && "$dir/glyphastored" --help 2>&1 | grep -q -- '--tls-cert'; then
-      daemon="$dir/glyphastored"
+    if [[ -x "$dir/glifistored" ]] && "$dir/glifistored" --help 2>&1 | grep -q -- '--tls-cert'; then
+      daemon="$dir/glifistored"
       break
     fi
   done
@@ -52,12 +52,12 @@ fi
 if [[ -z "$cpp_client" ]]; then
   # Prefer interop client from the same build tree as the chosen daemon when possible.
   daemon_dir="$(dirname "$daemon")"
-  if [[ -x "$daemon_dir/glyphastore_interop_client" ]]; then
-    cpp_client="$daemon_dir/glyphastore_interop_client"
+  if [[ -x "$daemon_dir/glifistore_interop_client" ]]; then
+    cpp_client="$daemon_dir/glifistore_interop_client"
   else
     for dir in "${prefer_bins[@]}"; do
-      if [[ -x "$dir/glyphastore_interop_client" ]]; then
-        cpp_client="$dir/glyphastore_interop_client"
+      if [[ -x "$dir/glifistore_interop_client" ]]; then
+        cpp_client="$dir/glifistore_interop_client"
         break
       fi
     done
@@ -65,11 +65,11 @@ if [[ -z "$cpp_client" ]]; then
 fi
 
 if [[ -z "$daemon" || ! -x "$daemon" ]]; then
-  echo "missing glyphastored; build a preset that produces it first" >&2
+  echo "missing glifistored; build a preset that produces it first" >&2
   exit 1
 fi
 if [[ -z "$cpp_client" || ! -x "$cpp_client" ]]; then
-  echo "missing glyphastore_interop_client; build target glyphastore_interop_client first" >&2
+  echo "missing glifistore_interop_client; build target glifistore_interop_client first" >&2
   exit 1
 fi
 
@@ -79,19 +79,19 @@ if [[ "$use_installed" != "1" ]]; then
 fi
 py_helper="$root/scripts/sdk_interop_py.py"
 pl_helper="$root/scripts/sdk_interop_perl.pl"
-go_helper="${GLYPHASTORE_GO_INTEROP:-}"
+go_helper="${GLIFISTORE_GO_INTEROP:-}"
 if [[ -z "$go_helper" || ! -x "$go_helper" ]]; then
   if [[ "$use_installed" == "1" ]]; then
-    echo "installed-artifact mode requires GLYPHASTORE_GO_INTEROP" >&2
+    echo "installed-artifact mode requires GLIFISTORE_GO_INTEROP" >&2
     exit 1
   fi
   mkdir -p "$root/sdk/go/bin"
-  (cd "$root/sdk/go" && "${GO:-go}" build -o bin/glyphastore-interop ./cmd/glyphastore-interop)
-  go_helper="$root/sdk/go/bin/glyphastore-interop"
+  (cd "$root/sdk/go" && "${GO:-go}" build -o bin/glifistore-interop ./cmd/glifistore-interop)
+  go_helper="$root/sdk/go/bin/glifistore-interop"
 fi
 ruby_bin="${RUBY:-}"
 ruby_ready=0
-ruby_helper="$root/sdk/ruby/exe/glyphastore-interop"
+ruby_helper="$root/sdk/ruby/exe/glifistore-interop"
 if [[ "${INTEROP_SKIP_RUBY:-0}" == "1" ]]; then
   echo "note: Ruby SDK interop skipped (INTEROP_SKIP_RUBY=1)" >&2
   ruby_bin=""
@@ -122,10 +122,10 @@ else
     ruby_bin=""
   fi
 fi
-erlang_helper="${GLYPHASTORE_ERLANG_INTEROP:-}"
+erlang_helper="${GLIFISTORE_ERLANG_INTEROP:-}"
 erlang_ready=0
 if [[ -z "$erlang_helper" ]]; then
-  erlang_helper="$root/sdk/erlang/scripts/glyphastore-interop.escript"
+  erlang_helper="$root/sdk/erlang/scripts/glifistore-interop.escript"
 fi
 if [[ "$use_installed" == "1" ]] && command -v erl >/dev/null 2>&1 && \
   command -v escript >/dev/null 2>&1; then
@@ -349,7 +349,7 @@ make_tls_material() {
   # verifiers reject a leaf trust anchor that lacks CA:TRUE.
   openssl req -x509 -newkey rsa:2048 -nodes \
     -keyout "$directory/ca.key" -out "$directory/ca.crt" -days 1 \
-    -subj "/CN=glyphastore-interop-tls-ca" >/dev/null 2>&1 || return 1
+    -subj "/CN=glifistore-interop-tls-ca" >/dev/null 2>&1 || return 1
   openssl req -newkey rsa:2048 -nodes \
     -keyout "$directory/server.key" -out "$directory/server.csr" \
     -subj "/CN=localhost" >/dev/null 2>&1 || return 1
@@ -372,7 +372,7 @@ make_secure_material() {
   fi
   openssl req -x509 -newkey rsa:2048 -nodes \
     -keyout "$directory/ca.key" -out "$directory/ca.crt" -days 1 \
-    -subj "/CN=glyphastore-interop-ca" >/dev/null 2>&1 || return 1
+    -subj "/CN=glifistore-interop-ca" >/dev/null 2>&1 || return 1
   openssl req -newkey rsa:2048 -nodes \
     -keyout "$directory/server.key" -out "$directory/server.csr" \
     -subj "/CN=localhost" >/dev/null 2>&1 || return 1
@@ -413,7 +413,7 @@ start_server() {
   if { ! grep -qx "workers=$workers" <<<"$resolved" &&
       ! grep -qx "shard-pairs=$workers" <<<"$resolved"; } ||
       ! grep -qx "max-connections=4096" <<<"$resolved"; then
-    echo "glyphastored configuration mismatch for workers=$workers" >&2
+    echo "glifistored configuration mismatch for workers=$workers" >&2
     echo "$resolved" >&2
     return 1
   fi
@@ -426,7 +426,7 @@ start_server() {
   local port=""
   for _ in $(seq 1 50); do
     if ! kill -0 "$pid" 2>/dev/null; then
-      echo "glyphastored exited early; see $log_file" >&2
+      echo "glifistored exited early; see $log_file" >&2
       return 1
     fi
     port="$(lsof -nP -iTCP -sTCP:LISTEN -a -p "$pid" 2>/dev/null | awk 'NR==2 {split($9,a,":"); print a[length(a)]}')"
@@ -436,7 +436,7 @@ start_server() {
     fi
     sleep 0.1
   done
-  echo "could not discover glyphastored listen port" >&2
+  echo "could not discover glifistored listen port" >&2
   return 1
 }
 
@@ -468,7 +468,7 @@ run_matrix_for_workers() {
   local mode="${2:-cleartext}" # cleartext | tls | secure
   local routing="${3:-fnv}"    # fnv | keyed
   local work
-  work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-interop.XXXXXX")"
+  work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-interop.XXXXXX")"
   local port_file="$work/port"
   local log_file="$work/server.log"
   active_port_file="$port_file"
@@ -614,7 +614,7 @@ run_matrix_for_workers() {
   done < <("$python" - "$workers" "$routing" "$hash_seed" <<'PY'
 import sys
 
-from glyphastore.protocol import (
+from glifistore.protocol import (
     ROUTING_ALG_SIPHASH24_V1,
     WorkerRouting,
     hash_key_routing,

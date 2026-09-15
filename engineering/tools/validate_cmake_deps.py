@@ -73,7 +73,7 @@ def main() -> int:
                         f"{rid}: {path.relative_to(root).as_posix()} includes forbidden '{inc}'"
                     )
 
-    required_aliases = {"GlyphaStore::core", "GlyphaStore::server", "GlyphaStore::client"}
+    required_aliases = {"GlifiStore::core", "GlifiStore::server", "GlifiStore::client"}
     found: set[str] = set()
     for spec in matrix.get("targets", {}).values():
         found.update(spec.get("aliases", []))

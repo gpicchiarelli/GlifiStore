@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::bench {
+namespace glifistore::bench {
 
 inline constexpr std::size_t kDefaultOperations = 200'000;
 inline constexpr std::size_t kDefaultWarmupIterations = 1;
@@ -730,4 +730,4 @@ inline void print_result(std::ostream& out, const Result& result) {
     return BenchmarkKind::all;
 }
 
-} // namespace glyphastore::bench
+} // namespace glifistore::bench

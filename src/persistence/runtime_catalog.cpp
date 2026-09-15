@@ -1,14 +1,14 @@
-#include "glyphastore/persistence/runtime_catalog.hpp"
+#include "glifistore/persistence/runtime_catalog.hpp"
 
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/integer_math.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/index/swiss_table.hpp"
-#include "glyphastore/persistence/compaction.hpp"
-#include "glyphastore/persistence/durable_flush_coordinator.hpp"
-#include "glyphastore/persistence/resource_limits.hpp"
-#include "glyphastore/persistence/segment_file.hpp"
-#include "glyphastore/segment/record.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/integer_math.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/index/swiss_table.hpp"
+#include "glifistore/persistence/compaction.hpp"
+#include "glifistore/persistence/durable_flush_coordinator.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
+#include "glifistore/persistence/segment_file.hpp"
+#include "glifistore/segment/record.hpp"
 #include "persistence/adaptive_batch_sizer.hpp"
 #include "persistence/hot_record_table.hpp"
 #include "persistence/runtime_catalog_detail.hpp"
@@ -26,8 +26,8 @@
 #include <string>
 #include <utility>
 
-namespace glyphastore {
-using namespace glyphastore::runtime_catalog_detail;
+namespace glifistore {
+using namespace glifistore::runtime_catalog_detail;
 
 auto DurableRuntimeCatalog::PublishedReadPin::matches(const RecordRef& reference) const noexcept -> bool {
     return generation_ && generation_->identity.segment_id == reference.segment_id &&
@@ -56,7 +56,7 @@ void DurableRuntimeCatalog::RuntimeWorker::erase_hot_record(const std::string_vi
 }
 
 auto DurableRuntimeCatalog::RuntimeWorker::drain_deferred_ttl(const std::size_t limit) -> Status {
-    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::deferred_ttl)) {
+    if (glifistore::fault::consume_fail(glifistore::fault::Site::deferred_ttl)) {
         return fail(ErrorCode::resource_exhausted, "injected deferred TTL drain failure");
     }
     std::size_t processed = 0;
@@ -618,4 +618,4 @@ auto DurableRuntimeCatalog::close() -> Status {
     }
     return cached_status();
 }
-} // namespace glyphastore
+} // namespace glifistore

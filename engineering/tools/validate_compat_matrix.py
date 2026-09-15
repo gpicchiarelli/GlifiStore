@@ -67,7 +67,7 @@ def validate_released_label(
                 f"{metadata_path}: {key} must be {expected!r}, got {metadata.get(key)!r}"
             )
 
-    for key in ("glyphastore_version", "packaged_at", "git_commit", "fixture_count"):
+    for key in ("glifistore_version", "packaged_at", "git_commit", "fixture_count"):
         if not metadata.get(key):
             errors.append(f"{metadata_path}: missing non-empty {key}")
     if metadata.get("git_commit") and not re.fullmatch(r"[0-9a-f]{40}", metadata["git_commit"]):

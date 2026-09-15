@@ -40,7 +40,7 @@ retaining the prior throughput envelope.
 ## Commands
 
 ```text
-glyphastore_server_benchmarks --ops 800 --workers 1 --clients 4 --pipeline 32 \
+glifistore_server_benchmarks --ops 800 --workers 1 --clients 4 --pipeline 32 \
   --executor-affinity --latency --workload read-after-write \
   --storage-mode durable-group --group-max-records {1,4} \
   --group-max-bytes 1048576 --group-max-wait-ms 10 --warmup 1 --repeats 5

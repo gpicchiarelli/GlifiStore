@@ -99,8 +99,8 @@ while [[ $# -gt 0 ]]; do
       cat <<EOF
 Usage: $0 [--profile smoke|long|1h|4h|hot-key|connection-churn|queue-saturation|adversarial-reclaim]
           [--seconds N] [--workers N] [--storage-mode MODE] [--sample-every SEC]
-Env: SOAK_PROFILE, SOAK_SECONDS, SOAK_SAMPLE_EVERY, GLYPHASTORED,
-     GLYPHASTORE_INTEROP_CLIENT, SOAK_RSS_FAIL_FACTOR, SOAK_RSS_FAIL_DELTA_KB
+Env: SOAK_PROFILE, SOAK_SECONDS, SOAK_SAMPLE_EVERY, GLIFISTORED,
+     GLIFISTORE_INTEROP_CLIENT, SOAK_RSS_FAIL_FACTOR, SOAK_RSS_FAIL_DELTA_KB
 EOF
       exit 0
       ;;
@@ -165,7 +165,7 @@ fetch_stats() {
 import socket
 import struct
 import sys
-from glyphastore.protocol import Opcode, Status, encode_request, decode_response
+from glifistore.protocol import Opcode, Status, encode_request, decode_response
 
 port = int(sys.argv[1])
 frame = encode_request(Opcode.STATS, 42)
@@ -226,10 +226,10 @@ client_get() {
   return 1
 }
 
-daemon="$(resolve_bin glyphastored "${GLYPHASTORED:-}" || true)"
-client="$(resolve_bin glyphastore_interop_client "${GLYPHASTORE_INTEROP_CLIENT:-}" || true)"
+daemon="$(resolve_bin glifistored "${GLIFISTORED:-}" || true)"
+client="$(resolve_bin glifistore_interop_client "${GLIFISTORE_INTEROP_CLIENT:-}" || true)"
 if [[ -z "$daemon" || -z "$client" ]]; then
-  echo "missing glyphastored or glyphastore_interop_client" >&2
+  echo "missing glifistored or glifistore_interop_client" >&2
   exit 1
 fi
 if ! command -v lsof >/dev/null 2>&1; then
@@ -237,7 +237,7 @@ if ! command -v lsof >/dev/null 2>&1; then
   exit 1
 fi
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-soak-XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-soak-XXXXXX")"
 daemon_pid=""
 cleanup() {
   if [[ -n "$daemon_pid" ]] && kill -0 "$daemon_pid" 2>/dev/null; then

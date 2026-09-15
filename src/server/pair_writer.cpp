@@ -1,10 +1,10 @@
-#include "glyphastore/server/pair_writer.hpp"
+#include "glifistore/server/pair_writer.hpp"
 
 #include "store/store_internal.hpp"
 
 #include <utility>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 [[nodiscard]] auto deliver_completion(void* completions, store::paired::MutationOutcome outcome) noexcept
@@ -35,7 +35,7 @@ auto PairWriterPool::create(Store& store, const std::size_t worker_count,
     auto* runtime = detail::StoreAccess::shard_pair_runtime(store);
     if (runtime == nullptr) {
         return fail(ErrorCode::invalid_argument,
-                    "glyphastored requires a paired Store; open with StoreConcurrencyMode::paired");
+                    "glifistored requires a paired Store; open with StoreConcurrencyMode::paired");
     }
     if (worker_count == 0 || worker_count != store.worker_count() || worker_count != runtime->shard_count() ||
         capacity_per_worker == 0 || payload_bytes_per_worker == 0 || read_merge.delta_entries == 0 ||
@@ -208,4 +208,4 @@ auto PairWriterPool::stop_and_drain(const std::optional<std::chrono::millisecond
     return runtime_.stop_and_drain(deadline);
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

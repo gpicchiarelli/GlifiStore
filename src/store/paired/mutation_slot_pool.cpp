@@ -1,11 +1,11 @@
-#include "glyphastore/store/paired/mutation_slot_pool.hpp"
+#include "glifistore/store/paired/mutation_slot_pool.hpp"
 
 #include <cstring>
 #include <exception>
 #include <limits>
 #include <stdexcept>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 MutationSlotPool::MutationSlotPool(const std::size_t slot_capacity, const std::size_t byte_capacity,
                                    const std::size_t maximum_payload_bytes)
@@ -156,4 +156,4 @@ auto MutationSlotPool::view(const SlotId slot_id) const noexcept -> std::optiona
     };
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

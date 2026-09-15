@@ -6,9 +6,9 @@ use FindBin;
 use JSON::PP qw(decode_json);
 use Test::More;
 
-use GlyphaStore::Client;
-use GlyphaStore::Error;
-use GlyphaStore::Protocol qw(
+use GlifiStore::Client;
+use GlifiStore::Error;
+use GlifiStore::Protocol qw(
     STATUS_INVALID_REQUEST STATUS_UNSUPPORTED STATUS_INTERNAL_ERROR STATUS_NOT_FOUND
     STATUS_OVERLOADED STATUS_WRONG_OWNER STATUS_NOT_BOUND STATUS_PERMISSION_DENIED
 );
@@ -29,12 +29,12 @@ my $fixture = decode_json($raw);
 
 for my $case (@{ $fixture->{cases} }) {
     subtest $case->{id} => sub {
-        my $error = GlyphaStore::Client::_status_error($case->{wire_status});
+        my $error = GlifiStore::Client::_status_error($case->{wire_status});
         is($error->category, $case->{category}, 'category');
         is($error->wire_status, $case->{wire_status}, 'wire_status');
         is($error->retryability, $case->{read_retryability}, 'read retryability');
 
-        my $enriched = GlyphaStore::Client::_status_error($case->{wire_status})->enrich(
+        my $enriched = GlifiStore::Client::_status_error($case->{wire_status})->enrich(
             bytes_sent       => 1,
             mutation_outcome => $case->{mutation_outcome},
         );
@@ -50,7 +50,7 @@ for my $case (@{ $fixture->{cases} }) {
 subtest 'indeterminate enrich ignores zero bytes_sent' => sub {
     # Receive-after-send paths historically omitted bytes_sent; transport+0 must not
     # advertise same_request when mutation_outcome is already indeterminate.
-    my $error = GlyphaStore::Error->new('transport', 'socket closed')->enrich(
+    my $error = GlifiStore::Error->new('transport', 'socket closed')->enrich(
         mutation_outcome => 'indeterminate',
     );
     is($error->bytes_sent, 0, 'bytes_sent stays zero when omitted');

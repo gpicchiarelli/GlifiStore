@@ -1,6 +1,6 @@
-#include "glyphastore/persistence/store_repair.hpp"
+#include "glifistore/persistence/store_repair.hpp"
 
-#include "glyphastore/persistence/segment_file.hpp"
+#include "glifistore/persistence/segment_file.hpp"
 #include "system_error.hpp"
 
 #include <array>
@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 [[nodiscard]] auto interrupted_open(const char* path, int flags, mode_t mode = 0) -> int {
@@ -161,7 +161,7 @@ namespace {
     if (!out) {
         return fail(ErrorCode::io_error, "cannot write repair quarantine audit");
     }
-    out << "glyphastore repair quarantine audit\n";
+    out << "glifistore repair quarantine audit\n";
     out << "source=" << report.source.string() << '\n';
     out << "workspace=" << report.workspace.string() << '\n';
     out << "repaired_store=" << report.repaired_store.string() << '\n';
@@ -332,4 +332,4 @@ auto repair_durable_store(const std::filesystem::path& source, const std::filesy
     return report;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

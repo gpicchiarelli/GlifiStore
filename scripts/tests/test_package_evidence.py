@@ -30,7 +30,7 @@ class PackageEvidenceTestCase(unittest.TestCase):
         cls.matrix = load_matrix(MATRIX)
 
     def setUp(self) -> None:
-        directory = tempfile.TemporaryDirectory(prefix="glyphastore-package-evidence-")
+        directory = tempfile.TemporaryDirectory(prefix="glifistore-package-evidence-")
         self.addCleanup(directory.cleanup)
         self.directory = Path(directory.name)
         self.context_path = self.directory / "release-context.json"
@@ -107,7 +107,7 @@ class EmissionTests(PackageEvidenceTestCase):
         self.assertEqual(evidence["subject"], {"kind": "source_tree", "name": "source-tree", "sha256": None})
 
     def test_evidence_is_bound_to_an_artifact_when_one_exists(self) -> None:
-        artifact = self.directory / "glyphastore-0.1.0-example.deb"
+        artifact = self.directory / "glifistore-0.1.0-example.deb"
         artifact.write_bytes(b"package payload")
         evidence = self.emit(subject_path=artifact)
         self.validate(evidence, artifact_root=self.directory)
@@ -152,7 +152,7 @@ class EmissionTests(PackageEvidenceTestCase):
 
 class NegativeValidationTests(PackageEvidenceTestCase):
     def test_a_tampered_artifact_digest_is_refused(self) -> None:
-        artifact = self.directory / "glyphastore-0.1.0-example.deb"
+        artifact = self.directory / "glifistore-0.1.0-example.deb"
         artifact.write_bytes(b"package payload")
         evidence = self.emit(subject_path=artifact)
         artifact.write_bytes(b"different payload")
@@ -160,7 +160,7 @@ class NegativeValidationTests(PackageEvidenceTestCase):
             self.validate(evidence, artifact_root=self.directory)
 
     def test_a_missing_artifact_is_refused(self) -> None:
-        artifact = self.directory / "glyphastore-0.1.0-example.deb"
+        artifact = self.directory / "glifistore-0.1.0-example.deb"
         artifact.write_bytes(b"package payload")
         evidence = self.emit(subject_path=artifact)
         artifact.unlink()

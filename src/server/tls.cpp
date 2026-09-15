@@ -1,6 +1,6 @@
-#include "glyphastore/server/tls.hpp"
+#include "glifistore/server/tls.hpp"
 
-#include "glyphastore/core/fault_injection.hpp"
+#include "glifistore/core/fault_injection.hpp"
 
 #include <chrono>
 #include <filesystem>
@@ -9,7 +9,7 @@
 #include <system_error>
 #include <utility>
 
-#if defined(GLYPHASTORE_HAS_TLS) && GLYPHASTORE_HAS_TLS
+#if defined(GLIFISTORE_HAS_TLS) && GLIFISTORE_HAS_TLS
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
@@ -17,10 +17,10 @@
 #include <openssl/x509v3.h>
 #endif
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
-#if defined(GLYPHASTORE_HAS_TLS) && GLYPHASTORE_HAS_TLS
+#if defined(GLIFISTORE_HAS_TLS) && GLIFISTORE_HAS_TLS
 
 [[nodiscard]] auto tls_error_string() -> std::string {
     const auto code = ERR_get_error();
@@ -172,8 +172,8 @@ auto validate_tls_config(const TlsConfig& config) -> Status {
     }
     if (!tls_build_enabled()) {
         return fail(ErrorCode::invalid_argument,
-                    "TLS was requested but GlyphaStore was built without TLS support "
-                    "(GLYPHASTORE_ENABLE_TLS=OFF or no LibreSSL/OpenSSL found)");
+                    "TLS was requested but GlifiStore was built without TLS support "
+                    "(GLIFISTORE_ENABLE_TLS=OFF or no LibreSSL/OpenSSL found)");
     }
     if (config.certificate_file.empty() || config.private_key_file.empty()) {
         return fail(ErrorCode::invalid_argument, "TLS requires both --tls-cert and --tls-key (fail closed)");
@@ -221,8 +221,8 @@ auto validate_client_tls_config(const ClientTlsConfig& config) -> Status {
     }
     if (!tls_build_enabled()) {
         return fail(ErrorCode::invalid_argument,
-                    "TLS was requested but GlyphaStore was built without TLS support "
-                    "(GLYPHASTORE_ENABLE_TLS=OFF or no LibreSSL/OpenSSL found)");
+                    "TLS was requested but GlifiStore was built without TLS support "
+                    "(GLIFISTORE_ENABLE_TLS=OFF or no LibreSSL/OpenSSL found)");
     }
     const auto has_cert = !config.certificate_file.empty();
     const auto has_key = !config.private_key_file.empty();
@@ -249,9 +249,9 @@ auto validate_client_tls_config(const ClientTlsConfig& config) -> Status {
 }
 
 auto tls_backend_name() -> std::string {
-#if defined(GLYPHASTORE_HAS_TLS) && GLYPHASTORE_HAS_TLS
-#if defined(GLYPHASTORE_TLS_BACKEND_NAME)
-    return GLYPHASTORE_TLS_BACKEND_NAME;
+#if defined(GLIFISTORE_HAS_TLS) && GLIFISTORE_HAS_TLS
+#if defined(GLIFISTORE_TLS_BACKEND_NAME)
+    return GLIFISTORE_TLS_BACKEND_NAME;
 #else
     return "OpenSSL";
 #endif
@@ -260,7 +260,7 @@ auto tls_backend_name() -> std::string {
 #endif
 }
 
-#if defined(GLYPHASTORE_HAS_TLS) && GLYPHASTORE_HAS_TLS
+#if defined(GLIFISTORE_HAS_TLS) && GLIFISTORE_HAS_TLS
 
 struct TlsContext::Impl {
     SSL_CTX* ctx{};
@@ -638,10 +638,10 @@ auto TlsSession::write(const std::byte* data, const std::size_t size) -> Result<
     if (!valid()) {
         return fail(ErrorCode::invalid_argument, "TLS session is not valid");
     }
-    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::tls_write_want_read)) {
+    if (glifistore::fault::consume_fail(glifistore::fault::Site::tls_write_want_read)) {
         return TlsIoResult{.kind = TlsIoKind::want_read, .bytes = 0};
     }
-    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::tls_write_want_write)) {
+    if (glifistore::fault::consume_fail(glifistore::fault::Site::tls_write_want_write)) {
         return TlsIoResult{.kind = TlsIoKind::want_write, .bytes = 0};
     }
     const auto result = SSL_write(impl_->ssl, data, static_cast<int>(size));
@@ -663,23 +663,23 @@ auto TlsContext::create(const TlsConfig& config) -> Result<std::shared_ptr<TlsCo
     if (auto valid = validate_tls_config(config); !valid) {
         return unexpected(valid.error());
     }
-    return fail(ErrorCode::invalid_argument, "GlyphaStore was built without TLS support");
+    return fail(ErrorCode::invalid_argument, "GlifiStore was built without TLS support");
 }
 
 auto TlsContext::create_client(const ClientTlsConfig& config) -> Result<std::shared_ptr<TlsContext>> {
     if (auto valid = validate_client_tls_config(config); !valid) {
         return unexpected(valid.error());
     }
-    return fail(ErrorCode::invalid_argument, "GlyphaStore was built without TLS support");
+    return fail(ErrorCode::invalid_argument, "GlifiStore was built without TLS support");
 }
 
 auto TlsContext::accept_socket(const int) const -> Result<std::unique_ptr<TlsSession>> {
-    return fail(ErrorCode::invalid_argument, "GlyphaStore was built without TLS support");
+    return fail(ErrorCode::invalid_argument, "GlifiStore was built without TLS support");
 }
 
 auto TlsContext::connect_socket(const int, const std::string_view) const
     -> Result<std::unique_ptr<TlsSession>> {
-    return fail(ErrorCode::invalid_argument, "GlyphaStore was built without TLS support");
+    return fail(ErrorCode::invalid_argument, "GlifiStore was built without TLS support");
 }
 
 TlsSession::TlsSession(std::unique_ptr<Impl> impl) : impl_(std::move(impl)) {}
@@ -701,12 +701,12 @@ auto TlsSession::pending() const noexcept -> std::size_t {
     return 0;
 }
 auto TlsSession::read(std::byte*, const std::size_t) -> Result<TlsIoResult> {
-    return fail(ErrorCode::invalid_argument, "GlyphaStore was built without TLS support");
+    return fail(ErrorCode::invalid_argument, "GlifiStore was built without TLS support");
 }
 auto TlsSession::write(const std::byte*, const std::size_t) -> Result<TlsIoResult> {
-    return fail(ErrorCode::invalid_argument, "GlyphaStore was built without TLS support");
+    return fail(ErrorCode::invalid_argument, "GlifiStore was built without TLS support");
 }
 
 #endif
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

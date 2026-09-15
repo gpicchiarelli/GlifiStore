@@ -22,7 +22,7 @@ filter() {
   ' "$1" | sort
 }
 
-tmp="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-sumcmp.XXXXXX")"
+tmp="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-sumcmp.XXXXXX")"
 cleanup() { rm -rf "$tmp"; }
 trap cleanup EXIT
 

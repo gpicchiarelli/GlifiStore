@@ -7,7 +7,7 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
 fi
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-project="$root/build/xcode/GlyphaStore.xcodeproj"
+project="$root/build/xcode/GlifiStore.xcodeproj"
 
 "$root/scripts/generate-xcode.sh" >/dev/null
 
@@ -33,7 +33,7 @@ xcodebuild \
     CODE_SIGNING_ALLOWED=NO \
     build
 
-"$root/build/xcode/Debug/glyphastore_demo"
+"$root/build/xcode/Debug/glifistore_demo"
 
 cat <<EOF
 Xcode verification passed.

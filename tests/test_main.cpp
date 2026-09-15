@@ -30,27 +30,27 @@ auto parse_shard_value(std::string_view value, std::string_view variable) -> std
 }
 
 auto read_test_shard(std::size_t test_count) -> TestShard {
-    const char* const count_env = std::getenv("GLYPHASTORE_TEST_SHARD_COUNT");
-    const char* const index_env = std::getenv("GLYPHASTORE_TEST_SHARD_INDEX");
+    const char* const count_env = std::getenv("GLIFISTORE_TEST_SHARD_COUNT");
+    const char* const index_env = std::getenv("GLIFISTORE_TEST_SHARD_INDEX");
     if ((count_env == nullptr) != (index_env == nullptr)) {
         throw std::invalid_argument{
-            "GLYPHASTORE_TEST_SHARD_COUNT and GLYPHASTORE_TEST_SHARD_INDEX must be set together"};
+            "GLIFISTORE_TEST_SHARD_COUNT and GLIFISTORE_TEST_SHARD_INDEX must be set together"};
     }
     if (count_env == nullptr) {
         return {};
     }
 
-    const std::size_t count = parse_shard_value(count_env, "GLYPHASTORE_TEST_SHARD_COUNT");
-    const std::size_t index = parse_shard_value(index_env, "GLYPHASTORE_TEST_SHARD_INDEX");
+    const std::size_t count = parse_shard_value(count_env, "GLIFISTORE_TEST_SHARD_COUNT");
+    const std::size_t index = parse_shard_value(index_env, "GLIFISTORE_TEST_SHARD_INDEX");
     if (count == 0) {
-        throw std::invalid_argument{"GLYPHASTORE_TEST_SHARD_COUNT must be greater than zero"};
+        throw std::invalid_argument{"GLIFISTORE_TEST_SHARD_COUNT must be greater than zero"};
     }
     if (count > test_count) {
-        throw std::invalid_argument{"GLYPHASTORE_TEST_SHARD_COUNT must not exceed the registered test count"};
+        throw std::invalid_argument{"GLIFISTORE_TEST_SHARD_COUNT must not exceed the registered test count"};
     }
     if (index >= count) {
         throw std::invalid_argument{
-            "GLYPHASTORE_TEST_SHARD_INDEX must be less than GLYPHASTORE_TEST_SHARD_COUNT"};
+            "GLIFISTORE_TEST_SHARD_INDEX must be less than GLIFISTORE_TEST_SHARD_COUNT"};
     }
     return {.count = count, .index = index};
 }
@@ -74,11 +74,11 @@ int main(int argc, char** argv) {
     // Ignore process-wide; sockets also set SO_NOSIGPIPE where available.
     std::signal(SIGPIPE, SIG_IGN);
 
-    const char* filter_env = std::getenv("GLYPHASTORE_TEST_FILTER");
+    const char* filter_env = std::getenv("GLIFISTORE_TEST_FILTER");
     const std::string_view filter =
         argc > 1 ? std::string_view{argv[1]}
                  : (filter_env != nullptr ? std::string_view{filter_env} : std::string_view{});
-    const auto& tests = glyphastore::test::registry();
+    const auto& tests = glifistore::test::registry();
     TestShard shard;
     try {
         shard = read_test_shard(tests.size());

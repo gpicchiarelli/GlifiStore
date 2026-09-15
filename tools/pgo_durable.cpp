@@ -1,5 +1,5 @@
-#include "glyphastore/store/config.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/store/config.hpp"
+#include "glifistore/store/store.hpp"
 
 #include <atomic>
 #include <cstdlib>
@@ -20,17 +20,17 @@ namespace {
 [[nodiscard]] auto temporary_directory() -> std::filesystem::path {
     static std::atomic<std::uint64_t> counter{0};
     return std::filesystem::temp_directory_path() /
-           ("glyphastore-pgo-" + std::to_string(static_cast<unsigned long>(::getpid())) + '-' +
+           ("glifistore-pgo-" + std::to_string(static_cast<unsigned long>(::getpid())) + '-' +
             std::to_string(counter.fetch_add(1U, std::memory_order_relaxed)));
 }
 
 void durable_training_loop(const std::filesystem::path& data_dir, const std::size_t operations) {
     {
         auto opened =
-            glyphastore::Store::open({.worker_config = {.explicit_count = 1},
-                                      .storage_mode = glyphastore::StorageMode::durable_sync,
+            glifistore::Store::open({.worker_config = {.explicit_count = 1},
+                                      .storage_mode = glifistore::StorageMode::durable_sync,
                                       .data_directory = data_dir,
-                                      .durable_open_mode = glyphastore::DurableOpenMode::create_new});
+                                      .durable_open_mode = glifistore::DurableOpenMode::create_new});
         if (!opened) {
             throw std::runtime_error("durable PGO training failed to create store");
         }
@@ -51,10 +51,10 @@ void durable_training_loop(const std::filesystem::path& data_dir, const std::siz
     }
 
     auto reopened =
-        glyphastore::Store::open({.worker_config = {.explicit_count = 1},
-                                  .storage_mode = glyphastore::StorageMode::durable_sync,
+        glifistore::Store::open({.worker_config = {.explicit_count = 1},
+                                  .storage_mode = glifistore::StorageMode::durable_sync,
                                   .data_directory = data_dir,
-                                  .durable_open_mode = glyphastore::DurableOpenMode::open_existing});
+                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     if (!reopened) {
         throw std::runtime_error("durable PGO training failed to reopen store");
     }
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
         std::cout << "# durable PGO training operations=" << operations << '\n';
         return 0;
     } catch (const std::exception& exception) {
-        std::cerr << "glyphastore_pgo_durable: fatal: " << exception.what() << '\n';
+        std::cerr << "glifistore_pgo_durable: fatal: " << exception.what() << '\n';
         return 1;
     }
 }

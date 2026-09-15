@@ -1,12 +1,12 @@
 # Contributing
 
-GlyphaStore is currently an architecture prototype under active design. Read
+GlifiStore is currently an architecture prototype under active design. Read
 [AGENTS.md](AGENTS.md) for the promise = requirement + spec + implementation + proof + evidence +
 residual risk rule and the non-negotiables.
 
 ## Licensing
 
-GlyphaStore is BSD-3-Clause ([LICENSE](LICENSE)). Copyright (c) 2026 Giacomo Picchiarelli.
+GlifiStore is BSD-3-Clause ([LICENSE](LICENSE)). Copyright (c) 2026 Giacomo Picchiarelli.
 Third-party attributions: [NOTICE](NOTICE), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 Contributor and redistributor rules: [docs/legal/licensing.md](docs/legal/licensing.md).
 
@@ -54,7 +54,7 @@ without linked proofs and existing evidence paths.
 
 - No raw owning pointers or manual `new`/`delete` in production code.
 - No persisted struct casts; use explicit little-endian codecs
-  (`include/glyphastore/core/little_endian.hpp`).
+  (`include/glifistore/core/little_endian.hpp`).
 - No unchecked length, offset, capacity, or allocation arithmetic.
 - No record parser without malformed-input tests and fuzz coverage.
 - No reclaim while a reader may still address a segment.

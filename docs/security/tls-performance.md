@@ -13,9 +13,9 @@ cleartext TCP benches, and what a representative local run showed.
 
 Use `scripts/benchmark_tls_tax.sh`. It:
 
-1. Starts a volatile `glyphastored` on loopback in cleartext mode and again in TLS-only mode
+1. Starts a volatile `glifistored` on loopback in cleartext mode and again in TLS-only mode
    (ephemeral self-signed cert with SAN `DNS:localhost` / `IP:127.0.0.1`).
-2. Runs `sdk/go/cmd/glyphastore-bench` with identical `--ops`, `--pipeline`, `--workers`,
+2. Runs `sdk/go/cmd/glifistore-bench` with identical `--ops`, `--pipeline`, `--workers`,
    `--execution concurrent`, warmup, and repeats.
 3. Writes per-cell outputs under `cleartext/` and `tls/`, plus a Markdown summary with
    `TLS/cleartext` median ops/s ratios.
@@ -24,7 +24,7 @@ Flags on the Go bench (same semantics as interop): `--tls`, `--tls-ca`, `--serve
 mTLS `--tls-cert`/`--tls-key`, and `--insecure-skip-verify` for lab-only escapes.
 
 ```bash
-# Requires a TLS-capable glyphastored (GLYPHASTORE_ENABLE_TLS + LibreSSL/OpenSSL).
+# Requires a TLS-capable glifistored (GLIFISTORE_ENABLE_TLS + LibreSSL/OpenSSL).
 OPS=50000 WARMUP=1 REPEATS=5 ./scripts/benchmark_tls_tax.sh
 ```
 
@@ -33,7 +33,7 @@ developer host before publishing absolute numbers.
 
 ## Representative local result (macOS, OpenSSL 3.x daemon)
 
-Captured 2026-07-20 on Apple Silicon against a Debug/Release TLS-capable `glyphastored` (OpenSSL
+Captured 2026-07-20 on Apple Silicon against a Debug/Release TLS-capable `glifistored` (OpenSSL
 backend), volatile storage, Go SDK 0.1.0, `OPS=20000`, `REPEATS=3`, concurrent execution:
 
 | workers | pipeline | cleartext median ops/s | TLS median ops/s | TLS/cleartext |

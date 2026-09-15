@@ -1,4 +1,4 @@
-#include "glyphastore/server/wakeup.hpp"
+#include "glifistore/server/wakeup.hpp"
 
 #include "system_error.hpp"
 
@@ -11,7 +11,7 @@
 #include <sys/eventfd.h>
 #endif
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 auto Wakeup::create() -> Result<Wakeup> {
 #if defined(__linux__)
@@ -96,4 +96,4 @@ auto Wakeup::drain() const -> Status {
     }
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

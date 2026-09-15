@@ -1,12 +1,12 @@
 #include "persistence/runtime_catalog_detail.hpp"
 
-#include "glyphastore/core/integer_math.hpp"
-#include "glyphastore/persistence/compaction.hpp"
-#include "glyphastore/persistence/namespace_audit.hpp"
-#include "glyphastore/persistence/recovery.hpp"
-#include "glyphastore/persistence/resource_limits.hpp"
-#include "glyphastore/persistence/segment_file.hpp"
-#include "glyphastore/segment/record.hpp"
+#include "glifistore/core/integer_math.hpp"
+#include "glifistore/persistence/compaction.hpp"
+#include "glifistore/persistence/namespace_audit.hpp"
+#include "glifistore/persistence/recovery.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
+#include "glifistore/persistence/segment_file.hpp"
+#include "glifistore/segment/record.hpp"
 #include "persistence/hot_record_table.hpp"
 
 #include <algorithm>
@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::runtime_catalog_detail {
+namespace glifistore::runtime_catalog_detail {
 
 [[nodiscard]] auto as_string_view(const std::span<const std::byte> bytes) noexcept -> std::string_view {
     if (bytes.empty()) {
@@ -430,4 +430,4 @@ auto rollback_prepared_compaction(DataDirectory& directory, const Manifest& old_
     return audit;
 }
 
-} // namespace glyphastore::runtime_catalog_detail
+} // namespace glifistore::runtime_catalog_detail

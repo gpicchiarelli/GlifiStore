@@ -1,7 +1,7 @@
 # Secure profile certificate rotation and revocation
 
 Status: descriptive operator runbook  
-Applies to: `glyphastored` secure profile (mTLS + `--authz-map`)  
+Applies to: `glifistored` secure profile (mTLS + `--authz-map`)  
 Owner: security maintainers  
 Last reviewed: 2026-07-28
 

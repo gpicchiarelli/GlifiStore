@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.dev/schemas/evidence-import-v1.json",
-  "title": "GlyphaStore post-admission evidence import receipt",
+  "$id": "https://glifistore.dev/schemas/evidence-import-v1.json",
+  "title": "GlifiStore post-admission evidence import receipt",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "candidate_seal", "candidate_seal_sha256", "imported_at", "workflow", "run_id", "files"],

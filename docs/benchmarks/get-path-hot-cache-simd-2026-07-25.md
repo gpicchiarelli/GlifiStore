@@ -32,7 +32,7 @@ no reader helpers / RCU / `shared_mutex` Index sharing / new executors / protoco
 
 Local raw outputs: gitignored `benchmark-results/get-path-simd/`.
 
-Sanitizers: Debug and ASan `glyphastore_tests` 373/0 after this change.
+Sanitizers: Debug and ASan `glifistore_tests` 373/0 after this change.
 
 ## Comparative medians (ops/s)
 

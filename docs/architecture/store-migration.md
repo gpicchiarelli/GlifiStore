@@ -7,7 +7,7 @@ Last reviewed: 2026-09-11
 
 ## Contract
 
-Worker-count changes are **offline** operations. Stop `glyphastored` / close every Store on the
+Worker-count changes are **offline** operations. Stop `glifistored` / close every Store on the
 source directory. Migration never mutates the source. It creates or resumes a **destination**
 durable Store with the target Worker count and copies every live visible key (value + expiry).
 
@@ -59,7 +59,7 @@ A destination directory without a matching checkpoint is also refused (fail clos
 ## Tooling
 
 ```bash
-glyphastore_migrate_store [--json] [--no-scan] --workers N -- /path/to/source /path/to/destination
+glifistore_migrate_store [--json] [--no-scan] --workers N -- /path/to/source /path/to/destination
 ```
 
 ## Explicit non-goals

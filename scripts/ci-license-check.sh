@@ -132,7 +132,7 @@ for line in open(path, encoding="utf-8"):
     if len(parts) < 3:
         continue
     name, license_name = parts[0], parts[2]
-    if name.lower() in {"glyphastore", "pip", "setuptools", "wheel", "pip-licenses"}:
+    if name.lower() in {"glifistore", "pip", "setuptools", "wheel", "pip-licenses"}:
         continue
     has_copyleft = re.search(r"\b(AGPL|GPL|SSPL|Commons Clause)\b", license_name, re.I)
     has_permissive = re.search(

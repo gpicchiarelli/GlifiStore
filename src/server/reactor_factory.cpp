@@ -1,10 +1,10 @@
 #include "server/reactor_factory.hpp"
 
-#include "glyphastore/server/socket.hpp"
+#include "glifistore/server/socket.hpp"
 
 #include <utility>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 auto ReactorFactory::create_all(const ReactorConfig& config, Store& store, ConnectionHandoffMesh& mesh,
                                 DiskReadExecutor& disk_reads, PairWriterPool& pair_writers,
@@ -84,4 +84,4 @@ auto ReactorFactory::create_all(const ReactorConfig& config, Store& store, Conne
     return reactors;
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

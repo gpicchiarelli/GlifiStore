@@ -77,12 +77,12 @@ jobs:
       - name: Build benchmark targets
         run: >-
           cmake --build --preset unix-release --target
-          glyphastore_benchmarks glyphastore_server_benchmarks
+          glifistore_benchmarks glifistore_server_benchmarks
 
       - name: Run core benchmarks
         run: |
           set -o pipefail
-          ./build/unix-release/glyphastore_benchmarks \
+          ./build/unix-release/glifistore_benchmarks \
             --filter all --ops 200000 --warmup 1 --repeats 7 --pin-cpu \
             | tee "$RESULTS_DIR/core.txt"
 
@@ -97,7 +97,7 @@ jobs:
             if [[ "$distribution" == "single-worker" ]]; then
               ops=50000
             fi
-            ./build/unix-release/glyphastore_benchmarks \
+            ./build/unix-release/glifistore_benchmarks \
               --filter store-parallel-all \
               --ops "$ops" --workers 2 --threads 2 \
               --distribution "$distribution" --warmup 1 --repeats 7 \
@@ -107,14 +107,14 @@ jobs:
       - name: Run durable Store benchmarks
         run: |
           set -o pipefail
-          ./build/unix-release/glyphastore_benchmarks \
+          ./build/unix-release/glifistore_benchmarks \
             --filter store-durable-put --ops 256 --workers 1 --warmup 1 --repeats 3 \
             | tee "$RESULTS_DIR/durable-sync.txt"
-          ./build/unix-release/glyphastore_benchmarks \
+          ./build/unix-release/glifistore_benchmarks \
             --filter store-durable-periodic-read-after-write \
             --ops 20000 --workers 1 --warmup 1 --repeats 5 \
             | tee "$RESULTS_DIR/durable-periodic.txt"
-          ./build/unix-release/glyphastore_benchmarks \
+          ./build/unix-release/glifistore_benchmarks \
             --filter store-durable-group-parallel-put \
             --ops 1024 --workers 1 --threads 32 --distribution single-worker \
             --latency --warmup 1 --repeats 3 \
@@ -125,7 +125,7 @@ jobs:
           set -o pipefail
           for workers in 1 2 4; do
             for pipeline in 1 8 32 128; do
-              ./build/unix-release/glyphastore_server_benchmarks \
+              ./build/unix-release/glifistore_server_benchmarks \
                 --ops 100000 --workers "$workers" --clients "$workers" --pipeline "$pipeline" \
                 --executor-affinity --warmup 1 --repeats 7 \
                 | tee "$RESULTS_DIR/server-tcp-w${workers}-p${pipeline}.txt"
@@ -135,7 +135,7 @@ jobs:
       - name: Measure pipelined TCP latency
         run: |
           set -o pipefail
-          ./build/unix-release/glyphastore_server_benchmarks \
+          ./build/unix-release/glifistore_server_benchmarks \
             --ops 100000 --workers 2 --clients 2 --pipeline 32 \
             --executor-affinity --latency --warmup 1 --repeats 7 \
             | tee "$RESULTS_DIR/server-latency-w2-p32.txt"
@@ -158,7 +158,7 @@ jobs:
 
           artifact_id="$(
             gh api "/repos/${GITHUB_REPOSITORY}/actions/runs/${previous_run_id}/artifacts" \
-              --jq '[.artifacts[] | select(.expired == false and (.name | startswith("glyphastore-benchmarks-")))][0].id // empty'
+              --jq '[.artifacts[] | select(.expired == false and (.name | startswith("glifistore-benchmarks-")))][0].id // empty'
           )"
           if [[ -z "$artifact_id" ]]; then
             echo "The previous run has no retained benchmark artifact."
@@ -194,7 +194,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: glyphastore-benchmarks-${{ github.sha }}
+          name: glifistore-benchmarks-${{ github.sha }}
           path: benchmark-results/
           if-no-files-found: error
           retention-days: 90

@@ -1,5 +1,5 @@
 Status: descriptive release process; does not raise claim ceiling
-Applies to: tagged releases and claim packaging for GlyphaStore 0.1.x
+Applies to: tagged releases and claim packaging for GlifiStore 0.1.x
 Owner: release maintainers
 Last reviewed: 2026-08-26
 
@@ -18,9 +18,9 @@ ceiling above *architectural prototype*. Authority for gates:
   (`engineering/compatibility/n-n1-matrix.yaml` if N↔N-1 policy changed)
 - [ ] Local: `python3 engineering/tools/validate_assurance.py`
 - [ ] Local: structure / Actions / compat / claims / perf budget validators (see `engineering/README.md`)
-- [ ] Local: `ctest` / `glyphastore_tests` green on at least one supported host
+- [ ] Local: `ctest` / `glifistore_tests` green on at least one supported host
 - [ ] Sanitizer / crash suites considered for the change set (or deferred with residual note)
-- [ ] No new absolute performance claims without `glyphastore-linux-perf` `pass-candidate` evidence
+- [ ] No new absolute performance claims without `glifistore-linux-perf` `pass-candidate` evidence
 
 ## Tag packaging
 
@@ -52,7 +52,7 @@ ceiling above *architectural prototype*. Authority for gates:
 - [ ] FreeBSD evidence generated `distinfo` from the sealed source, built and installed the native
       package, exercised rc.subr and durable recovery, then proved config/data preservation
 - [ ] OpenBSD evidence generated `distinfo` from the sealed source, built and installed the native
-      package, exercised `rcctl` and durable recovery under `/var/glyphastore`, then proved
+      package, exercised `rcctl` and durable recovery under `/var/glifistore`, then proved
       config/data preservation
 - [ ] Optional package backends (`deb`, `rpm`, `macports`, `homebrew`) ran the `release` profile from
       the sealed candidate; their evidence stays diagnostic and admits no release artifact

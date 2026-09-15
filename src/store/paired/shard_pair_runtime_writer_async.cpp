@@ -1,17 +1,17 @@
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/store/paired/completion_policy.hpp"
-#include "glyphastore/store/paired/fail_closed_state.hpp"
-#include "glyphastore/store/paired/lane_publication.hpp"
-#include "glyphastore/store/paired/mutation_batch.hpp"
-#include "glyphastore/store/paired/mutation_execution.hpp"
-#include "glyphastore/store/paired/mutation_recovery.hpp"
-#include "glyphastore/store/paired/mutation_state.hpp"
-#include "glyphastore/store/paired/publication_coordinator.hpp"
-#include "glyphastore/store/paired/shard_combining_executor.hpp"
-#include "glyphastore/store/paired/shard_pair_runtime.hpp"
-#include "glyphastore/store/paired/volatile_sync_chunk.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/store/paired/completion_policy.hpp"
+#include "glifistore/store/paired/fail_closed_state.hpp"
+#include "glifistore/store/paired/lane_publication.hpp"
+#include "glifistore/store/paired/mutation_batch.hpp"
+#include "glifistore/store/paired/mutation_execution.hpp"
+#include "glifistore/store/paired/mutation_recovery.hpp"
+#include "glifistore/store/paired/mutation_state.hpp"
+#include "glifistore/store/paired/publication_coordinator.hpp"
+#include "glifistore/store/paired/shard_combining_executor.hpp"
+#include "glifistore/store/paired/shard_pair_runtime.hpp"
+#include "glifistore/store/paired/volatile_sync_chunk.hpp"
 #include "store/paired/shard_pair_runtime_impl.hpp"
 #include "store/store_internal.hpp"
 
@@ -26,7 +26,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 void ShardPairRuntime::run_writer_async_batch(WriterAsyncBatchEnv& env) noexcept {
     auto& lane = env.lane;
@@ -218,7 +218,7 @@ void ShardPairRuntime::run_writer_async_batch(WriterAsyncBatchEnv& env) noexcept
         // Authority is already visible; preserve staged success ACKs across reclaim /
         // injected post-publish faults (mirror sync volatile/durable catch).
         ack_staged_after_publish();
-        if (glyphastore::fault::consume_fail(glyphastore::fault::Site::publish)) {
+        if (glifistore::fault::consume_fail(glifistore::fault::Site::publish)) {
             throw std::bad_alloc{};
         }
         if (env.lane.merge.read_merge) {
@@ -369,7 +369,7 @@ void ShardPairRuntime::run_writer_async_batch(WriterAsyncBatchEnv& env) noexcept
                     store_, shard, std::span{env.durable_views}.subspan(begin, end - begin));
                 // Keep mutate_inflight through classification so post-return throws
                 // cannot stamp Store-entered siblings as never-started OVERLOADED.
-                if (glyphastore::fault::consume_fail(glyphastore::fault::Site::post_mutate)) {
+                if (glifistore::fault::consume_fail(glifistore::fault::Site::post_mutate)) {
                     throw std::bad_alloc{};
                 }
                 if (results.size() != end - begin) {
@@ -617,7 +617,7 @@ void ShardPairRuntime::run_writer_async_batch(WriterAsyncBatchEnv& env) noexcept
             if (drain_durable_snapshot()) {
                 generation_published = true;
                 ack_clean_durable_after_drain();
-                if (glyphastore::fault::consume_fail(glyphastore::fault::Site::publish)) {
+                if (glifistore::fault::consume_fail(glifistore::fault::Site::publish)) {
                     throw std::bad_alloc{};
                 }
             } else {
@@ -661,7 +661,7 @@ void ShardPairRuntime::run_writer_async_batch(WriterAsyncBatchEnv& env) noexcept
                     drain_durable_snapshot()) {
                     generation_published = true;
                     ack_clean_durable_after_drain();
-                    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::publish)) {
+                    if (glifistore::fault::consume_fail(glifistore::fault::Site::publish)) {
                         throw std::bad_alloc{};
                     }
                 } else {
@@ -775,4 +775,4 @@ void ShardPairRuntime::run_writer_async_batch(WriterAsyncBatchEnv& env) noexcept
     release_execution_token(env.lane.async.execution_token);
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

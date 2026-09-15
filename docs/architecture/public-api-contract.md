@@ -1,7 +1,7 @@
 # Public C++ API contract
 
 Status: normative for the current installed C++ API
-Applies to: `glyphastore::Store` 0.1.x
+Applies to: `glifistore::Store` 0.1.x
 Owner: API maintainers
 Last reviewed: 2026-09-15
 
@@ -183,7 +183,7 @@ Optional automatic scheduling is governed by `StoreConfig::maintenance` and ADR 
 default is `cooperative` (no maintenance thread). `background` starts one Store-owned evaluation
 thread that may call `compact()` under Phase 3 normal/pressure/emergency budgets. Under emergency,
 `put`/`erase` return `storage_exhausted` until capacity recovers (embedded Store). On the TCP path the
-Reactor maps that to `OVERLOADED`; official clients report `retryability=never`. `glyphastored`
+Reactor maps that to `OVERLOADED`; official clients report `retryability=never`. `glifistored`
 defaults to
 `background`. Normal background maintenance preflights the selected durable Worker's exact
 Index-referenced live bytes against `max_copy_bytes_per_cycle` (128 MiB default, inclusive; zero

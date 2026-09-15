@@ -27,15 +27,15 @@ The engine-owned names are:
 
 | Name | Purpose |
 |---|---|
-| `.glyphastore.lock` | lifetime of the exclusive process lock |
-| `.manifest.glypha.tmp` | replaceable, recognizable publication temporary |
-| `manifest.glypha` | authoritative complete manifest |
-| `.glyphastore.bootstrap.tmp` | temporary bootstrap-intent publication |
-| `.glyphastore.bootstrap` | bootstrap intent encoded as a complete v1 Manifest |
-| `.glyphastore.compaction.tmp` | temporary compaction-intent publication |
-| `.glyphastore.compaction` | checksummed compaction intent with old and replacement manifests |
-| `.segment-<id>-<generation>.glypha.tmp` | recognizable unpublished Segment temporary |
-| `segment-<id>-<generation>.glypha` | immutable-identity Segment generation |
+| `.glifistore.lock` | lifetime of the exclusive process lock |
+| `.manifest.glifi.tmp` | replaceable, recognizable publication temporary |
+| `manifest.glifi` | authoritative complete manifest |
+| `.glifistore.bootstrap.tmp` | temporary bootstrap-intent publication |
+| `.glifistore.bootstrap` | bootstrap intent encoded as a complete v1 Manifest |
+| `.glifistore.compaction.tmp` | temporary compaction-intent publication |
+| `.glifistore.compaction` | checksummed compaction intent with old and replacement manifests |
+| `.segment-<id>-<generation>.glifi.tmp` | recognizable unpublished Segment temporary |
+| `segment-<id>-<generation>.glifi` | immutable-identity Segment generation |
 
 ## Platform synchronization strategy
 
@@ -54,7 +54,7 @@ size metadata needed to retrieve written data. See the current Linux
 
 Apple documents that `F_BARRIERFSYNC` orders I/O synchronized before the barrier ahead of I/O issued
 after it, while `F_FULLFSYNC` drains the device queue and makes earlier synchronized data persistent.
-GlyphaStore uses that two-phase protocol for Segment Record and commit-slot publication on supported
+GlifiStore uses that two-phase protocol for Segment Record and commit-slot publication on supported
 HFS/APFS storage. The final commit point, manifest publication, and directory publication still use
 `F_FULLFSYNC`; there is no downgrade to ordinary `fsync`. An unsupported barrier or full flush is an
 I/O failure. See Apple's [`fsync(2)`](https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/fsync.2.html)
@@ -117,7 +117,7 @@ encode
   -> create private temporary with O_EXCL
   -> complete positional write
   -> full file synchronization
-  -> atomic renameat over manifest.glypha
+  -> atomic renameat over manifest.glifi
   -> full directory synchronization
 ```
 

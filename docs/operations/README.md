@@ -1,7 +1,7 @@
 # Operations runbooks
 
 Status: descriptive
-Applies to: durable `glyphastored` deployments and offline maintenance tools
+Applies to: durable `glifistored` deployments and offline maintenance tools
 Owner: persistence and platform maintainers
 Last reviewed: 2026-08-01
 
@@ -13,10 +13,10 @@ in [cli.md](../cli.md), [wire protocol v2](../spec/wire-protocol-v2.md), and
 | Runbook | When to use |
 |---|---|
 | [Operations handbook](handbook.md) | Day-1/day-2 index and incident playbooks (entry point) |
-| [Durable TCP daemon](durable-tcp-daemon.md) | End-to-end durable `glyphastored` setup: profile/mode, flags, probes, drain, offline ops |
+| [Durable TCP daemon](durable-tcp-daemon.md) | End-to-end durable `glifistored` setup: profile/mode, flags, probes, drain, offline ops |
 | [Graceful drain and overload](graceful-drain-and-overload.md) | Rolling restart, deploy, capacity pressure, `OVERLOADED` responses |
 | [Backup and restore](backup-restore.md) | Planned copy, migration to new host, disaster recovery from verified backup |
-| [Worker count change](worker-resharding.md) | Offline reshard / logical rewrite via `glyphastore_migrate_store` |
+| [Worker count change](worker-resharding.md) | Offline reshard / logical rewrite via `glifistore_migrate_store` |
 | [Corruption detection and repair](corruption-repair.md) | Startup failure, verify errors, namespace anomalies, post-incident salvage |
 | [Observability reference](observability.md) | HEALTH/READY/STATS needles, JSON logs, dump-config, units |
 | [Compatibility and migration](compatibility-and-migration.md) | Upgrade/downgrade, Worker migrate, fixture drops, wire N↔N-1 |
@@ -32,7 +32,7 @@ All maintenance tools share the CLI contract in [cli.md](../cli.md):
 - exit `1` — validation, I/O, or repair failure (fail closed)
 - exit `2` — usage error
 
-Stop every writer (`glyphastored` or embedded `Store`) that holds the data-directory lock before
+Stop every writer (`glifistored` or embedded `Store`) that holds the data-directory lock before
 offline verify, backup, repair, or Worker migrate. Online **fenced** backup (`Store::backup_to` /
 wire `BACKUP`) is supported and briefly pauses admissions; fully concurrent zero-fence hot backup,
 in-place rewrite, and online reshard are **not** supported.

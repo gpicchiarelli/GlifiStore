@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/gpicchiarelli/GlyphaStore/sdk/go/protocol"
+	"github.com/gpicchiarelli/GlifiStore/sdk/go/protocol"
 )
 
 type taxonomyFixture struct {

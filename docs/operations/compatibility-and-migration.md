@@ -5,7 +5,7 @@ Last reviewed: 2026-08-01
 
 # Compatibility and migration manual
 
-Operator-facing upgrade, downgrade, and Worker-count procedures for GlyphaStore **before 1.0**.
+Operator-facing upgrade, downgrade, and Worker-count procedures for GlifiStore **before 1.0**.
 Machine-readable policy: [`engineering/compatibility/n-n1-matrix.yaml`](../../engineering/compatibility/n-n1-matrix.yaml).
 Normative lifecycle: [version-lifecycle](../architecture/version-lifecycle.md),
 [n-n1-compatibility](../architecture/n-n1-compatibility.md). Claim ceiling remains
@@ -16,7 +16,7 @@ Normative lifecycle: [version-lifecycle](../architecture/version-lifecycle.md),
 | Goal | Supported? | Procedure |
 | --- | --- | --- |
 | Reopen same data dir with same Worker count on 0.1.x | Yes | Stop writers → verify → open |
-| Change Worker count | Offline only | [`glyphastore_migrate_store`](worker-resharding.md) into a **new** directory |
+| Change Worker count | Offline only | [`glifistore_migrate_store`](worker-resharding.md) into a **new** directory |
 | Open pre-v1 / unknown required format | No | Fail closed |
 | Silent downgrade rewrite of a newer required version | No | Not promised |
 | Wire non-v2 client against 0.1.x server | No | Intentionally rejected |
@@ -28,12 +28,12 @@ Normative lifecycle: [version-lifecycle](../architecture/version-lifecycle.md),
 Preconditions: persistence format v1, unchanged Worker count, every writer stopped.
 
 ```bash
-# 1. Stop glyphastored / close embedded Stores (directory lock must be free).
+# 1. Stop glifistored / close embedded Stores (directory lock must be free).
 # 2. Read-only verify
-glyphastore_verify_store -- /path/to/data
+glifistore_verify_store -- /path/to/data
 
 # 3. Start the new binary with the same Worker count (omit override, or pass the persisted count).
-glyphastored --profile production --data-dir /path/to/data ...
+glifistored --profile production --data-dir /path/to/data ...
 ```
 
 Fail closed if the binary requires a higher format version than the Store encodes. Reopen never
@@ -46,9 +46,9 @@ Matrix row: `STORE-SAME-LINE`.
 Use [worker-resharding](worker-resharding.md) / [store-migration](../architecture/store-migration.md).
 
 ```bash
-glyphastore_verify_store -- /path/to/source
-glyphastore_migrate_store --workers N -- /path/to/source /path/to/destination
-glyphastore_verify_store -- /path/to/destination
+glifistore_verify_store -- /path/to/source
+glifistore_migrate_store --workers N -- /path/to/source /path/to/destination
+glifistore_verify_store -- /path/to/destination
 # Cut traffic to destination only after verify succeeds; keep source until rollback window ends.
 ```
 

@@ -66,6 +66,6 @@ status=0
 python3 /src/engineering/tools/run_linux_package_backend.py \
     --backend "$backend" --profile "$profile" --stage "$stage" \
     --root /src --release-context /release-context.json \
-    --output-dir /out --work-dir /glyphastore-work --inner \
+    --output-dir /out --work-dir /glifistore-work --inner \
     || status=$?
 exit "$status"

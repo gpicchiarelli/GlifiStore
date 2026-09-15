@@ -1,4 +1,4 @@
-# benchmark=glyphastore_concurrent_maintenance
+# benchmark=glifistore_concurrent_maintenance
 # git_sha=1ff35c3
 # scenario=forced-rotation
 # warmups=1;measured_repeats=7;threads=4;operations=15360;keys=128;value_bytes=65536;reclaim_value_bytes=262144;put_percent=5;cooldown_ms=250

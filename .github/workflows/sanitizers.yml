@@ -86,9 +86,9 @@ jobs:
         run: cmake --build --preset unix-fuzz --target fuzz_${{ matrix.target }}
       - name: Run fuzzer
         env:
-          GLYPHASTORE_FUZZ_BUILD_DIR: ${{ github.workspace }}/build/unix-fuzz
-          GLYPHASTORE_FUZZ_TARGET: ${{ matrix.target }}
-          GLYPHASTORE_FUZZ_SECONDS: ${{ steps.budget.outputs.seconds }}
+          GLIFISTORE_FUZZ_BUILD_DIR: ${{ github.workspace }}/build/unix-fuzz
+          GLIFISTORE_FUZZ_TARGET: ${{ matrix.target }}
+          GLIFISTORE_FUZZ_SECONDS: ${{ steps.budget.outputs.seconds }}
         run: |
           chmod +x scripts/run-fuzzers.sh
           bash scripts/run-fuzzers.sh

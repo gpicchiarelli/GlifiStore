@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resolve and admit the sealed N-1 upgrade baseline for GlyphaStore packaging.
+"""Resolve and admit the sealed N-1 upgrade baseline for GlifiStore packaging.
 
 A package upgrade may only be proven against the bytes of a release that was
 actually published and sealed, so this module never assumes that the baseline is
@@ -72,7 +72,7 @@ PROVENANCE_ASSET = "verified-seal.sigstore.json"
 BUILD_METADATA_ASSET = "build-metadata.json"
 CONTROL_ASSETS = (MANIFEST_ASSET, SEAL_ASSET, CHECKSUMS_ASSET, BUILD_METADATA_ASSET)
 RELEASE_FIELDS = {"tag", "draft", "prerelease", "assets"}
-INSTALL_ARCHIVE = re.compile(r"^glyphastore-(?P<version>.+)-linux-(?P<arch>[A-Za-z0-9_-]+)\.tar\.xz$")
+INSTALL_ARCHIVE = re.compile(r"^glifistore-(?P<version>.+)-linux-(?P<arch>[A-Za-z0-9_-]+)\.tar\.xz$")
 
 
 class UpgradeBaselineError(RuntimeError):
@@ -172,19 +172,19 @@ def resolve_assets(
 ) -> dict[str, str | None]:
     """The exact asset names an upgrade needs, or a refusal naming what is absent."""
     missing = [name for name in CONTROL_ASSETS if name not in assets]
-    source = f"GlyphaStore-{version}.tar.xz"
+    source = f"GlifiStore-{version}.tar.xz"
     if source not in assets:
         missing.append(source)
     if missing:
         raise _IncompleteAssets(f"missing required assets: {sorted(missing)}")
     install = _unique(
-        re.compile(rf"^glyphastore-{re.escape(version)}-linux-[A-Za-z0-9_-]+\.tar\.xz$"),
+        re.compile(rf"^glifistore-{re.escape(version)}-linux-[A-Za-z0-9_-]+\.tar\.xz$"),
         assets,
         "Linux install prefix",
     )
     consumer = _unique(
         re.compile(
-            rf"^glyphastore-abi-v{abi_major}-consumer-{re.escape(version)}-linux-"
+            rf"^glifistore-abi-v{abi_major}-consumer-{re.escape(version)}-linux-"
             r"[A-Za-z0-9_-]+\.tar\.xz$"
         ),
         assets,
@@ -192,7 +192,7 @@ def resolve_assets(
     )
     client = _unique(
         re.compile(
-            rf"^glyphastore-wire-v{wire_version}-client-{re.escape(version)}-linux-"
+            rf"^glifistore-wire-v{wire_version}-client-{re.escape(version)}-linux-"
             r"[A-Za-z0-9_-]+\.tar\.xz$"
         ),
         assets,
@@ -538,7 +538,7 @@ def admit(
             f"cannot derive the architecture from {selected['assets']['install_archive']}"
         )
     architecture = install.group("arch")
-    with tempfile.TemporaryDirectory(prefix="glyphastore-prior-release-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="glifistore-prior-release-") as temporary:
         prior = Path(temporary) / "prior-release.json"
         validate_prior_release(
             directory,

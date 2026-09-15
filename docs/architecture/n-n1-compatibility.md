@@ -8,7 +8,7 @@ Last reviewed: 2026-08-01
 Machine-readable authority: [`engineering/compatibility/n-n1-matrix.yaml`](../../engineering/compatibility/n-n1-matrix.yaml).
 Validator: `python3 engineering/tools/validate_compat_matrix.py`.
 
-This matrix states what GlyphaStore **supports**, **intentionally rejects**, or **does not promise**
+This matrix states what GlifiStore **supports**, **intentionally rejects**, or **does not promise**
 when a writer/server at version N meets a reader/client at N−1 (or the reverse). It does not
 advance the release claim ceiling beyond *architectural prototype*.
 
@@ -17,7 +17,7 @@ advance the release claim ceiling beyond *architectural prototype*.
 | ID | Writer | Reader | Status |
 | --- | --- | --- | --- |
 | `STORE-SAME-LINE` | 0.1.x | 0.1.x | supported (same Worker count, persistence v1) |
-| `STORE-WORKER-RESHARD` | 0.1.x | 0.1.x | supported offline only (`glyphastore_migrate_store`) |
+| `STORE-WORKER-RESHARD` | 0.1.x | 0.1.x | supported offline only (`glifistore_migrate_store`) |
 | `STORE-PRE-V1` | pre-v1 | 0.1.x | unsupported |
 | `STORE-FUTURE-REQUIRED` | future required version | 0.1.x | intentionally rejected (fail closed) |
 | `STORE-DOWNGRADE-REWRITE` | 0.1.x | older required | not promised |

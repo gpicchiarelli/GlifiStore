@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-export GLYPHASTORE_ROOT="$root"
+export GLIFISTORE_ROOT="$root"
 # shellcheck disable=SC1091
 source "$root/scripts/export-reproducible-build-env.sh"
 python="${PYTHON:-python3}"
@@ -17,16 +17,16 @@ for fixture in wire_requests_v2.hex wire_responses_v2.hex; do
 done
 
 expected="$(tr -d '[:space:]' <"$root/VERSION")"
-got="$(PYTHONPATH="$sdk/src${PYTHONPATH:+:$PYTHONPATH}" "$python" -c 'import glyphastore; print(glyphastore.__version__)')"
+got="$(PYTHONPATH="$sdk/src${PYTHONPATH:+:$PYTHONPATH}" "$python" -c 'import glifistore; print(glifistore.__version__)')"
 if [[ "$got" != "$expected" ]]; then
-  echo "glyphastore.__version__='$got' does not match VERSION='$expected'" >&2
+  echo "glifistore.__version__='$got' does not match VERSION='$expected'" >&2
   exit 1
 fi
 
 rm -rf "$sdk/dist" "$sdk/build"
 find "$sdk" -maxdepth 2 -type d -name '*.egg-info' -exec rm -rf {} +
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-python-pack.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-python-pack.XXXXXX")"
 cleanup() { rm -rf "$work"; }
 trap cleanup EXIT
 
@@ -46,8 +46,8 @@ done
 shopt -u nullglob
 
 shopt -s nullglob
-wheels=("$sdk/dist"/glyphastore-*.whl)
-sdists=("$sdk/dist"/glyphastore-*.tar.gz)
+wheels=("$sdk/dist"/glifistore-*.whl)
+sdists=("$sdk/dist"/glifistore-*.tar.gz)
 shopt -u nullglob
 if [[ "${#wheels[@]}" -ne 1 || "${#sdists[@]}" -ne 1 ]]; then
   echo "expected exactly one Python wheel and one sdist" >&2
@@ -62,20 +62,20 @@ verify_installed_artifact() {
   "$venv/bin/python" -m pip install --disable-pip-version-check -q --upgrade pip
   "$venv/bin/python" -m pip install --disable-pip-version-check -q --no-deps "$artifact"
   "$venv/bin/python" - "$label" <<'PY'
-import glyphastore
+import glifistore
 import sys
 from importlib.metadata import metadata, version
 
 label = sys.argv[1]
-assert glyphastore.__version__ == version("glyphastore")
-meta = metadata("glyphastore")
+assert glifistore.__version__ == version("glifistore")
+meta = metadata("glifistore")
 license_files = {p for p in (meta.get_all("License-File") or [])}
 # setuptools may list basenames or package-relative paths
 names = {p.split("/")[-1] for p in license_files} | license_files
 for required in ("LICENSE", "NOTICE"):
     if required not in names and not any(required in p for p in license_files):
         raise SystemExit(f"missing license file in installed {label} metadata: {required}")
-print(f"installed {label} glyphastore {glyphastore.__version__} (LICENSE/NOTICE present)")
+print(f"installed {label} glifistore {glifistore.__version__} (LICENSE/NOTICE present)")
 PY
   (
     cd "$work"

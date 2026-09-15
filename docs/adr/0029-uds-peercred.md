@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-07-25
 - Deciders: security maintainers, networking maintainers
-- Applies to: `glyphastored` AF_UNIX listen path; `--authz-map` principal form `unix:uid=N`
+- Applies to: `glifistored` AF_UNIX listen path; `--authz-map` principal form `unix:uid=N`
 - Amends: [ADR 0021](0021-secure-profile-authentication.md) (optional local principal source)
 - Supersedes: none
 - Depends on: [ADR 0021](0021-secure-profile-authentication.md), [ADR 0022](0022-authorization-capabilities.md)

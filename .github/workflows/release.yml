@@ -1,6 +1,6 @@
 name: Release
 
-# Candidate -> Verify -> Publish. Verify and Publish never rebuild GlyphaStore;
+# Candidate -> Verify -> Publish. Verify and Publish never rebuild GlifiStore;
 # both consume the exact candidate bytes and re-check their transitive seals.
 on:
   push:
@@ -62,14 +62,14 @@ jobs:
             --directory dist/release-candidate \
             --seal candidate-seal.json
           archive="$(find dist/release-candidate -maxdepth 1 -type f \
-            -name 'glyphastore-*-linux-*.tar.xz' \
-            ! -name 'glyphastore-abi-v*-consumer-*' \
-            ! -name 'glyphastore-wire-v*-client-*' -print -quit)"
+            -name 'glifistore-*-linux-*.tar.xz' \
+            ! -name 'glifistore-abi-v*-consumer-*' \
+            ! -name 'glifistore-wire-v*-client-*' -print -quit)"
           test -n "$archive"
           mkdir -p build/release-sdk-prefix
           tar -xJf "$archive" -C build/release-sdk-prefix --strip-components=1
-          test -x build/release-sdk-prefix/bin/glyphastored
-          test -f build/release-sdk-prefix/lib/cmake/GlyphaStore/GlyphaStoreConfig.cmake
+          test -x build/release-sdk-prefix/bin/glifistored
+          test -f build/release-sdk-prefix/lib/cmake/GlifiStore/GlifiStoreConfig.cmake
       - name: Prove installed C and C++ consumers
         run: |
           set -euo pipefail
@@ -82,7 +82,7 @@ jobs:
             ctest --test-dir build/release-sdk-consumer --output-on-failure
             read -r -a pkg_config_flags <<< "$(
               PKG_CONFIG_PATH="${GITHUB_WORKSPACE}/build/release-sdk-prefix/lib/pkgconfig" \
-                pkg-config --cflags --libs glyphastore-abi
+                pkg-config --cflags --libs glifistore-abi
             )"
             cc -std=c11 tests/consumer/abi.c \
               "${pkg_config_flags[@]}" \
@@ -101,8 +101,8 @@ jobs:
             ./scripts/package-ruby-client.sh
             ./scripts/package-erlang-client.sh
             INSTALLED_INTEROP_PROFILE=plain \
-              GLYPHASTORED="${GITHUB_WORKSPACE}/build/release-sdk-prefix/bin/glyphastored" \
-              GLYPHASTORE_CPP_PREFIX="${GITHUB_WORKSPACE}/build/release-sdk-prefix" \
+              GLIFISTORED="${GITHUB_WORKSPACE}/build/release-sdk-prefix/bin/glifistored" \
+              GLIFISTORE_CPP_PREFIX="${GITHUB_WORKSPACE}/build/release-sdk-prefix" \
               ./scripts/test-secure-profile-installed-artifacts.sh
           } 2>&1 | tee "$evidence/sdk-installed.log"
           grep -Fqx \
@@ -172,13 +172,13 @@ jobs:
             --directory dist/release-candidate \
             --seal candidate-seal.json
           archive="$(find dist/release-candidate -maxdepth 1 -type f \
-            -name 'glyphastore-*-linux-*.tar.xz' \
-            ! -name 'glyphastore-abi-v*-consumer-*' \
-            ! -name 'glyphastore-wire-v*-client-*' -print -quit)"
+            -name 'glifistore-*-linux-*.tar.xz' \
+            ! -name 'glifistore-abi-v*-consumer-*' \
+            ! -name 'glifistore-wire-v*-client-*' -print -quit)"
           test -n "$archive"
           mkdir -p build/release-persistence-prefix
           tar -xJf "$archive" -C build/release-persistence-prefix --strip-components=1
-          test -x build/release-persistence-prefix/bin/glyphastored
+          test -x build/release-persistence-prefix/bin/glifistored
       - name: Select a real prior tagged Store fixture
         run: |
           set -euo pipefail
@@ -269,19 +269,19 @@ jobs:
           python engineering/tools/release_bundle.py verify-seal \
             --directory dist/release-candidate --seal candidate-seal.json
           archive="$(find dist/release-candidate -maxdepth 1 -type f \
-            -name 'glyphastore-*-linux-*.tar.xz' \
-            ! -name 'glyphastore-abi-v*-consumer-*' \
-            ! -name 'glyphastore-wire-v*-client-*' -print -quit)"
+            -name 'glifistore-*-linux-*.tar.xz' \
+            ! -name 'glifistore-abi-v*-consumer-*' \
+            ! -name 'glifistore-wire-v*-client-*' -print -quit)"
           test -n "$archive"
           mkdir -p build/abi-candidate-prefix
           tar -xJf "$archive" -C build/abi-candidate-prefix --strip-components=1
-          test -f build/abi-candidate-prefix/share/GlyphaStore/ABI_VERSION
+          test -f build/abi-candidate-prefix/share/GlifiStore/ABI_VERSION
       - name: Select and download the newest prior ABI-compatible release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          abi_major="$(cut -d. -f1 build/abi-candidate-prefix/share/GlyphaStore/ABI_VERSION)"
+          abi_major="$(cut -d. -f1 build/abi-candidate-prefix/share/GlifiStore/ABI_VERSION)"
           python engineering/tools/prior_release.py select \
             --repository . --before-version "$(cat VERSION)" --abi-major "$abi_major" \
             >build/prior-release-tag.txt
@@ -301,7 +301,7 @@ jobs:
           set -euo pipefail
           prior_tag="$(cat build/prior-release-tag.txt)"
           prior_sha="$(git rev-parse "$prior_tag^{commit}")"
-          abi_major="$(cut -d. -f1 build/abi-candidate-prefix/share/GlyphaStore/ABI_VERSION)"
+          abi_major="$(cut -d. -f1 build/abi-candidate-prefix/share/GlifiStore/ABI_VERSION)"
           python engineering/tools/prior_release.py validate \
             --directory build/prior-release --repository . --tag "$prior_tag" \
             --before-version "$(cat VERSION)" --abi-major "$abi_major" \
@@ -330,7 +330,7 @@ jobs:
             --archive "build/prior-release/$consumer_archive" \
             --expected-version "$(read_field product_version)" \
             --expected-git-sha "$(read_field git_sha)" \
-            --expected-abi-major "$(cut -d. -f1 build/abi-candidate-prefix/share/GlyphaStore/ABI_VERSION)" \
+            --expected-abi-major "$(cut -d. -f1 build/abi-candidate-prefix/share/GlifiStore/ABI_VERSION)" \
             --extract-to build/prior-abi-consumer
       - name: Exercise exact symbols, layout, and both binary directions
         run: |
@@ -403,11 +403,11 @@ jobs:
           python engineering/tools/release_bundle.py verify-seal \
             --directory dist/release-candidate --seal candidate-seal.json
           install_archive="$(find dist/release-candidate -maxdepth 1 -type f \
-            -name 'glyphastore-*-linux-*.tar.xz' \
-            ! -name 'glyphastore-abi-v*-consumer-*' \
-            ! -name 'glyphastore-wire-v*-client-*' -print -quit)"
+            -name 'glifistore-*-linux-*.tar.xz' \
+            ! -name 'glifistore-abi-v*-consumer-*' \
+            ! -name 'glifistore-wire-v*-client-*' -print -quit)"
           wire_archive="$(find dist/release-candidate -maxdepth 1 -type f \
-            -name 'glyphastore-wire-v2-client-*-linux-*.tar.xz' -print -quit)"
+            -name 'glifistore-wire-v2-client-*-linux-*.tar.xz' -print -quit)"
           test -n "$install_archive"
           test -n "$wire_archive"
           mkdir -p build/wire-candidate-prefix
@@ -421,7 +421,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          abi_major="$(cut -d. -f1 build/wire-candidate-prefix/share/GlyphaStore/ABI_VERSION)"
+          abi_major="$(cut -d. -f1 build/wire-candidate-prefix/share/GlifiStore/ABI_VERSION)"
           python engineering/tools/prior_release.py select \
             --repository . --before-version "$(cat VERSION)" --abi-major "$abi_major" \
             >build/prior-wire-release-tag.txt
@@ -441,7 +441,7 @@ jobs:
           set -euo pipefail
           prior_tag="$(cat build/prior-wire-release-tag.txt)"
           prior_sha="$(git rev-parse "$prior_tag^{commit}")"
-          abi_major="$(cut -d. -f1 build/wire-candidate-prefix/share/GlyphaStore/ABI_VERSION)"
+          abi_major="$(cut -d. -f1 build/wire-candidate-prefix/share/GlifiStore/ABI_VERSION)"
           python engineering/tools/prior_release.py validate \
             --directory build/prior-wire-release --repository . --tag "$prior_tag" \
             --before-version "$(cat VERSION)" --abi-major "$abi_major" \
@@ -558,7 +558,7 @@ jobs:
             mkdir -p build/release-input-freebsd
             python3 engineering/tools/generate_release_context.py \
               --output build/release-input-freebsd/release-context.json --replace
-            export GLYPHASTORE_RELEASE_CONTEXT=build/release-input-freebsd/release-context.json
+            export GLIFISTORE_RELEASE_CONTEXT=build/release-input-freebsd/release-context.json
             chmod +x scripts/test-freebsd-package-lifecycle.sh
             bash scripts/test-freebsd-package-lifecycle.sh \
               dist/release-candidate build/release-input-freebsd
@@ -568,7 +568,7 @@ jobs:
           set -euo pipefail
           sudo ./scripts/install-syft.sh
           mapfile -t packages < <(find build/release-input-freebsd -maxdepth 1 \
-            -type f -name 'glyphastore-*-freebsd*.pkg' -print)
+            -type f -name 'glifistore-*-freebsd*.pkg' -print)
           test "${#packages[@]}" -eq 1
           input=build/freebsd-package.spdx.json
           syft "${packages[0]}" -o "spdx-json=$input"
@@ -635,7 +635,7 @@ jobs:
             mkdir -p build/release-input-openbsd
             python3 engineering/tools/generate_release_context.py \
               --output build/release-input-openbsd/release-context.json --replace
-            export GLYPHASTORE_RELEASE_CONTEXT=build/release-input-openbsd/release-context.json
+            export GLIFISTORE_RELEASE_CONTEXT=build/release-input-openbsd/release-context.json
             chmod +x scripts/test-openbsd-package-lifecycle.sh
             bash scripts/test-openbsd-package-lifecycle.sh \
               dist/release-candidate build/release-input-openbsd
@@ -645,7 +645,7 @@ jobs:
           set -euo pipefail
           sudo ./scripts/install-syft.sh
           mapfile -t packages < <(find build/release-input-openbsd -maxdepth 1 \
-            -type f -name 'glyphastore-*-openbsd*.tgz' -print)
+            -type f -name 'glifistore-*-openbsd*.tgz' -print)
           test "${#packages[@]}" -eq 1
           input=build/openbsd-package.spdx.json
           syft "${packages[0]}" -o "spdx-json=$input"
@@ -1062,13 +1062,13 @@ jobs:
             2>&1 | tee "$output/security-sbom-validation.log"
           echo 'SECURITY sbom-validation PASSED' >>"$output/security-sbom-validation.log"
           archive="$(find dist/release-candidate -maxdepth 1 -type f \
-            -name 'glyphastore-*-linux-*.tar.xz' \
-            ! -name 'glyphastore-abi-v*-consumer-*' \
-            ! -name 'glyphastore-wire-v*-client-*' -print -quit)"
+            -name 'glifistore-*-linux-*.tar.xz' \
+            ! -name 'glifistore-abi-v*-consumer-*' \
+            ! -name 'glifistore-wire-v*-client-*' -print -quit)"
           test -n "$archive"
           tar -xJf "$archive" -C build/security-candidate-prefix --strip-components=1
           python scripts/verify_hardening.py \
-            --binary build/security-candidate-prefix/bin/glyphastored \
+            --binary build/security-candidate-prefix/bin/glifistored \
             2>&1 | tee "$output/security-binary-hardening.log"
           echo 'SECURITY binary-hardening PASSED' >>"$output/security-binary-hardening.log"
       - name: Close and validate every retained security log
@@ -1109,7 +1109,7 @@ jobs:
             {"id":"secret-scan","command":"run pinned Gitleaks over full tag history","evidence_ref":"security-secret-scan.log"},
             {"id":"license-validation","command":"run REUSE, notice, SDK license and Go/Python dependency-license closure","evidence_ref":"security-license-validation.log"},
             {"id":"sbom-validation","command":"validate every SPDX document cryptographically against the externally anchored exact candidate","evidence_ref":"security-sbom-validation.log"},
-            {"id":"binary-hardening","command":"extract the sealed Linux prefix and inspect the distributed glyphastored ELF for PIE, RELRO, BIND_NOW and stack protector","evidence_ref":"security-binary-hardening.log"}
+            {"id":"binary-hardening","command":"extract the sealed Linux prefix and inspect the distributed glifistored ELF for PIE, RELRO, BIND_NOW and stack protector","evidence_ref":"security-binary-hardening.log"}
           ]
           JSON
           python engineering/tools/release_evidence.py create \
@@ -1169,12 +1169,12 @@ jobs:
               -DCMAKE_BUILD_TYPE=Release \
               -DCMAKE_INSTALL_PREFIX="${GITHUB_WORKSPACE}/build/release-prefix" \
               -DBUILD_TESTING=ON \
-              -DGLYPHASTORE_BUILD_BENCHMARKS=OFF \
-              -DGLYPHASTORE_BUILD_FUZZERS=OFF \
-              -DGLYPHASTORE_ENABLE_TLS=OFF \
-              -DGLYPHASTORE_FAULT_INJECTION=OFF \
-              -DGLYPHASTORE_NATIVE_CPU=OFF \
-              -DGLYPHASTORE_WARNINGS_AS_ERRORS=ON
+              -DGLIFISTORE_BUILD_BENCHMARKS=OFF \
+              -DGLIFISTORE_BUILD_FUZZERS=OFF \
+              -DGLIFISTORE_ENABLE_TLS=OFF \
+              -DGLIFISTORE_FAULT_INJECTION=OFF \
+              -DGLIFISTORE_NATIVE_CPU=OFF \
+              -DGLIFISTORE_WARNINGS_AS_ERRORS=ON
             cmake --build build/release-candidate --parallel 2
             cmake --install build/release-candidate
             cmake -S tests/consumer -B build/release-consumer -G Ninja \
@@ -1199,12 +1199,12 @@ jobs:
             --tls-backend none \
             --build-option BUILD_TESTING=ON \
             --build-option CMAKE_BUILD_TYPE=Release \
-            --build-option GLYPHASTORE_BUILD_BENCHMARKS=OFF \
-            --build-option GLYPHASTORE_BUILD_FUZZERS=OFF \
-            --build-option GLYPHASTORE_ENABLE_TLS=OFF \
-            --build-option GLYPHASTORE_FAULT_INJECTION=OFF \
-            --build-option GLYPHASTORE_NATIVE_CPU=OFF \
-            --build-option GLYPHASTORE_WARNINGS_AS_ERRORS=ON
+            --build-option GLIFISTORE_BUILD_BENCHMARKS=OFF \
+            --build-option GLIFISTORE_BUILD_FUZZERS=OFF \
+            --build-option GLIFISTORE_ENABLE_TLS=OFF \
+            --build-option GLIFISTORE_FAULT_INJECTION=OFF \
+            --build-option GLIFISTORE_NATIVE_CPU=OFF \
+            --build-option GLIFISTORE_WARNINGS_AS_ERRORS=ON
           python engineering/tools/release_bundle.py validate-metadata \
             build/repro-build-metadata.json
           python scripts/package-source-release.py \
@@ -1215,12 +1215,12 @@ jobs:
             --output-directory dist/rebuilt-release
           python scripts/package-abi-consumer.py \
             --tag "$RELEASE_TAG" \
-            --consumer build/release-consumer/glyphastore_abi_consumer_smoke \
+            --consumer build/release-consumer/glifistore_abi_consumer_smoke \
             --target-os linux --architecture "$(uname -m)" \
             --output-directory dist/rebuilt-release
           python scripts/package-wire-client.py \
             --tag "$RELEASE_TAG" \
-            --client build/release-candidate/glyphastore_interop_client \
+            --client build/release-candidate/glifistore_interop_client \
             --target-os linux --architecture "$(uname -m)" \
             --output-directory dist/rebuilt-release
       - name: Compare the complete archive set byte for byte
@@ -1301,27 +1301,27 @@ jobs:
             --candidate-seal candidate-seal.json
           python engineering/tools/release_bundle.py validate-sbom \
             dist/release-candidate/*.spdx.json
-      - name: Test installed binary archive without rebuilding GlyphaStore
+      - name: Test installed binary archive without rebuilding GlifiStore
         run: |
           set -euo pipefail
           archive="$(find dist/release-candidate -maxdepth 1 -type f \
-            -name 'glyphastore-*-linux-*.tar.xz' \
-            ! -name 'glyphastore-abi-v*-consumer-*' \
-            ! -name 'glyphastore-wire-v*-client-*' -print -quit)"
+            -name 'glifistore-*-linux-*.tar.xz' \
+            ! -name 'glifistore-abi-v*-consumer-*' \
+            ! -name 'glifistore-wire-v*-client-*' -print -quit)"
           test -n "$archive"
           mkdir -p build/extracted
           tar -xJf "$archive" -C build/extracted
           prefix="$(find build/extracted -mindepth 1 -maxdepth 1 -type d -print -quit)"
-          test -x "$prefix/bin/glyphastored"
-          test "$("$prefix/bin/glyphastored" --version)" = \
-            "glyphastored $(cat VERSION)"
+          test -x "$prefix/bin/glifistored"
+          test "$("$prefix/bin/glifistored" --version)" = \
+            "glifistored $(cat VERSION)"
           cmake -S tests/consumer -B build/verified-consumer -G Ninja \
             -DCMAKE_PREFIX_PATH="$prefix"
           cmake --build build/verified-consumer
           ctest --test-dir build/verified-consumer --output-on-failure
           read -r -a pkg_config_flags <<< "$(
             PKG_CONFIG_PATH="$prefix/lib/pkgconfig" \
-              pkg-config --cflags --libs glyphastore-abi
+              pkg-config --cflags --libs glifistore-abi
           )"
           cc -std=c11 tests/consumer/abi.c \
             "${pkg_config_flags[@]}" \
@@ -1464,12 +1464,12 @@ jobs:
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           tag_name: ${{ github.ref_name }}
-          name: GlyphaStore ${{ github.ref_name }}
+          name: GlifiStore ${{ github.ref_name }}
           draft: false
           prerelease: true
           generate_release_notes: true
           body: |
-            Architectural-prototype release artifacts for GlyphaStore.
+            Architectural-prototype release artifacts for GlifiStore.
 
             Candidate bytes were built once, sealed, independently verified,
             attested, and promoted without rebuilding. `release-manifest.json`,

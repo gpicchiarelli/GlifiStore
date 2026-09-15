@@ -1,4 +1,4 @@
-#include "glyphastore/client/client.hpp"
+#include "glifistore/client/client.hpp"
 
 #include <cstdint>
 #include <cstdlib>
@@ -103,7 +103,7 @@ int main(int argc, char** argv) try {
     std::string dest;
     std::uint64_t expire_at_ns = 0;
     std::uint64_t burst = 32;
-    glyphastore::client::TlsOptions tls{};
+    glifistore::client::TlsOptions tls{};
 
     for (int index = 1; index < argc; ++index) {
         const std::string_view arg = argv[index];
@@ -159,9 +159,9 @@ int main(int argc, char** argv) try {
         throw std::runtime_error("--burst must be between 1 and 10000");
     }
 
-    glyphastore::client::ClientConfig config{.host = host, .port = port, .tls = std::move(tls)};
+    glifistore::client::ClientConfig config{.host = host, .port = port, .tls = std::move(tls)};
     const auto maximum_frame_bytes = config.maximum_frame_bytes;
-    auto client = glyphastore::client::Client::connect(std::move(config));
+    auto client = glifistore::client::Client::connect(std::move(config));
     if (!client) {
         std::cerr << "connect failed: " << client.error().message << '\n';
         return 1;
@@ -171,7 +171,7 @@ int main(int argc, char** argv) try {
     if (command == "put") {
         const auto value = parse_hex(value_hex);
         const auto result = client->put(
-            key, value, glyphastore::client::PutOptions{.expire_at_ns = expire_at_ns});
+            key, value, glifistore::client::PutOptions{.expire_at_ns = expire_at_ns});
         if (!result.committed()) {
             std::cerr << "put not committed\n";
             return 1;
@@ -197,11 +197,11 @@ int main(int argc, char** argv) try {
     }
     if (command == "pipeline-put-get") {
         const auto value = parse_hex(value_hex);
-        const glyphastore::client::PipelineRequest requests[] = {
-            {.opcode = glyphastore::client::PipelineOpcode::put,
+        const glifistore::client::PipelineRequest requests[] = {
+            {.opcode = glifistore::client::PipelineOpcode::put,
              .key = std::span<const std::byte>{key},
              .value = std::span<const std::byte>{value}},
-            {.opcode = glyphastore::client::PipelineOpcode::get,
+            {.opcode = glifistore::client::PipelineOpcode::get,
              .key = std::span<const std::byte>{key}},
         };
         auto responses = client->execute_pipeline(requests);
@@ -249,17 +249,17 @@ int main(int argc, char** argv) try {
             return 1;
         }
         std::vector<std::vector<std::byte>> values(worker_count);
-        std::vector<std::vector<glyphastore::client::PipelineRequest>> batches(worker_count);
+        std::vector<std::vector<glifistore::client::PipelineRequest>> batches(worker_count);
         for (std::uint32_t worker = 0; worker < worker_count; ++worker) {
             values[worker] = parse_hex(value_hex);
             if (values[worker].empty()) {
                 values[worker] = {static_cast<std::byte>('v'), static_cast<std::byte>('0' + (worker % 10))};
             }
             batches[worker] = {
-                {.opcode = glyphastore::client::PipelineOpcode::put,
+                {.opcode = glifistore::client::PipelineOpcode::put,
                  .key = std::span<const std::byte>{owned_keys[worker]},
                  .value = std::span<const std::byte>{values[worker]}},
-                {.opcode = glyphastore::client::PipelineOpcode::get,
+                {.opcode = glifistore::client::PipelineOpcode::get,
                  .key = std::span<const std::byte>{owned_keys[worker]}},
             };
         }
@@ -310,7 +310,7 @@ int main(int argc, char** argv) try {
     }
     if (command == "expect-not-found") {
         const auto missing = client->get(key);
-        if (missing || missing.error().code != glyphastore::ErrorCode::not_found ||
+        if (missing || missing.error().code != glifistore::ErrorCode::not_found ||
             missing.error().category != "not_found" || missing.error().retryability != "new_attempt") {
             std::cerr << "GET did not produce the expected structured not_found error\n";
             return 1;
@@ -320,8 +320,8 @@ int main(int argc, char** argv) try {
     if (command == "expect-permission-denied") {
         const auto value = parse_hex(value_hex);
         const auto denied = client->put(
-            key, value, glyphastore::client::PutOptions{.expire_at_ns = expire_at_ns});
-        if (denied.outcome != glyphastore::client::MutationOutcome::rejected ||
+            key, value, glifistore::client::PutOptions{.expire_at_ns = expire_at_ns});
+        if (denied.outcome != glifistore::client::MutationOutcome::rejected ||
             !denied.error.has_value() || denied.error->category != "permission_denied" ||
             denied.error->retryability != "never") {
             std::cerr << "PUT did not produce the expected permission_denied rejection\n";
@@ -333,8 +333,8 @@ int main(int argc, char** argv) try {
         const auto value = parse_hex(value_hex);
         for (std::uint64_t index = 0; index < burst; ++index) {
             const auto result = client->put(
-                key, value, glyphastore::client::PutOptions{.expire_at_ns = expire_at_ns});
-            if (result.outcome == glyphastore::client::MutationOutcome::rejected &&
+                key, value, glifistore::client::PutOptions{.expire_at_ns = expire_at_ns});
+            if (result.outcome == glifistore::client::MutationOutcome::rejected &&
                 result.error.has_value() && result.error->category == "overloaded" &&
                 result.error->retryability == "never") {
                 return 0;
@@ -351,7 +351,7 @@ int main(int argc, char** argv) try {
         const std::vector<std::byte> oversized(maximum_frame_bytes, std::byte{0xA5});
         const auto limit_key = parse_hex("6c696d6974");
         const auto rejected = client->put(limit_key, oversized);
-        if (rejected.outcome != glyphastore::client::MutationOutcome::rejected ||
+        if (rejected.outcome != glifistore::client::MutationOutcome::rejected ||
             !rejected.error.has_value() || rejected.error->category != "invalid_argument" ||
             rejected.error->bytes_sent != 0 ||
             rejected.error->retryability != "never") {

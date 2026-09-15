@@ -50,7 +50,7 @@ sdk/perl/pm_to_blib
 sdk/perl/Makefile
 sdk/perl/Makefile.old
 sdk/perl/MYMETA.*
-sdk/perl/GlyphaStore-*.tar.gz
+sdk/perl/GlifiStore-*.tar.gz
 sdk/go/dist/
 sdk/go/bin/
 sdk/ruby/dist/
@@ -69,11 +69,11 @@ timeout-*
 fuzz-artifacts/
 fuzz-corpus-local/
 
-# GlyphaStore runtime artifacts
+# GlifiStore runtime artifacts
 *.gseg
 *.gwal
 *.gsf
-*.glyphatmp
+*.glifitmp
 erl_crash.dump
 
 # Local durability campaign outputs (retain outside the tree or as CI artifacts)

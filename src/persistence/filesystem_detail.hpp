@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glyphastore/persistence/filesystem.hpp"
+#include "glifistore/persistence/filesystem.hpp"
 #include "system_error.hpp"
 
 #include <cerrno>
@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-namespace glyphastore::persistence_detail {
+namespace glifistore::persistence_detail {
 
 inline auto interrupted_open(const char* path, int flags) -> int {
     int descriptor{};
@@ -199,4 +199,4 @@ inline auto read_private_compaction_intent_file(const int directory, const std::
     return decode_compaction_intent(bytes);
 }
 
-} // namespace glyphastore::persistence_detail
+} // namespace glifistore::persistence_detail

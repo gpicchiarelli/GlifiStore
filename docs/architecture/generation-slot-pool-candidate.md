@@ -1,6 +1,6 @@
 # Candidato generation slot-pool production-congruent
 
-Status: sperimentale; non selezionabile da `ShardPairRuntime` o `glyphastored`
+Status: sperimentale; non selezionabile da `ShardPairRuntime` o `glifistored`
 ADR: [0036](../adr/0036-generation-slot-pool-publish.md)
 Last reviewed: 2026-08-27
 
@@ -11,7 +11,7 @@ Last reviewed: 2026-08-27
 non reimplementa Index, delta o Segment: lo slot possiede direttamente la generation prodotta dal
 codice di produzione, inclusi i pin delle generazioni durevoli.
 
-Il pool e la banca di storage sono compilati soltanto in `glyphastore_tests`. Il bridge minimo che
+Il pool e la banca di storage sono compilati soltanto in `glifistore_tests`. Il bridge minimo che
 costruisce il grafo privato nello storage riservato è compilato nel core, perché `DeltaState` è
 intenzionalmente opaco, ma il suo header di accesso resta sotto `src/experimental/`, non viene
 installato e nessun percorso ufficiale lo invoca. Non esiste un flag runtime: ACK, recovery,
@@ -113,7 +113,7 @@ runtime ufficiale.
 
 ### Diagnostica Reader–Writer a due thread
 
-`glyphastore_generation_publication_benchmark` confronta il pool direct e quello con generation
+`glifistore_generation_publication_benchmark` confronta il pool direct e quello con generation
 `shared_ptr` usando due thread persistenti distinti. Entrambi attraversano reservation, publication
 token, adoption, reclaim e shutdown; cambia soltanto l'ownership della generation. Il Reader adotta
 continuamente e verifica la vista finale, mentre il Writer pubblica 20.000 mutation reali già

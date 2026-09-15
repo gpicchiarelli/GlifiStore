@@ -1,4 +1,4 @@
-#include "glyphastore/index/index_hash_seed.hpp"
+#include "glifistore/index/index_hash_seed.hpp"
 
 #include <atomic>
 #include <cstdint>
@@ -10,7 +10,7 @@
 #include <unistd.h>
 #endif
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 std::atomic<std::uint64_t> g_index_hash_seed{kDefaultIndexHashSeed};
@@ -58,4 +58,4 @@ auto generate_index_hash_seed() noexcept -> std::uint64_t {
     return seed == 0 ? 1U : seed;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

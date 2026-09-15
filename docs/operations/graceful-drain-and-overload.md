@@ -1,7 +1,7 @@
 # Runbook: graceful drain and overload
 
 Status: descriptive
-Applies to: `glyphastored` wire protocol v2
+Applies to: `glifistored` wire protocol v2
 Owner: platform maintainers
 Last reviewed: 2026-08-27
 
@@ -27,8 +27,8 @@ Wire opcodes 7–9 are accepted before `INIT`/`BIND_WORKER` and do not mutate St
 
 | Probe | Success value | Meaning |
 |---|---|---|
-| `HEALTH` (7) | `GlyphaStore/live` | Process and executors are live |
-| `READY` (8) | `GlyphaStore/ready` | Safe for traffic: Store admission open, not shutting down, catalog healthy, maintenance not in emergency or sticky fault |
+| `HEALTH` (7) | `GlifiStore/live` | Process and executors are live |
+| `READY` (8) | `GlifiStore/ready` | Safe for traffic: Store admission open, not shutting down, catalog healthy, maintenance not in emergency or sticky fault |
 | `STATS` (9) | bounded ASCII report | Admin snapshot: version, live/ready, connections, durable lane/batch counters, maintenance fields |
 
 Failed probes return `INTERNAL_ERROR` with an empty value. During shutdown, expect `READY` to fail
@@ -52,8 +52,8 @@ preStop hooks.
 ### 2. Send SIGTERM or SIGINT
 
 ```bash
-kill -TERM "$(pidof glyphastored)"
-# or: systemctl stop glyphastored
+kill -TERM "$(pidof glifistored)"
+# or: systemctl stop glifistored
 ```
 
 The daemon:
@@ -79,10 +79,10 @@ FIFO deadline rather than extending it to `group-max-wait-ms`.
 ### 3. Tune drain deadline when needed
 
 ```bash
-glyphastored --shutdown-drain-ms 120000 --data-dir /var/lib/glyphastore ...
+glifistored --shutdown-drain-ms 120000 --data-dir /var/lib/glifistore ...
 # or in daemon.conf:
 # shutdown-drain-ms = 120000
-# or: GLYPHASTORE_SHUTDOWN_DRAIN_MS=120000
+# or: GLIFISTORE_SHUTDOWN_DRAIN_MS=120000
 ```
 
 Increase the deadline when large durable batches or slow storage can exceed 30s. Use `0` only when an
@@ -98,8 +98,8 @@ orchestrator can wait indefinitely and you accept unbounded shutdown time.
 ### 5. Restart
 
 ```bash
-glyphastored --profile production --data-dir /var/lib/glyphastore --bind 0.0.0.0 --port 7379
-glyphastored --dump-config   # optional: print resolved settings without listening
+glifistored --profile production --data-dir /var/lib/glifistore --bind 0.0.0.0 --port 7379
+glifistored --dump-config   # optional: print resolved settings without listening
 ```
 
 Confirm `READY` returns `OK` before returning the instance to load balancing.
@@ -145,7 +145,7 @@ after fixing capacity or shedding load.
 ## Related tests and evidence
 
 Integration coverage includes graceful stop, drain timeout, and real-daemon SIGKILL paths
-(`glyphastore_crash_daemon`). CI/staging runbook smoke:
+(`glifistore_crash_daemon`). CI/staging runbook smoke:
 `scripts/exercise_ops_runbooks.sh` (backup/restore, corruption repair, graceful drain + `STATS`)
 via `.github/workflows/ops-runbooks.yml`. See [production readiness](../production-readiness.md).
 

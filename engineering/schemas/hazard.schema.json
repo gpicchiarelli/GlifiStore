@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.local/schemas/hazard.schema.json",
-  "title": "GlyphaStore hazard",
+  "$id": "https://glifistore.local/schemas/hazard.schema.json",
+  "title": "GlifiStore hazard",
   "type": "object",
   "additionalProperties": false,
   "required": [

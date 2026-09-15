@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Validate GlyphaStore mdoc man pages for Linux/macOS/FreeBSD/OpenBSD.
+# Validate GlifiStore mdoc man pages for Linux/macOS/FreeBSD/OpenBSD.
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -18,18 +18,18 @@ if [[ -z "${man_root}" ]]; then
 fi
 
 version="$(tr -d '[:space:]' <"${root}/VERSION")"
-date_stamp="${GLYPHASTORE_MAN_DATE:-August 1, 2026}"
+date_stamp="${GLIFISTORE_MAN_DATE:-August 1, 2026}"
 
 expected=(
-  "man1/glyphastore_demo.1"
-  "man1/glyphastore_inspect_segment.1"
-  "man1/glyphastore_verify_store.1"
-  "man1/glyphastore_backup_store.1"
-  "man1/glyphastore_migrate_store.1"
-  "man1/glyphastore_repair_store.1"
-  "man1/glyphastore_rebuild_index.1"
-  "man7/glyphastore.7"
-  "man8/glyphastored.8"
+  "man1/glifistore_demo.1"
+  "man1/glifistore_inspect_segment.1"
+  "man1/glifistore_verify_store.1"
+  "man1/glifistore_backup_store.1"
+  "man1/glifistore_migrate_store.1"
+  "man1/glifistore_repair_store.1"
+  "man1/glifistore_rebuild_index.1"
+  "man7/glifistore.7"
+  "man8/glifistored.8"
 )
 
 tmpdir=""
@@ -41,7 +41,7 @@ cleanup() {
 trap cleanup EXIT
 
 if [[ -z "${man_root}" ]]; then
-  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-man.XXXXXX")"
+  tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-man.XXXXXX")"
   man_root="${tmpdir}"
   for rel in "${expected[@]}"; do
     src="${root}/man/${rel}.in"
@@ -65,14 +65,14 @@ fi
 
 # Every Runtime CLI binary must have a dedicated page (overview is extra).
 runtime_bins=(
-  glyphastored
-  glyphastore_demo
-  glyphastore_inspect_segment
-  glyphastore_verify_store
-  glyphastore_backup_store
-  glyphastore_migrate_store
-  glyphastore_repair_store
-  glyphastore_rebuild_index
+  glifistored
+  glifistore_demo
+  glifistore_inspect_segment
+  glifistore_verify_store
+  glifistore_backup_store
+  glifistore_migrate_store
+  glifistore_repair_store
+  glifistore_rebuild_index
 )
 for bin in "${runtime_bins[@]}"; do
   if ! ls "${man_root}/man"*"/""${bin}".[0-9]* >/dev/null 2>&1; then
@@ -86,7 +86,7 @@ lint_one() {
   local view="${file}"
   local tmp_plain=""
   if [[ "${file}" == *.gz ]]; then
-    tmp_plain="$(mktemp "${TMPDIR:-/tmp}/glyphastore-manpage.XXXXXX")"
+    tmp_plain="$(mktemp "${TMPDIR:-/tmp}/glifistore-manpage.XXXXXX")"
     gzip -dc "${file}" >"${tmp_plain}"
     view="${tmp_plain}"
   fi

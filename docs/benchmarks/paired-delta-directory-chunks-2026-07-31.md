@@ -53,7 +53,7 @@ Nessun claim production-ready su throughput medio. Nessun `e3_certified=yes`.
 
 ## Verifica
 
-- Debug `glyphastore_tests`: 471/471 sul tree candidate;
+- Debug `glifistore_tests`: 471/471 sul tree candidate;
 - test arena overwrite/version capacity invariati (`pair_read_generation_tests`);
 - lifetime e merge path non ristrutturati oltre la spine directory.
 

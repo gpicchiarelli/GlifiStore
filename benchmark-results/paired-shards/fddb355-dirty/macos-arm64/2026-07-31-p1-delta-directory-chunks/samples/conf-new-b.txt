@@ -1,4 +1,4 @@
-# glyphastore TCP server benchmark
+# glifistore TCP server benchmark
 # git_sha=fddb355-dirty
 # arch=arm64
 # platform=macos

@@ -60,7 +60,7 @@ class BsdPackageCiTestCase(unittest.TestCase):
         cls.context = build_context(ROOT)
 
     def directory(self) -> Path:
-        temporary = tempfile.TemporaryDirectory(prefix="glyphastore-bsd-package-ci-")
+        temporary = tempfile.TemporaryDirectory(prefix="glifistore-bsd-package-ci-")
         self.addCleanup(temporary.cleanup)
         return Path(temporary.name)
 
@@ -269,7 +269,7 @@ class NativeMappingTests(BsdPackageCiTestCase):
     def test_a_complete_native_run_maps_every_retained_log(self) -> None:
         directory = self.directory()
         self.populate(directory, "freebsd")
-        package = directory / "glyphastore-0.1.0-freebsd14.3-amd64.pkg"
+        package = directory / "glifistore-0.1.0-freebsd14.3-amd64.pkg"
         package.write_bytes(b"native package payload")
 
         decision = self.decide(directory)
@@ -286,7 +286,7 @@ class NativeMappingTests(BsdPackageCiTestCase):
     def test_a_complete_native_run_emits_valid_evidence_bound_to_the_package(self) -> None:
         directory = self.directory()
         self.populate(directory, "openbsd")
-        package = directory / "glyphastore-0.1.0-openbsd7.9-amd64.tgz"
+        package = directory / "glifistore-0.1.0-openbsd7.9-amd64.tgz"
         package.write_bytes(b"native package payload")
         decision = self.decide(directory, "openbsd")
 
@@ -368,8 +368,8 @@ class NativeMappingTests(BsdPackageCiTestCase):
         directory = self.directory()
         self.populate(directory, "freebsd")
         for name in (
-            "glyphastore-0.1.0-freebsd14.3-amd64.pkg",
-            "glyphastore-0.1.0-freebsd14.2-amd64.pkg",
+            "glifistore-0.1.0-freebsd14.3-amd64.pkg",
+            "glifistore-0.1.0-freebsd14.2-amd64.pkg",
         ):
             (directory / name).write_bytes(b"payload")
         with self.assertRaisesRegex(BsdLifecycleError, "at most one native"):
@@ -434,7 +434,7 @@ class UpgradeHonestyTests(BsdPackageCiTestCase):
             check["detail"] for check in decision["plan"] if check["id"] == "package-upgrade"
         )
         self.assertIn("v0.0.9", detail)
-        self.assertIn("GLYPHASTORE_N1_PACKAGE_DIR", detail)
+        self.assertIn("GLIFISTORE_N1_PACKAGE_DIR", detail)
         self.assertIn("never rebuilds N-1 from HEAD", detail)
 
     def test_a_retained_native_upgrade_pass_maps_to_package_upgrade(self) -> None:
@@ -457,8 +457,8 @@ class UpgradeHonestyTests(BsdPackageCiTestCase):
             "reason": "test fixture",
         }
         n1 = self.directory()
-        (n1 / "glyphastore-0.0.9-freebsd14.3-amd64.pkg").write_bytes(b"n1")
-        with mock.patch.dict(os.environ, {"GLYPHASTORE_N1_PACKAGE_DIR": str(n1)}):
+        (n1 / "glifistore-0.0.9-freebsd14.3-amd64.pkg").write_bytes(b"n1")
+        with mock.patch.dict(os.environ, {"GLIFISTORE_N1_PACKAGE_DIR": str(n1)}):
             decision = decide(
                 backend="freebsd",
                 profile="nightly",

@@ -58,7 +58,7 @@ def package(
         if not value or not value.replace("-", "").replace("_", "").isalnum():
             raise ReleaseIdentityError(f"{name} must be a simple identifier")
     basename = (
-        f"glyphastore-abi-v{abi_major}-consumer-{identity.product_version}-{safe_os}-{safe_arch}"
+        f"glifistore-abi-v{abi_major}-consumer-{identity.product_version}-{safe_os}-{safe_arch}"
     )
     output_directory.mkdir(parents=True, exist_ok=True)
     output = output_directory / f"{basename}.tar.xz"
@@ -79,7 +79,7 @@ def package(
         archive.addfile(info(f"{basename}/", identity.source_date_epoch, 0o755, tarfile.DIRTYPE))
         add_bytes(
             archive,
-            f"{basename}/glyphastore-abi-v{abi_major}-consumer",
+            f"{basename}/glifistore-abi-v{abi_major}-consumer",
             binary,
             identity.source_date_epoch,
             0o755,

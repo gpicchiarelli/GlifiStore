@@ -20,13 +20,13 @@ clean immutable commit before any release evidence claim.
 ```bash
 cmake --preset macos-native-release
 cmake --build --preset macos-native-release --target \
-  glyphastore_memory_census_benchmark glyphastore_benchmarks
+  glifistore_memory_census_benchmark glifistore_benchmarks
 
-build/macos-native-release/glyphastore_memory_census_benchmark \
+build/macos-native-release/glifistore_memory_census_benchmark \
   --entries 200000 --key-bytes 16 --value-bytes 64 --workers 1
-build/macos-native-release/glyphastore_memory_census_benchmark \
+build/macos-native-release/glifistore_memory_census_benchmark \
   --entries 200000 --key-bytes 16 --value-bytes 64 --workers 4
-build/macos-native-release/glyphastore_benchmarks \
+build/macos-native-release/glifistore_benchmarks \
   --filter store-get --ops 200000 --key-size 16 --value-size 64 \
   --warmup 1 --repeats 7
 ```

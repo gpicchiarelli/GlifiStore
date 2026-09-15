@@ -1,7 +1,7 @@
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/core/worker_routing.hpp"
-#include "glyphastore/server/reactor.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/core/worker_routing.hpp"
+#include "glifistore/server/reactor.hpp"
 #include "server/reactor_detail.hpp"
 #include "store/store_internal.hpp"
 #include "system_error.hpp"
@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 auto Reactor::process_frames(const ConnectionToken token, const std::uint32_t new_mutation_admission_budget)
     -> Status {
@@ -158,7 +158,7 @@ auto Reactor::process_frames(const ConnectionToken token, const std::uint32_t ne
             // the flag left the connection half-initialized and fail-stopped the
             // executor under memory pressure.
             try {
-                if (glyphastore::fault::consume_fail(glyphastore::fault::Site::init_identity)) {
+                if (glifistore::fault::consume_fail(glifistore::fault::Site::init_identity)) {
                     throw std::bad_alloc{};
                 }
                 init_identity = encode_init_identity_value(get_worker_routing());
@@ -173,14 +173,14 @@ auto Reactor::process_frames(const ConnectionToken token, const std::uint32_t ne
             break;
         case RequestOpcode::health:
             if (lifecycle_probes_.live != nullptr && lifecycle_probes_.live(lifecycle_probes_.context)) {
-                response.value = reactor_detail::bytes("GlyphaStore/live");
+                response.value = reactor_detail::bytes("GlifiStore/live");
             } else {
                 response.status = ResponseStatus::internal_error;
             }
             break;
         case RequestOpcode::ready:
             if (lifecycle_probes_.ready != nullptr && lifecycle_probes_.ready(lifecycle_probes_.context)) {
-                response.value = reactor_detail::bytes("GlyphaStore/ready");
+                response.value = reactor_detail::bytes("GlifiStore/ready");
             } else {
                 response.status = ResponseStatus::internal_error;
             }
@@ -547,4 +547,4 @@ auto Reactor::dispatch_request(const ConnectionToken token, const RequestView& r
     return execute_local(token, request, key_hash, cached_now_ns);
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

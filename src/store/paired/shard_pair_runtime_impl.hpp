@@ -3,16 +3,16 @@
 // Internal types and helpers for ShardPairRuntime translation units.
 // Not installed; behavior-neutral extraction (Phase C decomposition).
 
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/store/config.hpp"
-#include "glyphastore/store/paired/bounded_spsc_queue.hpp"
-#include "glyphastore/store/paired/fail_closed_state.hpp"
-#include "glyphastore/store/paired/lane_publication.hpp"
-#include "glyphastore/store/paired/lane_state.hpp"
-#include "glyphastore/store/paired/mutation_slot_pool.hpp"
-#include "glyphastore/store/paired/publication_coordinator.hpp"
-#include "glyphastore/store/paired/read_generation.hpp"
-#include "glyphastore/store/paired/shard_pair_runtime.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/store/config.hpp"
+#include "glifistore/store/paired/bounded_spsc_queue.hpp"
+#include "glifistore/store/paired/fail_closed_state.hpp"
+#include "glifistore/store/paired/lane_publication.hpp"
+#include "glifistore/store/paired/lane_state.hpp"
+#include "glifistore/store/paired/mutation_slot_pool.hpp"
+#include "glifistore/store/paired/publication_coordinator.hpp"
+#include "glifistore/store/paired/read_generation.hpp"
+#include "glifistore/store/paired/shard_pair_runtime.hpp"
 #include "store/store_internal.hpp"
 
 #include <atomic>
@@ -29,7 +29,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 namespace runtime_detail {
 
 [[nodiscard]] inline auto elapsed_ns(const std::chrono::steady_clock::time_point start,
@@ -292,4 +292,4 @@ struct WriterSyncDrainEnv final {
     WriterSyncDrainHooks hooks;
 };
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

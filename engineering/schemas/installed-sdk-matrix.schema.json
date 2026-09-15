@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.dev/schemas/installed-sdk-matrix-v1.json",
-  "title": "GlyphaStore cross-SDK post-install matrix report",
+  "$id": "https://glifistore.dev/schemas/installed-sdk-matrix-v1.json",
+  "title": "GlifiStore cross-SDK post-install matrix report",
   "description": "Result of scripts/test-package-installed-sdk-matrix.sh. The report may only claim PASS when the daemon under test was owned by an installed package: a daemon taken from the build tree is reported NOT_RUN or BLOCKED, never PASS.",
   "type": "object",
   "additionalProperties": false,

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "glyphastore/core/error.hpp"
+#include "glifistore/core/error.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 
-namespace glyphastore::recovery {
+namespace glifistore::recovery {
 
 class RecoveryMemoryBudget final {
   public:
@@ -25,4 +25,4 @@ inline constexpr std::uint64_t kRecoveryBytesPerSegment = 256;
 inline constexpr std::uint64_t kRecoveryBytesPerWorker = 1024;
 inline constexpr std::uint64_t kRecoveryBytesPerKey = 256;
 
-} // namespace glyphastore::recovery
+} // namespace glifistore::recovery

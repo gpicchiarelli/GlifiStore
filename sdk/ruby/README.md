@@ -1,31 +1,31 @@
-# GlyphaStore Ruby client
+# GlifiStore Ruby client
 
-Native Ruby client for GlyphaStore wire protocol v2. One TCP connection per Worker
+Native Ruby client for GlifiStore wire protocol v2. One TCP connection per Worker
 (`TCP_NODELAY`), canonical FNV-1a routing, at-most-one automatic retry for safe reads /
 zero-byte mutations, and `committed` / `rejected` / `indeterminate` outcomes.
 
 Implements [client semantics v1](../../docs/spec/client-semantics-v1.md). Roadmap:
 [Ruby SDK roadmap](../../docs/architecture/ruby-sdk-roadmap.md).
 
-Worker routing follows ADR 0030: plain `GlyphaStore/2` is FNV-1a; the extended INIT identity selects SipHash-2-4.
+Worker routing follows ADR 0030: plain `GlifiStore/2` is FNV-1a; the extended INIT identity selects SipHash-2-4.
 
-**Gem:** `glyphastore` · **Module:** `GlyphaStore` · **Ruby:** ≥ 3.2 · **License:** BSD-3-Clause
+**Gem:** `glifistore` · **Module:** `GlifiStore` · **Ruby:** ≥ 3.2 · **License:** BSD-3-Clause
 
 Cleartext TCP by default: treat the server as loopback / private network / sidecar. Opt-in TLS 1.3
 via `ClientConfig#tls` (CA / mTLS / hostname verify) matches Go/C++/Python/Perl/Erlang (ADR 0020).
 See the [security roadmap](../../docs/security/roadmap.md).
 
 ```ruby
-require "glypha_store"
+require "glifi_store"
 
-config = GlyphaStore::ClientConfig.defaults
+config = GlifiStore::ClientConfig.defaults
 config.port = 7379
 # Opt-in TLS 1.3 (fail closed; no cleartext fallback):
 # config.tls = true
 # config.tls_ca = "/path/to/ca.pem"
-# config.server_name = "glyphastore.example"
+# config.server_name = "glifistore.example"
 # config.cert_file / config.key_file for mTLS
-client = GlyphaStore::Client.connect(config)
+client = GlifiStore::Client.connect(config)
 
 result = client.put("session\x0042".b, "payload".b)
 raise result.error unless result.committed?
@@ -38,10 +38,10 @@ client.close
 
 ```ruby
 # gem install async
-require "glypha_store/async_client"
+require "glifi_store/async_client"
 
 Async do
-  client = GlyphaStore::AsyncClient.connect(config)
+  client = GlifiStore::AsyncClient.connect(config)
   client.get("key".b)
   client.close
 end
@@ -68,13 +68,13 @@ fail-closed.
 | --- | --- |
 | MRI threads | One sync `Client` may be shared; each Worker connection is mutex-protected. |
 | `fork` (Puma clustered, Unicorn) | Construct a **new** client in the child. Never reuse parent sockets. |
-| Async / Fiber | Use `GlyphaStore::AsyncClient` inside an `Async` reactor (`async` gem). |
+| Async / Fiber | Use `GlifiStore::AsyncClient` inside an `Async` reactor (`async` gem). |
 
 ## Install (from this tree)
 
 ```bash
 cd sdk/ruby
-ruby -Ilib -e 'require "glypha_store"; puts GlyphaStore::VERSION'
+ruby -Ilib -e 'require "glifi_store"; puts GlifiStore::VERSION'
 ./scripts/test-ruby-client.sh   # from repo root
 ```
 
@@ -82,12 +82,12 @@ ruby -Ilib -e 'require "glypha_store"; puts GlyphaStore::VERSION'
 
 | Path | Role |
 | --- | --- |
-| `lib/glypha_store/protocol.rb` | Wire codec + FNV/SipHash routing |
-| `lib/glypha_store/error.rb` | Structured errors + outcome types |
-| `lib/glypha_store/client.rb` | Sync TCP/AF_UNIX/TLS client (Get/Put/Erase/Ping/Backup/Health/Ready/Stats; TLS not with AF_UNIX) |
-| `lib/glypha_store/async_client.rb` | Async reactor client (same surface as sync) |
-| `lib/glypha_store/tls.rb` | TLS 1.3 context + wrap helpers |
-| `exe/glyphastore-interop` | Interop CLI for `scripts/test-sdk-interop.sh` |
+| `lib/glifi_store/protocol.rb` | Wire codec + FNV/SipHash routing |
+| `lib/glifi_store/error.rb` | Structured errors + outcome types |
+| `lib/glifi_store/client.rb` | Sync TCP/AF_UNIX/TLS client (Get/Put/Erase/Ping/Backup/Health/Ready/Stats; TLS not with AF_UNIX) |
+| `lib/glifi_store/async_client.rb` | Async reactor client (same surface as sync) |
+| `lib/glifi_store/tls.rb` | TLS 1.3 context + wrap helpers |
+| `exe/glifistore-interop` | Interop CLI for `scripts/test-sdk-interop.sh` |
 | `test/fixtures/` | Vendored wire goldens |
 
 ## Performance

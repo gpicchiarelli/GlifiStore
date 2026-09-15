@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-GlyphaStore is pre-alpha software. No release currently carries a production support, durability,
+GlifiStore is pre-alpha software. No release currently carries a production support, durability,
 wire-compatibility, or disk-format guarantee.
 
 | Version | Security status |
@@ -34,7 +34,7 @@ severity or eligibility for a CVE.
 
 ## Current network posture
 
-`glyphastored` defaults to **cleartext TCP** with **no authentication**. Optional **TLS 1.3** outer
+`glifistored` defaults to **cleartext TCP** with **no authentication**. Optional **TLS 1.3** outer
 transport is available when built with LibreSSL/OpenSSL (`--tls-cert`/`--tls-key`; dual
 `--tls-port`; see [docs/security/secure-profile.md](docs/security/secure-profile.md)). The safe
 default remains bind `127.0.0.1` (loopback) or an otherwise trusted private boundary. Do not expose

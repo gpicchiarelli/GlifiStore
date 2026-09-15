@@ -1,13 +1,13 @@
-#include "glyphastore/persistence/resource_limits.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
 
-#include "glyphastore/core/types.hpp"
-#include "glyphastore/persistence/filesystem.hpp"
+#include "glifistore/core/types.hpp"
+#include "glifistore/persistence/filesystem.hpp"
 #include "system_error.hpp"
 
 #include <limits>
 #include <sys/resource.h>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 [[nodiscard]] auto checked_add(const std::uint64_t left, const std::uint64_t right, const char* description)
@@ -221,4 +221,4 @@ auto durable_worker_live_key_limit(const std::size_t worker_index, const std::si
     return total_limit / worker_count + (worker_index < total_limit % worker_count ? 1U : 0U);
 }
 
-} // namespace glyphastore
+} // namespace glifistore

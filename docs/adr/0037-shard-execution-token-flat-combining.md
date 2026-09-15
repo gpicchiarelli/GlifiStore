@@ -4,7 +4,7 @@
 - Date: 2026-08-26
 - Deciders: storage, concurrency, and performance maintainers
 - Applies to: paired `ShardPairRuntime` mutation ownership (embedded Store and
-  `glyphastored`); persistence format v1 and wire protocol v2 unchanged
+  `glifistored`); persistence format v1 and wire protocol v2 unchanged
 - Amends: [ADR 0031](paired-reader-writer-shards.md) (Writer identity),
   [ADR 0032](0032-paired-concurrency-embedded-store.md) (embedded handoff model)
 - Supersedes: none

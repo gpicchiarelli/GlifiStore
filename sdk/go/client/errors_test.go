@@ -3,7 +3,7 @@ package client
 import (
 	"testing"
 
-	"github.com/gpicchiarelli/GlyphaStore/sdk/go/protocol"
+	"github.com/gpicchiarelli/GlifiStore/sdk/go/protocol"
 )
 
 func TestOverloadedRetryabilityIsNever(t *testing.T) {

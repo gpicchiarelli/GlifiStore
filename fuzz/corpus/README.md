@@ -16,11 +16,11 @@ Local smoke (Linux Clang with libFuzzer runtime):
 ```bash
 cmake --preset unix-fuzz
 cmake --build --preset unix-fuzz
-GLYPHASTORE_FUZZ_SECONDS=30 ./scripts/run-fuzzers.sh
+GLIFISTORE_FUZZ_SECONDS=30 ./scripts/run-fuzzers.sh
 ```
 
 On macOS, use a full LLVM toolchain and the `macos-fuzz` preset, then point
-`GLYPHASTORE_FUZZ_BUILD_DIR` at `build/macos-fuzz`.
+`GLIFISTORE_FUZZ_BUILD_DIR` at `build/macos-fuzz`.
 
 Promote interesting minimized inputs into these directories when they catch a
 regression. Do not commit libFuzzer crash-/timeout-/oom- artifacts; those stay

@@ -2,7 +2,7 @@
 """Check an installed or staged package payload against the shared inventory.
 
 packaging/common/file-lists/payload.yaml is the single description of what a
-GlyphaStore package delivers. This tool resolves its @token@ placeholders from
+GlifiStore package delivers. This tool resolves its @token@ placeholders from
 the layout recorded by engineering/tools/render_package_metadata.py and proves,
 component by component, that the declared entries are present with the declared
 kind.

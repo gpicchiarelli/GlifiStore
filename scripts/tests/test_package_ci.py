@@ -37,7 +37,7 @@ def run(script: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
 
 class PackageCiTests(unittest.TestCase):
     def output_directory(self) -> Path:
-        directory = tempfile.TemporaryDirectory(prefix="glyphastore-package-ci-")
+        directory = tempfile.TemporaryDirectory(prefix="glifistore-package-ci-")
         self.addCleanup(directory.cleanup)
         return Path(directory.name) / "run"
 

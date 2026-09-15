@@ -1,18 +1,18 @@
 #include "daemon_config_detail.hpp"
-#include "glyphastore/server/authz.hpp"
-#include "glyphastore/server/tls.hpp"
+#include "glifistore/server/authz.hpp"
+#include "glifistore/server/tls.hpp"
 
 #include <string>
 #include <utility>
 #include <vector>
 
-namespace glyphastore::server::daemon_config_detail {
+namespace glifistore::server::daemon_config_detail {
 
 auto materialize_from_settings(SettingMap settings, const bool show_help, const bool show_version,
                                std::string deployment_profile) -> Result<DaemonOptions> {
     std::vector<std::string> storage;
     storage.reserve(settings.size() * 2U + 1U);
-    storage.emplace_back("glyphastored");
+    storage.emplace_back("glifistored");
     for (const auto& [key, value] : settings) {
         const auto* spec = find_spec(key);
         if (spec == nullptr) {
@@ -590,4 +590,4 @@ auto materialize_from_settings(SettingMap settings, const bool show_help, const 
     return options;
 }
 
-} // namespace glyphastore::server::daemon_config_detail
+} // namespace glifistore::server::daemon_config_detail

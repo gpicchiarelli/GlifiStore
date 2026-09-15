@@ -1,15 +1,15 @@
 #pragma once
 
-#include "glyphastore/server/connection_handoff.hpp"
-#include "glyphastore/server/disk_read_executor.hpp"
-#include "glyphastore/server/pair_writer.hpp"
-#include "glyphastore/server/reactor.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/server/connection_handoff.hpp"
+#include "glifistore/server/disk_read_executor.hpp"
+#include "glifistore/server/pair_writer.hpp"
+#include "glifistore/server/reactor.hpp"
+#include "glifistore/store/store.hpp"
 
 #include <memory>
 #include <vector>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 // Owned runtime graph assembled by ServerBuilder. Server is the lifecycle
 // façade over this aggregate, not the composition root.
@@ -21,4 +21,4 @@ struct ServerRuntime final {
     std::vector<std::unique_ptr<Reactor>> reactors;
 };
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

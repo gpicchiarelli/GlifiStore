@@ -33,21 +33,21 @@ jobs:
           python -m pip install --disable-pip-version-check cmake ninja
           cmake -S . -B build/man-ci \
             -DBUILD_TESTING=OFF \
-            -DGLYPHASTORE_ENABLE_TLS=OFF \
-            -DGLYPHASTORE_BUILD_BENCHMARKS=OFF \
-            -DGLYPHASTORE_BUILD_FUZZERS=OFF \
-            -DGLYPHASTORE_MAN_DATE="August 1, 2026"
+            -DGLIFISTORE_ENABLE_TLS=OFF \
+            -DGLIFISTORE_BUILD_BENCHMARKS=OFF \
+            -DGLIFISTORE_BUILD_FUZZERS=OFF \
+            -DGLIFISTORE_MAN_DATE="August 1, 2026"
           cmake --build build/man-ci
           ./scripts/validate-manpages.sh build/man-ci/man
           dest="$(mktemp -d)"
           cmake --install build/man-ci --prefix "${dest}" --component Runtime
-          test -f "${dest}/share/man/man8/glyphastored.8"
-          test -f "${dest}/share/man/man7/glyphastore.7"
-          test -f "${dest}/share/man/man1/glyphastore_verify_store.1"
-          test -f "${dest}/share/man/man1/glyphastore_demo.1"
-          mandoc -T ascii "${dest}/share/man/man8/glyphastored.8" >/dev/null
-          mandoc -T ascii "${dest}/share/man/man7/glyphastore.7" >/dev/null
-          mandoc -T ascii "${dest}/share/man/man1/glyphastore_verify_store.1" >/dev/null
+          test -f "${dest}/share/man/man8/glifistored.8"
+          test -f "${dest}/share/man/man7/glifistore.7"
+          test -f "${dest}/share/man/man1/glifistore_verify_store.1"
+          test -f "${dest}/share/man/man1/glifistore_demo.1"
+          mandoc -T ascii "${dest}/share/man/man8/glifistored.8" >/dev/null
+          mandoc -T ascii "${dest}/share/man/man7/glifistore.7" >/dev/null
+          mandoc -T ascii "${dest}/share/man/man1/glifistore_verify_store.1" >/dev/null
 
   strict-iso-hardening:
     name: ISO C++23 / Linux hardening evidence
@@ -186,43 +186,43 @@ jobs:
           CC: clang
           CXX: clang++
         run: |
-          cmake --preset unix-release -DGLYPHASTORE_ENABLE_TLS=ON
-          cmake --build --preset unix-release --target glyphastored glyphastore_interop_client
+          cmake --preset unix-release -DGLIFISTORE_ENABLE_TLS=ON
+          cmake --build --preset unix-release --target glifistored glifistore_interop_client
           mkdir -p sdk/go/bin
-          (cd sdk/go && go build -o bin/glyphastore-interop ./cmd/glyphastore-interop)
+          (cd sdk/go && go build -o bin/glifistore-interop ./cmd/glifistore-interop)
       - name: Cross-SDK interoperability matrix
         env:
-          GLYPHASTORED: ${{ github.workspace }}/build/unix-release/glyphastored
-          GLYPHASTORE_INTEROP_CLIENT: ${{ github.workspace }}/build/unix-release/glyphastore_interop_client
-          GLYPHASTORE_GO_INTEROP: ${{ github.workspace }}/sdk/go/bin/glyphastore-interop
+          GLIFISTORED: ${{ github.workspace }}/build/unix-release/glifistored
+          GLIFISTORE_INTEROP_CLIENT: ${{ github.workspace }}/build/unix-release/glifistore_interop_client
+          GLIFISTORE_GO_INTEROP: ${{ github.workspace }}/sdk/go/bin/glifistore-interop
         run: ./scripts/test-sdk-interop.sh
       - name: SDK online BACKUP interop smoke
         timeout-minutes: 5
         env:
-          GLYPHASTORED: ${{ github.workspace }}/build/unix-release/glyphastored
-          GLYPHASTORE_GO_INTEROP: ${{ github.workspace }}/sdk/go/bin/glyphastore-interop
+          GLIFISTORED: ${{ github.workspace }}/build/unix-release/glifistored
+          GLIFISTORE_GO_INTEROP: ${{ github.workspace }}/sdk/go/bin/glifistore-interop
           BACKUP_INTEROP_REQUIRE_ALL: "1"
         run: ./scripts/test-sdk-backup-interop.sh
       - name: SDK live HEALTH/READY/STATS interop smoke
         timeout-minutes: 5
         env:
-          GLYPHASTORED: ${{ github.workspace }}/build/unix-release/glyphastored
-          GLYPHASTORE_GO_INTEROP: ${{ github.workspace }}/sdk/go/bin/glyphastore-interop
+          GLIFISTORED: ${{ github.workspace }}/build/unix-release/glifistored
+          GLIFISTORE_GO_INTEROP: ${{ github.workspace }}/sdk/go/bin/glifistore-interop
           PROBE_INTEROP_REQUIRE_ALL: "1"
         run: ./scripts/test-sdk-probe-interop.sh
       - name: Secure-profile interop smoke
         timeout-minutes: 5
         env:
-          GLYPHASTORED: ${{ github.workspace }}/build/unix-release/glyphastored
-          GLYPHASTORE_INTEROP_CLIENT: ${{ github.workspace }}/build/unix-release/glyphastore_interop_client
-          GLYPHASTORE_GO_INTEROP: ${{ github.workspace }}/sdk/go/bin/glyphastore-interop
+          GLIFISTORED: ${{ github.workspace }}/build/unix-release/glifistored
+          GLIFISTORE_INTEROP_CLIENT: ${{ github.workspace }}/build/unix-release/glifistore_interop_client
+          GLIFISTORE_GO_INTEROP: ${{ github.workspace }}/sdk/go/bin/glifistore-interop
           INTEROP_SECURE_WORKERS: "2"
           SECURE_INTEROP_REQUIRE_ALL: "1"
         run: ./scripts/test-secure-profile-interop.sh
       - name: Installed SDK artifact secure-profile interop
         timeout-minutes: 5
         env:
-          GLYPHASTORED: ${{ github.workspace }}/build/unix-release/glyphastored
+          GLIFISTORED: ${{ github.workspace }}/build/unix-release/glifistored
         run: |
           evidence="build/evidence/sdk-installed-secure-profile"
           mkdir -p "$evidence"
@@ -276,11 +276,11 @@ jobs:
           set -euo pipefail
           prefix="${{ github.workspace }}/build/install-prefix"
           python engineering/tools/check_abi_symbols.py \
-            --library "$prefix/lib/libglyphastore.so.1" \
+            --library "$prefix/lib/libglifistore.so.1" \
             --allowlist abi/symbols-v1.txt
           read -r -a pkg_config_flags <<< "$(
             PKG_CONFIG_PATH="$prefix/lib/pkgconfig" \
-              pkg-config --cflags --libs glyphastore-abi
+              pkg-config --cflags --libs glifistore-abi
           )"
           cc -std=c11 tests/abi/c_abi_layout_probe.c \
             "${pkg_config_flags[@]}" \

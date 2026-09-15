@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 [[nodiscard]] inline auto
 make_shared_generation_in_shell(WorkerRoutingState routing, std::shared_ptr<const ImmutableReadIndex> base,
@@ -39,4 +39,4 @@ make_shared_generation_in_borrowed_shell(WorkerRoutingState routing,
                                                                 std::move(delta), epoch, visible_through);
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

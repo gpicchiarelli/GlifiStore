@@ -1,4 +1,4 @@
-#include "glyphastore/server/connection_handoff.hpp"
+#include "glifistore/server/connection_handoff.hpp"
 #include "test.hpp"
 
 #include <atomic>
@@ -9,59 +9,59 @@
 #include <utility>
 #include <vector>
 
-GLYPHA_TEST("connection handoff mesh is bounded and preserves binding state") {
-    glyphastore::server::ConnectionHandoffMesh mesh{2, 2};
-    glyphastore::server::ConnectionHandoff first{.bound_worker = 1};
-    glyphastore::server::ConnectionHandoff second{.bound_worker = 1};
-    glyphastore::server::ConnectionHandoff rejected{.bound_worker = 1, .initialized = true};
+GLIFI_TEST("connection handoff mesh is bounded and preserves binding state") {
+    glifistore::server::ConnectionHandoffMesh mesh{2, 2};
+    glifistore::server::ConnectionHandoff first{.bound_worker = 1};
+    glifistore::server::ConnectionHandoff second{.bound_worker = 1};
+    glifistore::server::ConnectionHandoff rejected{.bound_worker = 1, .initialized = true};
 
-    GLYPHA_REQUIRE(mesh.try_handoff(1, std::move(first)));
-    GLYPHA_REQUIRE(mesh.has_pending(1));
-    GLYPHA_REQUIRE(mesh.try_handoff(1, std::move(second)));
-    GLYPHA_REQUIRE(!mesh.try_handoff(1, std::move(rejected)));
+    GLIFI_REQUIRE(mesh.try_handoff(1, std::move(first)));
+    GLIFI_REQUIRE(mesh.has_pending(1));
+    GLIFI_REQUIRE(mesh.try_handoff(1, std::move(second)));
+    GLIFI_REQUIRE(!mesh.try_handoff(1, std::move(rejected)));
     // Full-queue rejection must not consume the handoff: the producer still owns it.
-    GLYPHA_REQUIRE(rejected.bound_worker == 1);
-    GLYPHA_REQUIRE(rejected.initialized);
+    GLIFI_REQUIRE(rejected.bound_worker == 1);
+    GLIFI_REQUIRE(rejected.initialized);
 
     const auto first_received = mesh.try_pop(1);
     const auto second_received = mesh.try_pop(1);
-    GLYPHA_REQUIRE(first_received.has_value());
-    GLYPHA_REQUIRE(second_received.has_value());
-    GLYPHA_REQUIRE(first_received->bound_worker == 1);
-    GLYPHA_REQUIRE(second_received->bound_worker == 1);
-    GLYPHA_REQUIRE(!mesh.try_pop(1).has_value());
-    GLYPHA_REQUIRE(!mesh.has_pending(1));
+    GLIFI_REQUIRE(first_received.has_value());
+    GLIFI_REQUIRE(second_received.has_value());
+    GLIFI_REQUIRE(first_received->bound_worker == 1);
+    GLIFI_REQUIRE(second_received->bound_worker == 1);
+    GLIFI_REQUIRE(!mesh.try_pop(1).has_value());
+    GLIFI_REQUIRE(!mesh.has_pending(1));
 }
 
-GLYPHA_TEST("connection handoff mesh stop_accepting refuses new transfers") {
-    glyphastore::server::ConnectionHandoffMesh mesh{2, 2};
-    glyphastore::server::ConnectionHandoff queued{.bound_worker = 1, .initialized = true};
-    GLYPHA_REQUIRE(mesh.try_handoff(1, std::move(queued)));
-    GLYPHA_REQUIRE(mesh.has_pending(1));
+GLIFI_TEST("connection handoff mesh stop_accepting refuses new transfers") {
+    glifistore::server::ConnectionHandoffMesh mesh{2, 2};
+    glifistore::server::ConnectionHandoff queued{.bound_worker = 1, .initialized = true};
+    GLIFI_REQUIRE(mesh.try_handoff(1, std::move(queued)));
+    GLIFI_REQUIRE(mesh.has_pending(1));
 
     mesh.stop_accepting();
-    GLYPHA_REQUIRE(!mesh.accepting());
-    glyphastore::server::ConnectionHandoff late{.bound_worker = 1, .initialized = true};
-    GLYPHA_REQUIRE(!mesh.try_handoff(1, std::move(late)));
-    GLYPHA_REQUIRE(late.bound_worker == 1);
-    GLYPHA_REQUIRE(late.initialized);
+    GLIFI_REQUIRE(!mesh.accepting());
+    glifistore::server::ConnectionHandoff late{.bound_worker = 1, .initialized = true};
+    GLIFI_REQUIRE(!mesh.try_handoff(1, std::move(late)));
+    GLIFI_REQUIRE(late.bound_worker == 1);
+    GLIFI_REQUIRE(late.initialized);
 
     // Already-queued cells remain poppable for drain / reject_orphaned.
     const auto received = mesh.try_pop(1);
-    GLYPHA_REQUIRE(received.has_value());
-    GLYPHA_REQUIRE(received->bound_worker == 1);
-    GLYPHA_REQUIRE(!mesh.has_pending(1));
+    GLIFI_REQUIRE(received.has_value());
+    GLIFI_REQUIRE(received->bound_worker == 1);
+    GLIFI_REQUIRE(!mesh.has_pending(1));
 }
 
-GLYPHA_TEST("connection handoff mesh preserves buffered state exactly once") {
+GLIFI_TEST("connection handoff mesh preserves buffered state exactly once") {
     // Exactly-once ownership: successful push transfers buffered fields; full-queue
     // rejection leaves the producer owning the ConnectionHandoff unchanged.
     // BoundedMpscQueue bit-ceils capacity to at least 2, so request 2 and fill both slots.
-    glyphastore::server::ConnectionHandoffMesh mesh{1, 2};
+    glifistore::server::ConnectionHandoffMesh mesh{1, 2};
     const auto now = std::chrono::steady_clock::now();
-    glyphastore::server::ConnectionHandoff first{
+    glifistore::server::ConnectionHandoff first{
         .principal = "alice.example",
-        .capabilities = glyphastore::server::Capability::read | glyphastore::server::Capability::write,
+        .capabilities = glifistore::server::Capability::read | glifistore::server::Capability::write,
         .key_prefix = "tenant/",
         .input = {std::byte{0x01}, std::byte{0x02}},
         .output = {std::byte{0x0a}},
@@ -73,13 +73,13 @@ GLYPHA_TEST("connection handoff mesh preserves buffered state exactly once") {
         .connection_rate_window_start_ns = 42,
         .connection_rate_used = 7,
     };
-    GLYPHA_REQUIRE(mesh.try_handoff(0, std::move(first)));
-    glyphastore::server::ConnectionHandoff filler{.bound_worker = 0, .initialized = true};
-    GLYPHA_REQUIRE(mesh.try_handoff(0, std::move(filler)));
+    GLIFI_REQUIRE(mesh.try_handoff(0, std::move(first)));
+    glifistore::server::ConnectionHandoff filler{.bound_worker = 0, .initialized = true};
+    GLIFI_REQUIRE(mesh.try_handoff(0, std::move(filler)));
 
-    glyphastore::server::ConnectionHandoff rejected{
+    glifistore::server::ConnectionHandoff rejected{
         .principal = "bob.example",
-        .capabilities = glyphastore::server::Capability::admin,
+        .capabilities = glifistore::server::Capability::admin,
         .key_prefix = "other/",
         .input = {std::byte{0xff}},
         .output = {std::byte{0xee}},
@@ -88,37 +88,37 @@ GLYPHA_TEST("connection handoff mesh preserves buffered state exactly once") {
         .peer_read_closed = false,
         .connection_rate_used = 3,
     };
-    GLYPHA_REQUIRE(!mesh.try_handoff(0, std::move(rejected)));
-    GLYPHA_REQUIRE(rejected.principal == "bob.example");
-    GLYPHA_REQUIRE(rejected.capabilities == glyphastore::server::Capability::admin);
-    GLYPHA_REQUIRE(rejected.key_prefix == "other/");
-    GLYPHA_REQUIRE(rejected.input.size() == 1);
-    GLYPHA_REQUIRE(rejected.output.size() == 1);
-    GLYPHA_REQUIRE(rejected.initialized);
-    GLYPHA_REQUIRE(rejected.connection_rate_used == 3);
+    GLIFI_REQUIRE(!mesh.try_handoff(0, std::move(rejected)));
+    GLIFI_REQUIRE(rejected.principal == "bob.example");
+    GLIFI_REQUIRE(rejected.capabilities == glifistore::server::Capability::admin);
+    GLIFI_REQUIRE(rejected.key_prefix == "other/");
+    GLIFI_REQUIRE(rejected.input.size() == 1);
+    GLIFI_REQUIRE(rejected.output.size() == 1);
+    GLIFI_REQUIRE(rejected.initialized);
+    GLIFI_REQUIRE(rejected.connection_rate_used == 3);
 
     const auto received = mesh.try_pop(0);
-    GLYPHA_REQUIRE(received.has_value());
-    GLYPHA_REQUIRE(received->principal == "alice.example");
-    GLYPHA_REQUIRE(received->capabilities ==
-                   (glyphastore::server::Capability::read | glyphastore::server::Capability::write));
-    GLYPHA_REQUIRE(received->key_prefix == "tenant/");
-    GLYPHA_REQUIRE(received->input.size() == 2);
-    GLYPHA_REQUIRE(received->output.size() == 1);
-    GLYPHA_REQUIRE(received->bound_worker == 0);
-    GLYPHA_REQUIRE(received->initialized);
-    GLYPHA_REQUIRE(received->peer_read_closed);
-    GLYPHA_REQUIRE(received->connection_rate_window_start_ns == 42);
-    GLYPHA_REQUIRE(received->connection_rate_used == 7);
-    GLYPHA_REQUIRE(mesh.try_pop(0).has_value());
-    GLYPHA_REQUIRE(!mesh.try_pop(0).has_value());
+    GLIFI_REQUIRE(received.has_value());
+    GLIFI_REQUIRE(received->principal == "alice.example");
+    GLIFI_REQUIRE(received->capabilities ==
+                   (glifistore::server::Capability::read | glifistore::server::Capability::write));
+    GLIFI_REQUIRE(received->key_prefix == "tenant/");
+    GLIFI_REQUIRE(received->input.size() == 2);
+    GLIFI_REQUIRE(received->output.size() == 1);
+    GLIFI_REQUIRE(received->bound_worker == 0);
+    GLIFI_REQUIRE(received->initialized);
+    GLIFI_REQUIRE(received->peer_read_closed);
+    GLIFI_REQUIRE(received->connection_rate_window_start_ns == 42);
+    GLIFI_REQUIRE(received->connection_rate_used == 7);
+    GLIFI_REQUIRE(mesh.try_pop(0).has_value());
+    GLIFI_REQUIRE(!mesh.try_pop(0).has_value());
 }
 
-GLYPHA_TEST("connection handoff mesh concurrent producers preserve exactly-once delivery") {
+GLIFI_TEST("connection handoff mesh concurrent producers preserve exactly-once delivery") {
     constexpr std::size_t kProducers = 4;
     constexpr std::size_t kPerProducer = 64;
     constexpr std::size_t kCapacity = 8;
-    glyphastore::server::ConnectionHandoffMesh mesh{1, kCapacity};
+    glifistore::server::ConnectionHandoffMesh mesh{1, kCapacity};
     std::atomic<std::size_t> accepted{0};
     std::atomic<std::size_t> rejected{0};
     std::atomic<bool> start{false};
@@ -131,7 +131,7 @@ GLYPHA_TEST("connection handoff mesh concurrent producers preserve exactly-once 
                 std::this_thread::yield();
             }
             for (std::size_t index = 0; index < kPerProducer; ++index) {
-                glyphastore::server::ConnectionHandoff cell{
+                glifistore::server::ConnectionHandoff cell{
                     .principal = "p" + std::to_string(producer),
                     .bound_worker = 0,
                     .initialized = true,
@@ -144,8 +144,8 @@ GLYPHA_TEST("connection handoff mesh concurrent producers preserve exactly-once 
                     }
                     rejected.fetch_add(1U, std::memory_order_relaxed);
                     // Producer still owns `cell` after full-queue rejection.
-                    GLYPHA_REQUIRE(cell.initialized);
-                    GLYPHA_REQUIRE(cell.bound_worker == 0);
+                    GLIFI_REQUIRE(cell.initialized);
+                    GLIFI_REQUIRE(cell.bound_worker == 0);
                     std::this_thread::yield();
                 }
             }
@@ -160,8 +160,8 @@ GLYPHA_TEST("connection handoff mesh concurrent producers preserve exactly-once 
         const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{5};
         while (popped < kProducers * kPerProducer && std::chrono::steady_clock::now() < deadline) {
             if (auto cell = mesh.try_pop(0); cell.has_value()) {
-                GLYPHA_REQUIRE(cell->initialized);
-                GLYPHA_REQUIRE(cell->bound_worker == 0);
+                GLIFI_REQUIRE(cell->initialized);
+                GLIFI_REQUIRE(cell->bound_worker == 0);
                 ++popped;
             } else {
                 std::this_thread::yield();
@@ -175,8 +175,8 @@ GLYPHA_TEST("connection handoff mesh concurrent producers preserve exactly-once 
     }
     consumer.join();
 
-    GLYPHA_REQUIRE(accepted.load(std::memory_order_relaxed) == kProducers * kPerProducer);
-    GLYPHA_REQUIRE(popped == kProducers * kPerProducer);
-    GLYPHA_REQUIRE(!mesh.has_pending(0));
-    GLYPHA_REQUIRE(rejected.load(std::memory_order_relaxed) > 0);
+    GLIFI_REQUIRE(accepted.load(std::memory_order_relaxed) == kProducers * kPerProducer);
+    GLIFI_REQUIRE(popped == kProducers * kPerProducer);
+    GLIFI_REQUIRE(!mesh.has_pending(0));
+    GLIFI_REQUIRE(rejected.load(std::memory_order_relaxed) > 0);
 }

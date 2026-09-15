@@ -1,11 +1,11 @@
 #pragma once
 
-#include "glyphastore/persistence/durable_flush_coordinator.hpp"
+#include "glifistore/persistence/durable_flush_coordinator.hpp"
 
 #include <cstdint>
 #include <mutex>
 
-namespace glyphastore::detail {
+namespace glifistore::detail {
 
 // Build-tree-only bridge for deterministic generation-boundary tests.
 class DurableFlushCoordinatorAccess final {
@@ -18,4 +18,4 @@ class DurableFlushCoordinatorAccess final {
     }
 };
 
-} // namespace glyphastore::detail
+} // namespace glifistore::detail

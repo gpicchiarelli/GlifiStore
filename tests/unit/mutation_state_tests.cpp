@@ -1,168 +1,168 @@
-#include "glyphastore/store/paired/mutation_state.hpp"
+#include "glifistore/store/paired/mutation_state.hpp"
 #include "test.hpp"
 
 #include <optional>
 
-using glyphastore::store::paired::commit_knowledge_from;
-using glyphastore::store::paired::CommitKnowledge;
-using glyphastore::store::paired::CompletionDecision;
-using glyphastore::store::paired::decide_completion;
-using glyphastore::store::paired::durable_outcome_from;
-using glyphastore::store::paired::DurableDecision;
-using glyphastore::store::paired::MutationLifecycle;
-using glyphastore::store::paired::MutationStage;
-using glyphastore::store::paired::PublicationDecision;
-using glyphastore::store::paired::PublicationState;
+using glifistore::store::paired::commit_knowledge_from;
+using glifistore::store::paired::CommitKnowledge;
+using glifistore::store::paired::CompletionDecision;
+using glifistore::store::paired::decide_completion;
+using glifistore::store::paired::durable_outcome_from;
+using glifistore::store::paired::DurableDecision;
+using glifistore::store::paired::MutationLifecycle;
+using glifistore::store::paired::MutationStage;
+using glifistore::store::paired::PublicationDecision;
+using glifistore::store::paired::PublicationState;
 
-GLYPHA_TEST("mutation_state CommitKnowledge aliases DurableMutationOutcome") {
-    GLYPHA_REQUIRE(commit_knowledge_from(glyphastore::DurableMutationOutcome::committed) ==
+GLIFI_TEST("mutation_state CommitKnowledge aliases DurableMutationOutcome") {
+    GLIFI_REQUIRE(commit_knowledge_from(glifistore::DurableMutationOutcome::committed) ==
                    CommitKnowledge::committed);
-    GLYPHA_REQUIRE(commit_knowledge_from(glyphastore::DurableMutationOutcome::not_committed) ==
+    GLIFI_REQUIRE(commit_knowledge_from(glifistore::DurableMutationOutcome::not_committed) ==
                    CommitKnowledge::known_not_committed);
-    GLYPHA_REQUIRE(commit_knowledge_from(glyphastore::DurableMutationOutcome::indeterminate) ==
+    GLIFI_REQUIRE(commit_knowledge_from(glifistore::DurableMutationOutcome::indeterminate) ==
                    CommitKnowledge::indeterminate);
-    GLYPHA_REQUIRE(durable_outcome_from(CommitKnowledge::committed) ==
-                   glyphastore::DurableMutationOutcome::committed);
+    GLIFI_REQUIRE(durable_outcome_from(CommitKnowledge::committed) ==
+                   glifistore::DurableMutationOutcome::committed);
 }
 
-GLYPHA_TEST("mutation_state illegal transitions are rejected by table") {
-    GLYPHA_REQUIRE(
+GLIFI_TEST("mutation_state illegal transitions are rejected by table") {
+    GLIFI_REQUIRE(
         !MutationLifecycle::transition_allowed(MutationStage::not_admitted, MutationStage::completed));
-    GLYPHA_REQUIRE(!MutationLifecycle::transition_allowed(MutationStage::published, MutationStage::rejected));
-    GLYPHA_REQUIRE(!MutationLifecycle::transition_allowed(MutationStage::completed, MutationStage::admitted));
-    GLYPHA_REQUIRE(
+    GLIFI_REQUIRE(!MutationLifecycle::transition_allowed(MutationStage::published, MutationStage::rejected));
+    GLIFI_REQUIRE(!MutationLifecycle::transition_allowed(MutationStage::completed, MutationStage::admitted));
+    GLIFI_REQUIRE(
         MutationLifecycle::transition_allowed(MutationStage::not_admitted, MutationStage::admitted));
-    GLYPHA_REQUIRE(MutationLifecycle::transition_allowed(MutationStage::durable_started,
+    GLIFI_REQUIRE(MutationLifecycle::transition_allowed(MutationStage::durable_started,
                                                          MutationStage::authority_committed));
 }
 
-GLYPHA_TEST("mutation_state happy durable path reaches completed success") {
+GLIFI_TEST("mutation_state happy durable path reaches completed success") {
     MutationLifecycle life;
-    GLYPHA_REQUIRE(life.admit());
-    GLYPHA_REQUIRE(life.stage_for_writer());
-    GLYPHA_REQUIRE(life.mark_durable_started());
-    glyphastore::DurableMutationResult result{.outcome = glyphastore::DurableMutationOutcome::committed,
-                                              .sequence = glyphastore::SequenceNumber{1},
+    GLIFI_REQUIRE(life.admit());
+    GLIFI_REQUIRE(life.stage_for_writer());
+    GLIFI_REQUIRE(life.mark_durable_started());
+    glifistore::DurableMutationResult result{.outcome = glifistore::DurableMutationOutcome::committed,
+                                              .sequence = glifistore::SequenceNumber{1},
                                               .error = std::nullopt};
-    GLYPHA_REQUIRE(life.apply_durable_result(result));
-    GLYPHA_REQUIRE(life.stage() == MutationStage::publication_required);
-    GLYPHA_REQUIRE(life.mark_publication_staged());
-    GLYPHA_REQUIRE(life.mark_published());
+    GLIFI_REQUIRE(life.apply_durable_result(result));
+    GLIFI_REQUIRE(life.stage() == MutationStage::publication_required);
+    GLIFI_REQUIRE(life.mark_publication_staged());
+    GLIFI_REQUIRE(life.mark_published());
     const auto decided = decide_completion(life.durable(), life.publication());
-    GLYPHA_REQUIRE(decided.kind == CompletionDecision::Kind::success);
-    GLYPHA_REQUIRE(!decided.fail_closed_required);
-    GLYPHA_REQUIRE(life.decide(decided));
-    GLYPHA_REQUIRE(life.mark_completed());
-    GLYPHA_REQUIRE(life.stage() == MutationStage::completed);
+    GLIFI_REQUIRE(decided.kind == CompletionDecision::Kind::success);
+    GLIFI_REQUIRE(!decided.fail_closed_required);
+    GLIFI_REQUIRE(life.decide(decided));
+    GLIFI_REQUIRE(life.mark_completed());
+    GLIFI_REQUIRE(life.stage() == MutationStage::completed);
 }
 
-GLYPHA_TEST("mutation_state known-not-committed never becomes success") {
+GLIFI_TEST("mutation_state known-not-committed never becomes success") {
     MutationLifecycle life;
-    GLYPHA_REQUIRE(life.admit());
-    GLYPHA_REQUIRE(life.stage_for_writer());
-    GLYPHA_REQUIRE(life.mark_durable_started());
-    glyphastore::DurableMutationResult result{
-        .outcome = glyphastore::DurableMutationOutcome::not_committed,
+    GLIFI_REQUIRE(life.admit());
+    GLIFI_REQUIRE(life.stage_for_writer());
+    GLIFI_REQUIRE(life.mark_durable_started());
+    glifistore::DurableMutationResult result{
+        .outcome = glifistore::DurableMutationOutcome::not_committed,
         .sequence = std::nullopt,
-        .error = glyphastore::Error{glyphastore::ErrorCode::segment_full, "full"}};
-    GLYPHA_REQUIRE(life.apply_durable_result(result));
-    GLYPHA_REQUIRE(life.stage() == MutationStage::completion_decided);
-    GLYPHA_REQUIRE(life.completion().kind == CompletionDecision::Kind::known_not_committed);
-    GLYPHA_REQUIRE(!life.mark_published());
+        .error = glifistore::Error{glifistore::ErrorCode::segment_full, "full"}};
+    GLIFI_REQUIRE(life.apply_durable_result(result));
+    GLIFI_REQUIRE(life.stage() == MutationStage::completion_decided);
+    GLIFI_REQUIRE(life.completion().kind == CompletionDecision::Kind::known_not_committed);
+    GLIFI_REQUIRE(!life.mark_published());
 }
 
-GLYPHA_TEST("mutation_state committed cannot decide known_not_committed") {
+GLIFI_TEST("mutation_state committed cannot decide known_not_committed") {
     MutationLifecycle life;
-    GLYPHA_REQUIRE(life.admit());
-    GLYPHA_REQUIRE(life.stage_for_writer());
-    GLYPHA_REQUIRE(life.mark_durable_started());
-    glyphastore::DurableMutationResult result{.outcome = glyphastore::DurableMutationOutcome::committed,
-                                              .sequence = glyphastore::SequenceNumber{2},
+    GLIFI_REQUIRE(life.admit());
+    GLIFI_REQUIRE(life.stage_for_writer());
+    GLIFI_REQUIRE(life.mark_durable_started());
+    glifistore::DurableMutationResult result{.outcome = glifistore::DurableMutationOutcome::committed,
+                                              .sequence = glifistore::SequenceNumber{2},
                                               .error = std::nullopt};
-    GLYPHA_REQUIRE(life.apply_durable_result(result));
-    GLYPHA_REQUIRE(life.mark_published());
+    GLIFI_REQUIRE(life.apply_durable_result(result));
+    GLIFI_REQUIRE(life.mark_published());
     CompletionDecision illegal{.kind = CompletionDecision::Kind::known_not_committed};
-    GLYPHA_REQUIRE(!life.decide(illegal));
+    GLIFI_REQUIRE(!life.decide(illegal));
 }
 
-GLYPHA_TEST("mutation_state completion_decided cannot change outcome") {
+GLIFI_TEST("mutation_state completion_decided cannot change outcome") {
     MutationLifecycle life;
-    GLYPHA_REQUIRE(life.admit());
-    GLYPHA_REQUIRE(life.expire_pre_store());
-    GLYPHA_REQUIRE(life.stage() == MutationStage::completion_decided);
+    GLIFI_REQUIRE(life.admit());
+    GLIFI_REQUIRE(life.expire_pre_store());
+    GLIFI_REQUIRE(life.stage() == MutationStage::completion_decided);
     CompletionDecision again{.kind = CompletionDecision::Kind::success};
-    GLYPHA_REQUIRE(!life.decide(again));
+    GLIFI_REQUIRE(!life.decide(again));
 }
 
-GLYPHA_TEST("mutation_state exception after durable_started is indeterminate") {
+GLIFI_TEST("mutation_state exception after durable_started is indeterminate") {
     MutationLifecycle life;
-    GLYPHA_REQUIRE(life.admit());
-    GLYPHA_REQUIRE(life.stage_for_writer());
-    GLYPHA_REQUIRE(life.mark_durable_started());
-    GLYPHA_REQUIRE(life.mark_exception_after_durable_start());
-    GLYPHA_REQUIRE(life.stage() == MutationStage::indeterminate);
-    GLYPHA_REQUIRE(life.durable().knowledge == CommitKnowledge::indeterminate);
-    GLYPHA_REQUIRE(life.durable().mutate_entered);
-    GLYPHA_REQUIRE(life.publication().state == PublicationState::required);
+    GLIFI_REQUIRE(life.admit());
+    GLIFI_REQUIRE(life.stage_for_writer());
+    GLIFI_REQUIRE(life.mark_durable_started());
+    GLIFI_REQUIRE(life.mark_exception_after_durable_start());
+    GLIFI_REQUIRE(life.stage() == MutationStage::indeterminate);
+    GLIFI_REQUIRE(life.durable().knowledge == CommitKnowledge::indeterminate);
+    GLIFI_REQUIRE(life.durable().mutate_entered);
+    GLIFI_REQUIRE(life.publication().state == PublicationState::required);
     const auto decided = decide_completion(life.durable(), life.publication());
-    GLYPHA_REQUIRE(decided.kind == CompletionDecision::Kind::indeterminate);
-    GLYPHA_REQUIRE(decided.fail_closed_required);
-    GLYPHA_REQUIRE(life.decide(decided));
-    GLYPHA_REQUIRE(life.mark_completed());
+    GLIFI_REQUIRE(decided.kind == CompletionDecision::Kind::indeterminate);
+    GLIFI_REQUIRE(decided.fail_closed_required);
+    GLIFI_REQUIRE(life.decide(decided));
+    GLIFI_REQUIRE(life.mark_completed());
 }
 
-GLYPHA_TEST("mutation_state decide_completion characterization table") {
+GLIFI_TEST("mutation_state decide_completion characterization table") {
     // known_not_committed → OVERLOADED polarity, no fail-closed.
     {
         DurableDecision d{.knowledge = CommitKnowledge::known_not_committed,
-                          .error = glyphastore::Error{glyphastore::ErrorCode::io_error, {}},
+                          .error = glifistore::Error{glifistore::ErrorCode::io_error, {}},
                           .mutate_entered = true};
         PublicationDecision p{};
         const auto c = decide_completion(d, p);
-        GLYPHA_REQUIRE(c.kind == CompletionDecision::Kind::known_not_committed);
-        GLYPHA_REQUIRE(!c.fail_closed_required);
+        GLIFI_REQUIRE(c.kind == CompletionDecision::Kind::known_not_committed);
+        GLIFI_REQUIRE(!c.fail_closed_required);
     }
     // clean commit + published → success.
     {
         DurableDecision d{.knowledge = CommitKnowledge::committed, .mutate_entered = true};
         PublicationDecision p{.state = PublicationState::published};
         const auto c = decide_completion(d, p);
-        GLYPHA_REQUIRE(c.kind == CompletionDecision::Kind::success);
-        GLYPHA_REQUIRE(!c.fail_closed_required);
+        GLIFI_REQUIRE(c.kind == CompletionDecision::Kind::success);
+        GLIFI_REQUIRE(!c.fail_closed_required);
     }
     // clean commit without publish → indeterminate + fail-closed.
     {
         DurableDecision d{.knowledge = CommitKnowledge::committed, .mutate_entered = true};
         PublicationDecision p{.state = PublicationState::failed};
         const auto c = decide_completion(d, p);
-        GLYPHA_REQUIRE(c.kind == CompletionDecision::Kind::indeterminate);
-        GLYPHA_REQUIRE(c.fail_closed_required);
+        GLIFI_REQUIRE(c.kind == CompletionDecision::Kind::indeterminate);
+        GLIFI_REQUIRE(c.fail_closed_required);
     }
     // committed+error + published → success (ACK-after-visibility), fail-closed.
     {
         DurableDecision d{.knowledge = CommitKnowledge::committed,
-                          .error = glyphastore::Error{glyphastore::ErrorCode::internal_error, {}},
+                          .error = glifistore::Error{glifistore::ErrorCode::internal_error, {}},
                           .mutate_entered = true};
         PublicationDecision p{.state = PublicationState::published};
         const auto c = decide_completion(d, p);
-        GLYPHA_REQUIRE(c.kind == CompletionDecision::Kind::success);
-        GLYPHA_REQUIRE(c.fail_closed_required);
+        GLIFI_REQUIRE(c.kind == CompletionDecision::Kind::success);
+        GLIFI_REQUIRE(c.fail_closed_required);
     }
     // indeterminate → indeterminate + drain + fail-closed.
     {
         DurableDecision d{.knowledge = CommitKnowledge::indeterminate, .mutate_entered = true};
         PublicationDecision p{.state = PublicationState::failed};
         const auto c = decide_completion(d, p);
-        GLYPHA_REQUIRE(c.kind == CompletionDecision::Kind::indeterminate);
-        GLYPHA_REQUIRE(c.fail_closed_required);
-        GLYPHA_REQUIRE(c.drain_required);
+        GLIFI_REQUIRE(c.kind == CompletionDecision::Kind::indeterminate);
+        GLIFI_REQUIRE(c.fail_closed_required);
+        GLIFI_REQUIRE(c.drain_required);
     }
     // expired pre-store (never entered).
     {
         DurableDecision d{};
         PublicationDecision p{};
         const auto c = decide_completion(d, p);
-        GLYPHA_REQUIRE(c.kind == CompletionDecision::Kind::known_not_committed);
-        GLYPHA_REQUIRE(!c.fail_closed_required);
+        GLIFI_REQUIRE(c.kind == CompletionDecision::Kind::known_not_committed);
+        GLIFI_REQUIRE(!c.fail_closed_required);
     }
 }

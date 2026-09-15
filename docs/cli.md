@@ -1,20 +1,20 @@
 # Command-line interface
 
-GlyphaStore command-line programs share one strict parser and a common operational contract.
+GlifiStore command-line programs share one strict parser and a common operational contract.
 
 Installed builds also ship portable [mdoc(7)](https://man.openbsd.org/mdoc.7) manuals under
 `${CMAKE_INSTALL_MANDIR}` (see [`man/README.md`](../man/README.md)):
 
 | Manual | Program |
 |---|---|
-| `man 8 glyphastored` | network daemon |
-| `man 7 glyphastore` | overview |
-| `man 1 glyphastore_*` | offline tools and `glyphastore_demo` |
+| `man 8 glifistored` | network daemon |
+| `man 7 glifistore` | overview |
+| `man 1 glifistore_*` | offline tools and `glifistore_demo` |
 
 ## Conventions
 
 - `-h` and `--help` print help to standard output and exit successfully.
-- `-V` and `--version` print the executable name and GlyphaStore version.
+- `-V` and `--version` print the executable name and GlifiStore version.
 - Long values accept both `--option value` and `--option=value`; selected common options have short forms.
 - An option may appear once unless its help explicitly says otherwise. Duplicate options are errors.
 - `--` ends option parsing, allowing paths that begin with `-`.
@@ -29,11 +29,11 @@ Operator guide for durable deployments: [durable TCP daemon](operations/durable-
 (profile/mode selection, resource flags, `HEALTH`/`READY`/`STATS`, drain, offline backup pointers).
 
 ```bash
-glyphastored --bind 127.0.0.1 --port 7379 --shard-pairs 4
-glyphastored --config /etc/glyphastore/daemon.conf
-glyphastored --profile embedded --data-dir /var/lib/glyphastore --dump-config
-glyphastored --port 0 --shard-pairs 2 --max-input-bytes 4MiB --max-output-bytes 4MiB
-glyphastored --help
+glifistored --bind 127.0.0.1 --port 7379 --shard-pairs 4
+glifistored --config /etc/glifistore/daemon.conf
+glifistored --profile embedded --data-dir /var/lib/glifistore --dump-config
+glifistored --port 0 --shard-pairs 2 --max-input-bytes 4MiB --max-output-bytes 4MiB
+glifistored --help
 ```
 
 `--shard-pairs COUNT` is the canonical setting for the number of Reader/Writer shard pairs
@@ -48,7 +48,7 @@ keys, unknown profile names, empty values, duplicate keys in one file, and confl
 `--reuse-port` / `--no-reuse-port` (or their env/file equivalents) fail closed before the process
 listens.
 
-- `--profile NAME` or `GLYPHASTORE_PROFILE=NAME` or `profile = NAME` in a config file selects one of
+- `--profile NAME` or `GLIFISTORE_PROFILE=NAME` or `profile = NAME` in a config file selects one of
   the built-in deployment presets (`dev`, `embedded`, `production`). Profile selection follows the
   same file/env/CLI precedence as other settings; the profile's preset values sit between hardcoded
   defaults and file/env/CLI overrides.
@@ -60,15 +60,15 @@ listens.
   supply `--data-dir` (or equivalent) before listen. Both rates are overrideable starting points,
   not device-independent performance claims.
 
-- `--config PATH` or `GLYPHASTORE_CONFIG=PATH` selects a settings file. The file cannot set `config`,
+- `--config PATH` or `GLIFISTORE_CONFIG=PATH` selects a settings file. The file cannot set `config`,
   `help`, or `version`.
-- `--dump-config` prints the fully resolved effective settings (`GlyphaStore/config` ASCII key=value,
+- `--dump-config` prints the fully resolved effective settings (`GlifiStore/config` ASCII key=value,
   including the selected deployment profile) after the same validation used before listen, then exits without binding or opening a Store. TLS
   settings appear as paths only. The flag is CLI-only (not settable from file or environment).
 - File keys are the long option names without `--` (`port = 7379`, `storage-mode = durable-sync`,
   `quiet = true`). Lines may be blank or start with `#`. Values may be quoted with `"..."`.
-- Environment variables use `GLYPHASTORE_` plus the long name in `SCREAMING_SNAKE_CASE`
-  (`GLYPHASTORE_PORT`, `GLYPHASTORE_DATA_DIR`, `GLYPHASTORE_MAX_STORE_BYTES`). Boolean flags accept
+- Environment variables use `GLIFISTORE_` plus the long name in `SCREAMING_SNAKE_CASE`
+  (`GLIFISTORE_PORT`, `GLIFISTORE_DATA_DIR`, `GLIFISTORE_MAX_STORE_BYTES`). Boolean flags accept
   `true`/`false`, `yes`/`no`, `on`/`off`, or `1`/`0`.
 
 `SIGINT` and `SIGTERM` request an orderly process stop. The daemon stops accepting new connections,
@@ -80,8 +80,8 @@ in-flight Store work is never cancelled. A timed-out drain makes process exit fa
 returns an error).
 
 Wire-protocol `HEALTH` (opcode 7) and `READY` (opcode 8) probes are accepted before `INIT`/`BIND_WORKER`.
-`HEALTH` returns `OK` with value `GlyphaStore/live` while executors are live; `READY` returns `OK`
-with value `GlyphaStore/ready` only when the Store is operational and maintenance is not in emergency
+`HEALTH` returns `OK` with value `GlifiStore/live` while executors are live; `READY` returns `OK`
+with value `GlifiStore/ready` only when the Store is operational and maintenance is not in emergency
 or a sticky faulted state. `STATS` (opcode 9) returns a bounded ASCII admin report (version, live/ready,
 connections, durable lane/batch counters, maintenance snapshot including skip reason and no-gain
 planning scan counters, and durable rotation wait/execution phase timings, including seal, Segment
@@ -90,7 +90,7 @@ while live. Failed probes return `INTERNAL_ERROR`. `--quiet`
 suppresses normal startup and shutdown messages, but never suppresses errors.
 
 Structured lifecycle logging is opt-in via `--log-format json` (or `log-format = json` in a config
-file, or `GLYPHASTORE_LOG_FORMAT=json`). Default `human` keeps the legacy one-line startup/shutdown
+file, or `GLIFISTORE_LOG_FORMAT=json`). Default `human` keeps the legacy one-line startup/shutdown
 messages on stdout and errors on stderr. JSON mode emits one object per line on stderr with stable
 `event` names: `start`, `listen`, `ready`, `maintenance_emergency`, `maintenance_fault`,
 `shutdown_begin`, `shutdown_drain_begin`, `shutdown_drain_end`, `stopped`, and `executor_failure`.
@@ -133,34 +133,34 @@ Additional bounded controls accepted by the daemon are:
 normal background compaction. The daemon default is `128MiB`; a candidate exactly at the limit is
 allowed, `0` explicitly removes the limit, and pressure/emergency bypass it to recover capacity.
 The same setting is available as `maintenance-max-copy-bytes-per-cycle` in the config file and
-`GLYPHASTORE_MAINTENANCE_MAX_COPY_BYTES_PER_CYCLE` in the environment.
+`GLIFISTORE_MAINTENANCE_MAX_COPY_BYTES_PER_CYCLE` in the environment.
 
 ### TLS (optional outer transport)
 
-When built with LibreSSL/OpenSSL (`GLYPHASTORE_ENABLE_TLS`), the daemon may wrap protocol v2 in
+When built with LibreSSL/OpenSSL (`GLIFISTORE_ENABLE_TLS`), the daemon may wrap protocol v2 in
 TLS 1.3 ([ADR 0020](adr/0020-tls-outer-transport.md),
 [secure-profile reference](security/secure-profile.md)):
 
 ```bash
 # TLS-only on --port
-glyphastored --bind 127.0.0.1 --port 7379 \
-  --tls-cert /etc/glyphastore/server.crt --tls-key /etc/glyphastore/server.key
+glifistored --bind 127.0.0.1 --port 7379 \
+  --tls-cert /etc/glifistore/server.crt --tls-key /etc/glifistore/server.key
 
 # Dual: cleartext on --port, TLS on --tls-port
-glyphastored --bind 127.0.0.1 --port 7379 --tls-port 7380 \
-  --tls-cert /etc/glyphastore/server.crt --tls-key /etc/glyphastore/server.key
+glifistored --bind 127.0.0.1 --port 7379 --tls-port 7380 \
+  --tls-cert /etc/glifistore/server.crt --tls-key /etc/glifistore/server.key
 
 # mTLS + authz (principal URI SAN → DNS SAN → CN; --authz-map default-deny)
-glyphastored ... --tls-cert ... --tls-key ... --tls-client-ca /etc/glyphastore/clients-ca.crt \
-  --authz-map /etc/glyphastore/authz.map
+glifistored ... --tls-cert ... --tls-key ... --tls-client-ca /etc/glifistore/clients-ca.crt \
+  --authz-map /etc/glifistore/authz.map
 
 # Fail-closed secure profile (TLS-only on --port; refuses --tls-port dual cleartext;
 # applies Phase 5 abuse-limit defaults)
-glyphastored --secure-profile --bind 127.0.0.1 --port 7379 \
+glifistored --secure-profile --bind 127.0.0.1 --port 7379 \
   --tls-cert ... --tls-key ... --tls-client-ca ... --authz-map ...
 
 # Optional UDS alongside TCP (ADR 0029); peercred principal unix:uid=N for --authz-map
-glyphastored --unix-socket /var/run/glyphastore.sock --unix-peercred --authz-map ...
+glifistored --unix-socket /var/run/glifistore.sock --unix-peercred --authz-map ...
 ```
 
 `--secure-profile` also selects keyed SipHash Worker routing. The daemon and official SDKs
@@ -188,7 +188,7 @@ AIA/HTTP OCSP. TLS configuration errors fail before the process begins serving.
 Distinct from maintenance rate budgets. Zero disables each limit (trusted cleartext default):
 
 ```bash
-glyphastored ... \
+glifistored ... \
   --max-accepts-per-sec 128 \
   --idle-timeout-ms 60000 \
   --request-timeout-ms 30000 \
@@ -204,7 +204,7 @@ counters. Store mutations already in execution are never cancelled by `--request
 Maintenance rate budgets (distinct from connection rate limits / Phase 5 and from E3 power-loss):
 
 ```bash
-glyphastored ... --maintenance-max-copy-bytes-per-sec 1048576 \
+glifistored ... --maintenance-max-copy-bytes-per-sec 1048576 \
   --maintenance-max-cpu-ms-per-window 25 \
   --maintenance-suspend-on-p99-latency-ms 40 \
   --maintenance-suspend-on-p99-min-samples 32 \
@@ -218,15 +218,15 @@ while pressure/emergency bypass all normal fairness controls.
 ## Maintenance tools
 
 ```bash
-glyphastore_inspect_segment [--json] [--no-scan] -- segment-<16hex>-<8hex>.glypha
-glyphastore_verify_store [--json] [--no-scan] -- /path/to/data-dir
-glyphastore_backup_store [--json] [--no-scan] -- /path/to/source /path/to/destination
-glyphastore_migrate_store [--json] [--no-scan] --workers N -- /path/to/source /path/to/destination
-glyphastore_repair_store [--json] [--no-scan] -- /path/to/source /path/to/empty-workspace
-glyphastore_rebuild_index -- segment-<16hex>-<8hex>.glypha
+glifistore_inspect_segment [--json] [--no-scan] -- segment-<16hex>-<8hex>.glifi
+glifistore_verify_store [--json] [--no-scan] -- /path/to/data-dir
+glifistore_backup_store [--json] [--no-scan] -- /path/to/source /path/to/destination
+glifistore_migrate_store [--json] [--no-scan] --workers N -- /path/to/source /path/to/destination
+glifistore_repair_store [--json] [--no-scan] -- /path/to/source /path/to/empty-workspace
+glifistore_rebuild_index -- segment-<16hex>-<8hex>.glifi
 ```
 
-### `glyphastore_inspect_segment`
+### `glifistore_inspect_segment`
 
 Read-only validation of one durable Segment file. It does not take the Store directory lock and does
 not modify the file.
@@ -235,7 +235,7 @@ Default work:
 
 1. open as a private, singly linked, owner-only regular file of exactly 64 MiB;
 2. decode the Segment header and select the newest valid commit slot;
-3. when the basename is a canonical `segment-…glypha` name, require it to match header identity;
+3. when the basename is a canonical `segment-…glifi` name, require it to match header identity;
 4. scan the committed Record extent (CRC32C, sequences, commit metadata agreement).
 
 `--no-scan` stops after header/commit validation. `--json` emits a stable single-line JSON object on
@@ -244,10 +244,10 @@ stdout. Exit codes: `0` validated, `1` validation/I/O failure, `2` usage.
 A concurrent writer can make a point-in-time read observe a torn commit slot; that is reported as
 validation failure (fail-closed), not success.
 
-### `glyphastore_verify_store`
+### `glifistore_verify_store`
 
 ```bash
-glyphastore_verify_store [--json] [--no-scan] -- /path/to/data-dir
+glifistore_verify_store [--json] [--no-scan] -- /path/to/data-dir
 ```
 
 Read-only structural validation of a durable Store data directory. Takes the exclusive Store lock
@@ -256,7 +256,7 @@ Read-only structural validation of a durable Store data directory. Takes the exc
 Default work:
 
 1. exclusive-lock the data directory;
-2. decode `manifest.glypha` and enforce Manifest resource bounds;
+2. decode `manifest.glifi` and enforce Manifest resource bounds;
 3. audit the namespace (missing/unlisted/unsafe entries fail; crash temporaries may be reported);
 4. open each catalog Segment read-only against Manifest identity;
 5. check Manifest role ↔ commit lifecycle (sealed-active is OK and counted as
@@ -265,23 +265,23 @@ Default work:
 
 Does not rebuild Indexes, check key routing, or repair files. Exit codes match inspect.
 
-### `glyphastore_backup_store`
+### `glifistore_backup_store`
 
 ```bash
-glyphastore_backup_store [--json] [--no-scan] -- /path/to/source /path/to/destination
+glifistore_backup_store [--json] [--no-scan] -- /path/to/source /path/to/destination
 ```
 
 Offline verified copy of a durable data directory. Stop writers first. Takes exclusive locks,
-verifies the source, creates an empty destination, copies catalog Segments then `manifest.glypha`,
+verifies the source, creates an empty destination, copies catalog Segments then `manifest.glifi`,
 syncs, and verifies the destination. Restore uses the same command with backup as source and a new
 empty destination. See [backup-restore](architecture/backup-restore.md). This offline tool cannot run
 against a live locked data directory; use online fenced `Store::backup_to` / wire `BACKUP` for that
 path (still not zero-fence hot I/O).
 
-### `glyphastore_migrate_store`
+### `glifistore_migrate_store`
 
 ```bash
-glyphastore_migrate_store [--json] [--no-scan] --workers N -- /path/to/source /path/to/destination
+glifistore_migrate_store [--json] [--no-scan] --workers N -- /path/to/source /path/to/destination
 ```
 
 Offline Worker reshard / logical rewrite. Stop writers first. Verifies the source, copies every live
@@ -292,10 +292,10 @@ offline rewrite into a new Store identity. Online resharding is not supported. S
 [store-migration](architecture/store-migration.md) and
 [worker-resharding](operations/worker-resharding.md).
 
-### `glyphastore_repair_store`
+### `glifistore_repair_store`
 
 ```bash
-glyphastore_repair_store [--json] [--no-scan] -- /path/to/source /path/to/empty-workspace
+glifistore_repair_store [--json] [--no-scan] -- /path/to/source /path/to/empty-workspace
 ```
 
 Offline fail-closed repair that never mutates the source. Requires an empty explicit workspace and
@@ -308,13 +308,13 @@ Unlisted Segments, crash temporaries, compaction intents, and unknown regular fi
 Missing catalog entries and unsafe entries (symlinks, hard links, non-regular objects) fail closed
 without writing a usable store. Live/hot repair is not supported.
 
-### `glyphastore_rebuild_index`
+### `glifistore_rebuild_index`
 
 Durable v1 does not persist a separate Index artifact. Indexes rebuild from committed Segments
 during Store recovery. This offline rewrite tool permanently refuses Segment-only input with an
 explicit operator path:
 
 1. Reopen or restart the Store on the data directory (ordinary recovery).
-2. For offline catalog repair, use `glyphastore_repair_store` with an explicit empty workspace.
+2. For offline catalog repair, use `glifistore_repair_store` with an explicit empty workspace.
 
 Help and version remain available. Do not use this tool for durable v1 operations.

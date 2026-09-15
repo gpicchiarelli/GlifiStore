@@ -11,7 +11,7 @@ protocol has its own independent version.
 
 ### Paired runtime honesty (0.1.0)
 
-`glyphastored` has a **single** daemon runtime: Reader–Writer shard pairs (ADR 0031/0032). There is
+`glifistored` has a **single** daemon runtime: Reader–Writer shard pairs (ADR 0031/0032). There is
 no dual-select switch and no “legacy until migration” daemon path.
 
 | Surface | Path | Notes |
@@ -20,11 +20,11 @@ no dual-select switch and no “legacy until migration” daemon path.
 | Daemon GET | Borrowed Reader-local `ReadGeneration` | Adopted once per Reactor turn |
 | Mutations | Bounded SPSC → serial Writer per shard pair | `Server::pair_writer_stats()` |
 | CLI | `--shard-pairs` canonical; `--workers` alias | Same count as Manifest/wire `worker_count` |
-| Lab | `src/experimental/paired_*` | Not installed; not reachable from `glyphastored` |
+| Lab | `src/experimental/paired_*` | Not installed; not reachable from `glifistored` |
 
 Residual P1 performance/evidence (not a second runtime): Delta mixed magnitude on Linux
 hard-pinned A/B, get-into/multi-extent **rejected** pending proof, Linux 1/2/4/8 harness waiting
-on `glyphastore-linux-perf`, optional Linux I/O backend **deferred** without ordering change. See
+on `glifistore-linux-perf`, optional Linux I/O backend **deferred** without ordering change. See
 [paired-shards-plan](benchmarks/paired-shards-plan.md).
 
 Implemented foundation: little-endian codecs, checksums, immutable Records, exact-key indexing,
@@ -110,7 +110,7 @@ and maintenance caps (including per-second/CPU rate budgets) with `--dump-config
 durable settings; file/environment config precedence and deployment profiles (`dev`, `embedded`,
 `production`) validate fail-closed before listen. Secure-profile authn/authz (`--authz-map`,
 `--secure-profile`) is wired. Real-daemon wire-protocol SIGKILL coverage exists for post-ack PUT,
-pre-commit PUT, and post-ack ERASE (`glyphastore_crash_daemon`). Integration tests cover
+pre-commit PUT, and post-ack ERASE (`glifistore_crash_daemon`). Integration tests cover
 emergency-gate wire `OVERLOADED` rejection and durable wire ERASE through reopen. Operator guide:
 [durable TCP daemon](operations/durable-tcp-daemon.md).
 
@@ -161,7 +161,7 @@ caller during cancellation, shutdown, or exception unwinding.
 does not recover, post-commit failure never permits continued ambiguous use, all waiters are
 released, and no exception terminates a worker or crosses the supported API.
 
-**Evidence:** `glyphastore_allocation_fault_tests` creates a fresh v1 Store for every Nth-allocation
+**Evidence:** `glifistore_allocation_fault_tests` creates a fresh v1 Store for every Nth-allocation
 failure, checks the persistent write boundary through filesystem hooks, reopens pre-write and
 interrupted-rotation states, verifies sticky fail-close after uncertain outcomes, and rejects any
 steady-state allocation after `write_record`. A background `bad_alloc` test joins every strict-group
@@ -343,17 +343,17 @@ profiles (`standard`, `copy-matrix`, `random-matrix`, `random-campaign`).
 
 ### Offline verification, backup, restore, and repair
 
-- `glyphastore_inspect_segment` is a v1-aware, bounded, read-only Segment validator (header/commit
+- `glifistore_inspect_segment` is a v1-aware, bounded, read-only Segment validator (header/commit
   decode, optional committed CRC scan, text/JSON, fail-closed exit codes).
-  `glyphastore_verify_store` validates Manifest + namespace + every catalog Segment under an
-  exclusive data-directory lock (optional `--no-scan`). `glyphastore_backup_store` performs offline
+  `glifistore_verify_store` validates Manifest + namespace + every catalog Segment under an
+  exclusive data-directory lock (optional `--no-scan`). `glifistore_backup_store` performs offline
   verified backup/restore copies (lock → verify → copy catalog files → verify).
-  `glyphastore_repair_store` performs offline fail-closed repair into an explicit empty workspace
+  `glifistore_repair_store` performs offline fail-closed repair into an explicit empty workspace
   (`store/` + `quarantine/` + audit): it never mutates the source, quarantines non-catalog anomalies,
   and refuses missing catalog or unsafe namespace entries. In-place destructive rewrite remains
   forbidden. Fully concurrent hot backup (zero admission fence) remains open; online fenced
   `Store::backup_to`, typed C++ `Client::backup`, and official SDK `backup` helpers are implemented.
-  `glyphastore_rebuild_index`
+  `glifistore_rebuild_index`
   permanently refuses offline Index rewrite for durable v1 with an explicit recovery/repair operator
   path; durable Indexes are rebuilt by Store recovery.
 - Live/hot backup with zero writer fencing remains open; online fenced backup (C++ and official
@@ -373,7 +373,7 @@ profiles (`standard`, `copy-matrix`, `random-matrix`, `random-campaign`).
   Operator procedure: [graceful-drain-and-overload runbook](operations/graceful-drain-and-overload.md).
 - Add liveness, readiness, structured logs, metrics, build/config dump, and an administrative
   diagnostic surface. Readiness must fail on sticky storage errors and during unsafe recovery.
-  Wire `HEALTH`/`READY`/`STATS` and `glyphastored --dump-config` are implemented, including durable
+  Wire `HEALTH`/`READY`/`STATS` and `glifistored --dump-config` are implemented, including durable
   lane latency histograms (`queue_wait_ns` / `service_ns`), `maintenance_rate_window_*` needles, and
   a bounded foreground-p99 maintenance guard with sample/p99/suspension telemetry.
   Structured JSON-lines lifecycle logging (`--log-format json`) is implemented for
@@ -447,7 +447,7 @@ Primary references:
   compile-time dispatch and identical property/fuzz results.
 - The immutable Reader base now uses a 64-byte record with the full hash and a 5-byte-per-bucket
   control/index lookup layout instead of 17 bytes per bucket. A coherent STATS census and
-  `glyphastore_memory_census_benchmark` attribute current base/delta payload separately from RSS.
+  `glifistore_memory_census_benchmark` attribute current base/delta payload separately from RSS.
   The local 200k-key cell saved exactly 3 MiB of lookup payload. Allocation tracing then found
   133.5 MiB of empty native regions matching successive base-record merge sizes; guarded geometric
   mappings with one spare per base lineage reduced one-shard RSS by 56.3% while an isolated local

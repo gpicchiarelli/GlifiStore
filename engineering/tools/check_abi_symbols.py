@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail unless a GlyphaStore shared library exports exactly the C ABI allowlist."""
+"""Fail unless a GlifiStore shared library exports exactly the C ABI allowlist."""
 
 from __future__ import annotations
 

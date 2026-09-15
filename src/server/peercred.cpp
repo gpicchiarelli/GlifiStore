@@ -1,4 +1,4 @@
-#include "glyphastore/server/peercred.hpp"
+#include "glifistore/server/peercred.hpp"
 
 #include "system_error.hpp"
 
@@ -12,7 +12,7 @@
 #include <sys/un.h>
 #endif
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 [[nodiscard]] auto format_uid_principal(const std::uint32_t uid) -> std::string {
@@ -78,4 +78,4 @@ auto peercred_principal(const PeerCredentials& credentials) -> std::string {
     return format_uid_principal(credentials.uid);
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

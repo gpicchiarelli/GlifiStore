@@ -1,10 +1,10 @@
-#include "glyphastore/segment/global_manager.hpp"
+#include "glifistore/segment/global_manager.hpp"
 
 #include <algorithm>
 #include <limits>
 #include <mutex>
 
-namespace glyphastore {
+namespace glifistore {
 
 GlobalSegmentManager::GlobalSegmentManager(const SegmentId first_id) : next_id_(first_id) {}
 
@@ -171,4 +171,4 @@ auto GlobalSegmentManager::try_retire(const SegmentId id) -> Status {
     return {};
 }
 
-} // namespace glyphastore
+} // namespace glifistore

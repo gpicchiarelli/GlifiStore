@@ -31,9 +31,9 @@ from engineering.tools.validate_package_evidence import emit_evidence  # noqa: E
 
 GIT_IDENTITY = (
     "-c",
-    "user.email=tests@glyphastore.invalid",
+    "user.email=tests@glifistore.invalid",
     "-c",
-    "user.name=GlyphaStore Tests",
+    "user.name=GlifiStore Tests",
     "-c",
     "commit.gpgsign=false",
     "-c",
@@ -57,7 +57,7 @@ class PackageAdmissionOrchestratorTests(unittest.TestCase):
     version = "0.1.0"
 
     def setUp(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="glyphastore-package-admission-run-")
+        temporary = tempfile.TemporaryDirectory(prefix="glifistore-package-admission-run-")
         self.addCleanup(temporary.cleanup)
         self.work = Path(temporary.name)
         self.matrix = load_matrix()
@@ -80,12 +80,12 @@ class PackageAdmissionOrchestratorTests(unittest.TestCase):
 
         self.candidate = self.work / "candidate"
         self.candidate.mkdir()
-        (self.candidate / f"GlyphaStore-{self.version}.tar.xz").write_bytes(b"sealed source bytes")
+        (self.candidate / f"GlifiStore-{self.version}.tar.xz").write_bytes(b"sealed source bytes")
         seal(self.candidate, "candidate-seal.json", "candidate")
 
         self.packages = self.work / "packages"
         self.packages.mkdir()
-        self.package = self.packages / f"glyphastore-{self.version}-freebsd14.3-amd64.pkg"
+        self.package = self.packages / f"glifistore-{self.version}-freebsd14.3-amd64.pkg"
         self.package.write_bytes(b"packaged bytes")
         (self.packages / "run.log").write_text("retained execution log\n", encoding="utf-8")
         self.output = self.work / "admission"
@@ -240,7 +240,7 @@ class PackageAdmissionOrchestratorTests(unittest.TestCase):
                     "generated_at": "2026-01-01T00:00:00Z",
                     "result": "NOT_RUN",
                     "package_installed": True,
-                    "daemon": "/usr/bin/glyphastored",
+                    "daemon": "/usr/bin/glifistored",
                     "prefix": "/usr",
                     "file_list": "/tmp/package-file-list.txt",
                     "languages": [],

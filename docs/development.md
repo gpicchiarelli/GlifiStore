@@ -117,7 +117,7 @@ Local maintenance and durable matrices write under gitignored `benchmark-results
 run outputs. Comparative GET/hot-cache notes live under `docs/benchmarks/` (methodology + medians
 only); reproduce with `./scripts/benchmark_get_path.sh` or the focused filters in those notes.
 
-`glyphastore_server_benchmarks` also has an opt-in controlled maintenance-overlap profile. Set
+`glifistore_server_benchmarks` also has an opt-in controlled maintenance-overlap profile. Set
 `--maintenance-overlap-seed-operations` to prebuild a reclaimable multi-Segment dataset on the last
 Worker; owner-bound client 0 then drives the first Worker. The benchmark holds the initial background
 space probe until `--maintenance-overlap-release-ms` after foreground start, so compaction admission
@@ -132,10 +132,10 @@ Cleartext vs TLS 1.3 tax on the Go pipeline harness:
 OpenBSD / LibreSSL correctness gate (not a throughput bench):
 `bash scripts/ci-openbsd-libressl.sh` on OpenBSD, or the
 [OpenBSD LibreSSL](../.github/workflows/openbsd-libressl.yml) workflow. The workflow partitions the
-registered `glyphastore_tests` cases by a stable test-name hash across two independent VM jobs; their
+registered `glifistore_tests` cases by a stable test-name hash across two independent VM jobs; their
 union is the complete suite, while both jobs retain native logs and one also performs the Go TLS
 PUT→GET smoke. A native developer run remains unsharded unless
-`GLYPHASTORE_TEST_SHARD_COUNT` and the zero-based `GLYPHASTORE_TEST_SHARD_INDEX` are both set. The
+`GLIFISTORE_TEST_SHARD_COUNT` and the zero-based `GLIFISTORE_TEST_SHARD_INDEX` are both set. The
 CI invocation streams each `[RUN]` marker and limits every CTest target to 15 minutes, so a stalled
 case fails with an attributable name instead of consuming the two-hour VM budget.
 
@@ -148,7 +148,7 @@ Continuous fuzz smoke (Linux Clang libFuzzer):
 ```bash
 cmake --preset unix-fuzz
 cmake --build --preset unix-fuzz
-GLYPHASTORE_FUZZ_SECONDS=30 ./scripts/run-fuzzers.sh
+GLIFISTORE_FUZZ_SECONDS=30 ./scripts/run-fuzzers.sh
 ```
 
 CI runs each target in `.github/workflows/sanitizers.yml` (`fuzz-run`) against

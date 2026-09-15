@@ -1,10 +1,10 @@
-#include "glyphastore/index/key_arena.hpp"
+#include "glifistore/index/key_arena.hpp"
 
-#include "glyphastore/core/checked_math.hpp"
+#include "glifistore/core/checked_math.hpp"
 
 #include <cstring>
 
-namespace glyphastore {
+namespace glifistore {
 
 auto KeyArena::allocate(const std::size_t size) -> Result<std::uint32_t> {
     if (size == 0) {
@@ -66,4 +66,4 @@ auto KeyArena::prepare_allocate(const std::size_t size) -> Status {
     return reserve(*needed);
 }
 
-} // namespace glyphastore
+} // namespace glifistore

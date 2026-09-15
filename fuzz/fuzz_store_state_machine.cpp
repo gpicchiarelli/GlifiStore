@@ -5,6 +5,6 @@
 #include <span>
 
 extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, const std::size_t size) {
-    glyphastore::test::run_stateful_store_model({data, size});
+    glifistore::test::run_stateful_store_model({data, size});
     return 0;
 }

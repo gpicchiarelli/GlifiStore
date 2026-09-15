@@ -19,11 +19,11 @@ reopen cannot change Worker count. Policy:
 
 ## Steps
 
-1. `glyphastore_verify_store -- /var/lib/glyphastore`
-2. Optional: `glyphastore_backup_store -- /var/lib/glyphastore /var/backups/glyphastore-$(date +%Y%m%d)`
-3. `glyphastore_migrate_store --workers 4 -- /var/lib/glyphastore /var/lib/glyphastore-w4`
-4. On interrupt, re-run the same command (resumes from `/var/lib/glyphastore-w4.migrate-state`).
-5. Point the daemon at the new directory: `glyphastored --data-dir /var/lib/glyphastore-w4 --shard-pairs 4 ...`
+1. `glifistore_verify_store -- /var/lib/glifistore`
+2. Optional: `glifistore_backup_store -- /var/lib/glifistore /var/backups/glifistore-$(date +%Y%m%d)`
+3. `glifistore_migrate_store --workers 4 -- /var/lib/glifistore /var/lib/glifistore-w4`
+4. On interrupt, re-run the same command (resumes from `/var/lib/glifistore-w4.migrate-state`).
+5. Point the daemon at the new directory: `glifistored --data-dir /var/lib/glifistore-w4 --shard-pairs 4 ...`
 6. After soak, retain or delete the old directory deliberately.
 
 ## Upgrade without reshard

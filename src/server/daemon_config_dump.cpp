@@ -1,9 +1,9 @@
-#include "glyphastore/server/daemon_config.hpp"
+#include "glifistore/server/daemon_config.hpp"
 
 #include <string>
 #include <string_view>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 namespace {
 
@@ -40,7 +40,7 @@ auto format_daemon_config_dump(const DaemonOptions& options) -> std::string {
                             : options.store.durable_group;
     std::string out;
     out.reserve(2048);
-    out += "GlyphaStore/config\n";
+    out += "GlifiStore/config\n";
     out += "profile=";
     out += options.deployment_profile;
     out += "\nbind=";
@@ -219,4 +219,4 @@ auto format_daemon_config_dump(const DaemonOptions& options) -> std::string {
     return out;
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

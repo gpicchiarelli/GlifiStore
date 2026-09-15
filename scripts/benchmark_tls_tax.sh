@@ -7,14 +7,14 @@
 # Usage:
 #   ./scripts/benchmark_tls_tax.sh [outdir]
 # Env:
-#   GLYPHASTORED OPS WARMUP REPEATS GO
+#   GLIFISTORED OPS WARMUP REPEATS GO
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 stamp="$(date -u +%Y%m%d-%H%M%S)"
 sdk_version="$(tr -d '[:space:]' <"$root/VERSION")"
 outdir="${1:-$root/benchmark-results-tls-tax-${sdk_version}-${stamp}}"
-daemon="${GLYPHASTORED:-}"
+daemon="${GLIFISTORED:-}"
 go_bin="${GO:-go}"
 host="127.0.0.1"
 ops="${OPS:-50000}"
@@ -30,14 +30,14 @@ prefer_bins=(
 )
 if [[ -z "$daemon" ]]; then
   for dir in "${prefer_bins[@]}"; do
-    if [[ -x "$dir/glyphastored" ]] && "$dir/glyphastored" --help 2>&1 | grep -q -- '--tls-cert'; then
-      daemon="$dir/glyphastored"
+    if [[ -x "$dir/glifistored" ]] && "$dir/glifistored" --help 2>&1 | grep -q -- '--tls-cert'; then
+      daemon="$dir/glifistored"
       break
     fi
   done
 fi
 if [[ -z "$daemon" || ! -x "$daemon" ]]; then
-  echo "missing TLS-capable glyphastored; build a preset with OpenSSL/LibreSSL first" >&2
+  echo "missing TLS-capable glifistored; build a preset with OpenSSL/LibreSSL first" >&2
   exit 1
 fi
 if ! command -v openssl >/dev/null 2>&1; then
@@ -47,8 +47,8 @@ fi
 
 mkdir -p "$outdir/cleartext" "$outdir/tls" "$outdir/logs" "$outdir/certs"
 mkdir -p "$root/sdk/go/bin"
-(cd "$root/sdk/go" && "$go_bin" build -o bin/glyphastore-bench ./cmd/glyphastore-bench)
-bench="$root/sdk/go/bin/glyphastore-bench"
+(cd "$root/sdk/go" && "$go_bin" build -o bin/glifistore-bench ./cmd/glifistore-bench)
+bench="$root/sdk/go/bin/glifistore-bench"
 
 cat >"$outdir/certs/openssl.cnf" <<'EOF'
 [req]
@@ -74,7 +74,7 @@ openssl req -x509 -newkey rsa:2048 -nodes \
   echo "git_sha=$(git -C "$root" rev-parse HEAD)"
   echo "go=$($go_bin version)"
   echo "go_sdk_version=$sdk_version"
-  echo "glyphastored=$daemon"
+  echo "glifistored=$daemon"
   echo "ops=$ops warmup=$warmup repeats=$repeats"
   echo "workload=ordered PUT/GET pipeline read-after-write, value_size=64"
   echo "storage_mode=volatile"
@@ -109,7 +109,7 @@ start_server() {
   local port=""
   for _ in $(seq 1 50); do
     if ! kill -0 "$pid" 2>/dev/null; then
-      echo "glyphastored exited early; see $log_file" >&2
+      echo "glifistored exited early; see $log_file" >&2
       return 1
     fi
     port="$(discover_port "$pid" || true)"
@@ -125,7 +125,7 @@ start_server() {
     fi
     sleep 0.1
   done
-  echo "could not discover glyphastored listen port; see $log_file" >&2
+  echo "could not discover glifistored listen port; see $log_file" >&2
   return 1
 }
 

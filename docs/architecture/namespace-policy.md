@@ -34,8 +34,8 @@ Segment filenames accept exactly lowercase hexadecimal, fixed widths, non-zero I
 forms:
 
 ```text
-segment-<16 hex Segment ID>-<8 hex generation>.glypha
-.segment-<16 hex Segment ID>-<8 hex generation>.glypha.tmp
+segment-<16 hex Segment ID>-<8 hex generation>.glifi
+.segment-<16 hex Segment ID>-<8 hex generation>.glifi.tmp
 ```
 
 Uppercase digits, width changes, trailing bytes, zero identities, and near-matches are malformed;
@@ -45,7 +45,7 @@ to match one exact manifest entry.
 | Classification | Meaning | Normal recovery policy |
 |---|---|---|
 | expected | lock, manifest, or exact manifest-listed final Segment with safe metadata | continue |
-| stale manifest temporary | exact private `.manifest.glypha.tmp` | report and continue; do not delete |
+| stale manifest temporary | exact private `.manifest.glifi.tmp` | report and continue; do not delete |
 | stale Segment temporary | exact private canonical Segment temporary | report and continue; do not delete |
 | unlisted Segment | canonical private final Segment absent from the manifest | reject without opening or adopting |
 | malformed engine name | near-match to an engine-owned namespace | reject |
@@ -74,7 +74,7 @@ Segments, and `A` anomalies, audit cost is `O(N log M + A log A)` time and `O(M 
 space. This favors bounded deterministic memory during a failure path; the fixed 40/45-byte name
 grammar keeps parsing linear in a tiny constant.
 
-The exclusive lock serializes cooperating GlyphaStore processes. As with the rest of the filesystem
+The exclusive lock serializes cooperating GlifiStore processes. As with the rest of the filesystem
 layer, it cannot prevent a same-user process that deliberately ignores the advisory protocol from
 mutating the directory concurrently; later no-follow opens and identity validation remain mandatory.
 

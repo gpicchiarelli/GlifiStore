@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run GlyphaStore Erlang SDK tests (requires Erlang/OTP >= 25 and rebar3).
+# Run GlifiStore Erlang SDK tests (requires Erlang/OTP >= 25 and rebar3).
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

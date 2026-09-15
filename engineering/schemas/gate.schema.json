@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.local/schemas/gate.schema.json",
-  "title": "GlyphaStore quality gate",
+  "$id": "https://glifistore.local/schemas/gate.schema.json",
+  "title": "GlifiStore quality gate",
   "type": "object",
   "additionalProperties": false,
   "required": [

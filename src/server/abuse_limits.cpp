@@ -1,6 +1,6 @@
-#include "glyphastore/server/abuse_limits.hpp"
+#include "glifistore/server/abuse_limits.hpp"
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 constexpr auto kWindow = std::chrono::seconds{1};
@@ -130,4 +130,4 @@ auto AbuseController::stats() const noexcept -> AbuseStats {
     };
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

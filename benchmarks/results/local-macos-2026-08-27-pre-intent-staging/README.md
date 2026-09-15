@@ -15,7 +15,7 @@ metadata stores a source-vector index instead of duplicating an owning `IndexEnt
 Command:
 
 ```text
-build/macos-native-release/glyphastore_compaction_benchmark --warmup 1 --repeats 5
+build/macos-native-release/glifistore_compaction_benchmark --warmup 1 --repeats 5
 ```
 
 Baseline: `../local-macos-2026-08-27-full-31bd35f-dirty/compaction/` (seven repeats, same host class,

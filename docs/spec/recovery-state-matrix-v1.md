@@ -8,7 +8,7 @@ Last reviewed: 2026-07-23
 ## 1. Purpose and terminology
 
 This specification fixes the recovery result for every persistent transition implemented by
-GlyphaStore v1: Store bootstrap, mutation/flush, active-Segment rotation, and whole-Worker
+GlifiStore v1: Store bootstrap, mutation/flush, active-Segment rotation, and whole-Worker
 compaction. It refines the ordering rules in [persistence v1](persistence-v1.md) without changing
 any encoded byte.
 
@@ -56,7 +56,7 @@ until every initial active Segment exists and the intent has been durably remove
 | Persistent state at restart | Authority | Recovery action | Result |
 |---|---|---|---|
 | no Manifest or intent; pristine directory | none | `open_or_create` may start a new bootstrap; `open_existing` returns `not_found` | no Store is inferred by `open_existing` |
-| only `.glyphastore.bootstrap.tmp` may remain | none | ignore/replace the private temporary during a new `open_or_create` bootstrap | new bootstrap receives a new canonical intent |
+| only `.glifistore.bootstrap.tmp` may remain | none | ignore/replace the private temporary during a new `open_or_create` bootstrap | new bootstrap receives a new canonical intent |
 | valid bootstrap intent; no Manifest | intent payload | publish the exact intent Manifest | resume |
 | valid intent; matching Manifest; some initial Segments absent | matching Manifest | create only missing exact initial Segment identities | resume |
 | valid intent; matching Manifest; all initial Segments present and pristine | matching Manifest | durably remove the intent | completed Store |
@@ -150,7 +150,7 @@ only authority. Once the intent is durable, recovery admits exactly `Mold` or `M
 |---|---|---|---|
 | planning or prepared Index only | `Mold` | ordinary recovery; no persistent transaction exists | no compaction |
 | staged output creation/copy/seal/verification; no durable intent | `Mold` | scan `Mold` completely, then remove recognized private Segment temporaries and sync the directory | no compaction; clean namespace |
-| only `.glyphastore.compaction.tmp` exists | `Mold` | ignore the private temporary during ordinary recovery | no compaction |
+| only `.glifistore.compaction.tmp` exists | `Mold` | ignore the private temporary during ordinary recovery | no compaction |
 | valid intent exists; no replacement final names | `Mold` | validate `Mold`, then remove intent | rollback complete |
 | valid intent; replacement temporaries or exact final replacements exist | `Mold` | validate `Mold`; remove both exact temporary and final non-authoritative replacement names; sync; remove intent | rollback complete with clean namespace |
 | replacement Record/slot/seal work is partial while `Mold` remains authoritative | `Mold` | same rollback; never adopt replacement contents | rollback complete |
@@ -224,13 +224,13 @@ repair, and salvage are separate explicit operator workflows.
 
 | Evidence | Covered state |
 |---|---|
-| `glyphastore_crash_sync` | 89 distinct SIGKILL checkpoints across bootstrap, sync mutation, rotation, single-output online compaction, differential online 3-to-2 build/publication, and two-output rollback/retirement cleanup |
-| `glyphastore_crash_persistence --mode copy-matrix` | 63 opt-in multi-output SIGKILL checkpoints which, with the standard matrix, cover every one of 64 Record copies and 152 distinct checkpoints total |
-| `glyphastore_crash_persistence --mode random-matrix` | 36 opt-in recoveries across four reproducible 96-operation multi-output histories and nine authority/copy/cleanup checkpoint classes |
-| `glyphastore_crash_persistence --mode random-campaign` | bounded reproducible sampling of randomized 96-operation histories × nine checkpoint classes; every SIGKILL is followed by full-model reopen verification and a structured outcome row |
-| `glyphastore_crash_periodic` | Record write, Record sync, slot write, and slot sync for deferred durability |
-| `glyphastore_crash_group` | the same four boundaries for strict group commit |
-| `glyphastore_crash_daemon_sync` / `group` / `periodic` | acknowledged wire mutation survives real-daemon SIGKILL; periodic waits through its flush window |
+| `glifistore_crash_sync` | 89 distinct SIGKILL checkpoints across bootstrap, sync mutation, rotation, single-output online compaction, differential online 3-to-2 build/publication, and two-output rollback/retirement cleanup |
+| `glifistore_crash_persistence --mode copy-matrix` | 63 opt-in multi-output SIGKILL checkpoints which, with the standard matrix, cover every one of 64 Record copies and 152 distinct checkpoints total |
+| `glifistore_crash_persistence --mode random-matrix` | 36 opt-in recoveries across four reproducible 96-operation multi-output histories and nine authority/copy/cleanup checkpoint classes |
+| `glifistore_crash_persistence --mode random-campaign` | bounded reproducible sampling of randomized 96-operation histories × nine checkpoint classes; every SIGKILL is followed by full-model reopen verification and a structured outcome row |
+| `glifistore_crash_periodic` | Record write, Record sync, slot write, and slot sync for deferred durability |
+| `glifistore_crash_group` | the same four boundaries for strict group commit |
+| `glifistore_crash_daemon_sync` / `group` / `periodic` | acknowledged wire mutation survives real-daemon SIGKILL; periodic waits through its flush window |
 | [`segment_file_tests.cpp`](../../tests/unit/segment_file_tests.cpp) | alternating slots, uncommitted tails, ambiguous slot sync, committed corruption |
 | [`persistence_recovery_tests.cpp`](../../tests/integration/persistence_recovery_tests.cpp) | lifecycle, routing, sequence, mutation/flush faults, exact rotation completion |
 | [`compaction_recovery_tests.cpp`](../../tests/integration/compaction_recovery_tests.cpp) | old/next authority selection, idempotent rollback/retirement, and cleanup of a partially created second replacement |

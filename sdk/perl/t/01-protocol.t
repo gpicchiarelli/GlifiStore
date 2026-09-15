@@ -5,7 +5,7 @@ use FindBin;
 use Test::More;
 
 use lib "$FindBin::Bin/../lib";
-use GlyphaStore::Protocol qw(
+use GlifiStore::Protocol qw(
     OP_INIT OP_PING OP_GET OP_PUT OP_ERASE OP_BIND_WORKER OP_HEALTH OP_READY OP_STATS OP_BACKUP
     encode_request decode_request encode_response decode_response worker_for
 );
@@ -44,7 +44,7 @@ my @encoded_requests = (
     encode_request(opcode => OP_HEALTH, request_id => 7),
     encode_request(opcode => OP_READY, request_id => 8),
     encode_request(opcode => OP_STATS, request_id => 9),
-    encode_request(opcode => OP_BACKUP, request_id => 10, key => '/tmp/glyphastore-backup'),
+    encode_request(opcode => OP_BACKUP, request_id => 10, key => '/tmp/glifistore-backup'),
 );
 is_deeply(\@encoded_requests, \@expected_requests, 'request encoder matches canonical corpus');
 
@@ -67,7 +67,7 @@ is_deeply(\@reencoded_requests, \@expected_requests, 'request codec round-trips 
 my @expected_responses = frames(fixture('wire_responses_v2.hex'));
 my @responses = map { decode_response($_) } @expected_responses;
 is_deeply([map { $_->{status} } @responses], [0 .. 8], 'response decoder covers every status');
-is($responses[0]->{value}, 'GlyphaStore/2', 'identity value is binary exact');
+is($responses[0]->{value}, 'GlifiStore/2', 'identity value is binary exact');
 is($responses[6]->{owner_worker}, 2, 'wrong-owner fixture preserves owner');
 my @reencoded_responses = map {
     encode_response(
@@ -84,7 +84,7 @@ is_deeply(\@reencoded_responses, \@expected_responses, 'response codec round-tri
 is(worker_for('', 4), 1, 'empty-key FNV routing matches canonical implementation');
 is(worker_for("key\x00\xff", 17), worker_for("key\x00\xff", 17), 'binary routing is stable');
 
-use GlyphaStore::Protocol qw(
+use GlifiStore::Protocol qw(
     ROUTING_ALG_SIPHASH24_V1 siphash24 hash_key_routing encode_init_identity decode_init_identity
 );
 # Paper vectors from Aumasson & Bernstein, SipHash: a fast short-input PRF.
@@ -97,14 +97,14 @@ is(hash_key_routing('tenant-a/orders/1', $keyed), 8_155_964_797_755_082_054, 'ke
 is(worker_for('tenant-a/orders/1', 8, $keyed), 6, 'keyed worker_for fixture');
 isnt(hash_key_routing('tenant-a/orders/1', $keyed), hash_key_routing('tenant-a/orders/1'),
     'siphash differs from FNV');
-is(encode_init_identity(), 'GlyphaStore/2', 'plain INIT identity');
+is(encode_init_identity(), 'GlifiStore/2', 'plain INIT identity');
 my $extended = encode_init_identity({ algorithm => ROUTING_ALG_SIPHASH24_V1, seed => 12_379_813_738_877_118_345 });
 is(length($extended), 26, 'extended INIT length');
 is_deeply(decode_init_identity($extended),
     { algorithm => ROUTING_ALG_SIPHASH24_V1, seed => 12_379_813_738_877_118_345 },
     'extended INIT round-trip');
-ok(!eval { decode_init_identity("GlyphaStore/2\x00bad"); 1 }, 'malformed extended INIT rejected');
-ok(!eval { decode_init_identity('GlyphaStore/3'); 1 }, 'wrong INIT prefix rejected');
+ok(!eval { decode_init_identity("GlifiStore/2\x00bad"); 1 }, 'malformed extended INIT rejected');
+ok(!eval { decode_init_identity('GlifiStore/3'); 1 }, 'wrong INIT prefix rejected');
 
 my $noncanonical = $expected_requests[0];
 substr($noncanonical, 36, 1, "\x01");
@@ -116,8 +116,8 @@ ok(!eval { encode_request(opcode => OP_PUT, request_id => 1, key => 'k', value =
     expire_at_ns => '18446744073709551616'); 1 },
     'expire_at_ns rejects values above u64 max');
 
-is($GlyphaStore::Protocol::VERSION, '0.1.0', 'module VERSION is not shadowed by wire constant');
-is(GlyphaStore::Protocol::PROTOCOL_VERSION(), 2, 'wire protocol version constant');
+is($GlifiStore::Protocol::VERSION, '0.1.0', 'module VERSION is not shadowed by wire constant');
+is(GlifiStore::Protocol::PROTOCOL_VERSION(), 2, 'wire protocol version constant');
 
 ok(!eval {
     encode_request(opcode => OP_PUT, request_id => 1, key => "\x{100}", value => 'v'); 1

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glyphastore/store/store.hpp"
+#include "glifistore/store/store.hpp"
 
 #include <algorithm>
 #include <array>
@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::test {
+namespace glifistore::test {
 namespace stateful_store_detail {
 
 [[nodiscard]] inline auto bytes(const std::string_view value) -> std::span<const std::byte> {
@@ -31,7 +31,7 @@ namespace stateful_store_detail {
 class TemporaryDirectory final {
   public:
     TemporaryDirectory() {
-        auto pattern = (std::filesystem::temp_directory_path() / "glyphastore-state-model-XXXXXX").string();
+        auto pattern = (std::filesystem::temp_directory_path() / "glifistore-state-model-XXXXXX").string();
         std::vector<char> writable(pattern.begin(), pattern.end());
         writable.push_back('\0');
         const auto* created = ::mkdtemp(writable.data());
@@ -181,4 +181,4 @@ inline void run_stateful_store_model(const std::span<const std::uint8_t> input,
     }
 }
 
-} // namespace glyphastore::test
+} // namespace glifistore::test

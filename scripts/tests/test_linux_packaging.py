@@ -59,7 +59,7 @@ def temporary_directory(case: unittest.TestCase, prefix: str) -> Path:
 
 def release_context(case: unittest.TestCase, *, revision: int = 1) -> Path:
     """A real release context, so no test invents its own version authority."""
-    path = temporary_directory(case, "glyphastore-context-") / "release-context.json"
+    path = temporary_directory(case, "glifistore-context-") / "release-context.json"
     path.write_text(
         encode_json(build_context(ROOT, package_revision=revision)), encoding="utf-8"
     )
@@ -68,7 +68,7 @@ def release_context(case: unittest.TestCase, *, revision: int = 1) -> Path:
 
 class MetadataRenderingTests(unittest.TestCase):
     def rendered(self, backend: str, *, revision: int = 1) -> tuple[Path, dict]:
-        output = temporary_directory(self, "glyphastore-render-") / "metadata"
+        output = temporary_directory(self, "glifistore-render-") / "metadata"
         manifest = render(release_context(self, revision=revision), backend, output)
         return output, manifest
 
@@ -80,9 +80,9 @@ class MetadataRenderingTests(unittest.TestCase):
             "debian/rules",
             "debian/copyright",
             "debian/source/format",
-            "debian/glyphastore.postinst",
-            "debian/glyphastore.postrm",
-            "debian/glyphastore.glyphastored.service",
+            "debian/glifistore.postinst",
+            "debian/glifistore.postrm",
+            "debian/glifistore.glifistored.service",
         ):
             with self.subTest(file=relative):
                 self.assertTrue((output / relative).is_file(), relative)
@@ -93,8 +93,8 @@ class MetadataRenderingTests(unittest.TestCase):
 
     def test_the_rpm_spec_comes_out_complete(self) -> None:
         output, manifest = self.rendered("rpm")
-        spec = (output / "glyphastore.spec").read_text(encoding="utf-8")
-        self.assertTrue((output / "glyphastored.service").is_file())
+        spec = (output / "glifistore.spec").read_text(encoding="utf-8")
+        self.assertTrue((output / "glifistored.service").is_file())
         self.assertIn(f"Version:        {VERSION}", spec)
         self.assertIn("%config(noreplace)", spec)
         self.assertEqual(manifest["layout"]["libdir"], "/usr/lib64")
@@ -144,19 +144,19 @@ class MetadataRenderingTests(unittest.TestCase):
         # indentation would still be valid shell but would read as a different
         # block to anyone reviewing the maintainer script.
         output, _ = self.rendered("deb")
-        postinst = (output / "debian/glyphastore.postinst").read_text(encoding="utf-8")
-        self.assertIn("    if ! getent group 'glyphastore'", postinst)
+        postinst = (output / "debian/glifistore.postinst").read_text(encoding="utf-8")
+        self.assertIn("    if ! getent group 'glifistore'", postinst)
         self.assertNotIn("\nif ! getent group", postinst)
 
     def test_both_backends_install_the_same_unit(self) -> None:
         deb_output, _ = self.rendered("deb")
         rpm_output, _ = self.rendered("rpm")
-        deb_unit = (deb_output / "debian/glyphastore.glyphastored.service").read_text(
+        deb_unit = (deb_output / "debian/glifistore.glifistored.service").read_text(
             encoding="utf-8"
         )
-        rpm_unit = (rpm_output / "glyphastored.service").read_text(encoding="utf-8")
+        rpm_unit = (rpm_output / "glifistored.service").read_text(encoding="utf-8")
         self.assertEqual(deb_unit, rpm_unit)
-        self.assertIn("StateDirectory=glyphastore", deb_unit)
+        self.assertIn("StateDirectory=glifistore", deb_unit)
         self.assertIn("ProtectSystem=strict", deb_unit)
 
     def test_the_unit_is_installed_but_never_enabled(self) -> None:
@@ -177,7 +177,7 @@ class PayloadInventoryTests(unittest.TestCase):
             "mandir": "/usr/share/man",
             "sysconfdir": "/etc",
             "unitdir": "/lib/systemd/system",
-            "statedir": "/var/lib/glyphastore",
+            "statedir": "/var/lib/glifistore",
             "abi_major": "1",
             "abi_version": "1.0.0",
         }
@@ -196,39 +196,39 @@ class PayloadInventoryTests(unittest.TestCase):
             entry["path"] for entry in component(self.payload, "configuration")["entries"]
         ]
         data = [entry["path"] for entry in component(self.payload, "data")["entries"]]
-        self.assertEqual(configuration, ["@sysconfdir@/glyphastore/glyphastored.conf"])
+        self.assertEqual(configuration, ["@sysconfdir@/glifistore/glifistored.conf"])
         self.assertEqual(data, ["@statedir@"])
 
     def test_a_missing_entry_is_reported_and_a_present_one_is_not(self) -> None:
-        root = temporary_directory(self, "glyphastore-payload-")
-        (root / "etc/glyphastore").mkdir(parents=True)
+        root = temporary_directory(self, "glifistore-payload-")
+        (root / "etc/glifistore").mkdir(parents=True)
         failures = verify(root, self.tokens, present=["configuration"], absent=[], payload=self.payload)
         self.assertEqual(len(failures), 1)
         self.assertIn("missing", failures[0])
 
-        (root / "etc/glyphastore/glyphastored.conf").write_text("port = 7000\n", encoding="utf-8")
+        (root / "etc/glifistore/glifistored.conf").write_text("port = 7000\n", encoding="utf-8")
         self.assertEqual(
             verify(root, self.tokens, present=["configuration"], absent=[], payload=self.payload),
             [],
         )
 
     def test_a_surviving_entry_fails_an_absence_check(self) -> None:
-        root = temporary_directory(self, "glyphastore-payload-")
+        root = temporary_directory(self, "glifistore-payload-")
         (root / "lib/systemd/system").mkdir(parents=True)
-        (root / "lib/systemd/system/glyphastored.service").write_text("[Unit]\n", encoding="utf-8")
+        (root / "lib/systemd/system/glifistored.service").write_text("[Unit]\n", encoding="utf-8")
         failures = verify(root, self.tokens, present=[], absent=["service"], payload=self.payload)
         self.assertEqual(len(failures), 1)
         self.assertIn("still present", failures[0])
 
     def test_the_declared_kind_is_enforced(self) -> None:
-        root = temporary_directory(self, "glyphastore-payload-")
+        root = temporary_directory(self, "glifistore-payload-")
         (root / "usr/bin").mkdir(parents=True)
-        (root / "usr/bin/glyphastored").write_text("#!/bin/sh\n", encoding="utf-8")
+        (root / "usr/bin/glifistored").write_text("#!/bin/sh\n", encoding="utf-8")
         failures = verify(root, self.tokens, present=["runtime"], absent=[], payload=self.payload)
         self.assertTrue(any("not executable" in failure for failure in failures), failures)
 
     def test_a_contradictory_or_empty_request_is_refused(self) -> None:
-        root = temporary_directory(self, "glyphastore-payload-")
+        root = temporary_directory(self, "glifistore-payload-")
         with self.assertRaisesRegex(PayloadError, "at least one"):
             verify(root, self.tokens, present=[], absent=[], payload=self.payload)
         with self.assertRaisesRegex(PayloadError, "present and absent"):
@@ -267,7 +267,7 @@ class ConsumerIsolationTests(unittest.TestCase):
         self.assertEqual(len(violations), 6, violations)
 
     def test_compile_commands_are_scanned_with_relative_includes_resolved(self) -> None:
-        directory = temporary_directory(self, "glyphastore-isolation-")
+        directory = temporary_directory(self, "glifistore-isolation-")
         database = directory / "compile_commands.json"
         database.write_text(
             json.dumps(
@@ -293,7 +293,7 @@ class ConsumerIsolationTests(unittest.TestCase):
     def test_the_ci_workspace_is_a_forbidden_root(self) -> None:
         # On a GitHub runner the checkout lives in GITHUB_WORKSPACE, which is where
         # a consumer would accidentally pick up headers instead of the installed ones.
-        workspace = "/home/runner/work/GlyphaStore/GlyphaStore"
+        workspace = "/home/runner/work/GlifiStore/GlifiStore"
         roots = normalise_roots([workspace])
         violations = scan_text(f"c++ -I{workspace}/include -L/usr/lib", roots, origin="log")
         self.assertEqual(len(violations), 1, violations)
@@ -401,7 +401,7 @@ class ContainerDispatchTests(unittest.TestCase):
         argv = container_create_arguments(
             runtime="docker",
             image="debian:12@sha256:deadbeef",
-            name="glyphastore-deb-test",
+            name="glifistore-deb-test",
             root=Path("/repo"),
             output=Path("/tmp/out"),
             release_context=Path("/tmp/release-context.json"),
@@ -420,7 +420,7 @@ class ContainerDispatchTests(unittest.TestCase):
         private = container_create_arguments(
             runtime="docker",
             image="debian:12@sha256:deadbeef",
-            name="glyphastore-deb-test",
+            name="glifistore-deb-test",
             root=Path("/repo"),
             output=Path("/tmp/out"),
             release_context=Path("/tmp/release-context.json"),
@@ -443,7 +443,7 @@ class ContainerDispatchTests(unittest.TestCase):
         self.assertNotIn("exec python3", text)
 
     def test_inner_fail_evidence_is_preferred_over_outer_blocked(self) -> None:
-        directory = tempfile.TemporaryDirectory(prefix="glyphastore-inner-evidence-")
+        directory = tempfile.TemporaryDirectory(prefix="glifistore-inner-evidence-")
         self.addCleanup(directory.cleanup)
         root = Path(directory.name)
         evidence = root / "deb-nightly-full-package-evidence.json"
@@ -484,7 +484,7 @@ class ContainerDispatchTests(unittest.TestCase):
 
     def test_rpm_spec_forces_static_core_linkage(self) -> None:
         spec = (
-            Path(__file__).resolve().parents[2] / "packaging/rpm/templates/glyphastore.spec.in"
+            Path(__file__).resolve().parents[2] / "packaging/rpm/templates/glifistore.spec.in"
         ).read_text(encoding="utf-8")
         self.assertIn("-DBUILD_SHARED_LIBS=OFF", spec)
 
@@ -493,7 +493,7 @@ class ContainerDispatchTests(unittest.TestCase):
         # and an expanded comment with unmatched quotes aborts the shell script after
         # a successful link (nightly Fedora 41 retained that failure; live rpm target is Fedora 43).
         spec = (
-            Path(__file__).resolve().parents[2] / "packaging/rpm/templates/glyphastore.spec.in"
+            Path(__file__).resolve().parents[2] / "packaging/rpm/templates/glifistore.spec.in"
         ).read_text(encoding="utf-8")
         build = spec.split("%build", 1)[1].split("%install", 1)[0]
         for line in build.splitlines():

@@ -28,7 +28,7 @@ classes:
     gate: GATE-PERFORMANCE
     requirement: GS-PERF-BUDGET-001
     enforcement: hardware_self_hosted
-    runner_label: glyphastore-linux-perf
+    runner_label: glifistore-linux-perf
     status: specified_waiting_for_runner
     metric: pass_candidate_manifest
     evidence_class: hardware
@@ -52,7 +52,7 @@ classes:
     gate: GATE-PERFORMANCE
     requirement: GS-PERF-BUDGET-001
     enforcement: hardware_self_hosted
-    runner_label: glyphastore-linux-perf
+    runner_label: glifistore-linux-perf
     status: specified_waiting_for_runner
     metric: scaling_efficiency_percent
     evidence_class: hardware
@@ -73,7 +73,7 @@ classes:
     gate: GATE-PERFORMANCE
     requirement: GS-PERF-BUDGET-001
     enforcement: hardware_self_hosted
-    runner_label: glyphastore-linux-perf
+    runner_label: glifistore-linux-perf
     status: specified_waiting_for_runner
     metric: p99_get_latency_ns
     evidence_class: hardware
@@ -87,13 +87,13 @@ classes:
       - docs/assurance/performance-budgets.md
     notes: >
       Absolute p99 GET placeholder. Numeric threshold intentionally null until
-      glyphastore-linux-perf publishes retained samples. Do not invent values.
+      glifistore-linux-perf publishes retained samples. Do not invent values.
 
   - id: HARDWARE-ABSOLUTE-P99-PUT
     gate: GATE-PERFORMANCE
     requirement: GS-PERF-BUDGET-001
     enforcement: hardware_self_hosted
-    runner_label: glyphastore-linux-perf
+    runner_label: glifistore-linux-perf
     status: specified_waiting_for_runner
     metric: p99_put_latency_ns
     evidence_class: hardware
@@ -107,7 +107,7 @@ classes:
       - docs/assurance/performance-budgets.md
     notes: >
       Absolute p99 PUT placeholder. Numeric threshold intentionally null until
-      glyphastore-linux-perf publishes retained samples. Do not invent values.
+      glifistore-linux-perf publishes retained samples. Do not invent values.
 
   - id: ADVISORY-EMBEDDED-DURABLE-GET-P99
     gate: GATE-PERFORMANCE

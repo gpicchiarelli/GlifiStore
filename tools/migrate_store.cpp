@@ -1,6 +1,6 @@
 #include "cli/arguments.hpp"
-#include "glyphastore/persistence/store_migrate.hpp"
-#include "glyphastore/store/config.hpp"
+#include "glifistore/persistence/store_migrate.hpp"
+#include "glifistore/store/config.hpp"
 
 #include <array>
 #include <charconv>
@@ -14,78 +14,78 @@ namespace {
 enum OptionId : std::size_t { help, version, json, no_scan, workers };
 
 constexpr std::array kOptionSpecs{
-    glyphastore::cli::OptionSpec{
-        help, "help", 'h', glyphastore::cli::OptionArity::none, {}, "Show this help message and exit"},
-    glyphastore::cli::OptionSpec{version,
+    glifistore::cli::OptionSpec{
+        help, "help", 'h', glifistore::cli::OptionArity::none, {}, "Show this help message and exit"},
+    glifistore::cli::OptionSpec{version,
                                  "version",
                                  'V',
-                                 glyphastore::cli::OptionArity::none,
+                                 glifistore::cli::OptionArity::none,
                                  {},
                                  "Show version information and exit"},
-    glyphastore::cli::OptionSpec{
-        json, "json", '\0', glyphastore::cli::OptionArity::none, {}, "Emit a stable JSON report on stdout"},
-    glyphastore::cli::OptionSpec{no_scan,
+    glifistore::cli::OptionSpec{
+        json, "json", '\0', glifistore::cli::OptionArity::none, {}, "Emit a stable JSON report on stdout"},
+    glifistore::cli::OptionSpec{no_scan,
                                  "no-scan",
                                  '\0',
-                                 glyphastore::cli::OptionArity::none,
+                                 glifistore::cli::OptionArity::none,
                                  {},
                                  "Skip committed Record scans during source/destination verify"},
-    glyphastore::cli::OptionSpec{workers,
+    glifistore::cli::OptionSpec{workers,
                                  "workers",
                                  'w',
-                                 glyphastore::cli::OptionArity::required,
+                                 glifistore::cli::OptionArity::required,
                                  "N",
                                  "Destination Worker count (required, 1..256)"},
 };
 
 void print_help(const std::string_view program) {
-    glyphastore::cli::write_help(
+    glifistore::cli::write_help(
         std::cout, program,
-        "Offline Worker reshard / logical rewrite of a GlyphaStore durable data directory.\n"
+        "Offline Worker reshard / logical rewrite of a GlifiStore durable data directory.\n"
         "Copies live keys into a new destination Store. Source is never mutated.\n"
         "Resumes from <DESTINATION>.migrate-state when interrupted.",
         "[OPTIONS] --workers N <SOURCE-DATA-DIR> <DESTINATION-DATA-DIR>", kOptionSpecs);
 }
 
-[[nodiscard]] auto error_code_name(const glyphastore::ErrorCode code) -> std::string_view {
+[[nodiscard]] auto error_code_name(const glifistore::ErrorCode code) -> std::string_view {
     switch (code) {
-    case glyphastore::ErrorCode::invalid_argument:
+    case glifistore::ErrorCode::invalid_argument:
         return "invalid_argument";
-    case glyphastore::ErrorCode::arithmetic_overflow:
+    case glifistore::ErrorCode::arithmetic_overflow:
         return "arithmetic_overflow";
-    case glyphastore::ErrorCode::record_too_large:
+    case glifistore::ErrorCode::record_too_large:
         return "record_too_large";
-    case glyphastore::ErrorCode::segment_full:
+    case glifistore::ErrorCode::segment_full:
         return "segment_full";
-    case glyphastore::ErrorCode::segment_sealed:
+    case glifistore::ErrorCode::segment_sealed:
         return "segment_sealed";
-    case glyphastore::ErrorCode::invalid_record:
+    case glifistore::ErrorCode::invalid_record:
         return "invalid_record";
-    case glyphastore::ErrorCode::checksum_mismatch:
+    case glifistore::ErrorCode::checksum_mismatch:
         return "checksum_mismatch";
-    case glyphastore::ErrorCode::invalid_reference:
+    case glifistore::ErrorCode::invalid_reference:
         return "invalid_reference";
-    case glyphastore::ErrorCode::sequence_conflict:
+    case glifistore::ErrorCode::sequence_conflict:
         return "sequence_conflict";
-    case glyphastore::ErrorCode::corrupted_data:
+    case glifistore::ErrorCode::corrupted_data:
         return "corrupted_data";
-    case glyphastore::ErrorCode::not_found:
+    case glifistore::ErrorCode::not_found:
         return "not_found";
-    case glyphastore::ErrorCode::resource_exhausted:
+    case glifistore::ErrorCode::resource_exhausted:
         return "resource_exhausted";
-    case glyphastore::ErrorCode::storage_exhausted:
+    case glifistore::ErrorCode::storage_exhausted:
         return "storage_exhausted";
-    case glyphastore::ErrorCode::file_too_large:
+    case glifistore::ErrorCode::file_too_large:
         return "file_too_large";
-    case glyphastore::ErrorCode::descriptor_exhausted:
+    case glifistore::ErrorCode::descriptor_exhausted:
         return "descriptor_exhausted";
-    case glyphastore::ErrorCode::read_only_filesystem:
+    case glifistore::ErrorCode::read_only_filesystem:
         return "read_only_filesystem";
-    case glyphastore::ErrorCode::internal_error:
+    case glifistore::ErrorCode::internal_error:
         return "internal_error";
-    case glyphastore::ErrorCode::unavailable:
+    case glifistore::ErrorCode::unavailable:
         return "unavailable";
-    case glyphastore::ErrorCode::io_error:
+    case glifistore::ErrorCode::io_error:
         return "io_error";
     }
     return "unknown";
@@ -126,7 +126,7 @@ void print_help(const std::string_view program) {
     return out;
 }
 
-void write_text_ok(std::ostream& out, const glyphastore::DurableStoreMigrateReport& report) {
+void write_text_ok(std::ostream& out, const glifistore::DurableStoreMigrateReport& report) {
     out << "status=ok\n"
         << "source=" << report.source.string() << '\n'
         << "destination=" << report.destination.string() << '\n'
@@ -138,7 +138,7 @@ void write_text_ok(std::ostream& out, const glyphastore::DurableStoreMigrateRepo
         << "resumed=" << (report.resumed ? "true" : "false") << '\n';
 }
 
-void write_json_ok(std::ostream& out, const glyphastore::DurableStoreMigrateReport& report) {
+void write_json_ok(std::ostream& out, const glifistore::DurableStoreMigrateReport& report) {
     out << '{'
         << "\"status\":\"ok\","
         << "\"source\":\"" << json_escape(report.source.string()) << "\","
@@ -152,7 +152,7 @@ void write_json_ok(std::ostream& out, const glyphastore::DurableStoreMigrateRepo
 }
 
 void write_json_error(std::ostream& out, const std::string_view source, const std::string_view destination,
-                      const glyphastore::Error& error) {
+                      const glifistore::Error& error) {
     out << '{'
         << "\"status\":\"error\","
         << "\"source\":\"" << json_escape(source) << "\","
@@ -170,7 +170,7 @@ void write_json_error(std::ostream& out, const std::string_view source, const st
     std::uint64_t value{};
     const auto parsed = std::from_chars(text.data(), text.data() + text.size(), value);
     if (parsed.ec != std::errc{} || parsed.ptr != text.data() + text.size() || value == 0 ||
-        value > glyphastore::kMaximumWorkerCount) {
+        value > glifistore::kMaximumWorkerCount) {
         return std::nullopt;
     }
     return static_cast<std::size_t>(value);
@@ -180,8 +180,8 @@ void write_json_error(std::ostream& out, const std::string_view source, const st
 
 int main(const int argc, char** argv) try {
     const auto program =
-        glyphastore::cli::executable_name(argc > 0 ? argv[0] : "glyphastore_migrate_store");
-    auto parsed = glyphastore::cli::parse_arguments(argc, argv, kOptionSpecs);
+        glifistore::cli::executable_name(argc > 0 ? argv[0] : "glifistore_migrate_store");
+    auto parsed = glifistore::cli::parse_arguments(argc, argv, kOptionSpecs);
     if (!parsed) {
         std::cerr << program << ": error: " << parsed.error().message << "\nTry '" << program
                   << " --help' for more information.\n";
@@ -192,7 +192,7 @@ int main(const int argc, char** argv) try {
         return 0;
     }
     if (parsed->has(version)) {
-        std::cout << program << ' ' << GLYPHASTORE_VERSION << '\n';
+        std::cout << program << ' ' << GLIFISTORE_VERSION << '\n';
         return 0;
     }
     const auto workers_value = parsed->value(workers);
@@ -204,7 +204,7 @@ int main(const int argc, char** argv) try {
     const auto worker_count = parse_worker_count(*workers_value);
     if (!worker_count) {
         std::cerr << program << ": error: --workers must be an integer in 1.."
-                  << glyphastore::kMaximumWorkerCount << "\n";
+                  << glifistore::kMaximumWorkerCount << "\n";
         return 2;
     }
     if (parsed->positionals.size() != 2) {
@@ -217,7 +217,7 @@ int main(const int argc, char** argv) try {
     const auto destination = std::string{parsed->positionals[1]};
     const bool emit_json = parsed->has(json);
     const bool scan = !parsed->has(no_scan);
-    auto report = glyphastore::migrate_durable_store(source, destination, *worker_count, scan);
+    auto report = glifistore::migrate_durable_store(source, destination, *worker_count, scan);
     if (!report) {
         if (emit_json) {
             write_json_error(std::cout, source, destination, report.error());
@@ -235,10 +235,10 @@ int main(const int argc, char** argv) try {
     return 0;
 } catch (const std::exception& exception) {
     const auto program =
-        glyphastore::cli::executable_name(argc > 0 ? argv[0] : "glyphastore_migrate_store");
+        glifistore::cli::executable_name(argc > 0 ? argv[0] : "glifistore_migrate_store");
     std::cerr << program << ": fatal: " << exception.what() << '\n';
     return 1;
 } catch (...) {
-    std::cerr << "glyphastore_migrate_store: fatal: unknown non-standard exception\n";
+    std::cerr << "glifistore_migrate_store: fatal: unknown non-standard exception\n";
     return 1;
 }

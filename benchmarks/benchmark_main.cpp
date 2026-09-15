@@ -14,15 +14,15 @@
 namespace {
 
 struct Options {
-    glyphastore::bench::BenchmarkKind kind{glyphastore::bench::BenchmarkKind::all};
-    glyphastore::bench::RunSettings settings{};
+    glifistore::bench::BenchmarkKind kind{glifistore::bench::BenchmarkKind::all};
+    glifistore::bench::RunSettings settings{};
     bool full_suite{};
     std::optional<std::size_t> operations;
     std::optional<std::size_t> key_size;
     std::optional<std::size_t> value_size;
     std::optional<std::size_t> workers;
     std::optional<std::size_t> threads;
-    std::optional<glyphastore::bench::ParallelDistribution> distribution;
+    std::optional<glifistore::bench::ParallelDistribution> distribution;
     std::optional<bool> random_access;
 };
 
@@ -32,7 +32,7 @@ struct Options {
         std::exit(2);
     }
     const std::string_view text{value};
-    const auto parsed = glyphastore::bench::parse_decimal_size(text);
+    const auto parsed = glifistore::bench::parse_decimal_size(text);
     if (!parsed) {
         throw std::invalid_argument{"invalid value for " + std::string{flag} + ": " + std::string{text}};
     }
@@ -60,7 +60,7 @@ struct Options {
             continue;
         }
         if (arg == "--filter" && index + 1 < argc) {
-            options.kind = glyphastore::bench::parse_kind(argv[++index]);
+            options.kind = glifistore::bench::parse_kind(argv[++index]);
             continue;
         }
         if (arg == "--ops" && index + 1 < argc) {
@@ -84,7 +84,7 @@ struct Options {
             continue;
         }
         if (arg == "--distribution" && index + 1 < argc) {
-            const auto distribution = glyphastore::bench::parse_distribution(argv[++index]);
+            const auto distribution = glifistore::bench::parse_distribution(argv[++index]);
             if (!distribution) {
                 std::cerr << "unknown distribution: " << argv[index] << '\n';
                 std::exit(2);
@@ -102,7 +102,7 @@ struct Options {
         }
         if (arg == "--help" || arg == "-h") {
             std::cout
-                << "usage: glyphastore_benchmarks [--suite] [--random] [--pin-cpu] [--latency]\n"
+                << "usage: glifistore_benchmarks [--suite] [--random] [--pin-cpu] [--latency]\n"
                 << "       [--filter all|index-all|index|index-insert|index-replace|index-find-hit|\n"
                 << "                "
                    "index-find-miss|index-churn-miss|index-erase|store-put|store-put-batch|store-get|\n"
@@ -132,7 +132,7 @@ struct Options {
     return options;
 }
 
-void apply_overrides(glyphastore::bench::Config& config, const Options& options) {
+void apply_overrides(glifistore::bench::Config& config, const Options& options) {
     if (options.operations) {
         config.operations = *options.operations;
     }
@@ -161,15 +161,15 @@ void apply_overrides(glyphastore::bench::Config& config, const Options& options)
            options.threads || options.distribution || options.random_access;
 }
 
-[[nodiscard]] auto result_is_valid(const glyphastore::bench::Result& result) -> bool {
+[[nodiscard]] auto result_is_valid(const glifistore::bench::Result& result) -> bool {
     return result.samples == result.settings.measured_iterations;
 }
 
-[[nodiscard]] auto supports_latency(const glyphastore::bench::BenchmarkKind kind) noexcept -> bool {
-    return kind == glyphastore::bench::BenchmarkKind::store_parallel_put ||
-           kind == glyphastore::bench::BenchmarkKind::store_durable_group_parallel_put ||
-           kind == glyphastore::bench::BenchmarkKind::store_durable_parallel_put ||
-           kind == glyphastore::bench::BenchmarkKind::store_durable_parallel_get;
+[[nodiscard]] auto supports_latency(const glifistore::bench::BenchmarkKind kind) noexcept -> bool {
+    return kind == glifistore::bench::BenchmarkKind::store_parallel_put ||
+           kind == glifistore::bench::BenchmarkKind::store_durable_group_parallel_put ||
+           kind == glifistore::bench::BenchmarkKind::store_durable_parallel_put ||
+           kind == glifistore::bench::BenchmarkKind::store_durable_parallel_get;
 }
 
 } // namespace
@@ -177,7 +177,7 @@ void apply_overrides(glyphastore::bench::Config& config, const Options& options)
 int main(int argc, char** argv) try {
     const auto options = parse_options(argc, argv);
     if ((options.threads || options.distribution) &&
-        !glyphastore::bench::is_parallel_benchmark(options.kind)) {
+        !glifistore::bench::is_parallel_benchmark(options.kind)) {
         std::cerr << "benchmark error: --threads and --distribution require a store-parallel filter\n";
         return 2;
     }
@@ -187,37 +187,37 @@ int main(int argc, char** argv) try {
                      "store-durable-parallel-put, or store-durable-parallel-get\n";
         return 2;
     }
-    std::vector<glyphastore::bench::Config> configs;
+    std::vector<glifistore::bench::Config> configs;
     if (has_custom_config(options)) {
-        glyphastore::bench::Config config;
+        glifistore::bench::Config config;
         apply_overrides(config, options);
         configs.push_back(config);
     } else if (options.full_suite) {
-        configs = glyphastore::bench::suite_configs();
+        configs = glifistore::bench::suite_configs();
     } else {
-        configs = glyphastore::bench::quick_configs();
+        configs = glifistore::bench::quick_configs();
     }
 
     for (const auto& config : configs) {
-        if (!glyphastore::bench::validate_run_settings(options.settings, config)) {
+        if (!glifistore::bench::validate_run_settings(options.settings, config)) {
             return 1;
         }
     }
 
-    std::cout << "# glyphastore benchmark\n";
-    (void)glyphastore::bench::try_cpu_pin(options.settings.pin_cpu);
-    glyphastore::bench::print_metadata(std::cout, options.settings);
+    std::cout << "# glifistore benchmark\n";
+    (void)glifistore::bench::try_cpu_pin(options.settings.pin_cpu);
+    glifistore::bench::print_metadata(std::cout, options.settings);
     std::cout << "# latency_measurement="
               << (options.settings.latency ? "per-operation-steady-clock" : "disabled") << '\n';
 
     for (auto config : configs) {
         apply_overrides(config, options);
-        for (const auto& result : glyphastore::bench::run_benchmark(options.kind, config, options.settings)) {
+        for (const auto& result : glifistore::bench::run_benchmark(options.kind, config, options.settings)) {
             if (!result_is_valid(result)) {
                 std::cerr << "benchmark error: " << result.name << " produced invalid samples\n";
                 return 1;
             }
-            glyphastore::bench::print_result(std::cout, result);
+            glifistore::bench::print_result(std::cout, result);
         }
     }
     return 0;

@@ -55,7 +55,7 @@ pin Mold + sealed source generations; copy owning Index snapshot
   -> release Worker/catalog synchronization
   -> scan and verify source Records
   -> construct the complete replacement Index and exact layout
-  -> create .segment-<id>-<generation>.glypha.tmp outputs
+  -> create .segment-<id>-<generation>.glifi.tmp outputs
   -> copy, synchronize, seal and verify every staged output
   -> acquire the Manifest publication lease; revalidate Mold
   -> publish and directory-sync the exact v1 compaction intent

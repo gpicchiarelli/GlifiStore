@@ -1,5 +1,5 @@
 Status: descriptive summary of the assurance engineering program
-Applies to: release claim honesty for GlyphaStore 0.1.x
+Applies to: release claim honesty for GlifiStore 0.1.x
 Owner: maintainers
 Last reviewed: 2026-09-12
 
@@ -34,7 +34,7 @@ Authority roots: `engineering/`, validators under `engineering/tools/`, workflow
 3. **Tagged N−1 fixture drops** — policy matrix exists; permanent prior-release trees under
    `tests/fixtures/released/<label>/` remain a release-process step.
 4. **Hardware performance** — `HARDWARE-PAIRED-LINUX-AB` is `specified_waiting_for_runner`
-   until `glyphastore-linux-perf` publishes `pass-candidate`.
+   until `glifistore-linux-perf` publishes `pass-candidate`.
 5. **Hardware soak / mandatory rotation** — software soak paths exist; controlled multi-hour
    hardware soak residual remains on `GATE-SOAK`.
 6. **Project GPG / full SLSA L3** — optional residuals on supply-chain gates. Scorecard,
@@ -45,9 +45,9 @@ Authority roots: `engineering/`, validators under `engineering/tools/`, workflow
 7. **Zero-fence hot backup** — online fenced backup exists (shorter fence + structural source check +
    bounded Segment copy parallelism; destination CRC promotion gate); fully concurrent hot copy
    remains deferred per [ADR 0034](../adr/0034-zero-fence-hot-backup-deferred.md). HAZ-021 incomplete
-   destination / failed-online paths, Store process-kill mid-copy (`glyphastore_crash_backup`),
-   in-process Server/wire BACKUP kill (`glyphastore_crash_backup_wire`), and real `glyphastored`
-   exec mid-BACKUP kill (`glyphastore_crash_backup_daemon`, lab-only crash hooks) are covered.
+   destination / failed-online paths, Store process-kill mid-copy (`glifistore_crash_backup`),
+   in-process Server/wire BACKUP kill (`glifistore_crash_backup_wire`), and real `glifistored`
+   exec mid-BACKUP kill (`glifistore_crash_backup_daemon`, lab-only crash hooks) are covered.
    Daemon `--request-timeout-ms` / idle timeout vs client contract (no cancel of admitted Store
    mutations; partial-frame close) is covered by reactor integration tests.
    HAZ-026 reclaim starvation from a below-threshold Worker pinning the round-robin cursor is

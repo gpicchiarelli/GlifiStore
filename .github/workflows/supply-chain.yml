@@ -47,7 +47,7 @@ jobs:
       - name: Export reproducible build env
         run: |
           {
-            echo "GLYPHASTORE_ROOT=${{ github.workspace }}"
+            echo "GLIFISTORE_ROOT=${{ github.workspace }}"
             echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)"
             echo "TZ=UTC"
             echo "PYTHONHASHSEED=0"
@@ -164,7 +164,7 @@ jobs:
       - name: Export reproducible build env
         run: |
           {
-            echo "GLYPHASTORE_ROOT=${{ github.workspace }}"
+            echo "GLIFISTORE_ROOT=${{ github.workspace }}"
             echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)"
             echo "TZ=UTC"
             echo "PYTHONHASHSEED=0"
@@ -226,10 +226,10 @@ jobs:
         run: |
           mkdir -p dist/cpp-sbom
           prefix="${{ github.workspace }}/build/install-prefix"
-          syft "dir:${prefix}" -o spdx-json=dist/cpp-sbom/glyphastore-install.spdx.json
-          daemon="$(find "$prefix" -type f -name glyphastored | head -1)"
+          syft "dir:${prefix}" -o spdx-json=dist/cpp-sbom/glifistore-install.spdx.json
+          daemon="$(find "$prefix" -type f -name glifistored | head -1)"
           test -n "$daemon"
-          syft "file:${daemon}" -o spdx-json=dist/cpp-sbom/glyphastored.spdx.json
+          syft "file:${daemon}" -o spdx-json=dist/cpp-sbom/glifistored.spdx.json
       - name: Upload C++ SBOM
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

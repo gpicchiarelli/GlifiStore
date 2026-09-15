@@ -242,7 +242,7 @@ def render_markdown(report: dict[str, object], outdir: Path) -> str:
     status = str(report["comparison_status"])
     missing = report["missing_sdks"]
     lines = [
-        f"# GlyphaStore SDK client benchmarks — version `{report['sdk_version']}`",
+        f"# GlifiStore SDK client benchmarks — version `{report['sdk_version']}`",
         "",
         f"Validated `{len(rows)}` result files from `{outdir.name}`.",
         f"Comparison status: **{status}**.",
@@ -261,7 +261,7 @@ def render_markdown(report: dict[str, object], outdir: Path) -> str:
         [
             "Workload: validated ordered `PUT`/`GET` pipeline read-after-write, "
             "value size 64 bytes,",
-            "volatile `glyphastored`, same-host loopback. Median ops/s is the "
+            "volatile `glifistored`, same-host loopback. Median ops/s is the "
             "comparison statistic.",
             "",
             "| SDK | Runtime | Execution | Workers | Pipeline pairs | Median ops/s | "

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "glyphastore/client/client.hpp"
-#include "glyphastore/core/little_endian.hpp"
-#include "glyphastore/core/worker_routing.hpp"
-#include "glyphastore/server/protocol.hpp"
-#include "glyphastore/server/tls.hpp"
+#include "glifistore/client/client.hpp"
+#include "glifistore/core/little_endian.hpp"
+#include "glifistore/core/worker_routing.hpp"
+#include "glifistore/server/protocol.hpp"
+#include "glifistore/server/tls.hpp"
 
 #include <algorithm>
 #include <array>
@@ -31,7 +31,7 @@
 #include <variant>
 #include <vector>
 
-namespace glyphastore::client::detail {
+namespace glifistore::client::detail {
 
 using Clock = std::chrono::steady_clock;
 
@@ -607,4 +607,4 @@ struct Metadata {
     WorkerRoutingState routing{};
 };
 
-} // namespace glyphastore::client::detail
+} // namespace glifistore::client::detail

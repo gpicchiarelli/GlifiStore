@@ -1,10 +1,10 @@
-#include "glyphastore/client/client.hpp"
+#include "glifistore/client/client.hpp"
 
 #include "client_detail.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/core/worker_routing.hpp"
-#include "glyphastore/server/protocol.hpp"
-#include "glyphastore/server/tls.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/core/worker_routing.hpp"
+#include "glifistore/server/protocol.hpp"
+#include "glifistore/server/tls.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -20,7 +20,7 @@
 #include <variant>
 #include <vector>
 
-namespace glyphastore::client {
+namespace glifistore::client {
 
 using detail::as_bytes;
 using detail::Clock;
@@ -1061,4 +1061,4 @@ void Client::close() noexcept {
     }
 }
 
-} // namespace glyphastore::client
+} // namespace glifistore::client

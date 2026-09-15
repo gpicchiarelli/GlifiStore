@@ -80,9 +80,9 @@ jobs:
         run: |
           cmake --preset unix-debug
           cmake --build --preset unix-debug --target \
-            glyphastore_crash_persistence \
-            glyphastore_crash_daemon \
-            glyphastored
+            glifistore_crash_persistence \
+            glifistore_crash_daemon \
+            glifistored
       - name: Resolve E2 suite
         id: e2
         run: |
@@ -143,7 +143,7 @@ jobs:
           CXX: clang++
         run: |
           cmake --preset unix-debug
-          cmake --build --preset unix-debug --target glyphastore_crash_persistence
+          cmake --build --preset unix-debug --target glifistore_crash_persistence
       - name: Resolve bounded E3 profile
         id: e3
         env:
@@ -229,7 +229,7 @@ jobs:
           CXX: clang++
         run: |
           cmake --preset unix-debug
-          cmake --build --preset unix-debug --target glyphastore_crash_persistence
+          cmake --build --preset unix-debug --target glifistore_crash_persistence
       - name: Resolve bounded campaign parameters
         id: campaign
         env:
@@ -305,7 +305,7 @@ jobs:
           CXX: clang++
         run: |
           cmake --preset unix-debug
-          cmake --build --preset unix-debug --target glyphastore_crash_persistence
+          cmake --build --preset unix-debug --target glifistore_crash_persistence
       - name: Resolve macOS E3 profile
         id: e3
         env:
@@ -382,11 +382,11 @@ jobs:
         run: |
           cmake --preset unix-debug
           cmake --build --preset unix-debug --target \
-            glyphastore_tests \
-            glyphastore_allocation_fault_tests \
-            glyphastore_crash_persistence \
-            glyphastore_crash_daemon \
-            glyphastored
+            glifistore_tests \
+            glifistore_allocation_fault_tests \
+            glifistore_crash_persistence \
+            glifistore_crash_daemon \
+            glifistored
       - name: Resolve orchestrator rehearsal knobs
         id: orch
         env:

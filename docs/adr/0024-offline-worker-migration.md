@@ -62,7 +62,7 @@ and downgrade exporters for future format versions beyond v1.
 ## Compatibility and migration
 
 - Existing Stores continue to reopen unchanged when Worker count matches.
-- `glyphastore_migrate_store` / `migrate_durable_store` is the supported Worker-count change path.
+- `glifistore_migrate_store` / `migrate_durable_store` is the supported Worker-count change path.
 - Destination gets a new `store_id` and bootstrap `routing_epoch`; clients must cut over to the new
   data directory (and daemon `--data-dir`) after verify.
 - Backup/restore remains byte-identical catalog copy and does **not** change Worker count.

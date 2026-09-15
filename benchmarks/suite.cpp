@@ -1,9 +1,9 @@
 #include "suite.hpp"
 
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/index/index.hpp"
-#include "glyphastore/store/config.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/index/index.hpp"
+#include "glifistore/store/config.hpp"
+#include "glifistore/store/store.hpp"
 #include "harness.hpp"
 
 #include <atomic>
@@ -18,7 +18,7 @@
 #include <unistd.h>
 #include <vector>
 
-namespace glyphastore::bench {
+namespace glifistore::bench {
 namespace {
 
 [[nodiscard]] auto bytes(std::span<const std::byte> value) -> std::span<const std::byte> {
@@ -53,28 +53,28 @@ struct DurableContext {
 [[nodiscard]] auto temporary_data_directory() -> std::filesystem::path {
     static std::atomic<std::uint64_t> counter{0};
     return std::filesystem::temp_directory_path() /
-           ("glyphastore-bench-" + std::to_string(static_cast<unsigned long>(::getpid())) + '-' +
+           ("glifistore-bench-" + std::to_string(static_cast<unsigned long>(::getpid())) + '-' +
             std::to_string(counter.fetch_add(1U, std::memory_order_relaxed)));
 }
 
 [[nodiscard]] auto durable_store_config(const Config& config, const std::filesystem::path& data_dir,
-                                        const glyphastore::DurableOpenMode open_mode)
-    -> glyphastore::StoreConfig {
-    glyphastore::StoreConfig store_config{.worker_config = {.explicit_count = config.workers},
+                                        const glifistore::DurableOpenMode open_mode)
+    -> glifistore::StoreConfig {
+    glifistore::StoreConfig store_config{.worker_config = {.explicit_count = config.workers},
                                           .data_directory = data_dir,
                                           .durable_open_mode = open_mode};
     if (config.durable_group) {
-        store_config.storage_mode = glyphastore::StorageMode::durable_group;
+        store_config.storage_mode = glifistore::StorageMode::durable_group;
     } else if (config.durable_periodic) {
-        store_config.storage_mode = glyphastore::StorageMode::durable_periodic;
+        store_config.storage_mode = glifistore::StorageMode::durable_periodic;
     } else {
-        store_config.storage_mode = glyphastore::StorageMode::durable_sync;
+        store_config.storage_mode = glifistore::StorageMode::durable_sync;
     }
     return store_config;
 }
 
 [[nodiscard]] auto open_durable_store(const Config& config, const std::filesystem::path& data_dir,
-                                      const glyphastore::DurableOpenMode open_mode)
+                                      const glifistore::DurableOpenMode open_mode)
     -> std::unique_ptr<Store> {
     auto opened = Store::open(durable_store_config(config, data_dir, open_mode));
     return opened ? std::move(*opened) : nullptr;
@@ -1322,4 +1322,4 @@ auto suite_configs() -> std::vector<Config> {
     return configs;
 }
 
-} // namespace glyphastore::bench
+} // namespace glifistore::bench

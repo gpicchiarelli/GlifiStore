@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gpicchiarelli/GlyphaStore/sdk/go/protocol"
+	"github.com/gpicchiarelli/GlifiStore/sdk/go/protocol"
 )
 
 func fixture(t *testing.T, name string) []byte {
@@ -93,7 +93,7 @@ func TestRequestEncoderMatchesEveryCanonicalFixture(t *testing.T) {
 		t.Fatal(err)
 	}
 	encoded = append(encoded, frame)
-	frame, err = protocol.EncodeRequest(protocol.OpcodeBackup, 10, []byte("/tmp/glyphastore-backup"), nil, 0, protocol.NoWorker)
+	frame, err = protocol.EncodeRequest(protocol.OpcodeBackup, 10, []byte("/tmp/glifistore-backup"), nil, 0, protocol.NoWorker)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -338,10 +338,10 @@ func TestKeyedRoutingAndInitIdentity(t *testing.T) {
 	if decoded.Algorithm != protocol.RoutingAlgSipHash24V1 || decoded.Seed != 0xABCDEF0123456789 {
 		t.Fatalf("decoded %#v", decoded)
 	}
-	if _, err := protocol.DecodeInitIdentity([]byte("GlyphaStore/2\x00bad")); err == nil {
+	if _, err := protocol.DecodeInitIdentity([]byte("GlifiStore/2\x00bad")); err == nil {
 		t.Fatal("expected malformed rejection")
 	}
-	if _, err := protocol.DecodeInitIdentity([]byte("GlyphaStore/3")); err == nil {
+	if _, err := protocol.DecodeInitIdentity([]byte("GlifiStore/3")); err == nil {
 		t.Fatal("expected prefix rejection")
 	}
 }

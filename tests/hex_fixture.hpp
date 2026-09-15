@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace glyphastore::test {
+namespace glifistore::test {
 
 inline auto hex_value(char character) -> std::optional<std::uint8_t> {
     if (character >= '0' && character <= '9') {
@@ -50,4 +50,4 @@ inline auto read_hex_fixture(const std::filesystem::path& path) -> std::vector<s
     return bytes;
 }
 
-} // namespace glyphastore::test
+} // namespace glifistore::test

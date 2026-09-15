@@ -1,6 +1,6 @@
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/store/paired/shard_combining_executor.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/store/paired/shard_combining_executor.hpp"
+#include "glifistore/store/store.hpp"
 #include "store/store_internal.hpp"
 #include "test.hpp"
 
@@ -14,11 +14,11 @@
 #include <unistd.h>
 #include <vector>
 
-using glyphastore::store::paired::execution_token_executing;
-using glyphastore::store::paired::execution_token_idle;
-using glyphastore::store::paired::release_execution_token;
-using glyphastore::store::paired::try_acquire_execution_token;
-using glyphastore::store::paired::try_reacquire_execution_token_if_pending;
+using glifistore::store::paired::execution_token_executing;
+using glifistore::store::paired::execution_token_idle;
+using glifistore::store::paired::release_execution_token;
+using glifistore::store::paired::try_acquire_execution_token;
+using glifistore::store::paired::try_reacquire_execution_token_if_pending;
 
 namespace {
 
@@ -28,27 +28,27 @@ auto bytes(const std::string_view value) -> std::span<const std::byte> {
 
 } // namespace
 
-GLYPHA_TEST("execution token CAS grants sole ownership") {
+GLIFI_TEST("execution token CAS grants sole ownership") {
     std::atomic<std::uint32_t> token{execution_token_idle()};
-    GLYPHA_REQUIRE(try_acquire_execution_token(token));
-    GLYPHA_REQUIRE(token.load() == execution_token_executing());
-    GLYPHA_REQUIRE(!try_acquire_execution_token(token));
+    GLIFI_REQUIRE(try_acquire_execution_token(token));
+    GLIFI_REQUIRE(token.load() == execution_token_executing());
+    GLIFI_REQUIRE(!try_acquire_execution_token(token));
     release_execution_token(token);
-    GLYPHA_REQUIRE(token.load() == execution_token_idle());
-    GLYPHA_REQUIRE(try_acquire_execution_token(token));
+    GLIFI_REQUIRE(token.load() == execution_token_idle());
+    GLIFI_REQUIRE(try_acquire_execution_token(token));
     release_execution_token(token);
 }
 
-GLYPHA_TEST("execution token lost-wakeup reacquire when pending") {
+GLIFI_TEST("execution token lost-wakeup reacquire when pending") {
     std::atomic<std::uint32_t> token{execution_token_idle()};
-    GLYPHA_REQUIRE(try_acquire_execution_token(token));
+    GLIFI_REQUIRE(try_acquire_execution_token(token));
     release_execution_token(token);
-    GLYPHA_REQUIRE(!try_reacquire_execution_token_if_pending(token, false));
-    GLYPHA_REQUIRE(try_reacquire_execution_token_if_pending(token, true));
+    GLIFI_REQUIRE(!try_reacquire_execution_token_if_pending(token, false));
+    GLIFI_REQUIRE(try_reacquire_execution_token_if_pending(token, true));
     release_execution_token(token);
 }
 
-GLYPHA_TEST("execution token serializes concurrent acquirers") {
+GLIFI_TEST("execution token serializes concurrent acquirers") {
     std::atomic<std::uint32_t> token{execution_token_idle()};
     std::atomic_int holders{0};
     std::atomic_int max_holders{0};
@@ -73,26 +73,26 @@ GLYPHA_TEST("execution token serializes concurrent acquirers") {
     for (auto& thread : threads) {
         thread.join();
     }
-    GLYPHA_REQUIRE(max_holders.load() == 1);
+    GLIFI_REQUIRE(max_holders.load() == 1);
 }
 
-GLYPHA_TEST("embedded volatile combining omits dedicated Writer threads") {
-    auto opened = glyphastore::Store::open({.worker_config = {.explicit_count = 1}});
-    GLYPHA_REQUIRE(opened.has_value());
-    auto* runtime = glyphastore::detail::StoreAccess::shard_pair_runtime(**opened);
-    GLYPHA_REQUIRE(runtime != nullptr);
-    GLYPHA_REQUIRE(runtime->combining_enabled());
-    GLYPHA_REQUIRE(!runtime->dedicated_writer_required());
-    GLYPHA_REQUIRE((**opened).put("k", bytes("v")).has_value());
+GLIFI_TEST("embedded volatile combining omits dedicated Writer threads") {
+    auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1}});
+    GLIFI_REQUIRE(opened.has_value());
+    auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(**opened);
+    GLIFI_REQUIRE(runtime != nullptr);
+    GLIFI_REQUIRE(runtime->combining_enabled());
+    GLIFI_REQUIRE(!runtime->dedicated_writer_required());
+    GLIFI_REQUIRE((**opened).put("k", bytes("v")).has_value());
     const auto got = (**opened).get("k");
-    GLYPHA_REQUIRE(got.has_value());
-    GLYPHA_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
+    GLIFI_REQUIRE(got.has_value());
+    GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
                    "v");
 }
 
-GLYPHA_TEST("embedded volatile combining preserves same-key FIFO under contention") {
-    auto opened = glyphastore::Store::open({.worker_config = {.explicit_count = 1}});
-    GLYPHA_REQUIRE(opened.has_value());
+GLIFI_TEST("embedded volatile combining preserves same-key FIFO under contention") {
+    auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1}});
+    GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     constexpr int kThreads = 4;
     constexpr int kIters = 50;
@@ -113,58 +113,58 @@ GLYPHA_TEST("embedded volatile combining preserves same-key FIFO under contentio
     for (auto& thread : threads) {
         thread.join();
     }
-    GLYPHA_REQUIRE(!failed.load());
+    GLIFI_REQUIRE(!failed.load());
     const auto got = store.get("shared");
-    GLYPHA_REQUIRE(got.has_value());
+    GLIFI_REQUIRE(got.has_value());
     const auto text = std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size());
-    GLYPHA_REQUIRE(!text.empty());
+    GLIFI_REQUIRE(!text.empty());
 }
 
-GLYPHA_TEST("embedded durable_sync combining omits dedicated Writer and keeps RAW") {
+GLIFI_TEST("embedded durable_sync combining omits dedicated Writer and keeps RAW") {
     auto pattern =
-        (std::filesystem::temp_directory_path() / "glyphastore-combine-durable-sync-XXXXXX").string();
+        (std::filesystem::temp_directory_path() / "glifistore-combine-durable-sync-XXXXXX").string();
     std::vector<char> writable(pattern.begin(), pattern.end());
     writable.push_back('\0');
-    GLYPHA_REQUIRE(::mkdtemp(writable.data()) != nullptr);
+    GLIFI_REQUIRE(::mkdtemp(writable.data()) != nullptr);
     const std::filesystem::path store_path{writable.data()};
-    auto opened = glyphastore::Store::open({
+    auto opened = glifistore::Store::open({
         .worker_config = {.explicit_count = 1},
-        .storage_mode = glyphastore::StorageMode::durable_sync,
+        .storage_mode = glifistore::StorageMode::durable_sync,
         .data_directory = store_path,
     });
-    GLYPHA_REQUIRE(opened.has_value());
-    auto* runtime = glyphastore::detail::StoreAccess::shard_pair_runtime(**opened);
-    GLYPHA_REQUIRE(runtime != nullptr);
-    GLYPHA_REQUIRE(runtime->combining_enabled());
-    GLYPHA_REQUIRE(!runtime->dedicated_writer_required());
-    GLYPHA_REQUIRE((**opened).put("alpha", bytes("one")).has_value());
+    GLIFI_REQUIRE(opened.has_value());
+    auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(**opened);
+    GLIFI_REQUIRE(runtime != nullptr);
+    GLIFI_REQUIRE(runtime->combining_enabled());
+    GLIFI_REQUIRE(!runtime->dedicated_writer_required());
+    GLIFI_REQUIRE((**opened).put("alpha", bytes("one")).has_value());
     const auto first = (**opened).get("alpha");
-    GLYPHA_REQUIRE(first.has_value());
-    GLYPHA_REQUIRE(
+    GLIFI_REQUIRE(first.has_value());
+    GLIFI_REQUIRE(
         std::string_view(reinterpret_cast<const char*>(first->bytes.data()), first->bytes.size()) == "one");
-    GLYPHA_REQUIRE((**opened).close().has_value());
+    GLIFI_REQUIRE((**opened).close().has_value());
     std::error_code ec;
     std::filesystem::remove_all(store_path, ec);
 }
 
-GLYPHA_TEST("embedded durable_sync combining preserves same-key FIFO under token contention") {
+GLIFI_TEST("embedded durable_sync combining preserves same-key FIFO under token contention") {
     auto pattern =
-        (std::filesystem::temp_directory_path() / "glyphastore-combine-durable-fifo-XXXXXX").string();
+        (std::filesystem::temp_directory_path() / "glifistore-combine-durable-fifo-XXXXXX").string();
     std::vector<char> writable(pattern.begin(), pattern.end());
     writable.push_back('\0');
-    GLYPHA_REQUIRE(::mkdtemp(writable.data()) != nullptr);
+    GLIFI_REQUIRE(::mkdtemp(writable.data()) != nullptr);
     const std::filesystem::path store_path{writable.data()};
-    auto opened = glyphastore::Store::open({
+    auto opened = glifistore::Store::open({
         .worker_config = {.explicit_count = 1},
-        .storage_mode = glyphastore::StorageMode::durable_sync,
+        .storage_mode = glifistore::StorageMode::durable_sync,
         .data_directory = store_path,
     });
-    GLYPHA_REQUIRE(opened.has_value());
+    GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
-    auto* runtime = glyphastore::detail::StoreAccess::shard_pair_runtime(store);
-    GLYPHA_REQUIRE(runtime != nullptr);
-    GLYPHA_REQUIRE(runtime->combining_enabled());
-    GLYPHA_REQUIRE(!runtime->dedicated_writer_required());
+    auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(store);
+    GLIFI_REQUIRE(runtime != nullptr);
+    GLIFI_REQUIRE(runtime->combining_enabled());
+    GLIFI_REQUIRE(!runtime->dedicated_writer_required());
 
     constexpr int kThreads = 4;
     constexpr int kIters = 25;
@@ -185,93 +185,93 @@ GLYPHA_TEST("embedded durable_sync combining preserves same-key FIFO under token
     for (auto& thread : threads) {
         thread.join();
     }
-    GLYPHA_REQUIRE(!failed.load());
+    GLIFI_REQUIRE(!failed.load());
     const auto got = store.get("shared-durable");
-    GLYPHA_REQUIRE(got.has_value());
+    GLIFI_REQUIRE(got.has_value());
     const auto text = std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size());
-    GLYPHA_REQUIRE(!text.empty());
-    GLYPHA_REQUIRE(store.close().has_value());
+    GLIFI_REQUIRE(!text.empty());
+    GLIFI_REQUIRE(store.close().has_value());
     std::error_code ec;
     std::filesystem::remove_all(store_path, ec);
 }
 
-GLYPHA_TEST("embedded durable_sync put_batch coalesces until RAW without early ACK") {
+GLIFI_TEST("embedded durable_sync put_batch coalesces until RAW without early ACK") {
     auto pattern =
-        (std::filesystem::temp_directory_path() / "glyphastore-combine-durable-batch-XXXXXX").string();
+        (std::filesystem::temp_directory_path() / "glifistore-combine-durable-batch-XXXXXX").string();
     std::vector<char> writable(pattern.begin(), pattern.end());
     writable.push_back('\0');
-    GLYPHA_REQUIRE(::mkdtemp(writable.data()) != nullptr);
+    GLIFI_REQUIRE(::mkdtemp(writable.data()) != nullptr);
     const std::filesystem::path store_path{writable.data()};
-    auto opened = glyphastore::Store::open({
+    auto opened = glifistore::Store::open({
         .worker_config = {.explicit_count = 1},
-        .storage_mode = glyphastore::StorageMode::durable_sync,
+        .storage_mode = glifistore::StorageMode::durable_sync,
         .data_directory = store_path,
     });
-    GLYPHA_REQUIRE(opened.has_value());
+    GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
-    auto* runtime = glyphastore::detail::StoreAccess::shard_pair_runtime(store);
-    GLYPHA_REQUIRE(runtime != nullptr);
-    GLYPHA_REQUIRE(runtime->combining_enabled());
-    GLYPHA_REQUIRE(!runtime->dedicated_writer_required());
+    auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(store);
+    GLIFI_REQUIRE(runtime != nullptr);
+    GLIFI_REQUIRE(runtime->combining_enabled());
+    GLIFI_REQUIRE(!runtime->dedicated_writer_required());
 
     const auto epoch_before = runtime->stats()[0].writer_epoch;
     std::vector<std::string> keys;
     std::vector<std::string> values;
-    std::vector<glyphastore::Store::PutItem> items;
+    std::vector<glifistore::Store::PutItem> items;
     keys.reserve(16);
     values.reserve(16);
     items.reserve(16);
     for (int index = 0; index < 16; ++index) {
         keys.push_back("coalesce-" + std::to_string(index));
         values.push_back("v-" + std::to_string(index));
-        items.push_back(glyphastore::Store::PutItem{.key = keys.back(), .value = bytes(values.back())});
+        items.push_back(glifistore::Store::PutItem{.key = keys.back(), .value = bytes(values.back())});
     }
     // put_batch drains already-queued work under the token (≤32, no wait-to-fill).
     // Success return is the RAW barrier: every key must be visible immediately.
     const auto statuses = store.put_batch(items);
-    GLYPHA_REQUIRE(statuses.size() == items.size());
+    GLIFI_REQUIRE(statuses.size() == items.size());
     for (const auto& status : statuses) {
-        GLYPHA_REQUIRE(status.has_value());
+        GLIFI_REQUIRE(status.has_value());
     }
     for (std::size_t index = 0; index < items.size(); ++index) {
         const auto got = store.get(keys[index]);
-        GLYPHA_REQUIRE(got.has_value());
-        GLYPHA_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()),
+        GLIFI_REQUIRE(got.has_value());
+        GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()),
                                         got->bytes.size()) == values[index]);
     }
     const auto epoch_after = runtime->stats()[0].writer_epoch;
-    GLYPHA_REQUIRE(epoch_after > epoch_before);
-    GLYPHA_REQUIRE(store.close().has_value());
+    GLIFI_REQUIRE(epoch_after > epoch_before);
+    GLIFI_REQUIRE(store.close().has_value());
     std::error_code ec;
     std::filesystem::remove_all(store_path, ec);
 }
 
-GLYPHA_TEST("embedded volatile hot-key does not starve sibling shard progress") {
-    auto opened = glyphastore::Store::open({.worker_config = {.explicit_count = 2}});
-    GLYPHA_REQUIRE(opened.has_value());
+GLIFI_TEST("embedded volatile hot-key does not starve sibling shard progress") {
+    auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 2}});
+    GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
-    auto* runtime = glyphastore::detail::StoreAccess::shard_pair_runtime(store);
-    GLYPHA_REQUIRE(runtime != nullptr);
-    GLYPHA_REQUIRE(runtime->combining_enabled());
+    auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(store);
+    GLIFI_REQUIRE(runtime != nullptr);
+    GLIFI_REQUIRE(runtime->combining_enabled());
 
     std::string hot_key;
     std::string cold_key;
     for (int index = 0; index < 10'000; ++index) {
         const auto candidate = "wave2-hot-" + std::to_string(index);
-        if (glyphastore::route_worker(candidate, 2) == 0) {
+        if (glifistore::route_worker(candidate, 2) == 0) {
             hot_key = candidate;
             break;
         }
     }
     for (int index = 0; index < 10'000; ++index) {
         const auto candidate = "wave2-cold-" + std::to_string(index);
-        if (glyphastore::route_worker(candidate, 2) == 1) {
+        if (glifistore::route_worker(candidate, 2) == 1) {
             cold_key = candidate;
             break;
         }
     }
-    GLYPHA_REQUIRE(!hot_key.empty());
-    GLYPHA_REQUIRE(!cold_key.empty());
+    GLIFI_REQUIRE(!hot_key.empty());
+    GLIFI_REQUIRE(!cold_key.empty());
 
     std::atomic_bool stop{false};
     std::atomic_bool hot_failed{false};
@@ -299,10 +299,10 @@ GLYPHA_TEST("embedded volatile hot-key does not starve sibling shard progress") 
     cold.join();
     stop.store(true, std::memory_order_release);
     hot.join();
-    GLYPHA_REQUIRE(!hot_failed.load());
-    GLYPHA_REQUIRE(!cold_failed.load());
-    GLYPHA_REQUIRE(cold_ok.load() == 200U);
+    GLIFI_REQUIRE(!hot_failed.load());
+    GLIFI_REQUIRE(!cold_failed.load());
+    GLIFI_REQUIRE(cold_ok.load() == 200U);
     const auto got = store.get(cold_key);
-    GLYPHA_REQUIRE(got.has_value());
-    GLYPHA_REQUIRE(store.close().has_value());
+    GLIFI_REQUIRE(got.has_value());
+    GLIFI_REQUIRE(store.close().has_value());
 }

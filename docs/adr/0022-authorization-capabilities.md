@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-07-20
 - Deciders: security maintainers
-- Applies to: `glyphastored` secure profile admission control
+- Applies to: `glifistored` secure profile admission control
 - Amends: none
 - Supersedes: none
 - Depends on: [ADR 0021](0021-secure-profile-authentication.md)

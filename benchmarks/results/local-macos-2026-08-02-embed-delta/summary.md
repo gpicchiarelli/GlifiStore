@@ -29,5 +29,5 @@ and `GS_PHASE_PUT(publish)` for lab attribution when phases are compiled in.
 
 **Keep.** Directional single-op / batch PUT gain without freelist-style affine
 cliff. Absolute PUT still publish/apply bound (≪ 600 k target). Next leverage is
-Writer apply slim + phase dumps with `GLYPHASTORE_HOT_PATH_PHASES`, not another
+Writer apply slim + phase dumps with `GLIFISTORE_HOT_PATH_PHASES`, not another
 TLS recycle pool.

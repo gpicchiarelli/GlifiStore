@@ -1,6 +1,6 @@
-#include "glyphastore/server/crash_test_hooks.hpp"
+#include "glifistore/server/crash_test_hooks.hpp"
 
-#include "glyphastore/persistence/filesystem.hpp"
+#include "glifistore/persistence/filesystem.hpp"
 
 #include <array>
 #include <cstdlib>
@@ -12,7 +12,7 @@
 #include <string_view>
 #include <unistd.h>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 struct CrashHookState {
@@ -49,21 +49,21 @@ void after_operation(void* context, const FilesystemOperation operation) {
 } // namespace
 
 auto maybe_install_crash_test_hooks(StoreConfig& store) -> Status {
-    const char* enabled = std::getenv("GLYPHASTORE_CRASH_TEST");
+    const char* enabled = std::getenv("GLIFISTORE_CRASH_TEST");
     if (enabled == nullptr || std::string_view{enabled} != "1") {
         return {};
     }
-    const char* kill_at = std::getenv("GLYPHASTORE_CRASH_KILL_AT");
-    const char* checkpoint_dir = std::getenv("GLYPHASTORE_CRASH_CHECKPOINT_DIR");
+    const char* kill_at = std::getenv("GLIFISTORE_CRASH_KILL_AT");
+    const char* checkpoint_dir = std::getenv("GLIFISTORE_CRASH_CHECKPOINT_DIR");
     if (kill_at == nullptr || *kill_at == '\0' || checkpoint_dir == nullptr || *checkpoint_dir == '\0') {
         return fail(ErrorCode::invalid_argument,
-                    "GLYPHASTORE_CRASH_TEST=1 requires GLYPHASTORE_CRASH_KILL_AT and "
-                    "GLYPHASTORE_CRASH_CHECKPOINT_DIR");
+                    "GLIFISTORE_CRASH_TEST=1 requires GLIFISTORE_CRASH_KILL_AT and "
+                    "GLIFISTORE_CRASH_CHECKPOINT_DIR");
     }
     if (store.filesystem_hooks.after != nullptr || store.filesystem_hooks.before != nullptr ||
         store.filesystem_hooks.context != nullptr) {
         return fail(ErrorCode::invalid_argument,
-                    "GLYPHASTORE_CRASH_TEST cannot combine with other filesystem hooks");
+                    "GLIFISTORE_CRASH_TEST cannot combine with other filesystem hooks");
     }
 
     g_crash_hooks = CrashHookState{
@@ -73,16 +73,16 @@ auto maybe_install_crash_test_hooks(StoreConfig& store) -> Status {
     std::error_code ec;
     std::filesystem::create_directories(g_crash_hooks.checkpoint_dir, ec);
     if (ec) {
-        return fail(ErrorCode::io_error, "cannot create GLYPHASTORE_CRASH_CHECKPOINT_DIR");
+        return fail(ErrorCode::io_error, "cannot create GLIFISTORE_CRASH_CHECKPOINT_DIR");
     }
 
     store.filesystem_hooks = FilesystemHooks{
         .context = &g_crash_hooks,
         .after = &after_operation,
     };
-    std::cerr << "glyphastored: warning: crash-test hooks active kill_at=" << g_crash_hooks.kill_at
+    std::cerr << "glifistored: warning: crash-test hooks active kill_at=" << g_crash_hooks.kill_at
               << " checkpoint_dir=" << g_crash_hooks.checkpoint_dir.string() << '\n';
     return {};
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

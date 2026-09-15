@@ -1,10 +1,10 @@
-#include "glyphastore/vacuum/vacuum.hpp"
+#include "glifistore/vacuum/vacuum.hpp"
 
 #include <algorithm>
 #include <limits>
 #include <unordered_map>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 auto make_catalog(std::span<const SegmentPtr> segments) -> std::unordered_map<SegmentId, Segment*> {
@@ -212,4 +212,4 @@ auto VacuumBuilder::rebuild(const Index& current_index, const std::span<const Se
     return VacuumResult{.index = std::move(new_index), .segments = std::move(new_segments), .stats = stats};
 }
 
-} // namespace glyphastore
+} // namespace glifistore

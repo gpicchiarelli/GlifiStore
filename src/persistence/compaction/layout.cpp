@@ -1,10 +1,10 @@
-#include "glyphastore/persistence/compaction.hpp"
-#include "glyphastore/segment/record.hpp"
-#include "glyphastore/segment/segment_header.hpp"
+#include "glifistore/persistence/compaction.hpp"
+#include "glifistore/segment/record.hpp"
+#include "glifistore/segment/segment_header.hpp"
 
 #include <limits>
 
-namespace glyphastore {
+namespace glifistore {
 
 auto DurableCompactionLayout::add_record(const std::uint32_t encoded_size)
     -> Result<DurableCompactionPlacement> {
@@ -52,4 +52,4 @@ auto durable_compaction_output_segments(const std::uint64_t live_encoded_bytes) 
     return static_cast<std::size_t>(quotient) + (remainder == 0 ? 0U : 1U);
 }
 
-} // namespace glyphastore
+} // namespace glifistore

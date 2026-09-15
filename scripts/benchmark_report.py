@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Convert GlyphaStore benchmark output into JSON and GitHub-flavored Markdown."""
+"""Convert GlifiStore benchmark output into JSON and GitHub-flavored Markdown."""
 
 from __future__ import annotations
 
@@ -1237,7 +1237,7 @@ def render_markdown(
     result_count = sum(len(run["results"]) for run in runs)
     diagnostic_count = sum(len(run.get("diagnostics", [])) for run in runs)
     lines = [
-        "# GlyphaStore benchmark report",
+        "# GlifiStore benchmark report",
         "",
         f"Generated at `{generated_at}` from {result_count} canonical result(s) and "
         f"{diagnostic_count} specialized diagnostic(s).",

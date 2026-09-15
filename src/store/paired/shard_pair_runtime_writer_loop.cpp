@@ -1,17 +1,17 @@
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/store/paired/completion_policy.hpp"
-#include "glyphastore/store/paired/fail_closed_state.hpp"
-#include "glyphastore/store/paired/lane_publication.hpp"
-#include "glyphastore/store/paired/mutation_batch.hpp"
-#include "glyphastore/store/paired/mutation_execution.hpp"
-#include "glyphastore/store/paired/mutation_recovery.hpp"
-#include "glyphastore/store/paired/mutation_state.hpp"
-#include "glyphastore/store/paired/publication_coordinator.hpp"
-#include "glyphastore/store/paired/shard_combining_executor.hpp"
-#include "glyphastore/store/paired/shard_pair_runtime.hpp"
-#include "glyphastore/store/paired/volatile_sync_chunk.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/store/paired/completion_policy.hpp"
+#include "glifistore/store/paired/fail_closed_state.hpp"
+#include "glifistore/store/paired/lane_publication.hpp"
+#include "glifistore/store/paired/mutation_batch.hpp"
+#include "glifistore/store/paired/mutation_execution.hpp"
+#include "glifistore/store/paired/mutation_recovery.hpp"
+#include "glifistore/store/paired/mutation_state.hpp"
+#include "glifistore/store/paired/publication_coordinator.hpp"
+#include "glifistore/store/paired/shard_combining_executor.hpp"
+#include "glifistore/store/paired/shard_pair_runtime.hpp"
+#include "glifistore/store/paired/volatile_sync_chunk.hpp"
 #include "store/paired/shard_pair_runtime_impl.hpp"
 #include "store/store_internal.hpp"
 
@@ -29,7 +29,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 void ShardPairRuntime::run(const std::size_t shard) noexcept try {
     auto& lane = *lanes_[shard];
@@ -423,4 +423,4 @@ void ShardPairRuntime::run(const std::size_t shard) noexcept try {
                                                              FailClosedScope::pair_and_store);
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

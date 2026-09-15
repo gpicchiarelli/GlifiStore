@@ -151,5 +151,5 @@ host I/O state, and maintenance/churn tail latency. Dedicated-host repetition an
 instrumentation are more appropriate next actions than weakening the correctness guards on the
 basis of overlapping local samples.
 
-These results do not close a production-readiness or durability gate. GlyphaStore remains an
+These results do not close a production-readiness or durability gate. GlifiStore remains an
 architectural prototype.

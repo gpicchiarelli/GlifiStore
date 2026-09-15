@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.dev/schemas/package-admission-v1.json",
-  "title": "GlyphaStore package release-admission report",
+  "$id": "https://glifistore.dev/schemas/package-admission-v1.json",
+  "title": "GlifiStore package release-admission report",
   "description": "Exact-artifact admission hook produced by engineering/tools/validate_package_admission.py. It binds package evidence and the artifact manifest to the sealed candidate source archive and to the N-1 upgrade baseline before any publish step may consider a package artifact. admitted is true only when nothing blocks: it is a report, never a gate promotion.",
   "type": "object",
   "additionalProperties": false,

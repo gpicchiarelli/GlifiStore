@@ -1,7 +1,7 @@
 #include "filesystem_detail.hpp"
-#include "glyphastore/persistence/filesystem.hpp"
-#include "glyphastore/persistence/namespace_audit.hpp"
-#include "glyphastore/persistence/segment_file.hpp"
+#include "glifistore/persistence/filesystem.hpp"
+#include "glifistore/persistence/namespace_audit.hpp"
+#include "glifistore/persistence/segment_file.hpp"
 #include "system_error.hpp"
 
 #include <algorithm>
@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include <vector>
 
-namespace glyphastore {
+namespace glifistore {
 
 using persistence_detail::compaction_publication_failure;
 using persistence_detail::compaction_removal_failure;
@@ -709,4 +709,4 @@ auto DataDirectory::read_manifest(const std::size_t max_bytes) const -> Result<M
                                       hooks_.file_io);
 }
 
-} // namespace glyphastore
+} // namespace glifistore

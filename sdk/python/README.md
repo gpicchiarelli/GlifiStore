@@ -1,6 +1,6 @@
-# GlyphaStore Python client
+# GlifiStore Python client
 
-Pure-Python client for GlyphaStore wire protocol v2. It opens and binds one TCP connection per
+Pure-Python client for GlifiStore wire protocol v2. It opens and binds one TCP connection per
 Worker, routes binary keys with canonical FNV-1a 64-bit, retries reads after a transient
 disconnect, and never reports an uncertain mutation as rejected.
 
@@ -9,7 +9,7 @@ the same codec, configuration, and outcome model. Runtime dependency: none (Pyth
 Portable error/retry/deadline rules:
 [client semantics v1](../../docs/spec/client-semantics-v1.md).
 
-Worker routing follows ADR 0030: plain `GlyphaStore/2` is FNV-1a; the extended INIT identity selects SipHash-2-4.
+Worker routing follows ADR 0030: plain `GlifiStore/2` is FNV-1a; the extended INIT identity selects SipHash-2-4.
 
 **Security posture:** cleartext TCP by default (no authentication). Opt-in TLS 1.3 via
 `ClientConfig(tls=True, tls_ca=..., cert_file=..., key_file=..., server_name=...,
@@ -21,7 +21,7 @@ cleartext; mTLS authn is ADR 0021
 License: BSD-3-Clause.
 
 ```python
-from glyphastore import Client
+from glifistore import Client
 
 with Client.connect() as cache:
     stored = cache.put(b"session:42", b"payload")
@@ -30,7 +30,7 @@ with Client.connect() as cache:
 ```
 
 ```python
-from glyphastore import AsyncClient, PipelineOpcode, PipelineRequest
+from glifistore import AsyncClient, PipelineOpcode, PipelineRequest
 
 async with await AsyncClient.connect() as cache:
     responses = await cache.execute_pipeline([
@@ -70,7 +70,7 @@ fail-closed on both sync and async clients.
 From PyPI (once published):
 
 ```bash
-pip install glyphastore
+pip install glifistore
 ```
 
 From this source tree:
@@ -95,7 +95,7 @@ See [PACKAGING.md](PACKAGING.md) for TestPyPI/PyPI upload steps and the version-
 
 ## Performance benchmark
 
-Start `glyphastored`, then run the same ordered `PUT`/`GET` workload used by the C++ client
+Start `glifistored`, then run the same ordered `PUT`/`GET` workload used by the C++ client
 benchmark:
 
 ```bash

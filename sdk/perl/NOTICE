@@ -1,4 +1,4 @@
-GlyphaStore
+GlifiStore
 Copyright (c) 2026 Giacomo Picchiarelli
 
 This product is licensed under the BSD 3-Clause License. See the accompanying
@@ -7,7 +7,7 @@ LICENSE file for the full text.
 Redistributors of binary forms must reproduce the copyright notice, the list of
 conditions, and the disclaimer from LICENSE in the documentation and/or other
 materials provided with the distribution. Official installs place LICENSE,
-NOTICE, VERSION, and THIRD_PARTY_NOTICES.md under the GlyphaStore data share
+NOTICE, VERSION, and THIRD_PARTY_NOTICES.md under the GlifiStore data share
 directory (see CMake install rules).
 
 ---------------------------------------------------------------------------
@@ -30,5 +30,5 @@ THIRD_PARTY_NOTICES.md and the related ADRs. No Abseil, OpenSSL, or LibreSSL
 source trees are vendored in this repository.
 
 CI workflows pin third-party GitHub Actions by commit SHA. Those Actions are
-not part of the GlyphaStore runtime distribution; their licenses apply to the
+not part of the GlifiStore runtime distribution; their licenses apply to the
 Actions themselves when GitHub executes them.

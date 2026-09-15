@@ -10,9 +10,9 @@ use Socket qw(AF_UNIX PF_UNSPEC SOCK_STREAM);
 use Test::More;
 
 use lib "$FindBin::Bin/../lib";
-use GlyphaStore::Client;
-use GlyphaStore::Error;
-use GlyphaStore::Protocol qw(
+use GlifiStore::Client;
+use GlifiStore::Error;
+use GlifiStore::Protocol qw(
     OP_INIT OP_PING OP_GET OP_PUT OP_ERASE OP_BIND_WORKER OP_HEALTH OP_READY OP_STATS OP_BACKUP
     STATUS_OK STATUS_NOT_FOUND STATUS_NOT_BOUND STATUS_INVALID_REQUEST STATUS_WRONG_OWNER
     STATUS_INTERNAL_ERROR
@@ -88,7 +88,7 @@ sub start_server {
                         send_response($handle,
                             status => STATUS_OK,
                             request_id => $request->{request_id},
-                            value => GlyphaStore::Protocol::encode_init_identity($routing),
+                            value => GlifiStore::Protocol::encode_init_identity($routing),
                             owner_worker => 0,
                             worker_count => $worker_count,
                             routing_epoch => 9);
@@ -96,7 +96,7 @@ sub start_server {
                         send_response($handle,
                             status => STATUS_OK,
                             request_id => $request->{request_id},
-                            value => 'GlyphaStore/live',
+                            value => 'GlifiStore/live',
                             owner_worker => $bound{$handle} // 0,
                             worker_count => $worker_count,
                             routing_epoch => 9);
@@ -104,7 +104,7 @@ sub start_server {
                         send_response($handle,
                             status => STATUS_OK,
                             request_id => $request->{request_id},
-                            value => 'GlyphaStore/ready',
+                            value => 'GlifiStore/ready',
                             owner_worker => $bound{$handle} // 0,
                             worker_count => $worker_count,
                             routing_epoch => 9);
@@ -112,7 +112,7 @@ sub start_server {
                         send_response($handle,
                             status => STATUS_OK,
                             request_id => $request->{request_id},
-                            value => "GlyphaStore/stats\n",
+                            value => "GlifiStore/stats\n",
                             owner_worker => $bound{$handle} // 0,
                             worker_count => $worker_count,
                             routing_epoch => 9);
@@ -276,26 +276,26 @@ sub start_server {
 
     my $probe = bless {
         request_timeout     => 1,
-        maximum_frame_bytes => GlyphaStore::Protocol::MAX_FRAME_BYTES(),
+        maximum_frame_bytes => GlifiStore::Protocol::MAX_FRAME_BYTES(),
         connections         => [],
-    }, 'GlyphaStore::Client';
+    }, 'GlifiStore::Client';
     my $connection = {
         socket => $reader, selector => undef, input => '', input_offset => 0,
     };
-    my $wait_io = \&GlyphaStore::Client::_wait_io;
+    my $wait_io = \&GlifiStore::Client::_wait_io;
     my $waits = 0;
     my $response;
     {
         no warnings 'redefine';
-        local *GlyphaStore::Client::_wait_io = sub {
+        local *GlifiStore::Client::_wait_io = sub {
             ++$waits;
             return $wait_io->(@_);
         };
         $response = $probe->_receive_response(
-            $connection, GlyphaStore::Client::_now() + 1, undef, 1
+            $connection, GlifiStore::Client::_now() + 1, undef, 1
         );
     }
-    is($response->[GlyphaStore::Client::RESPONSE_VALUE()], 'partial-ready',
+    is($response->[GlifiStore::Client::RESPONSE_VALUE()], 'partial-ready',
         'readiness fast path preserves a fragmented response');
     is($waits, 1, 'readiness skips only the first wait and partial input waits with its deadline');
     close($reader);
@@ -304,7 +304,7 @@ sub start_server {
 }
 
 my ($port, $pid) = start_server();
-my $client = GlyphaStore::Client->connect(port => $port);
+my $client = GlifiStore::Client->connect(port => $port);
 is($client->worker_count, 1, 'client discovers Worker count');
 is($client->routing_epoch, 9, 'client records routing epoch');
 is($client->worker_for("binary\x00key"), 0, 'client routes binary key');
@@ -313,9 +313,9 @@ is($client->get("binary\x00key"), "value\x00\xff", 'GET preserves binary value')
 is($client->ping('hello'), 'hello', 'PING echoes payload');
 ok($client->healthy, 'client is healthy after bootstrap');
 ok(defined $client->routing, 'client exposes routing metadata');
-is($client->health(), 'GlyphaStore/live', 'HEALTH returns wire live payload');
-is($client->ready(), 'GlyphaStore/ready', 'READY returns wire ready payload');
-like($client->stats(), qr/^GlyphaStore\/stats/, 'STATS returns wire stats report');
+is($client->health(), 'GlifiStore/live', 'HEALTH returns wire live payload');
+is($client->ready(), 'GlifiStore/ready', 'READY returns wire ready payload');
+like($client->stats(), qr/^GlifiStore\/stats/, 'STATS returns wire stats report');
 
 my $rejected = $client->put('bad-expiry', 'value', expire_at_ns => -1);
 is($rejected->{outcome}, 'rejected', 'negative expire_at_ns is rejected before send');
@@ -336,14 +336,14 @@ for my $index (0 .. $#expected) {
 }
 is($client->erase("binary\x00key")->{outcome}, 'committed', 'ERASE commits');
 my $loaded = eval { $client->get("binary\x00key") };
-ok(!$loaded && ref($@) eq 'GlyphaStore::Error' && $@->category eq 'not_found',
+ok(!$loaded && ref($@) eq 'GlifiStore::Error' && $@->category eq 'not_found',
     'missing GET raises categorized error');
 is($@->wire_status, STATUS_NOT_FOUND, 'not_found exposes wire_status');
 is($@->retryability, 'new_attempt', 'not_found retryability');
 
 my $absent = $client->erase('missing-key');
 is($absent->{outcome}, 'rejected', 'ERASE absent is rejected');
-ok(ref($absent->{error}) eq 'GlyphaStore::Error', 'ERASE absent error is structured');
+ok(ref($absent->{error}) eq 'GlifiStore::Error', 'ERASE absent error is structured');
 is($absent->{error}->category, 'not_found', 'ERASE absent category');
 is($absent->{error}->mutation_outcome, 'rejected', 'ERASE absent mutation_outcome');
 is($absent->{error}->retryability, 'new_attempt', 'ERASE absent retryability');
@@ -354,7 +354,7 @@ my $pipe_absent = $client->execute_pipeline([
 ]);
 is(scalar @$pipe_absent, 1, 'pipeline ERASE absent returns one slot');
 is($pipe_absent->[0]->{outcome}, 'failed', 'pipeline ERASE absent is failed');
-ok(ref($pipe_absent->[0]->{error}) eq 'GlyphaStore::Error', 'pipeline ERASE absent error is structured');
+ok(ref($pipe_absent->[0]->{error}) eq 'GlifiStore::Error', 'pipeline ERASE absent error is structured');
 is($pipe_absent->[0]->{error}->category, 'not_found', 'pipeline ERASE absent category');
 is($pipe_absent->[0]->{error}->mutation_outcome, 'rejected', 'pipeline ERASE absent mutation_outcome');
 is($pipe_absent->[0]->{error}->retryability, 'new_attempt', 'pipeline ERASE absent retryability');
@@ -365,7 +365,7 @@ my $batch_absent = $client->execute_batch([
 ]);
 is(scalar @$batch_absent, 1, 'batch ERASE absent returns one slot');
 is($batch_absent->[0]->{outcome}, 'failed', 'batch ERASE absent is failed');
-ok(ref($batch_absent->[0]->{error}) eq 'GlyphaStore::Error', 'batch ERASE absent error is structured');
+ok(ref($batch_absent->[0]->{error}) eq 'GlifiStore::Error', 'batch ERASE absent error is structured');
 is($batch_absent->[0]->{error}->category, 'not_found', 'batch ERASE absent category');
 is($batch_absent->[0]->{error}->mutation_outcome, 'rejected', 'batch ERASE absent mutation_outcome');
 is($batch_absent->[0]->{error}->retryability, 'new_attempt', 'batch ERASE absent retryability');
@@ -377,7 +377,7 @@ my $worker_absent = $client->execute_worker_pipelines([
 is(scalar @$worker_absent, 1, 'worker-pipelines ERASE absent returns one Worker');
 is(scalar @{$worker_absent->[0]}, 1, 'worker-pipelines ERASE absent returns one slot');
 is($worker_absent->[0][0]->{outcome}, 'failed', 'worker-pipelines ERASE absent is failed');
-ok(ref($worker_absent->[0][0]->{error}) eq 'GlyphaStore::Error', 'worker-pipelines ERASE absent error');
+ok(ref($worker_absent->[0][0]->{error}) eq 'GlifiStore::Error', 'worker-pipelines ERASE absent error');
 is($worker_absent->[0][0]->{error}->category, 'not_found', 'worker-pipelines ERASE absent category');
 is($worker_absent->[0][0]->{error}->mutation_outcome, 'rejected', 'worker-pipelines ERASE absent mutation_outcome');
 is($worker_absent->[0][0]->{error}->retryability, 'new_attempt', 'worker-pipelines ERASE absent retryability');
@@ -386,10 +386,10 @@ $client->close;
 waitpid($pid, 0);
 
 ($port, $pid) = start_server(disconnect_on_put => 1);
-$client = GlyphaStore::Client->connect(port => $port);
+$client = GlifiStore::Client->connect(port => $port);
 my $indeterminate = $client->put('key', 'value');
 is($indeterminate->{outcome}, 'indeterminate', 'standalone PUT disconnect is indeterminate');
-ok(ref($indeterminate->{error}) eq 'GlyphaStore::Error', 'disconnect error is structured');
+ok(ref($indeterminate->{error}) eq 'GlifiStore::Error', 'disconnect error is structured');
 ok($indeterminate->{error}->bytes_sent > 0, 'disconnect after send exposes bytes_sent');
 is($indeterminate->{error}->operation, 'put', 'disconnect error exposes operation');
 is($indeterminate->{error}->retryability, 'reconcile_first', 'partial send is reconcile_first');
@@ -397,7 +397,7 @@ $client->close;
 waitpid($pid, 0);
 
 ($port, $pid) = start_server(disconnect_on_put => 1);
-$client = GlyphaStore::Client->connect(port => $port);
+$client = GlifiStore::Client->connect(port => $port);
 $responses = $client->execute_pipeline([
     { opcode => 'put', key => 'key', value => 'value' },
     { opcode => 'get', key => 'key' },
@@ -414,10 +414,10 @@ $client->close;
 waitpid($pid, 0);
 
 ($port, $pid) = start_server(internal_error_on_put => 1);
-$client = GlyphaStore::Client->connect(port => $port);
+$client = GlifiStore::Client->connect(port => $port);
 my $ie = $client->put('key', 'value');
 is($ie->{outcome}, 'indeterminate', 'PUT INTERNAL_ERROR is indeterminate');
-ok(ref($ie->{error}) eq 'GlyphaStore::Error', 'INTERNAL_ERROR error is structured');
+ok(ref($ie->{error}) eq 'GlifiStore::Error', 'INTERNAL_ERROR error is structured');
 is($ie->{error}->mutation_outcome, 'indeterminate', 'PUT INTERNAL_ERROR mutation_outcome');
 is($ie->{error}->retryability, 'reconcile_first', 'PUT INTERNAL_ERROR is reconcile_first');
 ok($ie->{error}->bytes_sent > 0, 'PUT INTERNAL_ERROR exposes bytes_sent');
@@ -426,7 +426,7 @@ $client->close;
 waitpid($pid, 0);
 
 ($port, $pid) = start_server(worker_count => 2, internal_error_on_put => 1);
-$client = GlyphaStore::Client->connect(port => $port);
+$client = GlifiStore::Client->connect(port => $port);
 my @ie_keys = (undef, undef);
 my $candidate = 0;
 while (!defined($ie_keys[0]) || !defined($ie_keys[1])) {
@@ -449,7 +449,7 @@ $client->close;
 waitpid($pid, 0);
 
 ($port, $pid) = start_server();
-$client = GlyphaStore::Client->connect(
+$client = GlifiStore::Client->connect(
     port => $port,
     maximum_pipeline_requests => 1,
 );
@@ -459,13 +459,13 @@ ok(!eval {
         { opcode => 'get', key => 'key' },
     ]);
     1;
-} && ref($@) eq 'GlyphaStore::Error' && $@->category eq 'invalid_argument',
+} && ref($@) eq 'GlifiStore::Error' && $@->category eq 'invalid_argument',
     'pipeline request limit fails before transmission');
 $client->close;
 waitpid($pid, 0);
 
 ($port, $pid) = start_server(worker_count => 2);
-$client = GlyphaStore::Client->connect(port => $port);
+$client = GlifiStore::Client->connect(port => $port);
 is($client->worker_count, 2, 'multi-worker bootstrap discovers both Workers');
 my @keys = map { sprintf('mw-%02d', $_) } 0 .. 31;
 my %owners = map { $_ => $client->worker_for($_) } @keys;
@@ -484,11 +484,11 @@ $client->close;
 waitpid($pid, 0);
 
 my $keyed_routing = {
-    algorithm => GlyphaStore::Protocol::ROUTING_ALG_SIPHASH24_V1(),
+    algorithm => GlifiStore::Protocol::ROUTING_ALG_SIPHASH24_V1(),
     seed => 1_229_801_703_532_086_340,
 };
 ($port, $pid) = start_server(worker_count => 2, routing => $keyed_routing);
-$client = GlyphaStore::Client->connect(port => $port);
+$client = GlifiStore::Client->connect(port => $port);
 my $keyed_key = 'tenant-a/orders/1';
 is($client->worker_for($keyed_key), worker_for($keyed_key, 2, $keyed_routing),
     'client Worker routing reuses the validated keyed INIT identity');
@@ -499,7 +499,7 @@ $client->close;
 waitpid($pid, 0);
 
 ($port, $pid) = start_server(worker_count => 2);
-$client = GlyphaStore::Client->connect(port => $port);
+$client = GlifiStore::Client->connect(port => $port);
 {
     my @wave = ([], []);
     for my $key (@keys) {
@@ -532,7 +532,7 @@ $client->close;
 waitpid($pid, 0);
 
 ($port, $pid) = start_server(worker_count => 2);
-$client = GlyphaStore::Client->connect(port => $port);
+$client = GlifiStore::Client->connect(port => $port);
 {
     my @batch;
     for my $key (@keys) {
@@ -554,7 +554,7 @@ $client->close;
 waitpid($pid, 0);
 
 ($port, $pid) = start_server(worker_count => 2);
-$client = GlyphaStore::Client->connect(
+$client = GlifiStore::Client->connect(
     port => $port,
     maximum_pipeline_requests => 1,
 );
@@ -566,7 +566,7 @@ $client = GlyphaStore::Client->connect(
             { opcode => 'get', key => $key0 },
         ]);
         1;
-    } && ref($@) eq 'GlyphaStore::Error' && $@->category eq 'invalid_argument',
+    } && ref($@) eq 'GlifiStore::Error' && $@->category eq 'invalid_argument',
         'batch per-Worker limit fails before transmission');
 }
 $client->close;
@@ -575,10 +575,10 @@ waitpid($pid, 0);
 {
     my $err;
     eval {
-        GlyphaStore::Client->connect(port => 1, tls => 1, cert_file => 'only-cert.pem');
+        GlifiStore::Client->connect(port => 1, tls => 1, cert_file => 'only-cert.pem');
         1;
     } or $err = $@;
-    ok(ref($err) eq 'GlyphaStore::Error' && $err->category eq 'invalid_argument',
+    ok(ref($err) eq 'GlifiStore::Error' && $err->category eq 'invalid_argument',
         'TLS mTLS requires both cert_file and key_file');
 }
 
@@ -624,7 +624,7 @@ SKIP: {
                         owner_worker  => 0,
                         worker_count  => 1,
                         routing_epoch => 9,
-                        value         => GlyphaStore::Protocol::encode_init_identity()
+                        value         => GlifiStore::Protocol::encode_init_identity()
                     );
                 }
                 elsif ($opcode == OP_BIND_WORKER) {
@@ -658,7 +658,7 @@ SKIP: {
         _exit(0);
     }
     close($listener);
-    my $tls_client = GlyphaStore::Client->connect(
+    my $tls_client = GlifiStore::Client->connect(
         host        => '127.0.0.1',
         port        => $tls_port,
         tls         => 1,
@@ -671,32 +671,32 @@ SKIP: {
 }
 
 {
-    my $overloaded = GlyphaStore::Error->new('overloaded', 'server is overloaded');
+    my $overloaded = GlifiStore::Error->new('overloaded', 'server is overloaded');
     is($overloaded->retryability, 'never', 'overloaded retryability is never');
 }
 
 {
     my $ok = eval {
-        GlyphaStore::Client->connect(
-            unix_socket_path => '/tmp/glyphastore-perl-uds-tls-refuse.sock',
+        GlifiStore::Client->connect(
+            unix_socket_path => '/tmp/glifistore-perl-uds-tls-refuse.sock',
             tls              => 1,
         );
         1;
     };
     my $error = $@;
     ok(!$ok, 'AF_UNIX + TLS is refused');
-    isa_ok($error, 'GlyphaStore::Error');
+    isa_ok($error, 'GlifiStore::Error');
     is($error->category, 'invalid_argument', 'AF_UNIX + TLS is invalid_argument');
     like("$error", qr/AF_UNIX/, 'AF_UNIX + TLS mentions AF_UNIX');
 }
 
 {
     my ($backup_port, $backup_pid) = start_server(internal_error_on_backup => 1);
-    my $backup_client = GlyphaStore::Client->connect(port => $backup_port);
-    my $ok = eval { $backup_client->backup('/tmp/glyphastore-perl-backup-internal'); 1 };
+    my $backup_client = GlifiStore::Client->connect(port => $backup_port);
+    my $ok = eval { $backup_client->backup('/tmp/glifistore-perl-backup-internal'); 1 };
     my $error = $@;
     ok(!$ok, 'BACKUP INTERNAL_ERROR raises');
-    isa_ok($error, 'GlyphaStore::Error');
+    isa_ok($error, 'GlifiStore::Error');
     is($error->mutation_outcome, 'indeterminate', 'BACKUP INTERNAL_ERROR is indeterminate');
     is($error->retryability, 'reconcile_first', 'BACKUP INTERNAL_ERROR is reconcile_first');
     is($error->wire_status, STATUS_INTERNAL_ERROR, 'BACKUP INTERNAL_ERROR wire_status');
@@ -708,11 +708,11 @@ SKIP: {
 
 {
     my ($backup_port, $backup_pid) = start_server(wrong_request_id_on_backup => 1);
-    my $backup_client = GlyphaStore::Client->connect(port => $backup_port);
-    my $ok = eval { $backup_client->backup('/tmp/glyphastore-perl-backup-wrong-id'); 1 };
+    my $backup_client = GlifiStore::Client->connect(port => $backup_port);
+    my $ok = eval { $backup_client->backup('/tmp/glifistore-perl-backup-wrong-id'); 1 };
     my $error = $@;
     ok(!$ok, 'BACKUP validate failure raises');
-    isa_ok($error, 'GlyphaStore::Error');
+    isa_ok($error, 'GlifiStore::Error');
     is($error->mutation_outcome, 'indeterminate', 'BACKUP validate failure is indeterminate');
     is($error->retryability, 'reconcile_first', 'BACKUP validate failure is reconcile_first');
     ok($error->bytes_sent > 0, 'BACKUP validate failure exposes bytes_sent');

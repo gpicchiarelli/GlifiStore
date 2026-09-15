@@ -108,7 +108,7 @@ def admit_candidate(
             f"candidate seal digest mismatch: expected {expected}, got {actual}"
         )
     verify_seal(candidate, CANDIDATE_SEAL)
-    source = candidate / f"GlyphaStore-{product_version}.tar.xz"
+    source = candidate / f"GlifiStore-{product_version}.tar.xz"
     if source.is_symlink() or not source.is_file():
         raise PackageAdmissionError(f"sealed source archive is missing: {source.name}")
     return {

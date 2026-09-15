@@ -1,11 +1,11 @@
 Status: descriptive operator reference for implemented surfaces
-Applies to: `glyphastored` wire v2 probes, STATS needles, JSON lifecycle/audit logs, `--dump-config`
+Applies to: `glifistored` wire v2 probes, STATS needles, JSON lifecycle/audit logs, `--dump-config`
 Owner: platform / ops maintainers
 Last reviewed: 2026-08-27
 
 # Observability reference
 
-Inventory of **implemented** GlyphaStore operator signals. Normative probe/opcode contracts live in
+Inventory of **implemented** GlifiStore operator signals. Normative probe/opcode contracts live in
 [wire protocol v2](../spec/wire-protocol-v2.md). Flag defaults and dump-config keys live in
 [cli.md](../cli.md). This document names units, cardinality, and how to use the surfaces without
 claiming Prometheus/OpenTelemetry exporters (none exist yet).
@@ -17,9 +17,9 @@ Claim ceiling remains *architectural prototype*. Histogram approximations are **
 
 | Opcode | Success value | Use |
 | --- | --- | --- |
-| `HEALTH` (7) | `GlyphaStore/live` | Process/executors alive |
-| `READY` (8) | `GlyphaStore/ready` | Safe for **new traffic** |
-| `STATS` (9) | Bounded ASCII `GlyphaStore/stats` + `key=value` lines | Admin snapshot |
+| `HEALTH` (7) | `GlifiStore/live` | Process/executors alive |
+| `READY` (8) | `GlifiStore/ready` | Safe for **new traffic** |
+| `STATS` (9) | Bounded ASCII `GlifiStore/stats` + `key=value` lines | Admin snapshot |
 
 Rules:
 
@@ -164,7 +164,7 @@ and must not be added again to a lane's current-generation total.
 
 Per histogram: `.count`, `.sum` (ns), cumulative buckets `.le_1000` … `.le_1000000000`, `.le_inf`,
 approximate `.p50`, `.p99` (ns). Bucket edges: 1µs … 1s / +Inf
-(`include/glyphastore/core/latency_histogram.hpp`).
+(`include/glifistore/core/latency_histogram.hpp`).
 
 ### 3.5 Durable batch lanes (`batch[W].*`)
 
@@ -199,7 +199,7 @@ stderr (no payloads). See [secure-profile](../security/secure-profile.md).
 
 ## 5. `--dump-config` (startup contract dump)
 
-`glyphastored … --dump-config` prints `GlyphaStore/config` and exits (no listen). Use it to capture
+`glifistored … --dump-config` prints `GlifiStore/config` and exits (no listen). Use it to capture
 effective observability-related settings: `log-format`, `quiet`, abuse limits, maintenance
 rate/p99 guards, durable mutation queue caps, `shutdown-drain-ms`, TLS/authz flags (paths only).
 

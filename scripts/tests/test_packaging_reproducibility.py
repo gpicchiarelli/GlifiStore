@@ -19,7 +19,7 @@ def write_test_gem(
     *,
     compresslevel: int,
     mtime: int,
-    data_name: str = "lib/glyphastore.rb",
+    data_name: str = "lib/glifistore.rb",
     null_spacing: bytes = b"",
 ) -> None:
     data = io.BytesIO()
@@ -33,7 +33,7 @@ def write_test_gem(
         archive.addfile(info, io.BytesIO(payload))
     members = {
         "metadata.gz": gzip.compress(
-            b"---\nname: glyphastore\nautorequire:"
+            b"---\nname: glifistore\nautorequire:"
             + null_spacing
             + b"\nsigning_key:"
             + null_spacing
@@ -55,18 +55,18 @@ def write_test_gem(
 
 def write_test_perl_dist(path: Path, *, generated_by: str, backend: str) -> None:
     payloads = {
-        "GlyphaStore-0.1.0/META.json": (
+        "GlifiStore-0.1.0/META.json": (
             '{\n   "generated_by" : "'
             + generated_by
             + '",\n   "x_serialization_backend" : "'
             + backend
             + '"\n}\n'
         ).encode(),
-        "GlyphaStore-0.1.0/META.yml": (
+        "GlifiStore-0.1.0/META.yml": (
             f"generated_by: '{generated_by}'\n"
             f"x_serialization_backend: '{backend}'\n"
         ).encode(),
-        "GlyphaStore-0.1.0/lib/GlyphaStore.pm": b"package GlyphaStore; 1;\n",
+        "GlifiStore-0.1.0/lib/GlifiStore.pm": b"package GlifiStore; 1;\n",
     }
     with tarfile.open(path, "w:gz") as archive:
         for name, payload in payloads.items():
@@ -114,7 +114,7 @@ class PackagingReproducibilityTests(unittest.TestCase):
                 checksum_text = gzip.decompress(checksums.read()).decode("utf-8")
             with tarfile.open(fileobj=io.BytesIO(gzip.decompress(data_bytes)), mode="r:") as data_tar:
                 members = data_tar.getmembers()
-            self.assertEqual([member.name for member in members], ["lib/glyphastore.rb"])
+            self.assertEqual([member.name for member in members], ["lib/glifistore.rb"])
             self.assertEqual(members[0].mtime, 1_780_000_000)
             self.assertEqual((members[0].uid, members[0].gid), (0, 0))
             self.assertEqual(members[0].mode, 0o644)

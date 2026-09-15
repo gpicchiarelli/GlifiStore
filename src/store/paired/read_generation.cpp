@@ -1,8 +1,8 @@
-#include "glyphastore/store/paired/read_generation.hpp"
+#include "glifistore/store/paired/read_generation.hpp"
 
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/index/swiss_control_group.hpp"
-#include "glyphastore/store/paired/generation_slot_pool.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/index/swiss_control_group.hpp"
+#include "glifistore/store/paired/generation_slot_pool.hpp"
 
 #include <algorithm>
 #include <array>
@@ -27,7 +27,7 @@
 
 #include "store/paired/read_generation_impl.hpp"
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 auto immutable_base_spare_mapping_bytes() noexcept -> std::size_t {
     return immutable_base_spare_mapping_payload_bytes.load(std::memory_order_relaxed);
@@ -119,4 +119,4 @@ auto PairReadGeneration::memory_stats() const noexcept -> ReadGenerationMemorySt
     return stats;
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

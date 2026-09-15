@@ -1,10 +1,10 @@
 #pragma once
 
-#include "glyphastore/core/error.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/core/types.hpp"
-#include "glyphastore/index/swiss_control_group.hpp"
-#include "glyphastore/index/swiss_table.hpp"
+#include "glifistore/core/error.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/core/types.hpp"
+#include "glifistore/index/swiss_control_group.hpp"
+#include "glifistore/index/swiss_table.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore {
+namespace glifistore {
 namespace detail {
 
 // Per-Worker durable hot-cache table: Swiss-style flat open addressing with
@@ -473,4 +473,4 @@ struct HotRecordReservePlan {
 }
 
 } // namespace detail
-} // namespace glyphastore
+} // namespace glifistore

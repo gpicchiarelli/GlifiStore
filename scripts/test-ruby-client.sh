@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run GlyphaStore Ruby SDK tests (requires Ruby >= 3.2).
+# Run GlifiStore Ruby SDK tests (requires Ruby >= 3.2).
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

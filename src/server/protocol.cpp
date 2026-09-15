@@ -1,13 +1,13 @@
-#include "glyphastore/server/protocol.hpp"
+#include "glifistore/server/protocol.hpp"
 
-#include "glyphastore/core/checked_math.hpp"
-#include "glyphastore/core/little_endian.hpp"
+#include "glifistore/core/checked_math.hpp"
+#include "glifistore/core/little_endian.hpp"
 
 #include <algorithm>
 #include <limits>
 #include <string>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 [[nodiscard]] auto load_u16(const std::span<const std::byte> input, const std::size_t offset) noexcept
@@ -396,4 +396,4 @@ auto request_opcode_name(const RequestOpcode opcode) noexcept -> std::string_vie
     return "unknown";
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

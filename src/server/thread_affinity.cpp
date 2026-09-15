@@ -1,4 +1,4 @@
-#include "glyphastore/server/thread_affinity.hpp"
+#include "glifistore/server/thread_affinity.hpp"
 
 #include <climits>
 #include <cstdio>
@@ -15,12 +15,12 @@
 #include <sched.h>
 #endif
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 void set_thread_name(const std::size_t executor_id) noexcept {
     char name[16]{};
-    static_cast<void>(std::snprintf(name, sizeof(name), "glypha-%zu", executor_id));
+    static_cast<void>(std::snprintf(name, sizeof(name), "glifi-%zu", executor_id));
 #if defined(__APPLE__)
     static_cast<void>(pthread_setname_np(name));
 #elif defined(__linux__)
@@ -88,4 +88,4 @@ auto affinity_mode_name(const ExecutorAffinityMode mode) noexcept -> std::string
     return "unknown";
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

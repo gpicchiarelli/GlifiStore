@@ -27,13 +27,13 @@ throughput rejection threshold but does not satisfy ADR 0036 V11/V12.
 ## Commands and results
 
 ```text
-build/macos-release/glyphastore_tests paired
+build/macos-release/glifistore_tests paired
 51 tests, 0 failures
 
-build/macos-asan/glyphastore_tests paired
+build/macos-asan/glifistore_tests paired
 62 tests, 0 failures
 
-build/macos-tsan/glyphastore_tests paired
+build/macos-tsan/glifistore_tests paired
 62 tests, 0 failures
 
 .tools/venv/bin/python engineering/tools/validate_assurance.py

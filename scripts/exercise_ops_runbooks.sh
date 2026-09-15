@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Exercise critical operator runbook paths against built tools + glyphastored.
+# Exercise critical operator runbook paths against built tools + glifistored.
 # Covers offline verify/backup/restore, corruption quarantine repair, and a short
 # graceful drain with STATS histogram/rate-window checks. CI/staging smoke only.
 set -euo pipefail
@@ -35,15 +35,15 @@ discover_port() {
     awk 'NR==2 {split($9,a,":"); print a[length(a)]}'
 }
 
-daemon="$(resolve_bin glyphastored "${GLYPHASTORED:-}" || true)"
-verify="$(resolve_bin glyphastore_verify_store "${GLYPHASTORE_VERIFY_STORE:-}" || true)"
-backup="$(resolve_bin glyphastore_backup_store "${GLYPHASTORE_BACKUP_STORE:-}" || true)"
-repair="$(resolve_bin glyphastore_repair_store "${GLYPHASTORE_REPAIR_STORE:-}" || true)"
-client="$(resolve_bin glyphastore_interop_client "${GLYPHASTORE_INTEROP_CLIENT:-}" || true)"
+daemon="$(resolve_bin glifistored "${GLIFISTORED:-}" || true)"
+verify="$(resolve_bin glifistore_verify_store "${GLIFISTORE_VERIFY_STORE:-}" || true)"
+backup="$(resolve_bin glifistore_backup_store "${GLIFISTORE_BACKUP_STORE:-}" || true)"
+repair="$(resolve_bin glifistore_repair_store "${GLIFISTORE_REPAIR_STORE:-}" || true)"
+client="$(resolve_bin glifistore_interop_client "${GLIFISTORE_INTEROP_CLIENT:-}" || true)"
 
 missing=0
-for label in daemon:glyphastored verify:glyphastore_verify_store backup:glyphastore_backup_store \
-  repair:glyphastore_repair_store client:glyphastore_interop_client; do
+for label in daemon:glifistored verify:glifistore_verify_store backup:glifistore_backup_store \
+  repair:glifistore_repair_store client:glifistore_interop_client; do
   name="${label%%:*}"
   bin="${label#*:}"
   if [[ -z "${!name}" ]]; then
@@ -55,11 +55,11 @@ if [[ "$missing" -ne 0 ]]; then
   exit 1
 fi
 if ! command -v lsof >/dev/null 2>&1; then
-  echo "lsof is required to discover ephemeral glyphastored ports" >&2
+  echo "lsof is required to discover ephemeral glifistored ports" >&2
   exit 1
 fi
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-ops-XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-ops-XXXXXX")"
 cleanup() {
   if [[ -n "${daemon_pid:-}" ]] && kill -0 "$daemon_pid" 2>/dev/null; then
     kill -TERM "$daemon_pid" 2>/dev/null || true
@@ -117,7 +117,7 @@ start_daemon() {
 daemon_pid=""
 discovered_port=""
 
-echo "==> seed durable store via glyphastored + interop client"
+echo "==> seed durable store via glifistored + interop client"
 start_daemon "$daemon_dir" create-new "$work/daemon-seed"
 port="$discovered_port"
 key_hex="$(printf 'ops-runbook-key' | to_hex)"
@@ -141,7 +141,7 @@ echo "==> backup + restore (backup-restore runbook)"
 echo "==> corruption repair (quarantine orphan segment)"
 mkdir -p "$corrupt_dir"
 cp -R "$source_dir/." "$corrupt_dir/"
-orphan="$corrupt_dir/segment-00000000000000ff-0000000a.glypha"
+orphan="$corrupt_dir/segment-00000000000000ff-0000000a.glifi"
 printf 'orphan-bytes' >"$orphan"
 chmod 600 "$orphan"
 "$repair" -- "$corrupt_dir" "$repair_workspace"
@@ -155,7 +155,7 @@ PYTHONPATH="$root/sdk/python/src${PYTHONPATH:+:$PYTHONPATH}" python3 - "$port" <
 import socket
 import struct
 import sys
-from glyphastore.protocol import Opcode, Status, encode_request, decode_response
+from glifistore.protocol import Opcode, Status, encode_request, decode_response
 
 port = int(sys.argv[1])
 frame = encode_request(Opcode.STATS, 1)
@@ -177,7 +177,7 @@ with socket.create_connection(("127.0.0.1", port), timeout=5) as sock:
     if response.status != Status.OK:
         raise SystemExit(f"STATS status={response.status}")
     text = response.value.decode("ascii", errors="replace")
-    if not text.startswith("GlyphaStore/stats\n"):
+    if not text.startswith("GlifiStore/stats\n"):
         raise SystemExit("unexpected STATS banner")
     for needle in (
         "maintenance_rate_window_bytes_copied=",

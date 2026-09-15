@@ -1,6 +1,6 @@
 #include "cli/arguments.hpp"
-#include "glyphastore/core/types.hpp"
-#include "glyphastore/persistence/store_verify.hpp"
+#include "glifistore/core/types.hpp"
+#include "glifistore/persistence/store_verify.hpp"
 
 #include <array>
 #include <exception>
@@ -14,28 +14,28 @@ namespace {
 enum OptionId : std::size_t { help, version, json, no_scan };
 
 constexpr std::array kOptionSpecs{
-    glyphastore::cli::OptionSpec{
-        help, "help", 'h', glyphastore::cli::OptionArity::none, {}, "Show this help message and exit"},
-    glyphastore::cli::OptionSpec{version,
+    glifistore::cli::OptionSpec{
+        help, "help", 'h', glifistore::cli::OptionArity::none, {}, "Show this help message and exit"},
+    glifistore::cli::OptionSpec{version,
                                  "version",
                                  'V',
-                                 glyphastore::cli::OptionArity::none,
+                                 glifistore::cli::OptionArity::none,
                                  {},
                                  "Show version information and exit"},
-    glyphastore::cli::OptionSpec{
-        json, "json", '\0', glyphastore::cli::OptionArity::none, {}, "Emit a stable JSON report on stdout"},
-    glyphastore::cli::OptionSpec{no_scan,
+    glifistore::cli::OptionSpec{
+        json, "json", '\0', glifistore::cli::OptionArity::none, {}, "Emit a stable JSON report on stdout"},
+    glifistore::cli::OptionSpec{no_scan,
                                  "no-scan",
                                  '\0',
-                                 glyphastore::cli::OptionArity::none,
+                                 glifistore::cli::OptionArity::none,
                                  {},
                                  "Validate Manifest, namespace, and Segment headers only (skip Record scans)"},
 };
 
 void print_help(const std::string_view program) {
-    glyphastore::cli::write_help(
+    glifistore::cli::write_help(
         std::cout, program,
-        "Verify a GlyphaStore durable data directory (read-only, exclusive lock).",
+        "Verify a GlifiStore durable data directory (read-only, exclusive lock).",
         "[OPTIONS] <DATA-DIRECTORY>", kOptionSpecs);
 }
 
@@ -51,45 +51,45 @@ void print_help(const std::string_view program) {
     return out;
 }
 
-[[nodiscard]] auto error_code_name(const glyphastore::ErrorCode code) -> std::string_view {
+[[nodiscard]] auto error_code_name(const glifistore::ErrorCode code) -> std::string_view {
     switch (code) {
-    case glyphastore::ErrorCode::invalid_argument:
+    case glifistore::ErrorCode::invalid_argument:
         return "invalid_argument";
-    case glyphastore::ErrorCode::arithmetic_overflow:
+    case glifistore::ErrorCode::arithmetic_overflow:
         return "arithmetic_overflow";
-    case glyphastore::ErrorCode::record_too_large:
+    case glifistore::ErrorCode::record_too_large:
         return "record_too_large";
-    case glyphastore::ErrorCode::segment_full:
+    case glifistore::ErrorCode::segment_full:
         return "segment_full";
-    case glyphastore::ErrorCode::segment_sealed:
+    case glifistore::ErrorCode::segment_sealed:
         return "segment_sealed";
-    case glyphastore::ErrorCode::invalid_record:
+    case glifistore::ErrorCode::invalid_record:
         return "invalid_record";
-    case glyphastore::ErrorCode::checksum_mismatch:
+    case glifistore::ErrorCode::checksum_mismatch:
         return "checksum_mismatch";
-    case glyphastore::ErrorCode::invalid_reference:
+    case glifistore::ErrorCode::invalid_reference:
         return "invalid_reference";
-    case glyphastore::ErrorCode::sequence_conflict:
+    case glifistore::ErrorCode::sequence_conflict:
         return "sequence_conflict";
-    case glyphastore::ErrorCode::corrupted_data:
+    case glifistore::ErrorCode::corrupted_data:
         return "corrupted_data";
-    case glyphastore::ErrorCode::not_found:
+    case glifistore::ErrorCode::not_found:
         return "not_found";
-    case glyphastore::ErrorCode::resource_exhausted:
+    case glifistore::ErrorCode::resource_exhausted:
         return "resource_exhausted";
-    case glyphastore::ErrorCode::storage_exhausted:
+    case glifistore::ErrorCode::storage_exhausted:
         return "storage_exhausted";
-    case glyphastore::ErrorCode::file_too_large:
+    case glifistore::ErrorCode::file_too_large:
         return "file_too_large";
-    case glyphastore::ErrorCode::descriptor_exhausted:
+    case glifistore::ErrorCode::descriptor_exhausted:
         return "descriptor_exhausted";
-    case glyphastore::ErrorCode::read_only_filesystem:
+    case glifistore::ErrorCode::read_only_filesystem:
         return "read_only_filesystem";
-    case glyphastore::ErrorCode::internal_error:
+    case glifistore::ErrorCode::internal_error:
         return "internal_error";
-    case glyphastore::ErrorCode::unavailable:
+    case glifistore::ErrorCode::unavailable:
         return "unavailable";
-    case glyphastore::ErrorCode::io_error:
+    case glifistore::ErrorCode::io_error:
         return "io_error";
     }
     return "unknown";
@@ -130,27 +130,27 @@ void print_help(const std::string_view program) {
     return out;
 }
 
-[[nodiscard]] auto role_name(const glyphastore::ManifestSegmentRole role) -> std::string_view {
+[[nodiscard]] auto role_name(const glifistore::ManifestSegmentRole role) -> std::string_view {
     switch (role) {
-    case glyphastore::ManifestSegmentRole::active:
+    case glifistore::ManifestSegmentRole::active:
         return "active";
-    case glyphastore::ManifestSegmentRole::sealed:
+    case glifistore::ManifestSegmentRole::sealed:
         return "sealed";
     }
     return "unknown";
 }
 
-[[nodiscard]] auto state_name(const glyphastore::PersistedSegmentState state) -> std::string_view {
+[[nodiscard]] auto state_name(const glifistore::PersistedSegmentState state) -> std::string_view {
     switch (state) {
-    case glyphastore::PersistedSegmentState::active:
+    case glifistore::PersistedSegmentState::active:
         return "active";
-    case glyphastore::PersistedSegmentState::sealed:
+    case glifistore::PersistedSegmentState::sealed:
         return "sealed";
     }
     return "unknown";
 }
 
-void write_text_ok(std::ostream& out, const glyphastore::DurableStoreVerifyReport& report) {
+void write_text_ok(std::ostream& out, const glifistore::DurableStoreVerifyReport& report) {
     out << "status=ok\n"
         << "path=" << report.path.string() << '\n'
         << "store_id=" << to_hex(std::span{report.manifest.store_id}) << '\n'
@@ -174,7 +174,7 @@ void write_text_ok(std::ostream& out, const glyphastore::DurableStoreVerifyRepor
     }
 }
 
-void write_json_ok(std::ostream& out, const glyphastore::DurableStoreVerifyReport& report) {
+void write_json_ok(std::ostream& out, const glifistore::DurableStoreVerifyReport& report) {
     out << '{'
         << "\"status\":\"ok\","
         << "\"path\":\"" << json_escape(report.path.string()) << "\","
@@ -206,7 +206,7 @@ void write_json_ok(std::ostream& out, const glyphastore::DurableStoreVerifyRepor
     out << "]}\n";
 }
 
-void write_json_error(std::ostream& out, const std::string_view path, const glyphastore::Error& error) {
+void write_json_error(std::ostream& out, const std::string_view path, const glifistore::Error& error) {
     out << '{'
         << "\"status\":\"error\","
         << "\"path\":\"" << json_escape(path) << "\","
@@ -220,8 +220,8 @@ void write_json_error(std::ostream& out, const std::string_view path, const glyp
 
 int main(const int argc, char** argv) try {
     const auto program =
-        glyphastore::cli::executable_name(argc > 0 ? argv[0] : "glyphastore_verify_store");
-    auto parsed = glyphastore::cli::parse_arguments(argc, argv, kOptionSpecs);
+        glifistore::cli::executable_name(argc > 0 ? argv[0] : "glifistore_verify_store");
+    auto parsed = glifistore::cli::parse_arguments(argc, argv, kOptionSpecs);
     if (!parsed) {
         std::cerr << program << ": error: " << parsed.error().message << "\nTry '" << program
                   << " --help' for more information.\n";
@@ -232,7 +232,7 @@ int main(const int argc, char** argv) try {
         return 0;
     }
     if (parsed->has(version)) {
-        std::cout << program << ' ' << GLYPHASTORE_VERSION << '\n';
+        std::cout << program << ' ' << GLIFISTORE_VERSION << '\n';
         return 0;
     }
     if (parsed->positionals.size() != 1) {
@@ -244,7 +244,7 @@ int main(const int argc, char** argv) try {
     const auto path = std::string{parsed->positionals.front()};
     const bool emit_json = parsed->has(json);
     const bool scan = !parsed->has(no_scan);
-    auto report = glyphastore::verify_durable_store_path(path, scan);
+    auto report = glifistore::verify_durable_store_path(path, scan);
     if (!report) {
         if (emit_json) {
             write_json_error(std::cout, path, report.error());
@@ -262,10 +262,10 @@ int main(const int argc, char** argv) try {
     return 0;
 } catch (const std::exception& exception) {
     const auto program =
-        glyphastore::cli::executable_name(argc > 0 ? argv[0] : "glyphastore_verify_store");
+        glifistore::cli::executable_name(argc > 0 ? argv[0] : "glifistore_verify_store");
     std::cerr << program << ": fatal: " << exception.what() << '\n';
     return 1;
 } catch (...) {
-    std::cerr << "glyphastore_verify_store: fatal: unknown non-standard exception\n";
+    std::cerr << "glifistore_verify_store: fatal: unknown non-standard exception\n";
     return 1;
 }

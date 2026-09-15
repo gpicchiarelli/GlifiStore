@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.local/schemas/requirement.schema.json",
-  "title": "GlyphaStore requirement",
+  "$id": "https://glifistore.local/schemas/requirement.schema.json",
+  "title": "GlifiStore requirement",
   "type": "object",
   "additionalProperties": false,
   "required": [

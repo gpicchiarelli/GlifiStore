@@ -2,7 +2,7 @@
 
 require "socket"
 require "openssl"
-require "glypha_store"
+require "glifi_store"
 
 class FakeServer
   attr_reader :port
@@ -76,23 +76,23 @@ class FakeServer
       prefix = read_exact(socket, 4)
       size = prefix.unpack1("L<")
       frame = prefix + read_exact(socket, size - 4)
-      request = GlyphaStore::Protocol.decode_request(frame)
+      request = GlifiStore::Protocol.decode_request(frame)
       case request.opcode
-      when GlyphaStore::Protocol::Opcode::INIT
-        reply(socket, status: GlyphaStore::Protocol::Status::OK, request_id: request.request_id,
-                      value: GlyphaStore::Protocol.encode_init_identity(@routing || GlyphaStore::Protocol::WorkerRouting.new), owner_worker: GlyphaStore::Protocol::NO_WORKER,
+      when GlifiStore::Protocol::Opcode::INIT
+        reply(socket, status: GlifiStore::Protocol::Status::OK, request_id: request.request_id,
+                      value: GlifiStore::Protocol.encode_init_identity(@routing || GlifiStore::Protocol::WorkerRouting.new), owner_worker: GlifiStore::Protocol::NO_WORKER,
                       worker_count: @workers, routing_epoch: 9)
-      when GlyphaStore::Protocol::Opcode::HEALTH
+      when GlifiStore::Protocol::Opcode::HEALTH
         # Wire v2: HEALTH/READY/STATS are accepted unbound.
-        reply(socket, status: GlyphaStore::Protocol::Status::OK, request_id: request.request_id,
-                      value: "GlyphaStore/live".b, owner_worker: bound || 0, worker_count: @workers, routing_epoch: 9)
-      when GlyphaStore::Protocol::Opcode::READY
-        reply(socket, status: GlyphaStore::Protocol::Status::OK, request_id: request.request_id,
-                      value: "GlyphaStore/ready".b, owner_worker: bound || 0, worker_count: @workers, routing_epoch: 9)
-      when GlyphaStore::Protocol::Opcode::STATS
-        reply(socket, status: GlyphaStore::Protocol::Status::OK, request_id: request.request_id,
-                      value: "GlyphaStore/stats\n".b, owner_worker: bound || 0, worker_count: @workers, routing_epoch: 9)
-      when GlyphaStore::Protocol::Opcode::BIND_WORKER
+        reply(socket, status: GlifiStore::Protocol::Status::OK, request_id: request.request_id,
+                      value: "GlifiStore/live".b, owner_worker: bound || 0, worker_count: @workers, routing_epoch: 9)
+      when GlifiStore::Protocol::Opcode::READY
+        reply(socket, status: GlifiStore::Protocol::Status::OK, request_id: request.request_id,
+                      value: "GlifiStore/ready".b, owner_worker: bound || 0, worker_count: @workers, routing_epoch: 9)
+      when GlifiStore::Protocol::Opcode::STATS
+        reply(socket, status: GlifiStore::Protocol::Status::OK, request_id: request.request_id,
+                      value: "GlifiStore/stats\n".b, owner_worker: bound || 0, worker_count: @workers, routing_epoch: 9)
+      when GlifiStore::Protocol::Opcode::BIND_WORKER
         target = request.target_worker
         count = @bind_counts_mutex.synchronize { @bind_counts[target] += 1; @bind_counts[target] }
         if @fail_rebind_workers.include?(target) && count > 1
@@ -100,14 +100,14 @@ class FakeServer
         end
 
         bound = target
-        reply(socket, status: GlyphaStore::Protocol::Status::OK, request_id: request.request_id,
+        reply(socket, status: GlifiStore::Protocol::Status::OK, request_id: request.request_id,
                       owner_worker: bound, worker_count: @workers, routing_epoch: 9)
-      when GlyphaStore::Protocol::Opcode::PUT
+      when GlifiStore::Protocol::Opcode::PUT
         if @deny_data_plane
-          reply(socket, status: GlyphaStore::Protocol::Status::PERMISSION_DENIED, request_id: request.request_id,
+          reply(socket, status: GlifiStore::Protocol::Status::PERMISSION_DENIED, request_id: request.request_id,
                         owner_worker: bound, worker_count: @workers, routing_epoch: 9)
         elsif @internal_error_on_put
-          reply(socket, status: GlyphaStore::Protocol::Status::INTERNAL_ERROR, request_id: request.request_id,
+          reply(socket, status: GlifiStore::Protocol::Status::INTERNAL_ERROR, request_id: request.request_id,
                         owner_worker: bound, worker_count: @workers, routing_epoch: 9)
         elsif @disconnect_on_put
           return
@@ -122,45 +122,45 @@ class FakeServer
           return
         else
           store[request.key] = request.value
-          reply(socket, status: GlyphaStore::Protocol::Status::OK, request_id: request.request_id,
+          reply(socket, status: GlifiStore::Protocol::Status::OK, request_id: request.request_id,
                         owner_worker: bound, worker_count: @workers, routing_epoch: 9)
           if @drop_after_mutation
             socket.close
             return
           end
         end
-      when GlyphaStore::Protocol::Opcode::GET
+      when GlifiStore::Protocol::Opcode::GET
         if @deny_data_plane
-          reply(socket, status: GlyphaStore::Protocol::Status::PERMISSION_DENIED, request_id: request.request_id,
+          reply(socket, status: GlifiStore::Protocol::Status::PERMISSION_DENIED, request_id: request.request_id,
                         owner_worker: bound, worker_count: @workers, routing_epoch: 9)
         elsif store.key?(request.key)
-          reply(socket, status: GlyphaStore::Protocol::Status::OK, request_id: request.request_id,
+          reply(socket, status: GlifiStore::Protocol::Status::OK, request_id: request.request_id,
                         value: store[request.key], owner_worker: bound, worker_count: @workers, routing_epoch: 9)
         else
-          reply(socket, status: GlyphaStore::Protocol::Status::NOT_FOUND, request_id: request.request_id,
+          reply(socket, status: GlifiStore::Protocol::Status::NOT_FOUND, request_id: request.request_id,
                         owner_worker: bound, worker_count: @workers, routing_epoch: 9)
         end
-      when GlyphaStore::Protocol::Opcode::ERASE
+      when GlifiStore::Protocol::Opcode::ERASE
         found = !store.delete(request.key).nil?
-        reply(socket, status: found ? GlyphaStore::Protocol::Status::OK : GlyphaStore::Protocol::Status::NOT_FOUND,
+        reply(socket, status: found ? GlifiStore::Protocol::Status::OK : GlifiStore::Protocol::Status::NOT_FOUND,
                       request_id: request.request_id,
                       owner_worker: bound, worker_count: @workers, routing_epoch: 9)
-      when GlyphaStore::Protocol::Opcode::PING
-        reply(socket, status: GlyphaStore::Protocol::Status::OK, request_id: request.request_id,
+      when GlifiStore::Protocol::Opcode::PING
+        reply(socket, status: GlifiStore::Protocol::Status::OK, request_id: request.request_id,
                       value: request.value, owner_worker: bound || 0, worker_count: @workers, routing_epoch: 9)
-      when GlyphaStore::Protocol::Opcode::BACKUP
+      when GlifiStore::Protocol::Opcode::BACKUP
         @backup_mutex.synchronize { @backup_requests += 1 }
         if @internal_error_on_backup
-          reply(socket, status: GlyphaStore::Protocol::Status::INTERNAL_ERROR, request_id: request.request_id,
+          reply(socket, status: GlifiStore::Protocol::Status::INTERNAL_ERROR, request_id: request.request_id,
                         value: "report failed".b, owner_worker: bound || 0, worker_count: @workers, routing_epoch: 9)
         else
           reply_id = @wrong_request_id_on_backup ? (request.request_id ^ 1) : request.request_id
-          reply(socket, status: GlyphaStore::Protocol::Status::OK, request_id: reply_id,
+          reply(socket, status: GlifiStore::Protocol::Status::OK, request_id: reply_id,
                         value: "status=ok files=0 bytes=0".b, owner_worker: bound || 0, worker_count: @workers,
                         routing_epoch: 9)
         end
       else
-        reply(socket, status: GlyphaStore::Protocol::Status::UNSUPPORTED, request_id: request.request_id,
+        reply(socket, status: GlifiStore::Protocol::Status::UNSUPPORTED, request_id: request.request_id,
                       owner_worker: bound || 0, worker_count: @workers, routing_epoch: 9)
       end
     end
@@ -186,7 +186,7 @@ class FakeServer
   end
 
   def reply(socket, status:, request_id:, value: "".b, owner_worker:, worker_count:, routing_epoch:)
-    frame = GlyphaStore::Protocol.encode_response(
+    frame = GlifiStore::Protocol.encode_response(
       status, request_id, value: value, owner_worker: owner_worker,
       worker_count: worker_count, routing_epoch: routing_epoch
     )

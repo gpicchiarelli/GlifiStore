@@ -5,7 +5,7 @@ Applies to: `scripts/soak_daemon.sh` and GitHub Actions soak jobs
 Owner: platform / ops maintainers  
 Last reviewed: 2026-08-27
 
-CI-friendly and multi-hour soak entry points for `glyphastored`. These runs are **software
+CI-friendly and multi-hour soak entry points for `glifistored`. These runs are **software
 path evidence** (PUT/GET, reconnect, overwrite churn, graceful drain, optional RSS/STATS
 sampling, plus adversarial software stubs). They are **not** E3/E4 power-loss certification
 and not a substitute for a controlled multi-hour hardware matrix on release hardware.
@@ -58,8 +58,8 @@ SOAK_SECONDS=1800 ./scripts/soak_daemon.sh
 ./scripts/soak_daemon.sh --profile adversarial-reclaim
 ```
 
-Requires built `glyphastored` and `glyphastore_interop_client` (or set `GLYPHASTORED` /
-`GLYPHASTORE_INTEROP_CLIENT`), plus `lsof` and the Python SDK on `PYTHONPATH` for `STATS`.
+Requires built `glifistored` and `glifistore_interop_client` (or set `GLIFISTORED` /
+`GLIFISTORE_INTEROP_CLIENT`), plus `lsof` and the Python SDK on `PYTHONPATH` for `STATS`.
 
 ## What is checked
 

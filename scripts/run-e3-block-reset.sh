@@ -138,9 +138,9 @@ if [[ -e "$output_dir" ]]; then
   exit 2
 fi
 
-crash_bin="$build_dir/glyphastore_crash_persistence"
+crash_bin="$build_dir/glifistore_crash_persistence"
 [[ -x "$crash_bin" ]] || {
-  echo "error: missing executable $crash_bin (build glyphastore_crash_persistence first)" >&2
+  echo "error: missing executable $crash_bin (build glifistore_crash_persistence first)" >&2
   exit 2
 }
 
@@ -211,7 +211,7 @@ else
     echo "error: explicit --work-root must be outside the artifact directory" >&2
     exit 2
   fi
-  work_root="$work_parent/glyphastore-e3-work-$$"
+  work_root="$work_parent/glifistore-e3-work-$$"
   if [[ -e "$work_root" ]]; then
     echo "error: generated work directory already exists: $work_root" >&2
     exit 2
@@ -351,7 +351,7 @@ provision_linux_ext4() {
     command -v dmsetup >/dev/null 2>&1 || { echo "error: dmsetup not found" >&2; exit 2; }
     local sectors
     sectors="$(sudo blockdev --getsz "$loop_device")" || return 1
-    mapper_name="glypha-e3-$$"
+    mapper_name="glifi-e3-$$"
     mapper_path="/dev/mapper/$mapper_name"
     # Keep the setup path fully available. The selected flakey down-interval
     # mode is installed only after the worker has reached the checkpoint.
@@ -359,8 +359,8 @@ provision_linux_ext4() {
     sudo dmsetup create "$mapper_name" --table "0 $sectors linear $loop_device 0" || return 1
     attach_device="$mapper_path"
   fi
-  record_command "mkfs.ext4 -F -L glyphae3 <device>"
-  sudo mkfs.ext4 -F -L glyphae3 "$attach_device" >/dev/null || return 1
+  record_command "mkfs.ext4 -F -L glifie3 <device>"
+  sudo mkfs.ext4 -F -L glifie3 "$attach_device" >/dev/null || return 1
   record_command "mount -t ext4 -o defaults <device> <mount>"
   sudo mount -t ext4 -o defaults "$attach_device" "$mount_point" || return 1
   mounted="yes"
@@ -368,11 +368,11 @@ provision_linux_ext4() {
 }
 
 provision_macos_apfs() {
-  record_command "hdiutil create -size <N>m -fs APFS -volname GlyphaE3 -type SPARSEBUNDLE <image>"
+  record_command "hdiutil create -size <N>m -fs APFS -volname GlifiE3 -type SPARSEBUNDLE <image>"
   # .sparsebundle keeps the disposable row self-contained under work_root.
   local bundle="$image_path.sparsebundle"
   [[ ! -e "$bundle" ]] || return 1
-  hdiutil create -size "${image_size_mib}m" -fs APFS -volname GlyphaE3 -type SPARSEBUNDLE "$image_path" >/dev/null || return 1
+  hdiutil create -size "${image_size_mib}m" -fs APFS -volname GlifiE3 -type SPARSEBUNDLE "$image_path" >/dev/null || return 1
   image_path="$bundle"
   record_command "hdiutil attach -mountpoint <mount> <image>"
   local attach_out
@@ -402,7 +402,7 @@ remount_linux() {
   if [[ "$reset_mechanism" == "dm-flakey" ]]; then
     local sectors
     sectors="$(sudo blockdev --getsz "$loop_device")" || return 1
-    mapper_name="glypha-e3-$$"
+    mapper_name="glifi-e3-$$"
     mapper_path="/dev/mapper/$mapper_name"
     sudo dmsetup create "$mapper_name" --table "0 $sectors linear $loop_device 0" || return 1
     attach_device="$mapper_path"
@@ -606,7 +606,7 @@ campaign_cases() {
 case_list="$( [[ "$profile" == "campaign" ]] && campaign_cases || smoke_cases )"
 
 {
-  printf 'schema=glyphastore-durability-e3-harness-v2\n'
+  printf 'schema=glifistore-durability-e3-harness-v2\n'
   printf 'generated_utc=%s\n' "$utc_now"
   printf 'collector=scripts/run-e3-block-reset.sh\n'
   printf 'platform_row=%s\n' "$platform"
@@ -636,7 +636,7 @@ if [[ -x "$crash_bin" ]]; then
   digest_line="$(sha256_file "$crash_bin" 2>/dev/null || true)"
   {
     printf '\n[test_binaries]\n'
-    printf 'glyphastore_crash_persistence=%s\n' "${digest_line%% *}"
+    printf 'glifistore_crash_persistence=%s\n' "${digest_line%% *}"
   } >>"$provenance"
 fi
 
@@ -889,7 +889,7 @@ fi
 } >>"$provenance"
 
 {
-  printf '# GlyphaStore E3 block-reset harness artifact\n\n'
+  printf '# GlifiStore E3 block-reset harness artifact\n\n'
   printf -- '- Generated (UTC): `%s`\n' "$utc_now"
   printf -- '- Source commit: `%s`\n' "$source_commit"
   printf -- '- Source worktree dirty: `%s`\n' "$source_dirty"

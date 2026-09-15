@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Package one already-installed GlyphaStore prefix without rebuilding it."""
+"""Package one already-installed GlifiStore prefix without rebuilding it."""
 
 from __future__ import annotations
 
@@ -17,9 +17,9 @@ from release_identity import ReleaseIdentityError, validate_release_identity  # 
 
 
 VERSIONED_ABI_PATTERNS = (
-    re.compile(r"^libglyphastore\.so\.[0-9]+(?:\.[0-9]+)*$"),
-    re.compile(r"^libglyphastore\.[0-9]+(?:\.[0-9]+)*\.dylib$"),
-    re.compile(r"^glyphastore-[0-9]+(?:\.[0-9]+)*\.dll$"),
+    re.compile(r"^libglifistore\.so\.[0-9]+(?:\.[0-9]+)*$"),
+    re.compile(r"^libglifistore\.[0-9]+(?:\.[0-9]+)*\.dylib$"),
+    re.compile(r"^glifistore-[0-9]+(?:\.[0-9]+)*\.dll$"),
 )
 
 
@@ -68,10 +68,10 @@ def package_prefix(
         raise ReleaseIdentityError(f"install prefix does not exist: {prefix}")
     relative_files = [path.relative_to(prefix) for path in prefix.rglob("*")]
     required = {
-        PurePosixPath("bin/glyphastored"),
-        PurePosixPath("include/glyphastore/abi/glyphastore.h"),
-        PurePosixPath("share/GlyphaStore/VERSION"),
-        PurePosixPath("share/GlyphaStore/ABI_VERSION"),
+        PurePosixPath("bin/glifistored"),
+        PurePosixPath("include/glifistore/abi/glifistore.h"),
+        PurePosixPath("share/GlifiStore/VERSION"),
+        PurePosixPath("share/GlifiStore/ABI_VERSION"),
     }
     normalized = {PurePosixPath(path.as_posix()) for path in relative_files}
     missing = sorted(str(path) for path in required - normalized)
@@ -79,8 +79,8 @@ def package_prefix(
         raise ReleaseIdentityError(f"install prefix misses required files: {', '.join(missing)}")
     if not any(_is_versioned_abi(path) for path in relative_files):
         raise ReleaseIdentityError("install prefix misses the versioned shared C ABI")
-    installed_version = (prefix / "share/GlyphaStore/VERSION").read_text(encoding="utf-8").strip()
-    installed_abi = (prefix / "share/GlyphaStore/ABI_VERSION").read_text(encoding="utf-8").strip()
+    installed_version = (prefix / "share/GlifiStore/VERSION").read_text(encoding="utf-8").strip()
+    installed_abi = (prefix / "share/GlifiStore/ABI_VERSION").read_text(encoding="utf-8").strip()
     if installed_version != identity.product_version:
         raise ReleaseIdentityError("installed VERSION disagrees with release identity")
     if installed_abi != f"{identity.abi_major}.{identity.abi_minor}":
@@ -92,7 +92,7 @@ def package_prefix(
         "-", ""
     ).replace("_", "").isalnum():
         raise ReleaseIdentityError("target OS and architecture must be simple identifiers")
-    basename = f"glyphastore-{identity.product_version}-{safe_os}-{safe_arch}"
+    basename = f"glifistore-{identity.product_version}-{safe_os}-{safe_arch}"
     output_directory.mkdir(parents=True, exist_ok=True)
     output = output_directory / f"{basename}.tar.xz"
     if output.exists():

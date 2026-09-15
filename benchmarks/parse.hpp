@@ -6,7 +6,7 @@
 #include <string_view>
 #include <system_error>
 
-namespace glyphastore::bench {
+namespace glifistore::bench {
 
 [[nodiscard]] inline auto parse_decimal_size(const std::string_view text) noexcept
     -> std::optional<std::size_t> {
@@ -21,4 +21,4 @@ namespace glyphastore::bench {
     return parsed;
 }
 
-} // namespace glyphastore::bench
+} // namespace glifistore::bench

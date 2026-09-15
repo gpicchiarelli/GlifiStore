@@ -1,9 +1,9 @@
-#include "glyphastore/client/client.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/core/little_endian.hpp"
-#include "glyphastore/server/authz.hpp"
-#include "glyphastore/server/protocol.hpp"
-#include "glyphastore/server/server.hpp"
+#include "glifistore/client/client.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/core/little_endian.hpp"
+#include "glifistore/server/authz.hpp"
+#include "glifistore/server/protocol.hpp"
+#include "glifistore/server/server.hpp"
 #include "test.hpp"
 
 #include <algorithm>
@@ -47,7 +47,7 @@ auto receive_exact(const int descriptor, const std::span<std::byte> output) -> b
 }
 
 auto load_u32(const std::span<const std::byte> input) noexcept -> std::uint32_t {
-    return glyphastore::le::get_u32(input, 0);
+    return glifistore::le::get_u32(input, 0);
 }
 
 auto receive_request(const int descriptor) -> std::vector<std::byte> {
@@ -56,8 +56,8 @@ auto receive_request(const int descriptor) -> std::vector<std::byte> {
         return {};
     }
     const auto frame_size = static_cast<std::size_t>(load_u32(size));
-    if (frame_size < glyphastore::server::kRequestHeaderBytes ||
-        frame_size > glyphastore::server::kMaxFrameBytes) {
+    if (frame_size < glifistore::server::kRequestHeaderBytes ||
+        frame_size > glifistore::server::kMaxFrameBytes) {
         return {};
     }
     std::vector<std::byte> frame(frame_size);
@@ -84,16 +84,16 @@ class DisconnectingPipelineServer final {
   public:
     DisconnectingPipelineServer() {
         listener_ = ::socket(AF_INET, SOCK_STREAM, 0);
-        GLYPHA_REQUIRE(listener_ >= 0);
+        GLIFI_REQUIRE(listener_ >= 0);
         sockaddr_in endpoint{};
         endpoint.sin_family = AF_INET;
         endpoint.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
         endpoint.sin_port = 0;
-        GLYPHA_REQUIRE(::bind(listener_, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) ==
+        GLIFI_REQUIRE(::bind(listener_, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) ==
                        0);
-        GLYPHA_REQUIRE(::listen(listener_, 1) == 0);
+        GLIFI_REQUIRE(::listen(listener_, 1) == 0);
         socklen_t endpoint_size = sizeof(endpoint);
-        GLYPHA_REQUIRE(::getsockname(listener_, reinterpret_cast<sockaddr*>(&endpoint), &endpoint_size) == 0);
+        GLIFI_REQUIRE(::getsockname(listener_, reinterpret_cast<sockaddr*>(&endpoint), &endpoint_size) == 0);
         port_ = ntohs(endpoint.sin_port);
         thread_ = std::thread{[this] { run(); }};
     }
@@ -115,24 +115,24 @@ class DisconnectingPipelineServer final {
         if (descriptor < 0) {
             return;
         }
-        const auto reply = [&](const glyphastore::server::ResponseView& response) {
-            auto encoded = glyphastore::server::encode_response(response);
+        const auto reply = [&](const glifistore::server::ResponseView& response) {
+            auto encoded = glifistore::server::encode_response(response);
             return encoded && send_all(descriptor, *encoded);
         };
         auto init_frame = receive_request(descriptor);
-        auto init = glyphastore::server::decode_request(init_frame);
-        if (!init || !reply({.status = glyphastore::server::ResponseStatus::ok,
+        auto init = glifistore::server::decode_request(init_frame);
+        if (!init || !reply({.status = glifistore::server::ResponseStatus::ok,
                              .request_id = init->frame.request_id,
                              .owner_worker = 0,
                              .worker_count = 1,
                              .routing_epoch = 7,
-                             .value = bytes("GlyphaStore/2")})) {
+                             .value = bytes("GlifiStore/2")})) {
             static_cast<void>(::close(descriptor));
             return;
         }
         auto bind_frame = receive_request(descriptor);
-        auto bind = glyphastore::server::decode_request(bind_frame);
-        if (!bind || !reply({.status = glyphastore::server::ResponseStatus::ok,
+        auto bind = glifistore::server::decode_request(bind_frame);
+        if (!bind || !reply({.status = glifistore::server::ResponseStatus::ok,
                              .request_id = bind->frame.request_id,
                              .owner_worker = 0,
                              .worker_count = 1,
@@ -158,18 +158,18 @@ class OverloadedPutServer final {
   public:
     OverloadedPutServer() {
         listener_ = ::socket(AF_INET, SOCK_STREAM, 0);
-        GLYPHA_REQUIRE(listener_ >= 0);
+        GLIFI_REQUIRE(listener_ >= 0);
         int yes = 1;
-        GLYPHA_REQUIRE(::setsockopt(listener_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == 0);
+        GLIFI_REQUIRE(::setsockopt(listener_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == 0);
         sockaddr_in address{};
         address.sin_family = AF_INET;
         address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
         address.sin_port = 0;
-        GLYPHA_REQUIRE(::bind(listener_, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0);
+        GLIFI_REQUIRE(::bind(listener_, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0);
         socklen_t length = sizeof(address);
-        GLYPHA_REQUIRE(::getsockname(listener_, reinterpret_cast<sockaddr*>(&address), &length) == 0);
+        GLIFI_REQUIRE(::getsockname(listener_, reinterpret_cast<sockaddr*>(&address), &length) == 0);
         port_ = ntohs(address.sin_port);
-        GLYPHA_REQUIRE(::listen(listener_, 1) == 0);
+        GLIFI_REQUIRE(::listen(listener_, 1) == 0);
         thread_ = std::thread([this] { run(); });
     }
 
@@ -190,24 +190,24 @@ class OverloadedPutServer final {
         if (descriptor < 0) {
             return;
         }
-        const auto reply = [&](const glyphastore::server::ResponseView& response) {
-            auto encoded = glyphastore::server::encode_response(response);
+        const auto reply = [&](const glifistore::server::ResponseView& response) {
+            auto encoded = glifistore::server::encode_response(response);
             return encoded && send_all(descriptor, *encoded);
         };
         auto init_frame = receive_request(descriptor);
-        auto init = glyphastore::server::decode_request(init_frame);
-        if (!init || !reply({.status = glyphastore::server::ResponseStatus::ok,
+        auto init = glifistore::server::decode_request(init_frame);
+        if (!init || !reply({.status = glifistore::server::ResponseStatus::ok,
                              .request_id = init->frame.request_id,
                              .owner_worker = 0,
                              .worker_count = 1,
                              .routing_epoch = 7,
-                             .value = bytes("GlyphaStore/2")})) {
+                             .value = bytes("GlifiStore/2")})) {
             static_cast<void>(::close(descriptor));
             return;
         }
         auto bind_frame = receive_request(descriptor);
-        auto bind = glyphastore::server::decode_request(bind_frame);
-        if (!bind || !reply({.status = glyphastore::server::ResponseStatus::ok,
+        auto bind = glifistore::server::decode_request(bind_frame);
+        if (!bind || !reply({.status = glifistore::server::ResponseStatus::ok,
                              .request_id = bind->frame.request_id,
                              .owner_worker = 0,
                              .worker_count = 1,
@@ -216,9 +216,9 @@ class OverloadedPutServer final {
             return;
         }
         auto put_frame = receive_request(descriptor);
-        auto put = glyphastore::server::decode_request(put_frame);
+        auto put = glifistore::server::decode_request(put_frame);
         if (put) {
-            static_cast<void>(reply({.status = glyphastore::server::ResponseStatus::overloaded,
+            static_cast<void>(reply({.status = glifistore::server::ResponseStatus::overloaded,
                                      .request_id = put->frame.request_id,
                                      .owner_worker = 0,
                                      .worker_count = 1,
@@ -236,18 +236,18 @@ class BackupDropResponseServer final {
   public:
     BackupDropResponseServer() {
         listener_ = ::socket(AF_INET, SOCK_STREAM, 0);
-        GLYPHA_REQUIRE(listener_ >= 0);
+        GLIFI_REQUIRE(listener_ >= 0);
         int yes = 1;
-        GLYPHA_REQUIRE(::setsockopt(listener_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == 0);
+        GLIFI_REQUIRE(::setsockopt(listener_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == 0);
         sockaddr_in address{};
         address.sin_family = AF_INET;
         address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
         address.sin_port = 0;
-        GLYPHA_REQUIRE(::bind(listener_, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0);
+        GLIFI_REQUIRE(::bind(listener_, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0);
         socklen_t length = sizeof(address);
-        GLYPHA_REQUIRE(::getsockname(listener_, reinterpret_cast<sockaddr*>(&address), &length) == 0);
+        GLIFI_REQUIRE(::getsockname(listener_, reinterpret_cast<sockaddr*>(&address), &length) == 0);
         port_ = ntohs(address.sin_port);
-        GLYPHA_REQUIRE(::listen(listener_, 8) == 0);
+        GLIFI_REQUIRE(::listen(listener_, 8) == 0);
         thread_ = std::thread([this] { run(); });
     }
 
@@ -288,24 +288,24 @@ class BackupDropResponseServer final {
                 static_cast<void>(::close(descriptor));
                 return;
             }
-            const auto reply = [&](const glyphastore::server::ResponseView& response) {
-                auto encoded = glyphastore::server::encode_response(response);
+            const auto reply = [&](const glifistore::server::ResponseView& response) {
+                auto encoded = glifistore::server::encode_response(response);
                 return encoded && send_all(descriptor, *encoded);
             };
             auto init_frame = receive_request(descriptor);
-            auto init = glyphastore::server::decode_request(init_frame);
-            if (!init || !reply({.status = glyphastore::server::ResponseStatus::ok,
+            auto init = glifistore::server::decode_request(init_frame);
+            if (!init || !reply({.status = glifistore::server::ResponseStatus::ok,
                                  .request_id = init->frame.request_id,
                                  .owner_worker = 0,
                                  .worker_count = 1,
                                  .routing_epoch = 7,
-                                 .value = bytes("GlyphaStore/2")})) {
+                                 .value = bytes("GlifiStore/2")})) {
                 static_cast<void>(::close(descriptor));
                 continue;
             }
             auto bind_frame = receive_request(descriptor);
-            auto bind = glyphastore::server::decode_request(bind_frame);
-            if (!bind || !reply({.status = glyphastore::server::ResponseStatus::ok,
+            auto bind = glifistore::server::decode_request(bind_frame);
+            if (!bind || !reply({.status = glifistore::server::ResponseStatus::ok,
                                  .request_id = bind->frame.request_id,
                                  .owner_worker = 0,
                                  .worker_count = 1,
@@ -314,8 +314,8 @@ class BackupDropResponseServer final {
                 continue;
             }
             auto backup_frame = receive_request(descriptor);
-            auto backup = glyphastore::server::decode_request(backup_frame);
-            if (backup && backup->frame.opcode == glyphastore::server::RequestOpcode::backup) {
+            auto backup = glifistore::server::decode_request(backup_frame);
+            if (backup && backup->frame.opcode == glifistore::server::RequestOpcode::backup) {
                 backup_requests_.fetch_add(1U, std::memory_order_acq_rel);
             }
             // Drop the response so the client observes transport loss after send.
@@ -334,18 +334,18 @@ class BackupInternalErrorServer final {
   public:
     BackupInternalErrorServer() {
         listener_ = ::socket(AF_INET, SOCK_STREAM, 0);
-        GLYPHA_REQUIRE(listener_ >= 0);
+        GLIFI_REQUIRE(listener_ >= 0);
         int yes = 1;
-        GLYPHA_REQUIRE(::setsockopt(listener_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == 0);
+        GLIFI_REQUIRE(::setsockopt(listener_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == 0);
         sockaddr_in address{};
         address.sin_family = AF_INET;
         address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
         address.sin_port = 0;
-        GLYPHA_REQUIRE(::bind(listener_, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0);
+        GLIFI_REQUIRE(::bind(listener_, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0);
         socklen_t length = sizeof(address);
-        GLYPHA_REQUIRE(::getsockname(listener_, reinterpret_cast<sockaddr*>(&address), &length) == 0);
+        GLIFI_REQUIRE(::getsockname(listener_, reinterpret_cast<sockaddr*>(&address), &length) == 0);
         port_ = ntohs(address.sin_port);
-        GLYPHA_REQUIRE(::listen(listener_, 8) == 0);
+        GLIFI_REQUIRE(::listen(listener_, 8) == 0);
         thread_ = std::thread([this] { run(); });
     }
 
@@ -385,24 +385,24 @@ class BackupInternalErrorServer final {
                 static_cast<void>(::close(descriptor));
                 return;
             }
-            const auto reply = [&](const glyphastore::server::ResponseView& response) {
-                auto encoded = glyphastore::server::encode_response(response);
+            const auto reply = [&](const glifistore::server::ResponseView& response) {
+                auto encoded = glifistore::server::encode_response(response);
                 return encoded && send_all(descriptor, *encoded);
             };
             auto init_frame = receive_request(descriptor);
-            auto init = glyphastore::server::decode_request(init_frame);
-            if (!init || !reply({.status = glyphastore::server::ResponseStatus::ok,
+            auto init = glifistore::server::decode_request(init_frame);
+            if (!init || !reply({.status = glifistore::server::ResponseStatus::ok,
                                  .request_id = init->frame.request_id,
                                  .owner_worker = 0,
                                  .worker_count = 1,
                                  .routing_epoch = 7,
-                                 .value = bytes("GlyphaStore/2")})) {
+                                 .value = bytes("GlifiStore/2")})) {
                 static_cast<void>(::close(descriptor));
                 continue;
             }
             auto bind_frame = receive_request(descriptor);
-            auto bind = glyphastore::server::decode_request(bind_frame);
-            if (!bind || !reply({.status = glyphastore::server::ResponseStatus::ok,
+            auto bind = glifistore::server::decode_request(bind_frame);
+            if (!bind || !reply({.status = glifistore::server::ResponseStatus::ok,
                                  .request_id = bind->frame.request_id,
                                  .owner_worker = 0,
                                  .worker_count = 1,
@@ -411,10 +411,10 @@ class BackupInternalErrorServer final {
                 continue;
             }
             auto backup_frame = receive_request(descriptor);
-            auto backup = glyphastore::server::decode_request(backup_frame);
-            if (backup && backup->frame.opcode == glyphastore::server::RequestOpcode::backup) {
+            auto backup = glifistore::server::decode_request(backup_frame);
+            if (backup && backup->frame.opcode == glifistore::server::RequestOpcode::backup) {
                 backup_requests_.fetch_add(1U, std::memory_order_acq_rel);
-                static_cast<void>(reply({.status = glyphastore::server::ResponseStatus::internal_error,
+                static_cast<void>(reply({.status = glifistore::server::ResponseStatus::internal_error,
                                          .request_id = backup->frame.request_id,
                                          .owner_worker = 0,
                                          .worker_count = 1,
@@ -436,18 +436,18 @@ class BackupWrongRequestIdServer final {
   public:
     BackupWrongRequestIdServer() {
         listener_ = ::socket(AF_INET, SOCK_STREAM, 0);
-        GLYPHA_REQUIRE(listener_ >= 0);
+        GLIFI_REQUIRE(listener_ >= 0);
         int yes = 1;
-        GLYPHA_REQUIRE(::setsockopt(listener_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == 0);
+        GLIFI_REQUIRE(::setsockopt(listener_, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == 0);
         sockaddr_in address{};
         address.sin_family = AF_INET;
         address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
         address.sin_port = 0;
-        GLYPHA_REQUIRE(::bind(listener_, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0);
+        GLIFI_REQUIRE(::bind(listener_, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == 0);
         socklen_t length = sizeof(address);
-        GLYPHA_REQUIRE(::getsockname(listener_, reinterpret_cast<sockaddr*>(&address), &length) == 0);
+        GLIFI_REQUIRE(::getsockname(listener_, reinterpret_cast<sockaddr*>(&address), &length) == 0);
         port_ = ntohs(address.sin_port);
-        GLYPHA_REQUIRE(::listen(listener_, 8) == 0);
+        GLIFI_REQUIRE(::listen(listener_, 8) == 0);
         thread_ = std::thread([this] { run(); });
     }
 
@@ -487,24 +487,24 @@ class BackupWrongRequestIdServer final {
                 static_cast<void>(::close(descriptor));
                 return;
             }
-            const auto reply = [&](const glyphastore::server::ResponseView& response) {
-                auto encoded = glyphastore::server::encode_response(response);
+            const auto reply = [&](const glifistore::server::ResponseView& response) {
+                auto encoded = glifistore::server::encode_response(response);
                 return encoded && send_all(descriptor, *encoded);
             };
             auto init_frame = receive_request(descriptor);
-            auto init = glyphastore::server::decode_request(init_frame);
-            if (!init || !reply({.status = glyphastore::server::ResponseStatus::ok,
+            auto init = glifistore::server::decode_request(init_frame);
+            if (!init || !reply({.status = glifistore::server::ResponseStatus::ok,
                                  .request_id = init->frame.request_id,
                                  .owner_worker = 0,
                                  .worker_count = 1,
                                  .routing_epoch = 7,
-                                 .value = bytes("GlyphaStore/2")})) {
+                                 .value = bytes("GlifiStore/2")})) {
                 static_cast<void>(::close(descriptor));
                 continue;
             }
             auto bind_frame = receive_request(descriptor);
-            auto bind = glyphastore::server::decode_request(bind_frame);
-            if (!bind || !reply({.status = glyphastore::server::ResponseStatus::ok,
+            auto bind = glifistore::server::decode_request(bind_frame);
+            if (!bind || !reply({.status = glifistore::server::ResponseStatus::ok,
                                  .request_id = bind->frame.request_id,
                                  .owner_worker = 0,
                                  .worker_count = 1,
@@ -513,10 +513,10 @@ class BackupWrongRequestIdServer final {
                 continue;
             }
             auto backup_frame = receive_request(descriptor);
-            auto backup = glyphastore::server::decode_request(backup_frame);
-            if (backup && backup->frame.opcode == glyphastore::server::RequestOpcode::backup) {
+            auto backup = glifistore::server::decode_request(backup_frame);
+            if (backup && backup->frame.opcode == glifistore::server::RequestOpcode::backup) {
                 backup_requests_.fetch_add(1U, std::memory_order_acq_rel);
-                static_cast<void>(reply({.status = glyphastore::server::ResponseStatus::ok,
+                static_cast<void>(reply({.status = glifistore::server::ResponseStatus::ok,
                                          .request_id = backup->frame.request_id ^ 1U,
                                          .owner_worker = 0,
                                          .worker_count = 1,
@@ -537,7 +537,7 @@ class BackupWrongRequestIdServer final {
 class RunningServer final {
   public:
     explicit RunningServer(const std::size_t workers = 2) {
-        auto created = glyphastore::server::Server::create(
+        auto created = glifistore::server::Server::create(
             {.port = 0, .maximum_connections = 64, .worker_count = workers});
         if (!created) {
             throw std::runtime_error{"client test server creation failed (code " +
@@ -545,7 +545,7 @@ class RunningServer final {
                                      "): " + created.error().message};
         }
         server_ = std::move(*created);
-        GLYPHA_REQUIRE(server_->start().has_value());
+        GLIFI_REQUIRE(server_->start().has_value());
     }
 
     ~RunningServer() {
@@ -558,13 +558,13 @@ class RunningServer final {
     }
 
   private:
-    std::unique_ptr<glyphastore::server::Server> server_;
+    std::unique_ptr<glifistore::server::Server> server_;
 };
 
 auto key_for_worker(const std::size_t worker, const std::size_t worker_count) -> std::string {
     for (std::size_t candidate = 0;; ++candidate) {
         auto key = "client-worker-" + std::to_string(worker) + '-' + std::to_string(candidate);
-        if (glyphastore::route_worker(glyphastore::hash_key(key), worker_count) == worker) {
+        if (glifistore::route_worker(glifistore::hash_key(key), worker_count) == worker) {
             return key;
         }
     }
@@ -572,171 +572,171 @@ auto key_for_worker(const std::size_t worker, const std::size_t worker_count) ->
 
 } // namespace
 
-GLYPHA_TEST("C++ client bootstraps every worker and handles binary cache operations") {
+GLIFI_TEST("C++ client bootstraps every worker and handles binary cache operations") {
     RunningServer server;
-    auto connected = glyphastore::client::Client::connect({.port = server.port(), .maximum_frame_bytes = 64});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port(), .maximum_frame_bytes = 64});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
-    GLYPHA_REQUIRE(client.healthy());
-    GLYPHA_REQUIRE(client.worker_count() == 2);
-    GLYPHA_REQUIRE(client.routing_epoch() != 0);
+    GLIFI_REQUIRE(client.healthy());
+    GLIFI_REQUIRE(client.worker_count() == 2);
+    GLIFI_REQUIRE(client.routing_epoch() != 0);
 
     const std::array<std::byte, 4> ping_payload{std::byte{0}, std::byte{1}, std::byte{0xFE}, std::byte{0xFF}};
     auto pong = client.ping(ping_payload);
-    GLYPHA_REQUIRE(pong.has_value());
-    GLYPHA_REQUIRE(*pong == std::vector<std::byte>(ping_payload.begin(), ping_payload.end()));
+    GLIFI_REQUIRE(pong.has_value());
+    GLIFI_REQUIRE(*pong == std::vector<std::byte>(ping_payload.begin(), ping_payload.end()));
 
     const std::array<std::byte, 5> key{std::byte{'k'}, std::byte{0}, std::byte{'e'}, std::byte{'y'},
                                        std::byte{0xFF}};
     const std::array<std::byte, 5> value{std::byte{0}, std::byte{'v'}, std::byte{'a'}, std::byte{'l'},
                                          std::byte{0xFE}};
     const auto stored = client.put(key, value);
-    GLYPHA_REQUIRE(stored.committed());
-    GLYPHA_REQUIRE(!stored.error.has_value());
+    GLIFI_REQUIRE(stored.committed());
+    GLIFI_REQUIRE(!stored.error.has_value());
 
     auto loaded = client.get(key);
-    GLYPHA_REQUIRE(loaded.has_value());
-    GLYPHA_REQUIRE(*loaded == std::vector<std::byte>(value.begin(), value.end()));
+    GLIFI_REQUIRE(loaded.has_value());
+    GLIFI_REQUIRE(*loaded == std::vector<std::byte>(value.begin(), value.end()));
 
     const auto erased = client.erase(key);
-    GLYPHA_REQUIRE(erased.committed());
+    GLIFI_REQUIRE(erased.committed());
     auto missing = client.get(key);
-    GLYPHA_REQUIRE(!missing.has_value());
-    GLYPHA_REQUIRE(missing.error().code == glyphastore::ErrorCode::not_found);
-    GLYPHA_REQUIRE(missing.error().category == "not_found");
-    GLYPHA_REQUIRE(missing.error().wire_status.has_value());
-    GLYPHA_REQUIRE(*missing.error().wire_status ==
-                   static_cast<std::uint16_t>(glyphastore::server::ResponseStatus::not_found));
-    GLYPHA_REQUIRE(missing.error().retryability == "new_attempt");
-    GLYPHA_REQUIRE(missing.error().operation == "get");
+    GLIFI_REQUIRE(!missing.has_value());
+    GLIFI_REQUIRE(missing.error().code == glifistore::ErrorCode::not_found);
+    GLIFI_REQUIRE(missing.error().category == "not_found");
+    GLIFI_REQUIRE(missing.error().wire_status.has_value());
+    GLIFI_REQUIRE(*missing.error().wire_status ==
+                   static_cast<std::uint16_t>(glifistore::server::ResponseStatus::not_found));
+    GLIFI_REQUIRE(missing.error().retryability == "new_attempt");
+    GLIFI_REQUIRE(missing.error().operation == "get");
 
     const std::array<std::byte, 32> oversized_value{};
     const auto oversized = client.put(key, oversized_value);
-    GLYPHA_REQUIRE(oversized.outcome == glyphastore::client::MutationOutcome::rejected);
-    GLYPHA_REQUIRE(oversized.error.has_value());
-    GLYPHA_REQUIRE(oversized.error->code == glyphastore::ErrorCode::record_too_large);
-    GLYPHA_REQUIRE(oversized.error->category == "invalid_argument");
-    GLYPHA_REQUIRE(oversized.error->retryability == "never");
-    GLYPHA_REQUIRE(oversized.error->operation == "put");
-    GLYPHA_REQUIRE(oversized.error->bytes_sent == 0);
+    GLIFI_REQUIRE(oversized.outcome == glifistore::client::MutationOutcome::rejected);
+    GLIFI_REQUIRE(oversized.error.has_value());
+    GLIFI_REQUIRE(oversized.error->code == glifistore::ErrorCode::record_too_large);
+    GLIFI_REQUIRE(oversized.error->category == "invalid_argument");
+    GLIFI_REQUIRE(oversized.error->retryability == "never");
+    GLIFI_REQUIRE(oversized.error->operation == "put");
+    GLIFI_REQUIRE(oversized.error->bytes_sent == 0);
 
     client.close();
-    GLYPHA_REQUIRE(!client.healthy());
-    GLYPHA_REQUIRE(!client.get("after-close").has_value());
+    GLIFI_REQUIRE(!client.healthy());
+    GLIFI_REQUIRE(!client.get("after-close").has_value());
 }
 
-GLYPHA_TEST("C++ client erase of absent key is rejected") {
+GLIFI_TEST("C++ client erase of absent key is rejected") {
     // client-semantics §3: wire NOT_FOUND on standalone ERASE → rejected.
     RunningServer server;
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
     const auto result = client.erase("missing-key");
-    GLYPHA_REQUIRE(result.outcome == glyphastore::client::MutationOutcome::rejected);
-    GLYPHA_REQUIRE(result.error.has_value());
-    GLYPHA_REQUIRE(result.error->code == glyphastore::ErrorCode::not_found);
-    GLYPHA_REQUIRE(result.error->category == "not_found");
-    GLYPHA_REQUIRE(result.error->mutation_outcome == "rejected");
-    GLYPHA_REQUIRE(result.error->retryability == "new_attempt");
-    GLYPHA_REQUIRE(result.error->operation == "erase");
+    GLIFI_REQUIRE(result.outcome == glifistore::client::MutationOutcome::rejected);
+    GLIFI_REQUIRE(result.error.has_value());
+    GLIFI_REQUIRE(result.error->code == glifistore::ErrorCode::not_found);
+    GLIFI_REQUIRE(result.error->category == "not_found");
+    GLIFI_REQUIRE(result.error->mutation_outcome == "rejected");
+    GLIFI_REQUIRE(result.error->retryability == "new_attempt");
+    GLIFI_REQUIRE(result.error->operation == "erase");
     client.close();
 }
 
-GLYPHA_TEST("C++ client pipeline erase of absent key is failed rejected") {
+GLIFI_TEST("C++ client pipeline erase of absent key is failed rejected") {
     // client-semantics §3: wire NOT_FOUND on pipeline ERASE → failed + rejected.
     RunningServer server;
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
     const std::array requests{
-        glyphastore::client::PipelineRequest{.opcode = glyphastore::client::PipelineOpcode::erase,
+        glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::erase,
                                              .key = bytes("missing-key")},
     };
     const auto executed = client.execute_pipeline(requests);
-    GLYPHA_REQUIRE(executed.has_value());
-    GLYPHA_REQUIRE(executed->size() == 1);
-    GLYPHA_REQUIRE((*executed)[0].outcome == glyphastore::client::PipelineOutcome::failed);
-    GLYPHA_REQUIRE((*executed)[0].error.has_value());
-    GLYPHA_REQUIRE((*executed)[0].error->code == glyphastore::ErrorCode::not_found);
-    GLYPHA_REQUIRE((*executed)[0].error->category == "not_found");
-    GLYPHA_REQUIRE((*executed)[0].error->mutation_outcome == "rejected");
-    GLYPHA_REQUIRE((*executed)[0].error->retryability == "new_attempt");
-    GLYPHA_REQUIRE((*executed)[0].error->operation == "erase");
+    GLIFI_REQUIRE(executed.has_value());
+    GLIFI_REQUIRE(executed->size() == 1);
+    GLIFI_REQUIRE((*executed)[0].outcome == glifistore::client::PipelineOutcome::failed);
+    GLIFI_REQUIRE((*executed)[0].error.has_value());
+    GLIFI_REQUIRE((*executed)[0].error->code == glifistore::ErrorCode::not_found);
+    GLIFI_REQUIRE((*executed)[0].error->category == "not_found");
+    GLIFI_REQUIRE((*executed)[0].error->mutation_outcome == "rejected");
+    GLIFI_REQUIRE((*executed)[0].error->retryability == "new_attempt");
+    GLIFI_REQUIRE((*executed)[0].error->operation == "erase");
     client.close();
 }
 
-GLYPHA_TEST("C++ client batch erase of absent key is failed rejected") {
+GLIFI_TEST("C++ client batch erase of absent key is failed rejected") {
     // client-semantics §3/§5: execute_batch absent ERASE → failed + rejected.
     RunningServer server;
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
     const std::array requests{
-        glyphastore::client::PipelineRequest{.opcode = glyphastore::client::PipelineOpcode::erase,
+        glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::erase,
                                              .key = bytes("missing-key")},
     };
     const auto executed = client.execute_batch(requests);
-    GLYPHA_REQUIRE(executed.has_value());
-    GLYPHA_REQUIRE(executed->size() == 1);
-    GLYPHA_REQUIRE((*executed)[0].outcome == glyphastore::client::PipelineOutcome::failed);
-    GLYPHA_REQUIRE((*executed)[0].error.has_value());
-    GLYPHA_REQUIRE((*executed)[0].error->code == glyphastore::ErrorCode::not_found);
-    GLYPHA_REQUIRE((*executed)[0].error->category == "not_found");
-    GLYPHA_REQUIRE((*executed)[0].error->mutation_outcome == "rejected");
-    GLYPHA_REQUIRE((*executed)[0].error->retryability == "new_attempt");
-    GLYPHA_REQUIRE((*executed)[0].error->operation == "erase");
+    GLIFI_REQUIRE(executed.has_value());
+    GLIFI_REQUIRE(executed->size() == 1);
+    GLIFI_REQUIRE((*executed)[0].outcome == glifistore::client::PipelineOutcome::failed);
+    GLIFI_REQUIRE((*executed)[0].error.has_value());
+    GLIFI_REQUIRE((*executed)[0].error->code == glifistore::ErrorCode::not_found);
+    GLIFI_REQUIRE((*executed)[0].error->category == "not_found");
+    GLIFI_REQUIRE((*executed)[0].error->mutation_outcome == "rejected");
+    GLIFI_REQUIRE((*executed)[0].error->retryability == "new_attempt");
+    GLIFI_REQUIRE((*executed)[0].error->operation == "erase");
     client.close();
 }
 
-GLYPHA_TEST("C++ client worker pipelines erase of absent key is failed rejected") {
+GLIFI_TEST("C++ client worker pipelines erase of absent key is failed rejected") {
     // client-semantics §3/§5: pre-sharded worker pipelines inherit pipeline ERASE mapping.
     RunningServer server{1};
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
-    using Batch = std::vector<glyphastore::client::PipelineRequest>;
+    using Batch = std::vector<glifistore::client::PipelineRequest>;
     const std::vector<Batch> batches{
         Batch{
-            {.opcode = glyphastore::client::PipelineOpcode::erase, .key = bytes("missing-key")},
+            {.opcode = glifistore::client::PipelineOpcode::erase, .key = bytes("missing-key")},
         },
     };
     const auto executed = client.execute_worker_pipelines(batches);
-    GLYPHA_REQUIRE(executed.has_value());
-    GLYPHA_REQUIRE(executed->size() == 1);
-    GLYPHA_REQUIRE((*executed)[0].size() == 1);
-    GLYPHA_REQUIRE((*executed)[0][0].outcome == glyphastore::client::PipelineOutcome::failed);
-    GLYPHA_REQUIRE((*executed)[0][0].error.has_value());
-    GLYPHA_REQUIRE((*executed)[0][0].error->code == glyphastore::ErrorCode::not_found);
-    GLYPHA_REQUIRE((*executed)[0][0].error->category == "not_found");
-    GLYPHA_REQUIRE((*executed)[0][0].error->mutation_outcome == "rejected");
-    GLYPHA_REQUIRE((*executed)[0][0].error->retryability == "new_attempt");
-    GLYPHA_REQUIRE((*executed)[0][0].error->operation == "erase");
+    GLIFI_REQUIRE(executed.has_value());
+    GLIFI_REQUIRE(executed->size() == 1);
+    GLIFI_REQUIRE((*executed)[0].size() == 1);
+    GLIFI_REQUIRE((*executed)[0][0].outcome == glifistore::client::PipelineOutcome::failed);
+    GLIFI_REQUIRE((*executed)[0][0].error.has_value());
+    GLIFI_REQUIRE((*executed)[0][0].error->code == glifistore::ErrorCode::not_found);
+    GLIFI_REQUIRE((*executed)[0][0].error->category == "not_found");
+    GLIFI_REQUIRE((*executed)[0][0].error->mutation_outcome == "rejected");
+    GLIFI_REQUIRE((*executed)[0][0].error->retryability == "new_attempt");
+    GLIFI_REQUIRE((*executed)[0][0].error->operation == "erase");
     client.close();
 }
 
-GLYPHA_TEST("C++ client maps OVERLOADED mutations to rejected with retryability never") {
+GLIFI_TEST("C++ client maps OVERLOADED mutations to rejected with retryability never") {
     OverloadedPutServer server;
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
     const auto put = client.put("k", "v");
-    GLYPHA_REQUIRE(put.outcome == glyphastore::client::MutationOutcome::rejected);
-    GLYPHA_REQUIRE(put.error.has_value());
-    GLYPHA_REQUIRE(put.error->code == glyphastore::ErrorCode::resource_exhausted);
-    GLYPHA_REQUIRE(put.error->category == "overloaded");
-    GLYPHA_REQUIRE(put.error->mutation_outcome == "rejected");
-    GLYPHA_REQUIRE(put.error->retryability == "never");
-    GLYPHA_REQUIRE(put.error->wire_status.has_value());
-    GLYPHA_REQUIRE(*put.error->wire_status ==
-                   static_cast<std::uint16_t>(glyphastore::server::ResponseStatus::overloaded));
+    GLIFI_REQUIRE(put.outcome == glifistore::client::MutationOutcome::rejected);
+    GLIFI_REQUIRE(put.error.has_value());
+    GLIFI_REQUIRE(put.error->code == glifistore::ErrorCode::resource_exhausted);
+    GLIFI_REQUIRE(put.error->category == "overloaded");
+    GLIFI_REQUIRE(put.error->mutation_outcome == "rejected");
+    GLIFI_REQUIRE(put.error->retryability == "never");
+    GLIFI_REQUIRE(put.error->wire_status.has_value());
+    GLIFI_REQUIRE(*put.error->wire_status ==
+                   static_cast<std::uint16_t>(glifistore::server::ResponseStatus::overloaded));
     client.close();
 }
 
-GLYPHA_TEST("C++ client safely shares worker-bound connections between threads") {
+GLIFI_TEST("C++ client safely shares worker-bound connections between threads") {
     constexpr std::size_t workers = 2;
     RunningServer server{workers};
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
 
     std::array<std::string, workers> keys;
@@ -764,322 +764,322 @@ GLYPHA_TEST("C++ client safely shares worker-bound connections between threads")
     for (auto& thread : threads) {
         thread.join();
     }
-    GLYPHA_REQUIRE(!failed.load(std::memory_order_relaxed));
+    GLIFI_REQUIRE(!failed.load(std::memory_order_relaxed));
 }
 
-GLYPHA_TEST("C++ client pipeline preserves order and enforces one Worker") {
+GLIFI_TEST("C++ client pipeline preserves order and enforces one Worker") {
     constexpr std::size_t workers = 2;
     RunningServer server{workers};
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
 
     const auto key = key_for_worker(1, workers);
-    GLYPHA_REQUIRE(client.worker_for(key) == 1);
+    GLIFI_REQUIRE(client.worker_for(key) == 1);
     std::vector<std::string> values;
-    std::vector<glyphastore::client::PipelineRequest> requests;
+    std::vector<glifistore::client::PipelineRequest> requests;
     values.reserve(32);
     requests.reserve(64);
     for (std::size_t index = 0; index < 32; ++index) {
         values.push_back("pipeline-value-" + std::to_string(index));
-        requests.push_back({.opcode = glyphastore::client::PipelineOpcode::put,
+        requests.push_back({.opcode = glifistore::client::PipelineOpcode::put,
                             .key = bytes(key),
                             .value = bytes(values.back())});
-        requests.push_back({.opcode = glyphastore::client::PipelineOpcode::get, .key = bytes(key)});
+        requests.push_back({.opcode = glifistore::client::PipelineOpcode::get, .key = bytes(key)});
     }
     auto executed = client.execute_pipeline(requests);
-    GLYPHA_REQUIRE(executed.has_value());
-    GLYPHA_REQUIRE(executed->size() == requests.size());
+    GLIFI_REQUIRE(executed.has_value());
+    GLIFI_REQUIRE(executed->size() == requests.size());
     for (std::size_t index = 0; index < values.size(); ++index) {
-        GLYPHA_REQUIRE((*executed)[index * 2U].succeeded());
-        GLYPHA_REQUIRE((*executed)[index * 2U + 1U].succeeded());
-        GLYPHA_REQUIRE(text((*executed)[index * 2U + 1U].value) == values[index]);
+        GLIFI_REQUIRE((*executed)[index * 2U].succeeded());
+        GLIFI_REQUIRE((*executed)[index * 2U + 1U].succeeded());
+        GLIFI_REQUIRE(text((*executed)[index * 2U + 1U].value) == values[index]);
     }
 
     const auto other_key = key_for_worker(0, workers);
     const std::array mixed{
-        glyphastore::client::PipelineRequest{.opcode = glyphastore::client::PipelineOpcode::get,
+        glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
                                              .key = bytes(key)},
-        glyphastore::client::PipelineRequest{.opcode = glyphastore::client::PipelineOpcode::get,
+        glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
                                              .key = bytes(other_key)},
     };
     auto rejected = client.execute_pipeline(mixed);
-    GLYPHA_REQUIRE(!rejected.has_value());
-    GLYPHA_REQUIRE(rejected.error().code == glyphastore::ErrorCode::invalid_argument);
+    GLIFI_REQUIRE(!rejected.has_value());
+    GLIFI_REQUIRE(rejected.error().code == glifistore::ErrorCode::invalid_argument);
 
     const std::array invalid_opcode{
-        glyphastore::client::PipelineRequest{.opcode = static_cast<glyphastore::client::PipelineOpcode>(255),
+        glifistore::client::PipelineRequest{.opcode = static_cast<glifistore::client::PipelineOpcode>(255),
                                              .key = bytes(key)},
     };
     rejected = client.execute_pipeline(invalid_opcode);
-    GLYPHA_REQUIRE(!rejected.has_value());
-    GLYPHA_REQUIRE(rejected.error().code == glyphastore::ErrorCode::invalid_argument);
-    GLYPHA_REQUIRE(client.healthy());
+    GLIFI_REQUIRE(!rejected.has_value());
+    GLIFI_REQUIRE(rejected.error().code == glifistore::ErrorCode::invalid_argument);
+    GLIFI_REQUIRE(client.healthy());
 }
 
-GLYPHA_TEST("C++ client batch groups Workers and restores caller order") {
+GLIFI_TEST("C++ client batch groups Workers and restores caller order") {
     constexpr std::size_t workers = 2;
     RunningServer server{workers};
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
 
     const auto key0 = key_for_worker(0, workers);
     const auto key1 = key_for_worker(1, workers);
-    GLYPHA_REQUIRE(client.worker_for(key0) == 0);
-    GLYPHA_REQUIRE(client.worker_for(key1) == 1);
+    GLIFI_REQUIRE(client.worker_for(key0) == 0);
+    GLIFI_REQUIRE(client.worker_for(key1) == 1);
 
     const std::array requests{
-        glyphastore::client::PipelineRequest{
-            .opcode = glyphastore::client::PipelineOpcode::put, .key = bytes(key1), .value = bytes("v1")},
-        glyphastore::client::PipelineRequest{
-            .opcode = glyphastore::client::PipelineOpcode::put, .key = bytes(key0), .value = bytes("v0")},
-        glyphastore::client::PipelineRequest{.opcode = glyphastore::client::PipelineOpcode::get,
+        glifistore::client::PipelineRequest{
+            .opcode = glifistore::client::PipelineOpcode::put, .key = bytes(key1), .value = bytes("v1")},
+        glifistore::client::PipelineRequest{
+            .opcode = glifistore::client::PipelineOpcode::put, .key = bytes(key0), .value = bytes("v0")},
+        glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
                                              .key = bytes(key1)},
-        glyphastore::client::PipelineRequest{.opcode = glyphastore::client::PipelineOpcode::get,
+        glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
                                              .key = bytes(key0)},
     };
     auto executed = client.execute_batch(requests);
-    GLYPHA_REQUIRE(executed.has_value());
-    GLYPHA_REQUIRE(executed->size() == requests.size());
+    GLIFI_REQUIRE(executed.has_value());
+    GLIFI_REQUIRE(executed->size() == requests.size());
     for (const auto& response : *executed) {
-        GLYPHA_REQUIRE(response.succeeded());
+        GLIFI_REQUIRE(response.succeeded());
     }
-    GLYPHA_REQUIRE(text((*executed)[2].value) == "v1");
-    GLYPHA_REQUIRE(text((*executed)[3].value) == "v0");
+    GLIFI_REQUIRE(text((*executed)[2].value) == "v1");
+    GLIFI_REQUIRE(text((*executed)[3].value) == "v0");
     client.close();
 
     auto limited =
-        glyphastore::client::Client::connect({.port = server.port(), .maximum_pipeline_requests = 1});
-    GLYPHA_REQUIRE(limited.has_value());
+        glifistore::client::Client::connect({.port = server.port(), .maximum_pipeline_requests = 1});
+    GLIFI_REQUIRE(limited.has_value());
     auto limited_client = std::move(*limited);
     const std::array oversized{
-        glyphastore::client::PipelineRequest{.opcode = glyphastore::client::PipelineOpcode::get,
+        glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
                                              .key = bytes(key0)},
-        glyphastore::client::PipelineRequest{.opcode = glyphastore::client::PipelineOpcode::get,
+        glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
                                              .key = bytes(key0)},
     };
     auto rejected = limited_client.execute_batch(oversized);
-    GLYPHA_REQUIRE(!rejected.has_value());
-    GLYPHA_REQUIRE(rejected.error().code == glyphastore::ErrorCode::resource_exhausted);
+    GLIFI_REQUIRE(!rejected.has_value());
+    GLIFI_REQUIRE(rejected.error().code == glifistore::ErrorCode::resource_exhausted);
 }
 
-GLYPHA_TEST("C++ client execute_worker_pipelines fans out pre-sharded Worker vectors") {
+GLIFI_TEST("C++ client execute_worker_pipelines fans out pre-sharded Worker vectors") {
     constexpr std::size_t workers = 2;
     RunningServer server{workers};
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
 
     const auto key0 = key_for_worker(0, workers);
     const auto key1 = key_for_worker(1, workers);
-    using Batch = std::vector<glyphastore::client::PipelineRequest>;
+    using Batch = std::vector<glifistore::client::PipelineRequest>;
     const std::vector<Batch> batches{
         Batch{
-            {.opcode = glyphastore::client::PipelineOpcode::put, .key = bytes(key0), .value = bytes("a")},
-            {.opcode = glyphastore::client::PipelineOpcode::get, .key = bytes(key0)},
+            {.opcode = glifistore::client::PipelineOpcode::put, .key = bytes(key0), .value = bytes("a")},
+            {.opcode = glifistore::client::PipelineOpcode::get, .key = bytes(key0)},
         },
         Batch{
-            {.opcode = glyphastore::client::PipelineOpcode::put, .key = bytes(key1), .value = bytes("b")},
-            {.opcode = glyphastore::client::PipelineOpcode::get, .key = bytes(key1)},
+            {.opcode = glifistore::client::PipelineOpcode::put, .key = bytes(key1), .value = bytes("b")},
+            {.opcode = glifistore::client::PipelineOpcode::get, .key = bytes(key1)},
         },
     };
     auto executed = client.execute_worker_pipelines(batches);
-    GLYPHA_REQUIRE(executed.has_value());
-    GLYPHA_REQUIRE(executed->size() == workers);
-    GLYPHA_REQUIRE((*executed)[0].size() == 2);
-    GLYPHA_REQUIRE((*executed)[1].size() == 2);
-    GLYPHA_REQUIRE((*executed)[0][0].succeeded());
-    GLYPHA_REQUIRE((*executed)[0][1].succeeded());
-    GLYPHA_REQUIRE(text((*executed)[0][1].value) == "a");
-    GLYPHA_REQUIRE((*executed)[1][0].succeeded());
-    GLYPHA_REQUIRE((*executed)[1][1].succeeded());
-    GLYPHA_REQUIRE(text((*executed)[1][1].value) == "b");
+    GLIFI_REQUIRE(executed.has_value());
+    GLIFI_REQUIRE(executed->size() == workers);
+    GLIFI_REQUIRE((*executed)[0].size() == 2);
+    GLIFI_REQUIRE((*executed)[1].size() == 2);
+    GLIFI_REQUIRE((*executed)[0][0].succeeded());
+    GLIFI_REQUIRE((*executed)[0][1].succeeded());
+    GLIFI_REQUIRE(text((*executed)[0][1].value) == "a");
+    GLIFI_REQUIRE((*executed)[1][0].succeeded());
+    GLIFI_REQUIRE((*executed)[1][1].succeeded());
+    GLIFI_REQUIRE(text((*executed)[1][1].value) == "b");
 
     const std::vector<Batch> empty_slots{
         Batch{},
         Batch{
-            {.opcode = glyphastore::client::PipelineOpcode::get, .key = bytes(key1)},
+            {.opcode = glifistore::client::PipelineOpcode::get, .key = bytes(key1)},
         },
     };
     auto sparse = client.execute_worker_pipelines(empty_slots);
-    GLYPHA_REQUIRE(sparse.has_value());
-    GLYPHA_REQUIRE((*sparse)[0].empty());
-    GLYPHA_REQUIRE((*sparse)[1].size() == 1);
-    GLYPHA_REQUIRE((*sparse)[1][0].succeeded());
+    GLIFI_REQUIRE(sparse.has_value());
+    GLIFI_REQUIRE((*sparse)[0].empty());
+    GLIFI_REQUIRE((*sparse)[1].size() == 1);
+    GLIFI_REQUIRE((*sparse)[1][0].succeeded());
 
     const std::vector<Batch> misrouted{
         Batch{
-            {.opcode = glyphastore::client::PipelineOpcode::get, .key = bytes(key1)},
+            {.opcode = glifistore::client::PipelineOpcode::get, .key = bytes(key1)},
         },
         Batch{},
     };
     auto rejected = client.execute_worker_pipelines(misrouted);
-    GLYPHA_REQUIRE(!rejected.has_value());
-    GLYPHA_REQUIRE(rejected.error().code == glyphastore::ErrorCode::invalid_argument);
+    GLIFI_REQUIRE(!rejected.has_value());
+    GLIFI_REQUIRE(rejected.error().code == glifistore::ErrorCode::invalid_argument);
 
     const std::vector<Batch> wrong_length{
         Batch{
-            {.opcode = glyphastore::client::PipelineOpcode::get, .key = bytes(key0)},
+            {.opcode = glifistore::client::PipelineOpcode::get, .key = bytes(key0)},
         },
     };
     rejected = client.execute_worker_pipelines(wrong_length);
-    GLYPHA_REQUIRE(!rejected.has_value());
-    GLYPHA_REQUIRE(rejected.error().code == glyphastore::ErrorCode::invalid_argument);
+    GLIFI_REQUIRE(!rejected.has_value());
+    GLIFI_REQUIRE(rejected.error().code == glifistore::ErrorCode::invalid_argument);
     client.close();
 }
 
-GLYPHA_TEST("C++ client pipeline preserves indeterminate mutation outcomes after disconnect") {
+GLIFI_TEST("C++ client pipeline preserves indeterminate mutation outcomes after disconnect") {
     DisconnectingPipelineServer server;
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
 
     const std::array requests{
-        glyphastore::client::PipelineRequest{
-            .opcode = glyphastore::client::PipelineOpcode::put, .key = bytes("key"), .value = bytes("value")},
-        glyphastore::client::PipelineRequest{.opcode = glyphastore::client::PipelineOpcode::get,
+        glifistore::client::PipelineRequest{
+            .opcode = glifistore::client::PipelineOpcode::put, .key = bytes("key"), .value = bytes("value")},
+        glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
                                              .key = bytes("key")},
-        glyphastore::client::PipelineRequest{.opcode = glyphastore::client::PipelineOpcode::erase,
+        glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::erase,
                                              .key = bytes("key")},
     };
     auto executed = client.execute_pipeline(requests);
-    GLYPHA_REQUIRE(executed.has_value());
-    GLYPHA_REQUIRE(executed->size() == requests.size());
-    GLYPHA_REQUIRE((*executed)[0].outcome == glyphastore::client::PipelineOutcome::indeterminate);
-    GLYPHA_REQUIRE((*executed)[1].outcome == glyphastore::client::PipelineOutcome::failed);
-    GLYPHA_REQUIRE((*executed)[2].outcome == glyphastore::client::PipelineOutcome::indeterminate);
-    GLYPHA_REQUIRE((*executed)[0].error.has_value());
-    GLYPHA_REQUIRE((*executed)[1].error.has_value());
-    GLYPHA_REQUIRE((*executed)[2].error.has_value());
-    GLYPHA_REQUIRE((*executed)[0].error->bytes_sent > 0);
-    GLYPHA_REQUIRE((*executed)[0].error->retryability == "reconcile_first");
-    GLYPHA_REQUIRE((*executed)[0].error->mutation_outcome == "indeterminate");
-    GLYPHA_REQUIRE((*executed)[2].error->retryability == "reconcile_first");
-    GLYPHA_REQUIRE((*executed)[2].error->mutation_outcome == "indeterminate");
-    GLYPHA_REQUIRE(client.healthy());
+    GLIFI_REQUIRE(executed.has_value());
+    GLIFI_REQUIRE(executed->size() == requests.size());
+    GLIFI_REQUIRE((*executed)[0].outcome == glifistore::client::PipelineOutcome::indeterminate);
+    GLIFI_REQUIRE((*executed)[1].outcome == glifistore::client::PipelineOutcome::failed);
+    GLIFI_REQUIRE((*executed)[2].outcome == glifistore::client::PipelineOutcome::indeterminate);
+    GLIFI_REQUIRE((*executed)[0].error.has_value());
+    GLIFI_REQUIRE((*executed)[1].error.has_value());
+    GLIFI_REQUIRE((*executed)[2].error.has_value());
+    GLIFI_REQUIRE((*executed)[0].error->bytes_sent > 0);
+    GLIFI_REQUIRE((*executed)[0].error->retryability == "reconcile_first");
+    GLIFI_REQUIRE((*executed)[0].error->mutation_outcome == "indeterminate");
+    GLIFI_REQUIRE((*executed)[2].error->retryability == "reconcile_first");
+    GLIFI_REQUIRE((*executed)[2].error->mutation_outcome == "indeterminate");
+    GLIFI_REQUIRE(client.healthy());
 }
 
-GLYPHA_TEST("C++ client does not blind-retry BACKUP after request bytes were sent") {
+GLIFI_TEST("C++ client does not blind-retry BACKUP after request bytes were sent") {
     // Online BACKUP requires a pristine destination. Retrying after a lost OK would
     // hit "destination not empty" and falsely report failure of a completed backup.
     BackupDropResponseServer server;
-    auto connected = glyphastore::client::Client::connect({.port = server.port(), .request_timeout_ms = 200});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port(), .request_timeout_ms = 200});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
-    auto backed = client.backup("/tmp/glyphastore-backup-drop-litmus");
-    GLYPHA_REQUIRE(!backed.has_value());
-    GLYPHA_REQUIRE(backed.error().bytes_sent > 0);
-    GLYPHA_REQUIRE(backed.error().mutation_outcome == "indeterminate");
-    GLYPHA_REQUIRE(backed.error().retryability == "reconcile_first");
-    GLYPHA_REQUIRE(server.backup_requests() == 1);
+    auto backed = client.backup("/tmp/glifistore-backup-drop-litmus");
+    GLIFI_REQUIRE(!backed.has_value());
+    GLIFI_REQUIRE(backed.error().bytes_sent > 0);
+    GLIFI_REQUIRE(backed.error().mutation_outcome == "indeterminate");
+    GLIFI_REQUIRE(backed.error().retryability == "reconcile_first");
+    GLIFI_REQUIRE(server.backup_requests() == 1);
 }
 
-GLYPHA_TEST("C++ client treats BACKUP INTERNAL_ERROR as reconcile_first") {
+GLIFI_TEST("C++ client treats BACKUP INTERNAL_ERROR as reconcile_first") {
     // Wire INTERNAL_ERROR after a possible committed fenced copy must not advertise
     // new_attempt (same-destination retry would look like the first backup failed).
     BackupInternalErrorServer server;
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
-    auto backed = client.backup("/tmp/glyphastore-backup-internal-error-litmus");
-    GLYPHA_REQUIRE(!backed.has_value());
-    GLYPHA_REQUIRE(backed.error().mutation_outcome == "indeterminate");
-    GLYPHA_REQUIRE(backed.error().retryability == "reconcile_first");
-    GLYPHA_REQUIRE(server.backup_requests() == 1);
+    auto backed = client.backup("/tmp/glifistore-backup-internal-error-litmus");
+    GLIFI_REQUIRE(!backed.has_value());
+    GLIFI_REQUIRE(backed.error().mutation_outcome == "indeterminate");
+    GLIFI_REQUIRE(backed.error().retryability == "reconcile_first");
+    GLIFI_REQUIRE(server.backup_requests() == 1);
 }
 
-GLYPHA_TEST("C++ client treats BACKUP validate failure as reconcile_first") {
+GLIFI_TEST("C++ client treats BACKUP validate failure as reconcile_first") {
     // A framed BACKUP response with a mismatched request_id still means the fenced
     // copy may already exist — same polarity as INTERNAL_ERROR / mutate validate-fail.
     BackupWrongRequestIdServer server;
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
-    auto backed = client.backup("/tmp/glyphastore-backup-wrong-id-litmus");
-    GLYPHA_REQUIRE(!backed.has_value());
-    GLYPHA_REQUIRE(backed.error().bytes_sent > 0);
-    GLYPHA_REQUIRE(backed.error().mutation_outcome == "indeterminate");
-    GLYPHA_REQUIRE(backed.error().retryability == "reconcile_first");
-    GLYPHA_REQUIRE(server.backup_requests() == 1);
+    auto backed = client.backup("/tmp/glifistore-backup-wrong-id-litmus");
+    GLIFI_REQUIRE(!backed.has_value());
+    GLIFI_REQUIRE(backed.error().bytes_sent > 0);
+    GLIFI_REQUIRE(backed.error().mutation_outcome == "indeterminate");
+    GLIFI_REQUIRE(backed.error().retryability == "reconcile_first");
+    GLIFI_REQUIRE(server.backup_requests() == 1);
 }
 
-GLYPHA_TEST("C++ client rejects non-positive request timeout override") {
+GLIFI_TEST("C++ client rejects non-positive request timeout override") {
     RunningServer server;
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
     auto rejected = client.get("key", {.timeout = std::chrono::milliseconds{0}});
-    GLYPHA_REQUIRE(!rejected.has_value());
-    GLYPHA_REQUIRE(rejected.error().code == glyphastore::ErrorCode::invalid_argument);
+    GLIFI_REQUIRE(!rejected.has_value());
+    GLIFI_REQUIRE(rejected.error().code == glifistore::ErrorCode::invalid_argument);
 }
 
-GLYPHA_TEST("C++ client rejects invalid configuration before network I/O") {
-    auto invalid = glyphastore::client::Client::connect({.port = 0});
-    GLYPHA_REQUIRE(!invalid.has_value());
-    GLYPHA_REQUIRE(invalid.error().code == glyphastore::ErrorCode::invalid_argument);
+GLIFI_TEST("C++ client rejects invalid configuration before network I/O") {
+    auto invalid = glifistore::client::Client::connect({.port = 0});
+    GLIFI_REQUIRE(!invalid.has_value());
+    GLIFI_REQUIRE(invalid.error().code == glifistore::ErrorCode::invalid_argument);
 
-    invalid = glyphastore::client::Client::connect({.maximum_pipeline_requests = 0});
-    GLYPHA_REQUIRE(!invalid.has_value());
-    GLYPHA_REQUIRE(invalid.error().code == glyphastore::ErrorCode::invalid_argument);
+    invalid = glifistore::client::Client::connect({.maximum_pipeline_requests = 0});
+    GLIFI_REQUIRE(!invalid.has_value());
+    GLIFI_REQUIRE(invalid.error().code == glifistore::ErrorCode::invalid_argument);
 
-    invalid = glyphastore::client::Client::connect({.maximum_pipeline_bytes = 1});
-    GLYPHA_REQUIRE(!invalid.has_value());
-    GLYPHA_REQUIRE(invalid.error().code == glyphastore::ErrorCode::invalid_argument);
+    invalid = glifistore::client::Client::connect({.maximum_pipeline_bytes = 1});
+    GLIFI_REQUIRE(!invalid.has_value());
+    GLIFI_REQUIRE(invalid.error().code == glifistore::ErrorCode::invalid_argument);
 
-    invalid = glyphastore::client::Client::connect(
-        {.unix_socket_path = "/tmp/glyphastore-client-uds-tls-refuse.sock", .tls = {.enable = true}});
-    GLYPHA_REQUIRE(!invalid.has_value());
-    GLYPHA_REQUIRE(invalid.error().code == glyphastore::ErrorCode::invalid_argument);
+    invalid = glifistore::client::Client::connect(
+        {.unix_socket_path = "/tmp/glifistore-client-uds-tls-refuse.sock", .tls = {.enable = true}});
+    GLIFI_REQUIRE(!invalid.has_value());
+    GLIFI_REQUIRE(invalid.error().code == glifistore::ErrorCode::invalid_argument);
 }
 
-GLYPHA_TEST("C++ client exposes HEALTH READY STATS and routing state") {
+GLIFI_TEST("C++ client exposes HEALTH READY STATS and routing state") {
     RunningServer server;
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
-    GLYPHA_REQUIRE(client.routing().algorithm == glyphastore::RoutingAlgorithm::fnv1a64_v1 ||
-                   client.routing().algorithm == glyphastore::RoutingAlgorithm::siphash24_v1);
+    GLIFI_REQUIRE(client.routing().algorithm == glifistore::RoutingAlgorithm::fnv1a64_v1 ||
+                   client.routing().algorithm == glifistore::RoutingAlgorithm::siphash24_v1);
     auto health = client.health();
-    GLYPHA_REQUIRE(health.has_value());
-    GLYPHA_REQUIRE(text(*health) == "GlyphaStore/live");
+    GLIFI_REQUIRE(health.has_value());
+    GLIFI_REQUIRE(text(*health) == "GlifiStore/live");
     auto ready = client.ready();
-    GLYPHA_REQUIRE(ready.has_value());
-    GLYPHA_REQUIRE(text(*ready) == "GlyphaStore/ready");
+    GLIFI_REQUIRE(ready.has_value());
+    GLIFI_REQUIRE(text(*ready) == "GlifiStore/ready");
     auto stats = client.stats();
-    GLYPHA_REQUIRE(stats.has_value());
-    GLYPHA_REQUIRE(!stats->empty());
-    GLYPHA_REQUIRE(text(*stats).starts_with("GlyphaStore/stats"));
+    GLIFI_REQUIRE(stats.has_value());
+    GLIFI_REQUIRE(!stats->empty());
+    GLIFI_REQUIRE(text(*stats).starts_with("GlifiStore/stats"));
 }
 
-GLYPHA_TEST("authz-enabled server emits wire permission_denied status 8") {
-    glyphastore::server::AuthzPolicy policy;
-    policy.bind("mapped.example", glyphastore::server::Capability::read);
-    auto created = glyphastore::server::Server::create(
+GLIFI_TEST("authz-enabled server emits wire permission_denied status 8") {
+    glifistore::server::AuthzPolicy policy;
+    policy.bind("mapped.example", glifistore::server::Capability::read);
+    auto created = glifistore::server::Server::create(
         {.port = 0, .maximum_connections = 16, .worker_count = 1, .authz = std::move(policy)});
-    GLYPHA_REQUIRE(created.has_value());
-    GLYPHA_REQUIRE((*created)->start().has_value());
+    GLIFI_REQUIRE(created.has_value());
+    GLIFI_REQUIRE((*created)->start().has_value());
 
-    auto connected = glyphastore::client::Client::connect({.port = (*created)->port()});
-    GLYPHA_REQUIRE(connected.has_value());
+    auto connected = glifistore::client::Client::connect({.port = (*created)->port()});
+    GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
 
     // Lifecycle opcodes remain open; data-plane opcodes default-deny unmapped peers.
     const auto denied = client.get("key");
-    GLYPHA_REQUIRE(!denied.has_value());
-    GLYPHA_REQUIRE(denied.error().category == "permission_denied");
-    GLYPHA_REQUIRE(denied.error().retryability == "never");
-    GLYPHA_REQUIRE(denied.error().wire_status.has_value());
-    GLYPHA_REQUIRE(*denied.error().wire_status ==
-                   static_cast<std::uint16_t>(glyphastore::server::ResponseStatus::permission_denied));
+    GLIFI_REQUIRE(!denied.has_value());
+    GLIFI_REQUIRE(denied.error().category == "permission_denied");
+    GLIFI_REQUIRE(denied.error().retryability == "never");
+    GLIFI_REQUIRE(denied.error().wire_status.has_value());
+    GLIFI_REQUIRE(*denied.error().wire_status ==
+                   static_cast<std::uint16_t>(glifistore::server::ResponseStatus::permission_denied));
 
     const auto put = client.put("key", "value");
-    GLYPHA_REQUIRE(!put.committed());
-    GLYPHA_REQUIRE(put.error.has_value());
-    GLYPHA_REQUIRE(put.error->category == "permission_denied");
-    GLYPHA_REQUIRE(put.error->wire_status.has_value());
-    GLYPHA_REQUIRE(*put.error->wire_status ==
-                   static_cast<std::uint16_t>(glyphastore::server::ResponseStatus::permission_denied));
+    GLIFI_REQUIRE(!put.committed());
+    GLIFI_REQUIRE(put.error.has_value());
+    GLIFI_REQUIRE(put.error->category == "permission_denied");
+    GLIFI_REQUIRE(put.error->wire_status.has_value());
+    GLIFI_REQUIRE(*put.error->wire_status ==
+                   static_cast<std::uint16_t>(glifistore::server::ResponseStatus::permission_denied));
 
     client.close();
     (*created)->request_stop();

@@ -1,8 +1,8 @@
-@INCLUDEDIR_REL@/glyphastore
-@LIBDIR_REL@/cmake/GlyphaStore
-@LIBDIR_REL@/libglyphastore.so
-@LIBDIR_REL@/libglyphastore_client.a
-@LIBDIR_REL@/libglyphastore_core.a
-@LIBDIR_REL@/libglyphastore_tls_layer.a
-@LIBDIR_REL@/libglyphastore_wire.a
-@LIBDIR_REL@/pkgconfig/glyphastore-abi.pc
+@INCLUDEDIR_REL@/glifistore
+@LIBDIR_REL@/cmake/GlifiStore
+@LIBDIR_REL@/libglifistore.so
+@LIBDIR_REL@/libglifistore_client.a
+@LIBDIR_REL@/libglifistore_core.a
+@LIBDIR_REL@/libglifistore_tls_layer.a
+@LIBDIR_REL@/libglifistore_wire.a
+@LIBDIR_REL@/pkgconfig/glifistore-abi.pc

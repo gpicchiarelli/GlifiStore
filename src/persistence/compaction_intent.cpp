@@ -1,15 +1,15 @@
-#include "glyphastore/persistence/compaction_intent.hpp"
+#include "glifistore/persistence/compaction_intent.hpp"
 
-#include "glyphastore/core/little_endian.hpp"
-#include "glyphastore/persistence/compaction.hpp"
-#include "glyphastore/segment/crc32c.hpp"
+#include "glifistore/core/little_endian.hpp"
+#include "glifistore/persistence/compaction.hpp"
+#include "glifistore/segment/crc32c.hpp"
 
 #include <algorithm>
 #include <cstring>
 #include <limits>
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 inline constexpr std::size_t kChecksumOffset = 56;
@@ -156,4 +156,4 @@ auto decode_compaction_intent(const std::span<const std::byte> bytes) -> Result<
     return intent;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

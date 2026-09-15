@@ -1,7 +1,7 @@
-#include "glyphastore/store/paired/read_generation.hpp"
+#include "glifistore/store/paired/read_generation.hpp"
 #include "store/paired/read_generation_impl.hpp"
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 PairReadMerge::PairReadMerge(std::unique_ptr<State> state) noexcept : state_(std::move(state)) {}
 PairReadMerge::~PairReadMerge() = default;
@@ -239,4 +239,4 @@ auto PairReadGeneration::can_publish_incremental(const PairReadGeneration& curre
            maximum_new_entries <= merge->state_->post_delta.available_record_versions();
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

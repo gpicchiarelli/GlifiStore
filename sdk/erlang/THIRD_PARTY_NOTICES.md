@@ -1,6 +1,6 @@
 # Third-party notices (SDK)
 
-This SDK is part of GlyphaStore (BSD-3-Clause). Copyright (c) 2026 Giacomo Picchiarelli.
+This SDK is part of GlifiStore (BSD-3-Clause). Copyright (c) 2026 Giacomo Picchiarelli.
 
 Full third-party catalog for the monorepo (TLS libraries, algorithms, CI tooling):
 

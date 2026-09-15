@@ -44,11 +44,11 @@ that are not necessary for ABI 1.
 
 ## Decision
 
-1. `libglyphastore` exports only an `extern "C"` facade with opaque handles and caller-owned buffers.
+1. `libglifistore` exports only an `extern "C"` facade with opaque handles and caller-owned buffers.
 2. `ABI_VERSION` is the single major/minor authority. `VERSION`, wire v2, and persistence v1 remain
    independent.
 3. ABI 1 contains only version/error, open/close, GET, PUT, ERASE, and PUT batch.
-4. The shared facade links the PIC static core privately. `glyphastored` continues to link core/server
+4. The shared facade links the PIC static core privately. `glifistored` continues to link core/server
    targets and never routes its native hot path through the C ABI. On ELF, a distinct ABI-private
    PIC core prevents the shared-library relocation requirement from constraining the daemon's
    directly linked static core; Darwin does not require the duplicate target.

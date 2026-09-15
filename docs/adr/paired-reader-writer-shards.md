@@ -1,6 +1,6 @@
 # ADR 0031: shard a coppie Reader–Writer
 
-- Status: accepted (product concurrency for `glyphastored`; amended for embedded Store by 0032)
+- Status: accepted (product concurrency for `glifistored`; amended for embedded Store by 0032)
 - Date: 2026-07-28
 - Deciders: project owner, storage, networking, performance e reliability maintainers
 - Applies to: runtime paired; persistence v1 e wire protocol v2 restano invariati
@@ -422,7 +422,7 @@ nessuna perdita in shutdown. Il solo throughput medio non chiude il gate.
 5. **Compaction/reclamation:** QSBR, retirement, merge incrementale e Manifest transition.
 6. **Reader optimization:** `ImmutableReadIndex`, SIMD, scatter/gather, get-into, batch lookup e PGO.
 
-Per GlyphaStore 0.1.0 il runtime paired è il solo modello di destinazione e diventa default non
+Per GlifiStore 0.1.0 il runtime paired è il solo modello di destinazione e diventa default non
 appena il primo gate produttivo conserva la suite wire/persistence. Il runtime precedente resta
 temporaneamente nel repository come oracle A/B, recovery compatibility harness e sorgente di
 componenti già verificati; non riceve nuove scelte architetturali e non costituisce un secondo

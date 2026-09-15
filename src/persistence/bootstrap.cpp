@@ -1,9 +1,9 @@
-#include "glyphastore/persistence/bootstrap.hpp"
+#include "glifistore/persistence/bootstrap.hpp"
 
-#include "glyphastore/core/types.hpp"
-#include "glyphastore/core/worker_routing.hpp"
-#include "glyphastore/persistence/resource_limits.hpp"
-#include "glyphastore/persistence/segment_file.hpp"
+#include "glifistore/core/types.hpp"
+#include "glifistore/core/worker_routing.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
+#include "glifistore/persistence/segment_file.hpp"
 #include "system_error.hpp"
 
 #include <algorithm>
@@ -16,7 +16,7 @@
 #include <unistd.h>
 #endif
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 auto new_store_id() -> Result<StoreId> {
@@ -274,4 +274,4 @@ auto prepare_durable_store(DataDirectory& directory, const DurableOpenMode mode,
     return complete_bootstrap(directory, *created, required_worker_count, limits, creation_routing);
 }
 
-} // namespace glyphastore
+} // namespace glifistore

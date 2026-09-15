@@ -28,15 +28,15 @@ require_match() {
 # C++
 require_match "C++ Client::backup" \
   'Client::backup|auto backup\(' \
-  "include/glyphastore/client/client.hpp"
+  "include/glifistore/client/client.hpp"
 
 # Python
 require_match "Python sync backup" \
   'def backup' \
-  "sdk/python/src/glyphastore/client.py"
+  "sdk/python/src/glifistore/client.py"
 require_match "Python async backup" \
   'def backup' \
-  "sdk/python/src/glyphastore/async_client.py"
+  "sdk/python/src/glifistore/async_client.py"
 
 # Go — method Backup on a receiver
 if ! find sdk/go -type f \( -name '*.go' ! -name '*_test.go' \) -print0 \
@@ -50,18 +50,18 @@ fi
 # Perl
 require_match "Perl backup" \
   'sub backup' \
-  "sdk/perl/lib/GlyphaStore/Client.pm"
+  "sdk/perl/lib/GlifiStore/Client.pm"
 
 # Ruby
 require_match "Ruby sync backup" \
   'def backup' \
-  "sdk/ruby/lib/glypha_store/client.rb"
+  "sdk/ruby/lib/glifi_store/client.rb"
 require_match "Ruby async backup" \
   'def backup' \
-  "sdk/ruby/lib/glypha_store/async_client.rb"
+  "sdk/ruby/lib/glifi_store/async_client.rb"
 
 # Erlang — export or function clause
-erl="sdk/erlang/src/glyphastore_client.erl"
+erl="sdk/erlang/src/glifistore_client.erl"
 if [[ ! -f "$erl" ]]; then
   echo "FAIL: Erlang backup — missing file: $erl" >&2
   fail=1

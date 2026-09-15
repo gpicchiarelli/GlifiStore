@@ -1,6 +1,6 @@
-# GlyphaStore C++ safety profile
+# GlifiStore C++ safety profile
 
-GlyphaStore is performance-oriented C++, not unchecked C++.
+GlifiStore is performance-oriented C++, not unchecked C++.
 
 ## Non-negotiable rules
 

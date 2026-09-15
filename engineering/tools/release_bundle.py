@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build, seal, and verify fail-closed GlyphaStore release metadata."""
+"""Build, seal, and verify fail-closed GlifiStore release metadata."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ class BundleError(RuntimeError):
 
 def artifact_product_version(name: str) -> str | None:
     match = re.match(
-        r"^(?:GlyphaStore|glyphastore)-"
+        r"^(?:GlifiStore|glifistore)-"
         r"(?:(?:abi-v[0-9]+-consumer|wire-v[0-9]+-client)-)?"
         r"((?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))"
         r"(?:[.-]|$)",
@@ -482,9 +482,9 @@ def write_build_metadata(
     build_options: list[str],
 ) -> None:
     identity = validate_release_identity(root, tag)
-    wire = _authority_constant(root / "include/glyphastore/server/protocol.hpp", "kProtocolVersion")
+    wire = _authority_constant(root / "include/glifistore/server/protocol.hpp", "kProtocolVersion")
     persistent = _authority_constant(
-        root / "include/glyphastore/persistence/manifest.hpp", "kManifestFormatVersion"
+        root / "include/glifistore/persistence/manifest.hpp", "kManifestFormatVersion"
     )
     compiler = _cmake_cache_value(cmake_cache, "CMAKE_CXX_COMPILER")
     linker = _cmake_cache_value(cmake_cache, "CMAKE_LINKER")
@@ -497,7 +497,7 @@ def write_build_metadata(
         "source": {
             "repository": os.environ.get("GITHUB_SERVER_URL", "https://github.com")
             + "/"
-            + os.environ.get("GITHUB_REPOSITORY", "gpicchiarelli/GlyphaStore"),
+            + os.environ.get("GITHUB_REPOSITORY", "gpicchiarelli/GlifiStore"),
             "tag": identity.tag,
             "git_sha": identity.git_sha,
             "source_date_epoch": identity.source_date_epoch,
@@ -638,12 +638,12 @@ def bind_sbom(artifact: Path, input_path: Path, metadata_path: Path, output: Pat
     packages = [
         package
         for package in packages
-        if isinstance(package, dict) and package.get("SPDXID") != "SPDXRef-Package-GlyphaStore"
+        if isinstance(package, dict) and package.get("SPDXID") != "SPDXRef-Package-GlifiStore"
     ]
     artifact_sha256 = digest(artifact)
     root_package = {
-        "SPDXID": "SPDXRef-Package-GlyphaStore",
-        "name": "GlyphaStore",
+        "SPDXID": "SPDXRef-Package-GlifiStore",
+        "name": "GlifiStore",
         "versionInfo": version,
         "packageFileName": artifact.name,
         "downloadLocation": "NOASSERTION",
@@ -652,7 +652,7 @@ def bind_sbom(artifact: Path, input_path: Path, metadata_path: Path, output: Pat
         "licenseConcluded": "BSD-3-Clause",
         "licenseDeclared": "BSD-3-Clause",
         "copyrightText": "Copyright (c) 2026, Giacomo Picchiarelli",
-        "supplier": "Organization: GlyphaStore",
+        "supplier": "Organization: GlifiStore",
         "sourceInfo": (
             f"git_sha={source.get('git_sha')}; tag={source.get('tag')}; "
             f"target={target.get('os')}/{target.get('architecture')}; "
@@ -662,7 +662,7 @@ def bind_sbom(artifact: Path, input_path: Path, metadata_path: Path, output: Pat
             {
                 "referenceCategory": "PACKAGE-MANAGER",
                 "referenceType": "purl",
-                "referenceLocator": f"pkg:generic/glyphastore@{version}",
+                "referenceLocator": f"pkg:generic/glifistore@{version}",
             }
         ],
     }
@@ -675,7 +675,7 @@ def bind_sbom(artifact: Path, input_path: Path, metadata_path: Path, output: Pat
     describes = {
         "spdxElementId": "SPDXRef-DOCUMENT",
         "relationshipType": "DESCRIBES",
-        "relatedSpdxElement": "SPDXRef-Package-GlyphaStore",
+        "relatedSpdxElement": "SPDXRef-Package-GlifiStore",
     }
     relationships = [relationship for relationship in relationships if relationship != describes]
     relationships.append(describes)
@@ -688,13 +688,13 @@ def bind_sbom(artifact: Path, input_path: Path, metadata_path: Path, output: Pat
     creators = creation_info.get("creators", []) if isinstance(creation_info, dict) else []
     if not isinstance(creators, list):
         creators = []
-    creators = sorted(set([*creators, "Tool: GlyphaStore release_bundle.py"]))
+    creators = sorted(set([*creators, "Tool: GlifiStore release_bundle.py"]))
 
     value.update(
         {
             "dataLicense": "CC0-1.0",
-            "name": f"GlyphaStore-{version}-{artifact.name}",
-            "documentNamespace": f"https://glyphastore.dev/spdx/{version}/{artifact_sha256}",
+            "name": f"GlifiStore-{version}-{artifact.name}",
+            "documentNamespace": f"https://glifistore.dev/spdx/{version}/{artifact_sha256}",
             "creationInfo": {"created": created, "creators": creators},
             "packages": packages,
             "relationships": relationships,
@@ -741,11 +741,11 @@ def validate_sbom(path: Path) -> None:
     artifact_version = artifact_product_version(artifact.name)
     if artifact_version is None:
         raise BundleError(f"SBOM subject has no product version: {artifact.name}")
-    roots = [package for package in packages if package.get("SPDXID") == "SPDXRef-Package-GlyphaStore"]
+    roots = [package for package in packages if package.get("SPDXID") == "SPDXRef-Package-GlifiStore"]
     if len(roots) != 1:
-        raise BundleError(f"SBOM must identify exactly one GlyphaStore root package: {path.name}")
+        raise BundleError(f"SBOM must identify exactly one GlifiStore root package: {path.name}")
     root = roots[0]
-    if root.get("name") != "GlyphaStore" or root.get("versionInfo") != artifact_version:
+    if root.get("name") != "GlifiStore" or root.get("versionInfo") != artifact_version:
         raise BundleError(f"SBOM root package identity disagrees with its artifact: {path.name}")
     if root.get("licenseDeclared") != "BSD-3-Clause":
         raise BundleError(f"SBOM root package license is not BSD-3-Clause: {path.name}")
@@ -755,11 +755,11 @@ def validate_sbom(path: Path) -> None:
     if not any(
         relationship.get("spdxElementId") == "SPDXRef-DOCUMENT"
         and relationship.get("relationshipType") == "DESCRIBES"
-        and relationship.get("relatedSpdxElement") == "SPDXRef-Package-GlyphaStore"
+        and relationship.get("relatedSpdxElement") == "SPDXRef-Package-GlifiStore"
         for relationship in value.get("relationships", [])
         if isinstance(relationship, dict)
     ):
-        raise BundleError(f"SBOM document does not describe the GlyphaStore package: {path.name}")
+        raise BundleError(f"SBOM document does not describe the GlifiStore package: {path.name}")
 
 
 def write_checksums(directory: Path, output_name: str = "SHA256SUMS") -> Path:
@@ -813,7 +813,7 @@ def _artifact_kind(name: str) -> str:
         return "candidate_admission"
     if name == "evidence-import.json":
         return "evidence_import"
-    if name.endswith(".tar.xz") and name.startswith("GlyphaStore-"):
+    if name.endswith(".tar.xz") and name.startswith("GlifiStore-"):
         return "source"
     if name.endswith((".pkg", ".tgz", ".tar.xz")):
         return "binary_package"
@@ -978,18 +978,18 @@ def validate_release_policy(directory: Path) -> None:
         raise BundleError("release policy requires an evidence import receipt")
     import_receipt = validate_evidence_import(directory)
     target_patterns = {
-        "source": re.compile(rf"^GlyphaStore-{re.escape(version)}\.tar\.xz$"),
-        "linux": re.compile(rf"^glyphastore-{re.escape(version)}-linux-[A-Za-z0-9_-]+\.tar\.xz$"),
+        "source": re.compile(rf"^GlifiStore-{re.escape(version)}\.tar\.xz$"),
+        "linux": re.compile(rf"^glifistore-{re.escape(version)}-linux-[A-Za-z0-9_-]+\.tar\.xz$"),
         "abi_consumer": re.compile(
-            rf"^glyphastore-abi-v{manifest['abi_major']}-consumer-{re.escape(version)}-linux-"
+            rf"^glifistore-abi-v{manifest['abi_major']}-consumer-{re.escape(version)}-linux-"
             r"[A-Za-z0-9_-]+\.tar\.xz$"
         ),
         "wire_client": re.compile(
-            rf"^glyphastore-wire-v{manifest['wire_version']}-client-{re.escape(version)}-linux-"
+            rf"^glifistore-wire-v{manifest['wire_version']}-client-{re.escape(version)}-linux-"
             r"[A-Za-z0-9_-]+\.tar\.xz$"
         ),
-        "freebsd": re.compile(rf"^glyphastore-{re.escape(version)}-freebsd[0-9._-]*-[A-Za-z0-9_-]+\.pkg$"),
-        "openbsd": re.compile(rf"^glyphastore-{re.escape(version)}-openbsd[0-9._-]*-[A-Za-z0-9_-]+\.tgz$"),
+        "freebsd": re.compile(rf"^glifistore-{re.escape(version)}-freebsd[0-9._-]*-[A-Za-z0-9_-]+\.pkg$"),
+        "openbsd": re.compile(rf"^glifistore-{re.escape(version)}-openbsd[0-9._-]*-[A-Za-z0-9_-]+\.tgz$"),
     }
     for target, pattern in target_patterns.items():
         matches = sorted(name for name in names if pattern.fullmatch(name))

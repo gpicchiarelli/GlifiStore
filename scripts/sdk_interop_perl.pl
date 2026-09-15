@@ -7,13 +7,13 @@ use Getopt::Long qw(GetOptions);
 use Cwd qw(abs_path);
 BEGIN {
     unshift @INC, "$FindBin::Bin/../sdk/perl/lib"
-      if ($ENV{GLYPHASTORE_INTEROP_USE_INSTALLED} // '0') ne '1';
+      if ($ENV{GLIFISTORE_INTEROP_USE_INSTALLED} // '0') ne '1';
 }
-use GlyphaStore::Client;
+use GlifiStore::Client;
 
-if (($ENV{GLYPHASTORE_INTEROP_USE_INSTALLED} // '0') eq '1') {
-    my $source_root = abs_path($ENV{GLYPHASTORE_SOURCE_ROOT} // '');
-    my $loaded_from = abs_path($INC{'GlyphaStore/Client.pm'} // '');
+if (($ENV{GLIFISTORE_INTEROP_USE_INSTALLED} // '0') eq '1') {
+    my $source_root = abs_path($ENV{GLIFISTORE_SOURCE_ROOT} // '');
+    my $loaded_from = abs_path($INC{'GlifiStore/Client.pm'} // '');
     die "installed-artifact mode loaded Perl SDK from source: $loaded_from\n"
       if !$source_root || !$loaded_from || index($loaded_from, "$source_root/") == 0;
 }
@@ -72,7 +72,7 @@ $connect{cert_file}    = $options{tls_cert}     if defined $options{tls_cert} &&
 $connect{key_file}     = $options{tls_key}      if defined $options{tls_key} && length $options{tls_key};
 $connect{server_name}  = $options{server_name}  if defined $options{server_name} && length $options{server_name};
 
-my $client = GlyphaStore::Client->connect(%connect);
+my $client = GlifiStore::Client->connect(%connect);
 
 if ($command eq 'put') {
     my $result = $client->put($key, $value, expire_at_ns => $options{expire_at_ns});
@@ -93,7 +93,7 @@ elsif ($command eq 'expect-not-found') {
     die "GET unexpectedly found the key\n" if $found;
     my $error = $@;
     die "GET did not produce structured not_found\n"
-      if ref($error) ne 'GlyphaStore::Error'
+      if ref($error) ne 'GlifiStore::Error'
       || $error->category ne 'not_found'
       || $error->retryability ne 'new_attempt';
 }
@@ -101,7 +101,7 @@ elsif ($command eq 'expect-permission-denied') {
     my $result = $client->put($key, $value, expire_at_ns => $options{expire_at_ns});
     die "PUT did not produce structured permission_denied\n"
       if $result->{outcome} ne 'rejected'
-      || ref($result->{error}) ne 'GlyphaStore::Error'
+      || ref($result->{error}) ne 'GlifiStore::Error'
       || $result->{error}->category ne 'permission_denied'
       || $result->{error}->retryability ne 'never';
 }
@@ -109,7 +109,7 @@ elsif ($command eq 'burst-expect-overloaded') {
     for (1 .. $options{burst}) {
         my $result = $client->put($key, $value, expire_at_ns => $options{expire_at_ns});
         if ($result->{outcome} eq 'rejected'
-            && ref($result->{error}) eq 'GlyphaStore::Error'
+            && ref($result->{error}) eq 'GlifiStore::Error'
             && $result->{error}->category eq 'overloaded'
             && $result->{error}->retryability eq 'never')
         {
@@ -125,7 +125,7 @@ elsif ($command eq 'expect-frame-limit') {
     my $result = $client->put('limit', "\xA5" x $client->{maximum_frame_bytes});
     die "oversized PUT did not produce the expected local rejection\n"
       if $result->{outcome} ne 'rejected'
-      || ref($result->{error}) ne 'GlyphaStore::Error'
+      || ref($result->{error}) ne 'GlifiStore::Error'
       || $result->{error}->category ne 'invalid_argument'
       || $result->{error}->bytes_sent != 0
       || $result->{error}->retryability ne 'never';

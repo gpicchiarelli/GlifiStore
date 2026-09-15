@@ -1,7 +1,7 @@
 #pragma once
 
-#include "glyphastore/index/index.hpp"
-#include "glyphastore/persistence/runtime_catalog.hpp"
+#include "glifistore/index/index.hpp"
+#include "glifistore/persistence/runtime_catalog.hpp"
 #include "persistence/adaptive_batch_sizer.hpp"
 #include "persistence/hot_record_table.hpp"
 
@@ -20,9 +20,9 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::runtime_catalog_detail {
+namespace glifistore::runtime_catalog_detail {
 
-#if defined(NDEBUG) && !defined(GLYPHASTORE_GET_PATH_TIMING)
+#if defined(NDEBUG) && !defined(GLIFISTORE_GET_PATH_TIMING)
 inline constexpr bool kGetPathTimingEnabled = false;
 #else
 inline constexpr bool kGetPathTimingEnabled = true;
@@ -200,9 +200,9 @@ auto rollback_prepared_compaction(DataDirectory& directory, const Manifest& old_
                                   std::span<const ManifestSegmentEntry> replacements,
                                   const DurableResourceLimits& limits) -> Result<NamespaceAuditReport>;
 
-} // namespace glyphastore::runtime_catalog_detail
+} // namespace glifistore::runtime_catalog_detail
 
-namespace glyphastore {
+namespace glifistore {
 
 // Private DurableRuntimeCatalog nested types shared across runtime_catalog*.cpp TUs.
 using runtime_catalog_detail::HotRecordEntry;
@@ -432,4 +432,4 @@ struct DurableRuntimeCatalog::ExclusiveIndexQuiesce final {
     auto operator=(const ExclusiveIndexQuiesce&) -> ExclusiveIndexQuiesce& = delete;
 };
 
-} // namespace glyphastore
+} // namespace glifistore

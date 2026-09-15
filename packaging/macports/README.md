@@ -1,7 +1,7 @@
 # MacPorts port (reference packaging)
 
-Upstream-submittable material for a MacPorts `databases/glyphastore` port. It is
-**not** an accepted port: no `glyphastore` entry exists in the MacPorts ports tree,
+Upstream-submittable material for a MacPorts `databases/glifistore` port. It is
+**not** an accepted port: no `glifistore` entry exists in the MacPorts ports tree,
 and nothing in this repository may claim otherwise. The `upstream-ports-acceptance`
 check stays `OPEN_GATE` until that changes.
 
@@ -10,7 +10,7 @@ check stays `OPEN_GATE` until that changes.
 | Path | Role |
 | --- | --- |
 | [`Portfile.in`](Portfile.in) | Portfile template; carries no version, master site or checksum |
-| [`files/glyphastored.conf.sample`](files/glyphastored.conf.sample) | Prefix-relative configuration sample installed as `${prefix}/etc/glyphastore/glyphastored.conf.sample` |
+| [`files/glifistored.conf.sample`](files/glifistored.conf.sample) | Prefix-relative configuration sample installed as `${prefix}/etc/glifistore/glifistored.conf.sample` |
 
 A usable `Portfile` is produced by
 [`engineering/tools/render_macos_packaging.py`](../../engineering/tools/render_macos_packaging.py),
@@ -24,13 +24,13 @@ checked-in `Portfile`, so a port version can never drift from `VERSION`.
 python3 engineering/tools/generate_release_context.py --output /tmp/ctx.json
 python3 engineering/tools/render_macos_packaging.py --backend macports --profile pr \
   --release-context /tmp/ctx.json \
-  --source-url "file:///path/to/GlyphaStore-<version>.tar.xz" \
+  --source-url "file:///path/to/GlifiStore-<version>.tar.xz" \
   --source-sha256 "<sha256>" --output-dir /tmp/port
 
-mkdir -p /tmp/tree/databases/glyphastore
-cp /tmp/port/Portfile /tmp/tree/databases/glyphastore/
-cp -R packaging/macports/files /tmp/tree/databases/glyphastore/
-cd /tmp/tree/databases/glyphastore && port lint --nitpick
+mkdir -p /tmp/tree/databases/glifistore
+cp /tmp/port/Portfile /tmp/tree/databases/glifistore/
+cp -R packaging/macports/files /tmp/tree/databases/glifistore/
+cd /tmp/tree/databases/glifistore && port lint --nitpick
 ```
 
 `scripts/package-ci.sh --profile pr --backend macports` does the same thing and
@@ -50,8 +50,8 @@ it, with a reason, into `packaging/macports/prefix-exceptions.txt`
 ## Service integration
 
 The port installs an unprivileged launchd startup item via MacPorts 2.7+
-`startupitem.user` / `startupitem.group` (`glyphastore`). When
-`GLYPHASTORE_PACKAGE_CI_NATIVE=1`, the packaging lifecycle starts and stops it
+`startupitem.user` / `startupitem.group` (`glifistore`). When
+`GLIFISTORE_PACKAGE_CI_NATIVE=1`, the packaging lifecycle starts and stops it
 with `port load` / `port unload`. Without a retained native run,
 `service-lifecycle` stays `OPEN_GATE`.
 
@@ -63,16 +63,16 @@ exercise, not an init-system managed service run.
 
 `package-upgrade` stays `NOT_APPLICABLE_INITIAL_BASELINE` or `NOT_RUN` until a
 sealed SemVer predecessor exists and sealed N−1 source archives are supplied via
-`GLYPHASTORE_N1_PACKAGE_DIR`. The native lifecycle then runs
+`GLIFISTORE_N1_PACKAGE_DIR`. The native lifecycle then runs
 install→seed→upgrade→verify against those bytes (never rebuilt from HEAD).
 Supplying the directory alone does not invent a PASS without a retained native run.
 
 ## Release sources
 
 The release profile refuses anything that is not a sealed source archive: the URL
-must be `https`, must be named `GlyphaStore-<version>.tar.xz`, and must not look
-like a git ref or checkout tarball. Set `GLYPHASTORE_SOURCE_ARCHIVE_URL` and
-`GLYPHASTORE_SOURCE_ARCHIVE_SHA256` (optionally `..._SIZE` and `..._RMD160`).
+must be `https`, must be named `GlifiStore-<version>.tar.xz`, and must not look
+like a git ref or checkout tarball. Set `GLIFISTORE_SOURCE_ARCHIVE_URL` and
+`GLIFISTORE_SOURCE_ARCHIVE_SHA256` (optionally `..._SIZE` and `..._RMD160`).
 For `pr`, `main` and `nightly` the adapter may build from a `file://` archive of
 `HEAD`, whose digest it verifies before pinning it.
 
@@ -81,5 +81,5 @@ For `pr`, `main` and `nightly` the adapter may build from a `file://` archive of
 `port lint`, `port destroot`, `port install`, `port contents`, the external
 consumer build, the daemon exercise, `port deactivate` / `port activate`,
 `port uninstall` and `port clean` only run on a macOS host with MacPorts **and**
-`GLYPHASTORE_PACKAGE_CI_NATIVE=1`, because they mutate the host package manager.
+`GLIFISTORE_PACKAGE_CI_NATIVE=1`, because they mutate the host package manager.
 Everything that did not run is reported as `NOT_RUN` or `BLOCKED`, never as `PASS`.

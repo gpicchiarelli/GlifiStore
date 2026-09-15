@@ -1,10 +1,10 @@
 #pragma once
 
-#include "glyphastore/core/little_endian.hpp"
-#include "glyphastore/persistence/segment_file.hpp"
-#include "glyphastore/server/protocol.hpp"
-#include "glyphastore/server/server.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/core/little_endian.hpp"
+#include "glifistore/persistence/segment_file.hpp"
+#include "glifistore/server/protocol.hpp"
+#include "glifistore/server/server.hpp"
+#include "glifistore/store/store.hpp"
 #include "test.hpp"
 
 #include <algorithm>
@@ -27,30 +27,30 @@
 #include <unistd.h>
 #include <vector>
 
-namespace glyphastore::test::server_reactor_support {
+namespace glifistore::test::server_reactor_support {
 
 inline constexpr std::size_t kTestMutationArenaBytes = 1U * 1024U * 1024U;
 
 [[nodiscard]] inline auto
 open_paired_store_for_writer(std::size_t worker_count, std::size_t async_capacity,
                              std::size_t async_payload_bytes = kTestMutationArenaBytes,
-                             glyphastore::PairedConcurrencyConfig paired = {})
-    -> glyphastore::Result<std::unique_ptr<glyphastore::Store>> {
+                             glifistore::PairedConcurrencyConfig paired = {})
+    -> glifistore::Result<std::unique_ptr<glifistore::Store>> {
     paired.async_lane_capacity = async_capacity;
     paired.async_lane_payload_bytes = async_payload_bytes;
     paired.reader_epoch_lease = true;
     if (paired.merge_delta_entries == 0) {
-        paired.merge_delta_entries = glyphastore::kDefaultPairedMergeDeltaEntries;
+        paired.merge_delta_entries = glifistore::kDefaultPairedMergeDeltaEntries;
     }
     if (paired.merge_maximum_post_entries == 0) {
-        paired.merge_maximum_post_entries = glyphastore::kDefaultPairedMergeMaximumPostEntries;
+        paired.merge_maximum_post_entries = glifistore::kDefaultPairedMergeMaximumPostEntries;
     }
     if (paired.merge_quantum_slots == 0) {
-        paired.merge_quantum_slots = glyphastore::kDefaultPairedMergeQuantumSlots;
+        paired.merge_quantum_slots = glifistore::kDefaultPairedMergeQuantumSlots;
     }
-    return glyphastore::Store::open({
+    return glifistore::Store::open({
         .worker_config = {.explicit_count = worker_count},
-        .concurrency = glyphastore::StoreConcurrencyMode::paired,
+        .concurrency = glifistore::StoreConcurrencyMode::paired,
         .paired = paired,
     });
 }
@@ -64,7 +64,7 @@ open_paired_store_for_writer(std::size_t worker_count, std::size_t async_capacit
 }
 
 [[nodiscard]] inline auto load_u32(const std::span<const std::byte> input) -> std::uint32_t {
-    return glyphastore::le::get_u32(input, 0);
+    return glifistore::le::get_u32(input, 0);
 }
 
 [[nodiscard]] inline auto send_all(const int socket, const std::span<const std::byte> data) -> bool {
@@ -92,12 +92,12 @@ open_paired_store_for_writer(std::size_t worker_count, std::size_t async_capacit
 }
 
 [[nodiscard]] inline auto receive_response(const int socket) -> std::vector<std::byte> {
-    std::array<std::byte, glyphastore::server::kResponseHeaderBytes> header{};
+    std::array<std::byte, glifistore::server::kResponseHeaderBytes> header{};
     if (!receive_exact(socket, header)) {
         return {};
     }
     const auto frame_size = static_cast<std::size_t>(load_u32(header));
-    if (frame_size < header.size() || frame_size > glyphastore::server::kMaxFrameBytes) {
+    if (frame_size < header.size() || frame_size > glifistore::server::kMaxFrameBytes) {
         return {};
     }
     std::vector<std::byte> frame(frame_size);
@@ -154,21 +154,21 @@ open_paired_store_for_writer(std::size_t worker_count, std::size_t async_capacit
 
 [[nodiscard]] inline auto initialize_and_bind(const int socket, const std::uint32_t worker,
                                               const std::uint32_t worker_count) -> bool {
-    const auto init = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::init,
+    const auto init = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::init,
         .request_id = 1,
     });
     if (!init || !send_all(socket, *init)) {
         return false;
     }
     const auto init_frame = receive_response(socket);
-    const auto initialized = glyphastore::server::decode_response(init_frame);
-    if (!initialized || initialized->frame.status != glyphastore::server::ResponseStatus::ok ||
+    const auto initialized = glifistore::server::decode_response(init_frame);
+    if (!initialized || initialized->frame.status != glifistore::server::ResponseStatus::ok ||
         initialized->frame.worker_count != worker_count || initialized->frame.routing_epoch == 0) {
         return false;
     }
-    const auto bind = glyphastore::server::encode_request({
-        .opcode = glyphastore::server::RequestOpcode::bind_worker,
+    const auto bind = glifistore::server::encode_request({
+        .opcode = glifistore::server::RequestOpcode::bind_worker,
         .request_id = 2,
         .target_worker = worker,
     });
@@ -176,25 +176,25 @@ open_paired_store_for_writer(std::size_t worker_count, std::size_t async_capacit
         return false;
     }
     const auto bind_frame = receive_response(socket);
-    const auto bound = glyphastore::server::decode_response(bind_frame);
-    return bound && bound->frame.status == glyphastore::server::ResponseStatus::ok &&
+    const auto bound = glifistore::server::decode_response(bind_frame);
+    return bound && bound->frame.status == glifistore::server::ResponseStatus::ok &&
            bound->frame.owner_worker == worker && bound->frame.worker_count == worker_count;
 }
 
 struct LifecycleProbeResponse final {
-    glyphastore::server::DecodedFrame<glyphastore::server::ResponseView> decoded{};
+    glifistore::server::DecodedFrame<glifistore::server::ResponseView> decoded{};
     std::vector<std::byte> frame_bytes{};
 };
 
-[[nodiscard]] inline auto probe_lifecycle(const int socket, const glyphastore::server::RequestOpcode opcode,
+[[nodiscard]] inline auto probe_lifecycle(const int socket, const glifistore::server::RequestOpcode opcode,
                                           const std::uint64_t request_id)
     -> std::optional<LifecycleProbeResponse> {
-    const auto request = glyphastore::server::encode_request({.opcode = opcode, .request_id = request_id});
+    const auto request = glifistore::server::encode_request({.opcode = opcode, .request_id = request_id});
     if (!request || !send_all(socket, *request)) {
         return std::nullopt;
     }
     LifecycleProbeResponse result{.frame_bytes = receive_response(socket)};
-    const auto decoded = glyphastore::server::decode_response(result.frame_bytes);
+    const auto decoded = glifistore::server::decode_response(result.frame_bytes);
     if (!decoded) {
         return std::nullopt;
     }
@@ -205,11 +205,11 @@ struct LifecycleProbeResponse final {
 class ServerTemporaryDirectory final {
   public:
     ServerTemporaryDirectory() {
-        auto pattern = (std::filesystem::temp_directory_path() / "glyphastore-server-XXXXXX").string();
+        auto pattern = (std::filesystem::temp_directory_path() / "glifistore-server-XXXXXX").string();
         std::vector<char> writable(pattern.begin(), pattern.end());
         writable.push_back('\0');
         const auto* created = ::mkdtemp(writable.data());
-        GLYPHA_REQUIRE(created != nullptr);
+        GLIFI_REQUIRE(created != nullptr);
         root_ = created;
     }
 
@@ -255,7 +255,7 @@ class BlockingColdRead final {
                              const std::uint64_t offset) -> std::ptrdiff_t {
         auto& state = *static_cast<BlockingColdRead*>(opaque);
         bool claimed_here{};
-        if (offset >= glyphastore::kSegmentHeaderReservedBytes) {
+        if (offset >= glifistore::kSegmentHeaderReservedBytes) {
             std::unique_lock lock{state.mutex_};
             if (state.armed_ && !state.claimed_) {
                 state.claimed_ = true;
@@ -308,7 +308,7 @@ class BlockingFileSync final {
     }
 
     static auto sync_file(void* opaque, const int descriptor,
-                          [[maybe_unused]] const glyphastore::FileSyncMode mode) -> int {
+                          [[maybe_unused]] const glifistore::FileSyncMode mode) -> int {
         auto& state = *static_cast<BlockingFileSync*>(opaque);
         {
             std::unique_lock lock{state.mutex_};
@@ -320,7 +320,7 @@ class BlockingFileSync final {
             }
         }
 #if defined(__APPLE__)
-        if (mode == glyphastore::FileSyncMode::full) {
+        if (mode == glifistore::FileSyncMode::full) {
             return ::fcntl(descriptor, F_FULLFSYNC);
         }
 #endif
@@ -374,16 +374,16 @@ class BlockingCompactionIntent final {
         condition_.notify_all();
     }
 
-    static auto before(void* opaque, const glyphastore::FilesystemOperation operation)
-        -> glyphastore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
+        -> glifistore::Status {
         auto& state = *static_cast<BlockingCompactionIntent*>(opaque);
         std::unique_lock lock{state.mutex_};
-        if (operation == glyphastore::FilesystemOperation::write_record && state.force_record_full_) {
+        if (operation == glifistore::FilesystemOperation::write_record && state.force_record_full_) {
             state.force_record_full_ = false;
-            return glyphastore::fail(glyphastore::ErrorCode::segment_full,
+            return glifistore::fail(glifistore::ErrorCode::segment_full,
                                      "injected full Segment before publication-lease wait");
         }
-        if (operation != glyphastore::FilesystemOperation::write_compaction_intent || state.claimed_) {
+        if (operation != glifistore::FilesystemOperation::write_compaction_intent || state.claimed_) {
             return {};
         }
         state.claimed_ = true;
@@ -404,18 +404,18 @@ class BlockingCompactionIntent final {
 
 class GroupBatchObserver final {
   public:
-    static auto before(void* opaque, const glyphastore::FilesystemOperation operation)
-        -> glyphastore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
+        -> glifistore::Status {
         auto& state = *static_cast<GroupBatchObserver*>(opaque);
         const std::lock_guard lock{state.mutex_};
-        if (operation == glyphastore::FilesystemOperation::write_record) {
+        if (operation == glifistore::FilesystemOperation::write_record) {
             ++state.writes_since_sync_;
-        } else if (operation == glyphastore::FilesystemOperation::sync_record) {
+        } else if (operation == glifistore::FilesystemOperation::sync_record) {
             state.maximum_writes_before_sync_ =
                 std::max(state.maximum_writes_before_sync_, state.writes_since_sync_);
             state.writes_since_sync_ = 0;
             ++state.sync_count_;
-        } else if (operation == glyphastore::FilesystemOperation::sync_commit_slot) {
+        } else if (operation == glifistore::FilesystemOperation::sync_commit_slot) {
             ++state.commit_slot_sync_count_;
         }
         return {};
@@ -444,4 +444,4 @@ class GroupBatchObserver final {
     std::size_t commit_slot_sync_count_{};
 };
 
-} // namespace glyphastore::test::server_reactor_support
+} // namespace glifistore::test::server_reactor_support

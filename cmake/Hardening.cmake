@@ -4,8 +4,8 @@ include(CheckCXXCompilerFlag)
 include(CheckCXXSourceCompiles)
 include(CheckLinkerFlag)
 
-function(glyphastore_enable_hardening target)
-    if(NOT GLYPHASTORE_ENABLE_HARDENING)
+function(glifistore_enable_hardening target)
+    if(NOT GLIFISTORE_ENABLE_HARDENING)
         return()
     endif()
 

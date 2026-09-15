@@ -1,10 +1,10 @@
-#include "glyphastore/persistence/store_verify.hpp"
+#include "glifistore/persistence/store_verify.hpp"
 
-#include "glyphastore/persistence/segment_file.hpp"
+#include "glifistore/persistence/segment_file.hpp"
 
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 [[nodiscard]] auto validate_lifecycle(const ManifestSegmentEntry& entry, const SegmentCommit& commit,
@@ -112,4 +112,4 @@ auto verify_durable_store_path(const std::filesystem::path& path, const bool sca
     return report;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

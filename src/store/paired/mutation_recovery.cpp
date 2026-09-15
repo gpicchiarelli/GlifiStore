@@ -1,6 +1,6 @@
-#include "glyphastore/store/paired/mutation_recovery.hpp"
+#include "glifistore/store/paired/mutation_recovery.hpp"
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 auto plan_sync_durable_exception_recovery(const SyncDurableExceptionContext& ctx) noexcept
     -> SyncDurableRecoveryActions {
@@ -35,4 +35,4 @@ auto plan_sync_durable_exception_status(const SyncDurableExceptionContext& ctx) 
     return out;
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

@@ -1,5 +1,5 @@
 #include "benchmark_metadata.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/store/store.hpp"
 #include "harness.hpp"
 #include "parse.hpp"
 #include "store/store_internal.hpp"
@@ -34,7 +34,7 @@ struct Options final {
         throw std::invalid_argument{"missing numeric argument"};
     }
     const std::string_view input{text};
-    const auto value = glyphastore::bench::parse_decimal_size(input);
+    const auto value = glifistore::bench::parse_decimal_size(input);
     if (!value || *value == 0) {
         throw std::invalid_argument{"numeric argument is outside size_t"};
     }
@@ -46,7 +46,7 @@ struct Options final {
     for (int index = 1; index < argc; ++index) {
         const std::string_view argument{argv[index]};
         if (argument == "--help" || argument == "-h") {
-            std::cout << "usage: glyphastore_memory_census_benchmark "
+            std::cout << "usage: glifistore_memory_census_benchmark "
                          "[--entries N] [--key-bytes N] [--value-bytes N] [--workers N] "
                          "[--hold-ms N] [--pressure-relief]\n";
             std::exit(0);
@@ -72,7 +72,7 @@ struct Options final {
             throw std::invalid_argument{"unknown argument: " + std::string{argument}};
         }
     }
-    if (options.key_bytes < 16 || options.workers > glyphastore::kMaximumWorkerCount ||
+    if (options.key_bytes < 16 || options.workers > glifistore::kMaximumWorkerCount ||
         options.hold_ms > 600'000U) {
         throw std::invalid_argument{
             "memory census requires key-bytes >= 16, a supported Worker count, and hold-ms <= 600000"};
@@ -106,8 +106,8 @@ struct Options final {
 
 int main(const int argc, char** argv) try {
     const auto options = parse_options(argc, argv);
-    auto opened = glyphastore::Store::open({.worker_config = {.explicit_count = options.workers},
-                                            .maintenance = {.mode = glyphastore::MaintenanceMode::disabled}});
+    auto opened = glifistore::Store::open({.worker_config = {.explicit_count = options.workers},
+                                            .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     if (!opened) {
         throw std::runtime_error{"cannot open volatile paired Store"};
     }
@@ -116,7 +116,7 @@ int main(const int argc, char** argv) try {
     constexpr std::size_t kBatchSize = 32;
     for (std::size_t cursor = 0; cursor < options.entries;) {
         std::vector<std::string> keys;
-        std::vector<glyphastore::Store::PutItem> items;
+        std::vector<glifistore::Store::PutItem> items;
         keys.reserve(kBatchSize);
         items.reserve(kBatchSize);
         for (; cursor < options.entries && keys.size() < kBatchSize; ++cursor) {
@@ -132,7 +132,7 @@ int main(const int argc, char** argv) try {
         }
     }
 
-    auto* runtime = glyphastore::detail::StoreAccess::shard_pair_runtime(store);
+    auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(store);
     if (runtime == nullptr) {
         throw std::runtime_error{"paired runtime is unavailable"};
     }
@@ -144,7 +144,7 @@ int main(const int argc, char** argv) try {
     std::size_t mutable_index_bytes{};
     std::size_t mutable_index_entries{};
     for (std::size_t worker = 0; worker < options.workers; ++worker) {
-        const auto index = glyphastore::detail::StoreAccess::worker(store, worker).index().stats();
+        const auto index = glifistore::detail::StoreAccess::worker(store, worker).index().stats();
         mutable_index_entries = saturating_add(mutable_index_entries, index.size);
         mutable_index_bytes = saturating_add(
             mutable_index_bytes, saturating_add(index.table_allocated_bytes, index.arena_allocated_bytes));
@@ -154,7 +154,7 @@ int main(const int argc, char** argv) try {
     std::size_t segment_used_bytes{};
     std::size_t segment_live_bytes{};
     std::size_t segment_capacity_bytes{};
-    for (const auto& segment : glyphastore::detail::StoreAccess::segments(store)) {
+    for (const auto& segment : glifistore::detail::StoreAccess::segments(store)) {
         const auto stats = segment->stats();
         ++segment_count;
         segment_used_bytes = saturating_add(segment_used_bytes, stats.used_bytes);
@@ -197,7 +197,7 @@ int main(const int argc, char** argv) try {
             saturating_add(mutation_lane_storage_bytes, pair.payload_arena_storage_bytes);
     }
     const auto read_generation_spare_mapping_bytes =
-        glyphastore::store::paired::immutable_base_spare_mapping_bytes();
+        glifistore::store::paired::immutable_base_spare_mapping_bytes();
 
     const auto logical_payload_bytes =
         saturating_multiply(options.entries, saturating_add(options.key_bytes, options.value_bytes));
@@ -227,13 +227,13 @@ int main(const int argc, char** argv) try {
         attributed_reserved_lower_bound_bytes >= non_allocator_mapping_bytes
             ? attributed_reserved_lower_bound_bytes - non_allocator_mapping_bytes
             : 0U;
-    const auto process_before_relief = glyphastore::bench::process_memory_snapshot();
-    const auto allocator_before_relief = glyphastore::bench::allocator_memory_snapshot();
+    const auto process_before_relief = glifistore::bench::process_memory_snapshot();
+    const auto allocator_before_relief = glifistore::bench::allocator_memory_snapshot();
     const auto pressure_relief = options.pressure_relief
-                                     ? glyphastore::bench::allocator_pressure_relief()
-                                     : glyphastore::bench::AllocatorPressureReliefSample{};
-    const auto process = glyphastore::bench::process_memory_snapshot();
-    const auto allocator = glyphastore::bench::allocator_memory_snapshot();
+                                     ? glifistore::bench::allocator_pressure_relief()
+                                     : glifistore::bench::AllocatorPressureReliefSample{};
+    const auto process = glifistore::bench::process_memory_snapshot();
+    const auto allocator = glifistore::bench::allocator_memory_snapshot();
     const auto unattributed_rss_bytes = process.rss_after_bytes > attributed_live_lower_bound_bytes
                                             ? process.rss_after_bytes - attributed_live_lower_bound_bytes
                                             : 0U;
@@ -245,8 +245,8 @@ int main(const int argc, char** argv) try {
                                                    ? allocator.bytes_reserved - allocator.bytes_in_use
                                                    : 0U;
 
-    std::cout << "# glyphastore paired memory census\n";
-    glyphastore::bench::print_common_metadata(std::cout, 0, 1);
+    std::cout << "# glifistore paired memory census\n";
+    glifistore::bench::print_common_metadata(std::cout, 0, 1);
     std::cout << "# accounting=allocation-payload-lower-bound-plus-process-rss\n";
     std::cout << "entries=" << options.entries << " key_bytes=" << options.key_bytes
               << " value_bytes=" << options.value_bytes << " workers=" << options.workers
@@ -307,7 +307,7 @@ int main(const int argc, char** argv) try {
     if (!store.close()) {
         throw std::runtime_error{"memory census Store close failed"};
     }
-    if (glyphastore::store::paired::immutable_base_spare_mapping_bytes() != 0) {
+    if (glifistore::store::paired::immutable_base_spare_mapping_bytes() != 0) {
         throw std::runtime_error{"immutable-base spare mapping survived Store close"};
     }
     return 0;

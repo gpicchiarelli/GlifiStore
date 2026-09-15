@@ -1,4 +1,4 @@
-# GlyphaStore Persistence v1
+# GlifiStore Persistence v1
 
 Status: normative master specification
 Applies to: persistent format family v1
@@ -22,14 +22,14 @@ A durable Store exclusively owns its data directory while open. Version 1 recogn
 
 | Name | Role |
 |---|---|
-| `manifest.glypha` | selected manifest candidate |
-| `.manifest.glypha.tmp` | incomplete/new manifest publication candidate |
-| `.glyphastore.lock` | exclusive process lock |
-| `.glyphastore.bootstrap` | bootstrap intent encoded as Manifest v1 |
-| `.glyphastore.bootstrap.tmp` | temporary bootstrap-intent publication |
-| `.glyphastore.compaction` | durable compaction intent v1 |
-| `.glyphastore.compaction.tmp` | temporary compaction-intent publication |
-| `segment-<id>-<generation>.glypha` | published Segment file |
+| `manifest.glifi` | selected manifest candidate |
+| `.manifest.glifi.tmp` | incomplete/new manifest publication candidate |
+| `.glifistore.lock` | exclusive process lock |
+| `.glifistore.bootstrap` | bootstrap intent encoded as Manifest v1 |
+| `.glifistore.bootstrap.tmp` | temporary bootstrap-intent publication |
+| `.glifistore.compaction` | durable compaction intent v1 |
+| `.glifistore.compaction.tmp` | temporary compaction-intent publication |
+| `segment-<id>-<generation>.glifi` | published Segment file |
 | `.segment-<id>-<generation>.tmp` | temporary Segment creation |
 
 `<id>` is exactly 16 lowercase hexadecimal digits and `<generation>` exactly eight. A filename is not identity authority: the decoded Store ID, Segment ID, generation, owner, and versions must agree with the manifest and name.
@@ -116,7 +116,7 @@ immutable catalog metadata, and the canonical sealed-set replacement.
 
 ## 8. Bootstrap intent
 
-`.glyphastore.bootstrap` contains exactly the canonical initial Manifest v1 bytes; it has no wrapper or separate codec. Its filename and directory state provide the intent context. Recovery may complete or clean bootstrap only through the documented creation state machine and only after validating that manifest and every referenced initial Segment.
+`.glifistore.bootstrap` contains exactly the canonical initial Manifest v1 bytes; it has no wrapper or separate codec. Its filename and directory state provide the intent context. Recovery may complete or clean bootstrap only through the documented creation state machine and only after validating that manifest and every referenced initial Segment.
 
 ## 9. Publication rules
 
@@ -126,7 +126,7 @@ normative in the [recovery state-transition matrix v1](recovery-state-matrix-v1.
 Stable files are never incrementally rewritten as a namespace transaction. Publication uses a temporary file in the same directory, complete write, required file synchronization, atomic rename, and required directory synchronization.
 
 Whole-Worker compaction (ADR 0039) may build complete replacement Segment contents under recognized
-private `.segment-<id>-<generation>.glypha.tmp` names while the old Manifest remains the sole
+private `.segment-<id>-<generation>.glifi.tmp` names while the old Manifest remains the sole
 authority. Each staged file is synchronized, sealed and verified before the publication lease and
 before the v1 compaction intent. After the exact intent is durable, all planned temporaries are
 renamed to their canonical names and one directory synchronization orders that promotion before

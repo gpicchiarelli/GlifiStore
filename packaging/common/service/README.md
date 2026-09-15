@@ -6,8 +6,8 @@ cannot drift into different runtime behaviour.
 
 | Path | Role |
 | --- | --- |
-| [`glyphastored.service.in`](glyphastored.service.in) | systemd unit template |
-| [`service-account.sh.in`](service-account.sh.in) | shell snippet that creates the `glyphastore` system user and group, inlined into `postinst` (deb) and `%pre` (rpm) |
+| [`glifistored.service.in`](glifistored.service.in) | systemd unit template |
+| [`service-account.sh.in`](service-account.sh.in) | shell snippet that creates the `glifistore` system user and group, inlined into `postinst` (deb) and `%pre` (rpm) |
 
 Both files are rendered by
 [`../../../engineering/tools/render_package_metadata.py`](../../../engineering/tools/render_package_metadata.py),
@@ -17,8 +17,8 @@ installed from this directory directly, and neither may be edited after renderin
 
 ## What the unit commits to
 
-- The daemon runs as the unprivileged `glyphastore` system account, never as root.
-- `StateDirectory=glyphastore` gives systemd ownership of the durable directory's
+- The daemon runs as the unprivileged `glifistore` system account, never as root.
+- `StateDirectory=glifistore` gives systemd ownership of the durable directory's
   creation and mode (`0750`), so an install does not have to guess.
 - `ProtectSystem=strict` with an explicit `ReadWritePaths` for the state directory:
   the daemon cannot write anywhere else, including its own configuration.
@@ -42,5 +42,5 @@ else those checks report `BLOCKED` with the reason. No gate references them and
 The macOS backends still have no launchd or `brew services` integration; the BSD
 reference ports keep their own native scripts:
 
-- FreeBSD rc.subr script: [`../../freebsd/files/glyphastored.in`](../../freebsd/files/glyphastored.in)
-- OpenBSD rc.d script: [`../../openbsd/pkg/glyphastored.rc`](../../openbsd/pkg/glyphastored.rc)
+- FreeBSD rc.subr script: [`../../freebsd/files/glifistored.in`](../../freebsd/files/glifistored.in)
+- OpenBSD rc.d script: [`../../openbsd/pkg/glifistored.rc`](../../openbsd/pkg/glifistored.rc)

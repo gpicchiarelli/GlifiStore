@@ -13,11 +13,11 @@ from unittest import mock
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 try:
-    import glyphastore  # noqa: F401
+    import glifistore  # noqa: F401
 except ImportError:
     sys.path.insert(0, str(PACKAGE_ROOT / "src"))
 
-from glyphastore import (  # noqa: E402
+from glifistore import (  # noqa: E402
     AsyncClient,
     Client,
     ClientConfig,
@@ -30,8 +30,8 @@ from glyphastore import (  # noqa: E402
     PipelineRequest,
     TransportError,
 )
-from glyphastore.client import _enrich, _retryability_for, build_ssl_context  # noqa: E402
-from glyphastore.protocol import (  # noqa: E402
+from glifistore.client import _enrich, _retryability_for, build_ssl_context  # noqa: E402
+from glifistore.protocol import (  # noqa: E402
     Opcode,
     Status,
     WorkerRouting,
@@ -179,7 +179,7 @@ class FakeServer:
                             Status.OK,
                             request.request_id,
                             owner_worker=bound_worker if bound_worker is not None else 0,
-                            value=b"GlyphaStore/live",
+                            value=b"GlifiStore/live",
                         )
                     elif request.opcode is Opcode.READY:
                         self._send(
@@ -187,7 +187,7 @@ class FakeServer:
                             Status.OK,
                             request.request_id,
                             owner_worker=bound_worker if bound_worker is not None else 0,
-                            value=b"GlyphaStore/ready",
+                            value=b"GlifiStore/ready",
                         )
                     elif request.opcode is Opcode.STATS:
                         self._send(
@@ -195,7 +195,7 @@ class FakeServer:
                             Status.OK,
                             request.request_id,
                             owner_worker=bound_worker if bound_worker is not None else 0,
-                            value=b"GlyphaStore/stats\n",
+                            value=b"GlifiStore/stats\n",
                         )
                     elif request.opcode is Opcode.BIND_WORKER:
                         if request.target_worker >= self._worker_count:
@@ -360,7 +360,7 @@ class ClientTests(unittest.TestCase):
             self.assertTrue(client.put(b"binary\x00key", b"value\x00\xff").committed)
             self.assertEqual(client.get(b"binary\x00key"), b"value\x00\xff")
             self.assertEqual(client.ping(b"hello"), b"hello")
-            report = client.backup("/tmp/glyphastore-sdk-backup")
+            report = client.backup("/tmp/glifistore-sdk-backup")
             self.assertIn(b"status=ok", report)
             with self.assertRaises(InvalidArgument):
                 client.backup("")
@@ -447,7 +447,7 @@ class ClientTests(unittest.TestCase):
         server = FakeServer(drop_on_backup=True)
         with Client.connect(ClientConfig(port=server.port, request_timeout=0.2)) as client:
             with self.assertRaises(TransportError) as raised:
-                client.backup("/tmp/glyphastore-sdk-backup-drop")
+                client.backup("/tmp/glifistore-sdk-backup-drop")
             error = raised.exception
             self.assertGreater(error.bytes_sent, 0)
             self.assertEqual(error.mutation_outcome, MutationOutcome.INDETERMINATE)
@@ -458,12 +458,12 @@ class ClientTests(unittest.TestCase):
     def test_backup_internal_error_is_reconcile_first(self) -> None:
         # Wire INTERNAL_ERROR after a possible committed fenced copy must not
         # advertise new_attempt (same-destination retry would look like failure).
-        from glyphastore import InternalError
+        from glifistore import InternalError
 
         server = FakeServer(internal_error_on_backup=True)
         with Client.connect(ClientConfig(port=server.port)) as client:
             with self.assertRaises(InternalError) as raised:
-                client.backup("/tmp/glyphastore-sdk-backup-internal")
+                client.backup("/tmp/glifistore-sdk-backup-internal")
             error = raised.exception
             self.assertEqual(error.mutation_outcome, MutationOutcome.INDETERMINATE)
             self.assertEqual(error.retryability, "reconcile_first")
@@ -473,12 +473,12 @@ class ClientTests(unittest.TestCase):
 
     def test_backup_validate_failure_is_reconcile_first(self) -> None:
         # Framed BACKUP response with mismatched request_id — fenced copy may exist.
-        from glyphastore import ProtocolError
+        from glifistore import ProtocolError
 
         server = FakeServer(wrong_request_id_on_backup=True)
         with Client.connect(ClientConfig(port=server.port)) as client:
             with self.assertRaises(ProtocolError) as raised:
-                client.backup("/tmp/glyphastore-sdk-backup-wrong-id")
+                client.backup("/tmp/glifistore-sdk-backup-wrong-id")
             error = raised.exception
             self.assertEqual(error.mutation_outcome, MutationOutcome.INDETERMINATE)
             self.assertEqual(error.retryability, "reconcile_first")
@@ -550,17 +550,17 @@ class ClientTests(unittest.TestCase):
         with Client.connect(ClientConfig(port=server.port)) as client:
             self.assertTrue(client.healthy)
             self.assertIsInstance(client.routing, WorkerRouting)
-            self.assertEqual(client.health(), b"GlyphaStore/live")
-            self.assertEqual(client.ready(), b"GlyphaStore/ready")
+            self.assertEqual(client.health(), b"GlifiStore/live")
+            self.assertEqual(client.ready(), b"GlifiStore/ready")
             stats = client.stats()
-            self.assertTrue(stats.startswith(b"GlyphaStore/stats"))
+            self.assertTrue(stats.startswith(b"GlifiStore/stats"))
         server.join()
 
     def test_unix_socket_refuses_tls(self) -> None:
         with self.assertRaises(InvalidArgument) as raised:
             Client.connect(
                 ClientConfig(
-                    unix_socket_path="/tmp/glyphastore-py-uds-tls-refuse.sock",
+                    unix_socket_path="/tmp/glifistore-py-uds-tls-refuse.sock",
                     tls=True,
                 )
             )
@@ -1022,7 +1022,7 @@ class AsyncClientTests(unittest.IsolatedAsyncioTestCase):
         # Post-send cancel must classify indeterminate before poison. If reset's
         # wait_closed (or a hostile reset) raises CancelledError, the app must still
         # get reconcile_first — not bare CancelledError / rejected (§6.3).
-        from glyphastore import async_client as ac_mod
+        from glifistore import async_client as ac_mod
 
         server = FakeServer(stall_on_put=True)
         async with await AsyncClient.connect(
@@ -1053,7 +1053,7 @@ class AsyncClientTests(unittest.IsolatedAsyncioTestCase):
     async def test_async_pipeline_cancel_classifies_despite_cancel_during_reset(
         self,
     ) -> None:
-        from glyphastore import async_client as ac_mod
+        from glifistore import async_client as ac_mod
 
         server = FakeServer(stall_on_put=True)
         async with await AsyncClient.connect(
@@ -1103,7 +1103,7 @@ class AsyncClientTests(unittest.IsolatedAsyncioTestCase):
             ClientConfig(port=server.port, request_timeout=0.2)
         ) as client:
             with self.assertRaises(TransportError) as raised:
-                await client.backup("/tmp/glyphastore-sdk-async-backup-drop")
+                await client.backup("/tmp/glifistore-sdk-async-backup-drop")
             error = raised.exception
             self.assertGreater(error.bytes_sent, 0)
             self.assertEqual(error.mutation_outcome, MutationOutcome.INDETERMINATE)
@@ -1112,12 +1112,12 @@ class AsyncClientTests(unittest.IsolatedAsyncioTestCase):
         server.join()
 
     async def test_async_backup_internal_error_is_reconcile_first(self) -> None:
-        from glyphastore import InternalError
+        from glifistore import InternalError
 
         server = FakeServer(internal_error_on_backup=True)
         async with await AsyncClient.connect(ClientConfig(port=server.port)) as client:
             with self.assertRaises(InternalError) as raised:
-                await client.backup("/tmp/glyphastore-sdk-async-backup-internal")
+                await client.backup("/tmp/glifistore-sdk-async-backup-internal")
             error = raised.exception
             self.assertEqual(error.mutation_outcome, MutationOutcome.INDETERMINATE)
             self.assertEqual(error.retryability, "reconcile_first")
@@ -1176,7 +1176,7 @@ class ClientTlsTests(unittest.TestCase):
 
 
 def _self_signed_material() -> tuple[str, str] | None:
-    directory = tempfile.mkdtemp(prefix="glyphastore-py-tls-")
+    directory = tempfile.mkdtemp(prefix="glifistore-py-tls-")
     cert_path = str(Path(directory) / "server.crt")
     key_path = str(Path(directory) / "server.key")
     command = [

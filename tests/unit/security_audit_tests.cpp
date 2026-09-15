@@ -1,4 +1,4 @@
-#include "glyphastore/server/security_audit.hpp"
+#include "glifistore/server/security_audit.hpp"
 #include "test.hpp"
 
 #include <atomic>
@@ -31,57 +31,57 @@ class CapturedStderr final {
 
 } // namespace
 
-GLYPHA_TEST("security audit emits accept deny authz and tls json without secrets") {
+GLIFI_TEST("security audit emits accept deny authz and tls json without secrets") {
     CapturedStderr capture;
-    glyphastore::server::SecurityAudit audit{true, false};
+    glifistore::server::SecurityAudit audit{true, false};
     audit.auth_accept("reader.example");
     audit.auth_deny("handshake_failed", "bad.example");
     audit.authz_deny("reader.example", "put", "capability_denied");
     audit.tls_error("TLS handshake timed out");
 
     const auto output = capture.text();
-    GLYPHA_REQUIRE(output.find("\"event\":\"auth\"") != std::string::npos);
-    GLYPHA_REQUIRE(output.find("\"decision\":\"accept\"") != std::string::npos);
-    GLYPHA_REQUIRE(output.find("\"decision\":\"deny\"") != std::string::npos);
-    GLYPHA_REQUIRE(output.find("\"principal\":\"reader.example\"") != std::string::npos);
-    GLYPHA_REQUIRE(output.find("\"event\":\"authz\"") != std::string::npos);
-    GLYPHA_REQUIRE(output.find("\"opcode\":\"put\"") != std::string::npos);
-    GLYPHA_REQUIRE(output.find("\"reason\":\"capability_denied\"") != std::string::npos);
-    GLYPHA_REQUIRE(output.find("\"event\":\"tls\"") != std::string::npos);
-    GLYPHA_REQUIRE(output.find("BEGIN CERTIFICATE") == std::string::npos);
-    GLYPHA_REQUIRE(output.find("PRIVATE KEY") == std::string::npos);
+    GLIFI_REQUIRE(output.find("\"event\":\"auth\"") != std::string::npos);
+    GLIFI_REQUIRE(output.find("\"decision\":\"accept\"") != std::string::npos);
+    GLIFI_REQUIRE(output.find("\"decision\":\"deny\"") != std::string::npos);
+    GLIFI_REQUIRE(output.find("\"principal\":\"reader.example\"") != std::string::npos);
+    GLIFI_REQUIRE(output.find("\"event\":\"authz\"") != std::string::npos);
+    GLIFI_REQUIRE(output.find("\"opcode\":\"put\"") != std::string::npos);
+    GLIFI_REQUIRE(output.find("\"reason\":\"capability_denied\"") != std::string::npos);
+    GLIFI_REQUIRE(output.find("\"event\":\"tls\"") != std::string::npos);
+    GLIFI_REQUIRE(output.find("BEGIN CERTIFICATE") == std::string::npos);
+    GLIFI_REQUIRE(output.find("PRIVATE KEY") == std::string::npos);
 
     const auto stats = audit.stats();
-    GLYPHA_REQUIRE(stats.auth_accepts == 1);
-    GLYPHA_REQUIRE(stats.auth_denies == 1);
-    GLYPHA_REQUIRE(stats.authz_denies == 1);
-    GLYPHA_REQUIRE(stats.tls_errors == 1);
+    GLIFI_REQUIRE(stats.auth_accepts == 1);
+    GLIFI_REQUIRE(stats.auth_denies == 1);
+    GLIFI_REQUIRE(stats.authz_denies == 1);
+    GLIFI_REQUIRE(stats.tls_errors == 1);
 }
 
-GLYPHA_TEST("security audit quiet suppresses accept events only") {
+GLIFI_TEST("security audit quiet suppresses accept events only") {
     CapturedStderr capture;
-    glyphastore::server::SecurityAudit audit{true, true};
+    glifistore::server::SecurityAudit audit{true, true};
     audit.auth_accept("reader.example");
     audit.auth_deny("no_peer_cert");
     const auto output = capture.text();
-    GLYPHA_REQUIRE(output.find("\"decision\":\"accept\"") == std::string::npos);
-    GLYPHA_REQUIRE(output.find("\"decision\":\"deny\"") != std::string::npos);
-    GLYPHA_REQUIRE(audit.stats().auth_accepts == 1);
-    GLYPHA_REQUIRE(audit.stats().auth_denies == 1);
+    GLIFI_REQUIRE(output.find("\"decision\":\"accept\"") == std::string::npos);
+    GLIFI_REQUIRE(output.find("\"decision\":\"deny\"") != std::string::npos);
+    GLIFI_REQUIRE(audit.stats().auth_accepts == 1);
+    GLIFI_REQUIRE(audit.stats().auth_denies == 1);
 }
 
-GLYPHA_TEST("security audit disabled emits no lines but still counts") {
+GLIFI_TEST("security audit disabled emits no lines but still counts") {
     CapturedStderr capture;
-    glyphastore::server::SecurityAudit audit{false, false};
+    glifistore::server::SecurityAudit audit{false, false};
     audit.auth_accept("reader.example");
     audit.authz_deny("reader.example", "get", "capability_denied");
-    GLYPHA_REQUIRE(capture.text().empty());
-    GLYPHA_REQUIRE(audit.stats().auth_accepts == 1);
-    GLYPHA_REQUIRE(audit.stats().authz_denies == 1);
+    GLIFI_REQUIRE(capture.text().empty());
+    GLIFI_REQUIRE(audit.stats().auth_accepts == 1);
+    GLIFI_REQUIRE(audit.stats().authz_denies == 1);
 }
 
-GLYPHA_TEST("security audit concurrent deny storm keeps counters coherent") {
-    glyphastore::server::SecurityAudit audit{false, false};
+GLIFI_TEST("security audit concurrent deny storm keeps counters coherent") {
+    glifistore::server::SecurityAudit audit{false, false};
     constexpr int kThreads = 8;
     constexpr int kPerThread = 128;
     std::atomic<bool> start{false};
@@ -105,8 +105,8 @@ GLYPHA_TEST("security audit concurrent deny storm keeps counters coherent") {
 
     const auto stats = audit.stats();
     constexpr std::uint64_t kExpected = static_cast<std::uint64_t>(kThreads) * kPerThread;
-    GLYPHA_REQUIRE(stats.auth_denies == kExpected);
-    GLYPHA_REQUIRE(stats.authz_denies == kExpected);
-    GLYPHA_REQUIRE(stats.auth_accepts == 0);
-    GLYPHA_REQUIRE(stats.tls_errors == 0);
+    GLIFI_REQUIRE(stats.auth_denies == kExpected);
+    GLIFI_REQUIRE(stats.authz_denies == kExpected);
+    GLIFI_REQUIRE(stats.auth_accepts == 0);
+    GLIFI_REQUIRE(stats.tls_errors == 0);
 }

@@ -14,7 +14,7 @@ prefer the stricter fail-closed reading here.
 
 A successful backup is a **verified catalog snapshot**:
 
-1. Every Segment named by a valid `manifest.glypha` for the Store, and
+1. Every Segment named by a valid `manifest.glifi` for the Store, and
 2. That Manifest file itself (written **last**).
 
 The snapshot is consistent for recovery if and only if destination verify succeeds after copy.
@@ -23,7 +23,7 @@ Indexes are **not** copied; `Store::open(..., open_existing)` rebuilds them via 
 ### Included
 
 - Catalog Segment files referenced by the Manifest (mode `0600` on Unix copies)
-- `manifest.glypha` (final file in the destination)
+- `manifest.glifi` (final file in the destination)
 
 ### Excluded (must not appear in a conforming backup)
 
@@ -36,7 +36,7 @@ Indexes are **not** copied; `Store::open(..., open_existing)` rebuilds them via 
 
 | Path | Writer activity during copy | Consistency point |
 | --- | --- | --- |
-| Offline CLI (`glyphastore_backup_store`) | None — exclusive data-dir lock; fail if locked | Post-verify source → copy → post-verify destination |
+| Offline CLI (`glifistore_backup_store`) | None — exclusive data-dir lock; fail if locked | Post-verify source → copy → post-verify destination |
 | Online fenced (`Store::backup_to` / wire `BACKUP`) | New admissions fenced for flush + structural source check + catalog copy; destination CRC verify runs after admissions resume | Flush → catalog exclusive lock → structural source verify → parallel Segment copy → Manifest last → resume admissions → verify destination (optional CRC) |
 
 Online fenced backup is **not** a zero-fence hot copy and is **not** a filesystem freeze/COW
@@ -52,11 +52,11 @@ and lifecycle control and is not part of the normal GET/PUT admission path.
 
 ## 3. Offline procedure (normative steps)
 
-1. Ensure no Store/`glyphastored` holds the source directory lock.
+1. Ensure no Store/`glifistored` holds the source directory lock.
 2. Exclusive-lock source; run `verify_durable_store` (Manifest, namespace audit, catalog Segment open;
    optional CRC scan unless `--no-scan`).
 3. Create destination with `create_new` (empty). Non-empty destinations fail closed.
-4. Copy catalog Segments, then `manifest.glypha` last; `fsync`/`fdatasync` files and destination dir
+4. Copy catalog Segments, then `manifest.glifi` last; `fsync`/`fdatasync` files and destination dir
    per platform persistence rules used by the implementation.
 5. Release locks; `verify_durable_store` destination. Exit non-zero ⇒ do not put destination in
    service.
@@ -70,7 +70,7 @@ is no in-place overwrite of an open production directory.
 2. Fence new admissions; wait for in-flight admitted work (bounded by close/admission rules).
 3. Flush durable state per the Store's durability policy.
 4. Under catalog exclusive lock: **structural** source verify (Manifest/namespace/Segment open; no
-   committed CRC scan) + copy catalog Segments (bounded parallel) then `manifest.glypha` last.
+   committed CRC scan) + copy catalog Segments (bounded parallel) then `manifest.glifi` last.
 5. Release catalog lock and **resume admissions** (writers may proceed).
 6. Verify destination independently before promoting it (optional committed CRC scan). Destination
    verify is the promotion gate; the live source is not CRC-rescanned after resume.
@@ -98,14 +98,14 @@ Wire `BACKUP` (opcode 10): key = UTF-8 destination path; empty value; `expire_at
 - Fully concurrent hot backup with zero admission fencing (see [ADR 0034](../adr/0034-zero-fence-hot-backup-deferred.md))
 - In-place destructive repair of the source
 - Preserving crash temporaries or compaction intents
-- Filesystem freeze / COW snapshot orchestration as a GlyphaStore feature (operators may use
+- Filesystem freeze / COW snapshot orchestration as a GlifiStore feature (operators may use
   external volume snapshots; that is not this API)
 
 ## 7. Tooling
 
 ```bash
-glyphastore_backup_store [--json] [--no-scan] -- /path/to/source /path/to/backup
-glyphastore_backup_store [--json] [--no-scan] -- /path/to/backup /path/to/restored
+glifistore_backup_store [--json] [--no-scan] -- /path/to/source /path/to/backup
+glifistore_backup_store [--json] [--no-scan] -- /path/to/backup /path/to/restored
 ```
 
 ```cpp

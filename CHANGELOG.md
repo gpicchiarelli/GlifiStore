@@ -41,7 +41,7 @@
 - Prove async Python/Ruby standalone ERASE of an absent key maps wire `NOT_FOUND` to
   `rejected`/`not_found`/`new_attempt` (parity with sync SDK fakes). Claim ceiling unchanged.
 
-- Prove live C++ online `BACKUP` in `test-sdk-backup-interop.sh` via `glyphastore_interop_client
+- Prove live C++ online `BACKUP` in `test-sdk-backup-interop.sh` via `glifistore_interop_client
   backup --dest` (six official SDKs on the runtime smoke). Still fenced, not zero-fence. Claim
   ceiling unchanged.
 
@@ -95,13 +95,13 @@
 - Add `Store::erase_batch` (paired + non-paired) with litmus coverage, C ABI
   `gs_store_erase_batch` / `gs_erase_request` (ABI minor 1.1), daemon
   `--close-drain-deadline-ms`, and live SDK HEALTH/READY/STATS interop against
-  glyphastored; align FreeBSD/OpenBSD packaging ABI filenames with `ABI_VERSION`.
+  glifistored; align FreeBSD/OpenBSD packaging ABI filenames with `ABI_VERSION`.
   Claim ceiling unchanged.
 
 - Harden sealed N-1 package selection: token-bound SemVer matching (no `10.0.9`/`0.0.90`
   false positives), refuse mixed architectures without an explicit filter, verify
   `SHA256SUMS` when present; stop validating N-1 Linux installs against N rendered
-  metadata; refuse `GLYPHASTORE_N1_PACKAGE_DIR` when no SemVer predecessor exists;
+  metadata; refuse `GLIFISTORE_N1_PACKAGE_DIR` when no SemVer predecessor exists;
   narrow MacPorts/Homebrew residuals so tip-rendered recipes vs sealed source bytes are
   honest; align Python/Perl/Ruby READMEs with HEALTH/READY/STATS. Claim ceiling unchanged.
 
@@ -111,7 +111,7 @@
 
 - Prove official language-SDK HEALTH/READY/STATS (and AF_UNIX⊕TLS refusal) against
   fake servers, and correct client comments that wrongly claimed empty HEALTH/READY
-  payloads on OK (wire v2 returns `GlyphaStore/live` / `GlyphaStore/ready`). Align
+  payloads on OK (wire v2 returns `GlifiStore/live` / `GlifiStore/ready`). Align
   cpp-client-api, SDK roadmap, TCP client conformance, packaging debian/rpm residuals,
   and engineering README N-1 walk wording with the landed surface; wire
   `GS-CORE-CLOSE-001` → `GATE-CONCURRENCY-SPEC`. Claim ceiling unchanged.
@@ -124,8 +124,8 @@
   stale `rebuild_index` wording. Claim ceiling unchanged.
 
 - Implement install→seed→upgrade→verify walks for FreeBSD/OpenBSD (sealed `.pkg`/`.tgz`)
-  and MacPorts/Homebrew (sealed `GlyphaStore-<version>.tar.xz` sources) when
-  `GLYPHASTORE_N1_PACKAGE_DIR` supplies predecessor bytes; extend N-1 artifact selection
+  and MacPorts/Homebrew (sealed `GlifiStore-<version>.tar.xz` sources) when
+  `GLIFISTORE_N1_PACKAGE_DIR` supplies predecessor bytes; extend N-1 artifact selection
   accordingly. Claim ceiling unchanged; no sealed N-1 PASS invented.
 
 - Move the live RPM package-ci target from EOL Fedora 41 to digest-pinned Fedora 43;
@@ -142,7 +142,7 @@
   existing same-run release path; refresh Action pin counts; annotate `openbsd-vm` as
   `# v1.4.7`; checksum-pin Go 1.27.1 bootstraps; bump Syft to v1.51.1; align Python SDK
   classifiers with CI 3.14 and Pre-Alpha claim ceiling. Bound the CMake
-  `glyphastore_benchmark_parallel_single-worker` smoke to 1×2 so generation-admission
+  `glifistore_benchmark_parallel_single-worker` smoke to 1×2 so generation-admission
   `resource_exhausted` on slow FreeBSD VMs is not misread as a hit-count visibility failure.
   Claim ceiling unchanged.
 
@@ -159,7 +159,7 @@
   `GS-RELEASE-UPGRADE-001`, `GATE-PACKAGE-LIFECYCLE`, `GATE-PACKAGE-ADMISSION`, and
   `HAZ-034` so residuals match retained nightly evidence (Linux `LIFECYCLE_VERIFIED`,
   cross-SDK PASS) and the implemented Linux install→seed→upgrade→verify walk under
-  `GLYPHASTORE_N1_PACKAGE_DIR`; regenerate package-status and production-readiness;
+  `GLIFISTORE_N1_PACKAGE_DIR`; regenerate package-status and production-readiness;
   align package-ci, wave5 residuals, BSD packaging, and MacPorts/Homebrew READMEs.
   Claim ceiling unchanged (architectural prototype); no gate promotion.
 
@@ -194,7 +194,7 @@
 
 - Structure / ACK hygiene follow-up (architectural prototype unchanged): unify Writer
   ACK-after-visibility on DualPath `load_published_generation`; share
-  `include/glyphastore/core/little_endian.hpp`; split oversized production TUs under the
+  `include/glifistore/core/little_endian.hpp`; split oversized production TUs under the
   1600-line gate (reactor I/O/execute, daemon_config materialize, client transport/error,
   filesystem directory, segment_file IO, runtime_catalog batch/compact, writer_sync,
   read_generation internals/immutable, maintenance evaluate); harden detail-header ODR/includes.
@@ -347,7 +347,7 @@
   armed entry reject + `Site::durable_batch_gate` mid-batch TOCTOU.
 - Polish: Ruby `AsyncClient` classify-before-`reset!` on post-send cancel /
   send-failure (mutate / BACKUP / pipeline), matching Python §6.3. Python
-  `AsyncClient.execute_batch` defensive path enriches escaped `GlyphaError` with
+  `AsyncClient.execute_batch` defensive path enriches escaped `GlifiError` with
   `mutation_outcome=rejected` / `bytes_sent=0`.
 - `rotate_active`: after seal (or already-sealed / durable create), create and
   publish `not_published` failures preserve `exception_outcome` (`indeterminate`)
@@ -757,7 +757,7 @@
 - Record encode: `encode_record(out, input, encoded_size)` avoids a second
   `encoded_record_size` pass on Segment append and durable encode-scratch paths.
   Bytes unchanged; release validates input + extent; debug asserts size match.
-  Lab attribution (`GLYPHASTORE_HOT_PATH_PHASES`): `encode_copy` ~66 ns,
+  Lab attribution (`GLIFISTORE_HOT_PATH_PHASES`): `encode_copy` ~66 ns,
   `index_publish` ~158 ns inside Writer apply; `ack` still ~64% of PUT section.
   Evidence: `benchmarks/results/local-macos-2026-08-02-encode-size/`.
 - Embed `DeltaState` in the `make_shared` generation allocation (one heap block
@@ -793,7 +793,7 @@
   path unchanged. No early ACK; lab `store_put` remains publish-bound (~400 k ops/s
   on Apple M4). Rejected for now: Delta COW freelist (measured regressions).
 - Hot-path performance program (lab, macOS Apple Silicon): disableable phase
-  attribution (`GLYPHASTORE_HOT_PATH_PHASES`), GET path consolidation + ReadLease
+  attribution (`GLIFISTORE_HOT_PATH_PHASES`), GET path consolidation + ReadLease
   without Writer wake + 64 B `OwnedValue` SSO, bounded adaptive spin / proportional
   reclaim on paired sync PUT, TCP phase scopes. Lab results under
   `benchmarks/results/local-macos-2026-08-01-perf/` and
@@ -816,9 +816,9 @@
   (OTP-strict), hosted benchmark report keeps Δ but drops hard fail gate, prototype
   Reactor GET telemetry assert softened for ARM flake.
 - Ship portable mdoc(7) manual pages for every Runtime install binary
-  (`glyphastored.8`, maintenance tools in section 1, overview `glyphastore.7`), installed via
+  (`glifistored.8`, maintenance tools in section 1, overview `glifistore.7`), installed via
   `GNUInstallDirs` `MANDIR` for Linux/macOS/FreeBSD/OpenBSD; `scripts/validate-manpages.sh` + CI
-  job; optional `GLYPHASTORE_COMPRESS_MANPAGES`.
+  job; optional `GLIFISTORE_COMPRESS_MANPAGES`.
 - CI green fixes: lychee 0.24 timeout/exclude_path, actionlint labels, CodeQL Go manual
   build, OpenBSD SIGPIPE + daemon-CLI ctest scope + skip three qemu-flaky reactor tests,
   FreeBSD exclude crash/fault labels, durable-group smoke threads 32→4, BlockingFileSync
@@ -852,7 +852,7 @@
   completion) **deferred** for 0.1.0 without a measured queue/syscall win that preserves write
   ordering; refresh Delta COW / get-into reject / Linux harness residual status in
   `paired-shards-plan`, lab prototype “Prossimo gate”, and durable cold-read follow-ups. No
-  fabricated `glyphastore-linux-perf` evidence; no `e3_certified=yes`.
+  fabricated `glifistore-linux-perf` evidence; no `e3_certified=yes`.
 - Paired adoption Fase 0 honesty: dual-path inventory on the production roadmap
   (`docs/v1-production-roadmap.md` — public owning `Store::get` vs daemon `ReadGeneration`,
   `pair_writer_stats`, `--shard-pairs` / `--workers` alias, lab-only `experimental/`). Complements
@@ -864,13 +864,13 @@
   client-semantics §6.2 and durable-tcp-daemon. Closes GATE-CONCURRENCY-SPEC /
   `GS-PROTO-WIRE-001` residual on daemon cancellation/deadline beyond client contract.
   TLC/checker history residuals unchanged; not N−1 fixtures; not E3.
-- HAZ-021: real `glyphastored` exec mid-BACKUP kill matrix via env-gated crash hooks
-  (`GLYPHASTORE_CRASH_TEST` / `GLYPHASTORE_CRASH_KILL_AT` / `GLYPHASTORE_CRASH_CHECKPOINT_DIR`)
-  and `glyphastore_crash_backup_daemon` (`copy_backup_segment` / `copy_backup_manifest` /
+- HAZ-021: real `glifistored` exec mid-BACKUP kill matrix via env-gated crash hooks
+  (`GLIFISTORE_CRASH_TEST` / `GLIFISTORE_CRASH_KILL_AT` / `GLIFISTORE_CRASH_CHECKPOINT_DIR`)
+  and `glifistore_crash_backup_daemon` (`copy_backup_segment` / `copy_backup_manifest` /
   `sync_backup_destination`). Incomplete dest fails verify; source reopens healthy. Lab-only;
   production leaves hooks unset. Still not zero-fence (ADR 0034); durable remains sync write-through.
 - Runtime SDK online `BACKUP` interop smoke (`scripts/test-sdk-backup-interop.sh`): durable
-  `glyphastored` + typed `backup()` for Python/Go/Perl/Ruby/Erlang; wired into CI `sdk-clients`
+  `glifistored` + typed `backup()` for Python/Go/Perl/Ruby/Erlang; wired into CI `sdk-clients`
   (`BACKUP_INTEROP_REQUIRE_ALL=1`). Closes the symbol-only residual from
   `assert-sdk-backup-helpers.sh` (still fenced, not zero-fence).
 - C++ `Error` carries portable `mutation_outcome` (`rejected` / `indeterminate`) on failed
@@ -888,13 +888,13 @@
   destination `FilesystemHooks` then resume; fail-closed corrupt/mismatched/orphan checkpoints;
   N↔N-1 `STORE-WORKER-RESHARD` evidence points at unit tests.
 - HAZ-021: wire/reactor BACKUP process-kill via in-process Server + `Client::backup`
-  (`glyphastore_crash_backup_wire`). Incomplete dest fails verify; source reopen + wire GET after
+  (`glifistore_crash_backup_wire`). Incomplete dest fails verify; source reopen + wire GET after
   Server restart.
 - HAZ-021: Store process-kill mid-backup via `FilesystemHooks`
   (`copy_backup_segment` / `copy_backup_manifest` / `sync_backup_destination`) and
-  `glyphastore_crash_backup`. Incomplete dest fails verify; source reopens healthy.
+  `glifistore_crash_backup`. Incomplete dest fails verify; source reopens healthy.
 - Surface `source_crc_scanned` / `destination_crc_scanned` on wire `BACKUP` ASCII and
-  `glyphastore_backup_store` text/JSON reports. Clarify ops docs: online fenced backup is supported;
+  `glifistore_backup_store` text/JSON reports. Clarify ops docs: online fenced backup is supported;
   zero-fence hot backup is not.
 - HAZ-021: incomplete backup destinations fail verify/restore; failed online backup leaves the live
   Store usable (`tests/unit/store_backup_tests.cpp`).
@@ -942,7 +942,7 @@
   (`engineering/claims/`, `scripts/package-release-claim.sh`), and requirements
   `GS-COMPAT-NN1-001` / `GS-SUPPLY-ACTIONS-001`. Residual: permanent tagged N−1 fixture drops.
 - Assurance Phase C: split root `CMakeLists.txt` via `add_subdirectory` for
-  `src`/`tools`/`tests`/`benchmarks`/`fuzz` (installed `GlyphaStore::*` aliases unchanged);
+  `src`/`tools`/`tests`/`benchmarks`/`fuzz` (installed `GlifiStore::*` aliases unchanged);
   add `engineering/build/dependency-matrix.yaml`, structure debt thresholds, waivers (`WAV-001`),
   and CI validators `validate_cmake_deps.py` / `validate_structure_debt.py`.
 - Paired embedded Store gate snapshot (ADR 0032 T5): macOS-release Zipf durable parallel GET
@@ -957,18 +957,18 @@
   dominated by paired Writer startup. `legacy_mutex` ctest path documented in
   `docs/development/test-strategy.md`.
 - ADR 0032: paired Reader/Writer concurrency is the product default for embedded `Store::open` as
-  well as `glyphastored` (amends ADR 0031/0005/0009 concurrency notes). Persistence v1 and wire v2
+  well as `glifistored` (amends ADR 0031/0005/0009 concurrency notes). Persistence v1 and wire v2
   unchanged; public owning `Store::get` unchanged. Docs aligned
   (`concurrency-memory-model`, `worker-model`, `public-api-contract`, glossary). Deprecated
   `legacy_mutex` escape hatch documented for 0.1.x removal in 0.2; mixing legacy mutators with a
   paired Writer on one Store is refused / UB.
-- Embed `ShardPairRuntime` in `glyphastore_core`: `Store::open` defaults to paired (Writer thread +
+- Embed `ShardPairRuntime` in `glifistore_core`: `Store::open` defaults to paired (Writer thread +
   published `ReadGeneration` per shard). Public `get` adopts the generation (durable cold reads
   complete synchronously); `put`/`erase` hand off to the Writer. Durable hot-cache admission is
-  disabled in paired mode (generation-only). `glyphastored` opens the same paired Store and uses a
+  disabled in paired mode (generation-only). `glifistored` opens the same paired Store and uses a
   thin `PairWriterPool` adapter (no second publication spine). `src/experimental/paired_*` remains
   lab-only.
-- Document paired Reader–Writer as the sole `glyphastored` 0.1.0 runtime (ADR 0031); the volatile
+- Document paired Reader–Writer as the sole `glifistored` 0.1.0 runtime (ADR 0031); the volatile
   engine under `src/experimental/` remains lab-only and is not a second selectable daemon. Inventory:
   public `Store::get` keeps owning pins; daemon GET borrows a Reader-local `ReadGeneration`;
   `Server::pair_writer_stats()` is the paired mutation-lane surface while Manifest/wire
@@ -1031,7 +1031,7 @@
 - Add first-slice secure-profile interop smoke (`scripts/test-secure-profile-interop.sh`): mTLS
   client/server PEMs, `--authz-map` write principal, pinned `--worker-hash-seed` under
   `--secure-profile`, cpp/python/go PUT→GET + keyed owner checks; wired into CI `sdk-clients`
-  (`timeout-minutes: 5`, TLS build forced `GLYPHASTORE_ENABLE_TLS=ON`).
+  (`timeout-minutes: 5`, TLS build forced `GLIFISTORE_ENABLE_TLS=ON`).
 - Add supply-chain CI gate (`.github/workflows/supply-chain.yml`): package SDKs, require `syft`
   SPDX JSON (`SYFT_REQUIRED=1`), upload `SHA256SUMS` + `*.spdx.json`. Tag Cosign keyless signing
   and GitHub SLSA attestations land on tags (public / `ENABLE_ARTIFACT_ATTESTATIONS`); verify
@@ -1089,7 +1089,7 @@
 - Advance E3/E4 durability certification scaffolding: `scripts/run-e3-block-reset.sh` provisions
   disposable linux-ext4 (loopback + optional dm-flakey) and macOS APFS (hdiutil) rows, arms abrupt
   block-device reset at crash-harness checkpoints, remounts with non-repairing fsck, and records
-  honest `e3_certified=no` artifacts; expose `glyphastore_crash_persistence --mode seed`; add
+  honest `e3_certified=no` artifacts; expose `glifistore_crash_persistence --mode seed`; add
   `.github/workflows/durability-evidence.yml` for E2 collector + E3 harness smoke; document PASS/FAIL
   and promotion rules in `platform-durability-evidence.md`. No filesystem row is E3/E4 certified.
 - Advance durable hot-cache probing to Swiss-style H2 control bytes with SIMD/scalar 8-slot group
@@ -1100,7 +1100,7 @@
 - Finish durable GET path follow-up optimizations: slim `prepare_get` critical section (hot snapshot
   then unlock; pin only on cold miss; deferred TTL drain only when backlog non-empty), move hot-cache
   bookkeeping to cache-line-aligned relaxed atomics, gate fine-grained GET timing out of Release
-  builds (`NDEBUG`, overridable with `GLYPHASTORE_GET_PATH_TIMING`), and replace the hot map with a
+  builds (`NDEBUG`, overridable with `GLIFISTORE_GET_PATH_TIMING`), and replace the hot map with a
   flat open-addressed table (FNV hash, load 0.5, 48-byte inline values, in-place staging). Raise
   default GET-path bench ops. The prior −20% v32 regression is closed at credible op counts.
 - Record durable GET path + hot-cache optimization notes (comparative microbenchmarks, sanitizer
@@ -1124,7 +1124,7 @@
   bytes/entries. Extend `hot_cache_stats()` with stale, eviction, size-rejected, and expired counters.
   Behavioral GET/hot-cache optimizations follow in later commits; capture baselines first.
 - Wire the consolidation slice so documented secure-profile / migrate / STATS surfaces match the
-  binary: CMake builds `authz.cpp`, `store_migrate.cpp`, `glyphastore_migrate_store`, and the orphan
+  binary: CMake builds `authz.cpp`, `store_migrate.cpp`, `glifistore_migrate_store`, and the orphan
   unit tests; mTLS extracts principal (URI SAN → DNS SAN → CN); the reactor enforces
   `--authz-map` with wire `PERMISSION_DENIED` (8); `--secure-profile` fails closed (no dual
   `--tls-port`); durable lanes export `LatencyHistogram` needles plus
@@ -1134,9 +1134,9 @@
   TLS 1.3 connect options.
 - Complete durable TCP daemon software path (P0-01). Extend `--dump-config` with maintenance
   thresholds, durable resource defaults, disk-read settings, and group batch fields. Extend
-  `glyphastore_crash_daemon` with pre-commit PUT and post-ack ERASE checkpoints. Mark P0-01
+  `glifistore_crash_daemon` with pre-commit PUT and post-ack ERASE checkpoints. Mark P0-01
   software-complete; E3/E4 power-loss remain open (histogram export now wired into STATS).
-- Add end-to-end operator guide for durable `glyphastored` deployments
+- Add end-to-end operator guide for durable `glifistored` deployments
   (`docs/operations/durable-tcp-daemon.md`): profile or explicit storage mode, data directory and
   open policy, resource/batch/maintenance flags, `HEALTH`/`READY`/`STATS` expectations, shutdown
   drain, offline backup/verify/repair pointers, and explicit unsupported claims (live backup,
@@ -1149,18 +1149,18 @@
   path and copy budget still uses exact live bytes. Export scheduling ratio through
   `MaintenanceSnapshot` and daemon `STATS`. Add daemon CLI/config for unread-TTL probe and normal
   scheduling flags.
-- Document permanent refusal of `glyphastore_rebuild_index` for durable v1 with explicit operator
-  paths via Store recovery and `glyphastore_repair_store`. Sync persistence roadmap: software P0-08
+- Document permanent refusal of `glifistore_rebuild_index` for durable v1 with explicit operator
+  paths via Store recovery and `glifistore_repair_store`. Sync persistence roadmap: software P0-08
   policy slices closed; controlled native baselines and E3/E4 power-loss certification remain open.
-- Add fail-closed JSON-lines structured logging for `glyphastored` lifecycle events (`start`, `listen`,
+- Add fail-closed JSON-lines structured logging for `glifistored` lifecycle events (`start`, `listen`,
   `ready`, `maintenance_emergency`, `maintenance_fault`, `shutdown_begin`, `shutdown_drain_begin`,
   `shutdown_drain_end`, `stopped`, `executor_failure`). Opt in with `--log-format json` (default
   `human` keeps legacy stdout/stderr). Structured fields are bounded, omit secrets, and `--quiet`
   suppresses only the normal startup/shutdown lifecycle lines.
 - Add operator runbooks under `docs/operations/` for graceful drain and overload (`HEALTH`/`READY`/`STATS`,
-  `--shutdown-drain-ms`), offline backup/restore (`glyphastore_backup_store`, `glyphastore_verify_store`),
-  and corruption detection/repair (`glyphastore_verify_store`, `glyphastore_inspect_segment`,
-  `glyphastore_repair_store` with quarantine outside the live store). Link from the documentation index,
+  `--shutdown-drain-ms`), offline backup/restore (`glifistore_backup_store`, `glifistore_verify_store`),
+  and corruption detection/repair (`glifistore_verify_store`, `glifistore_inspect_segment`,
+  `glifistore_repair_store` with quarantine outside the live store). Link from the documentation index,
   production readiness, persistence roadmap, and architecture backup-restore guide.
 - Add fail-closed unread-TTL observability for pressure/emergency maintenance. When
   `unread_ttl_pressure_probe` is enabled (default), background evaluations under segment or

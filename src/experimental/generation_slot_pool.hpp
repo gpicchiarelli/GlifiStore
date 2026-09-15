@@ -1,9 +1,9 @@
 #pragma once
 
 // ADR 0036 lab-only candidate. This header is compiled only by tests and
-// dedicated benchmarks; it is not installed or linked into glyphastored.
+// dedicated benchmarks; it is not installed or linked into glifistored.
 
-#include "glyphastore/core/error.hpp"
+#include "glifistore/core/error.hpp"
 
 #include <array>
 #include <atomic>
@@ -14,7 +14,7 @@
 #include <optional>
 #include <utility>
 
-namespace glyphastore::experimental {
+namespace glifistore::experimental {
 
 enum class GenerationSlotPublishStatus : std::uint8_t {
     published,
@@ -461,4 +461,4 @@ template <typename Generation, std::size_t Capacity> class GenerationSlotPool fi
     GenerationSlotFailureHook failure_hook_{};
 };
 
-} // namespace glyphastore::experimental
+} // namespace glifistore::experimental

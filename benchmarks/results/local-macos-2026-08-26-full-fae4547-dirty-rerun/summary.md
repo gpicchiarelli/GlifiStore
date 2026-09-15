@@ -1,4 +1,4 @@
-# GlyphaStore complete local benchmark rerun — 2026-08-26
+# GlifiStore complete local benchmark rerun — 2026-08-26
 
 ## Verdict
 

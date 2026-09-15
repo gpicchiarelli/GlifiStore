@@ -33,23 +33,23 @@ add() {
 }
 
 shopt -s nullglob
-# Distinct names: macOS default FS is case-insensitive (glyphastore vs GlyphaStore).
-for f in "$root/sdk/python/dist"/glyphastore-*.whl; do
+# Distinct names: macOS default FS is case-insensitive (glifistore vs GlifiStore).
+for f in "$root/sdk/python/dist"/glifistore-*.whl; do
   add "$f"
 done
-for f in "$root/sdk/python/dist"/glyphastore-*.tar.gz; do
+for f in "$root/sdk/python/dist"/glifistore-*.tar.gz; do
   add "$f" "python-$(basename "$f")"
 done
-for f in "$root/sdk/perl/dist"/GlyphaStore-*.tar.gz; do
+for f in "$root/sdk/perl/dist"/GlifiStore-*.tar.gz; do
   add "$f" "perl-$(basename "$f")"
 done
-for f in "$root/sdk/ruby/dist"/glyphastore-*.gem; do
+for f in "$root/sdk/ruby/dist"/glifistore-*.gem; do
   add "$f"
 done
-for f in "$root/sdk/erlang/dist"/glyphastore-erlang-*.tar.gz; do
+for f in "$root/sdk/erlang/dist"/glifistore-erlang-*.tar.gz; do
   add "$f"
 done
-for f in "$root/sdk/go/dist"/glyphastore-go-*.tar.gz; do
+for f in "$root/sdk/go/dist"/glifistore-go-*.tar.gz; do
   add "$f"
 done
 add "$root/sdk/go/dist/package-info.txt" "go-package-info.txt"

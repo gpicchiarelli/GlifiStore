@@ -36,5 +36,5 @@ MYMETA\..*$
 \.DS_Store$
 
 # Local packaging output.
-^GlyphaStore-[\d\._]+
+^GlifiStore-[\d\._]+
 \.tar\.gz$

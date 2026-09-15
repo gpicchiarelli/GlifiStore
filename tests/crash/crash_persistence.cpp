@@ -1,12 +1,12 @@
 #include "crash_checkpoint.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/persistence/bootstrap.hpp"
-#include "glyphastore/persistence/recovery.hpp"
-#include "glyphastore/persistence/runtime_catalog.hpp"
-#include "glyphastore/persistence/segment_file.hpp"
-#include "glyphastore/segment/record.hpp"
-#include "glyphastore/store/config.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/persistence/bootstrap.hpp"
+#include "glifistore/persistence/recovery.hpp"
+#include "glifistore/persistence/runtime_catalog.hpp"
+#include "glifistore/persistence/segment_file.hpp"
+#include "glifistore/segment/record.hpp"
+#include "glifistore/store/config.hpp"
+#include "glifistore/store/store.hpp"
 
 #include <algorithm>
 #include <array>
@@ -184,42 +184,42 @@ void print_usage(const char* program) {
     return options.storage == "group";
 }
 
-[[nodiscard]] auto durable_runtime_options(const Options& options) -> glyphastore::DurableRuntimeOptions {
+[[nodiscard]] auto durable_runtime_options(const Options& options) -> glifistore::DurableRuntimeOptions {
     if (group_storage(options)) {
-        return {.commit_sync = glyphastore::SegmentCommitSync::immediate,
+        return {.commit_sync = glifistore::SegmentCommitSync::immediate,
                 .sync_interval_ms = 50,
                 .batch =
-                    glyphastore::DurableGroupConfig{.max_records = 32, .max_bytes = 65536, .max_wait_ms = 50},
+                    glifistore::DurableGroupConfig{.max_records = 32, .max_bytes = 65536, .max_wait_ms = 50},
                 .strict_ack = true};
     }
     if (periodic_storage(options)) {
-        return {.commit_sync = glyphastore::SegmentCommitSync::deferred,
+        return {.commit_sync = glifistore::SegmentCommitSync::deferred,
                 .sync_interval_ms = 50,
-                .batch = glyphastore::DurableGroupConfig{
+                .batch = glifistore::DurableGroupConfig{
                     .max_records = 32, .max_bytes = 65536, .max_wait_ms = 50}};
     }
     return {};
 }
 
-[[nodiscard]] auto recovery_storage_mode(const Options& options) -> glyphastore::StorageMode {
+[[nodiscard]] auto recovery_storage_mode(const Options& options) -> glifistore::StorageMode {
     if (group_storage(options)) {
-        return glyphastore::StorageMode::durable_group;
+        return glifistore::StorageMode::durable_group;
     }
-    return periodic_storage(options) ? glyphastore::StorageMode::durable_periodic
-                                     : glyphastore::StorageMode::durable_sync;
+    return periodic_storage(options) ? glifistore::StorageMode::durable_periodic
+                                     : glifistore::StorageMode::durable_sync;
 }
 
-[[nodiscard]] auto open_runtime_for_worker(const Options& options, glyphastore::FilesystemHooks hooks)
-    -> std::unique_ptr<glyphastore::DurableRuntimeCatalog> {
-    auto directory = glyphastore::DataDirectory::open_and_lock(
-        options.data_dir, glyphastore::DataDirectoryOpenMode::existing, hooks);
+[[nodiscard]] auto open_runtime_for_worker(const Options& options, glifistore::FilesystemHooks hooks)
+    -> std::unique_ptr<glifistore::DurableRuntimeCatalog> {
+    auto directory = glifistore::DataDirectory::open_and_lock(
+        options.data_dir, glifistore::DataDirectoryOpenMode::existing, hooks);
     if (!directory) {
         return nullptr;
     }
     const auto now_ns = options.scenario == "compact" || options.scenario == "compact-multi-random"
                             ? kCompactionHistoryNowNs
                             : std::uint64_t{0};
-    auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory), now_ns,
+    auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory), now_ns,
                                                                    durable_runtime_options(options));
     if (!runtime) {
         return nullptr;
@@ -231,27 +231,27 @@ void print_usage(const char* program) {
     return {reinterpret_cast<const std::byte*>(value.data()), value.size()};
 }
 
-[[nodiscard]] auto owned_text(const glyphastore::OwnedValue& value) -> std::string {
+[[nodiscard]] auto owned_text(const glifistore::OwnedValue& value) -> std::string {
     return {reinterpret_cast<const char*>(value.bytes.data()), value.bytes.size()};
 }
 
-[[nodiscard]] auto recovery_store_id() -> glyphastore::StoreId {
+[[nodiscard]] auto recovery_store_id() -> glifistore::StoreId {
     return {std::byte{0x20}, std::byte{0x21}, std::byte{0x22}, std::byte{0x23},
             std::byte{0x24}, std::byte{0x25}, std::byte{0x26}, std::byte{0x27},
             std::byte{0x28}, std::byte{0x29}, std::byte{0x2A}, std::byte{0x2B},
             std::byte{0x2C}, std::byte{0x2D}, std::byte{0x2E}, std::byte{0x2F}};
 }
 
-void append_record(glyphastore::DurableSegmentFile& file, const std::uint64_t sequence,
+void append_record(glifistore::DurableSegmentFile& file, const std::uint64_t sequence,
                    const std::string_view key, const std::string_view value,
-                   const glyphastore::Opcode opcode = glyphastore::Opcode::put,
+                   const glifistore::Opcode opcode = glifistore::Opcode::put,
                    const std::uint64_t expire_at_ns = 0, const bool commit_immediately = true) {
-    const auto encoded = glyphastore::encode_record({
-        .sequence = glyphastore::SequenceNumber{sequence},
+    const auto encoded = glifistore::encode_record({
+        .sequence = glifistore::SequenceNumber{sequence},
         .opcode = opcode,
-        .type = glyphastore::ValueType::bytes,
+        .type = glifistore::ValueType::bytes,
         .flags = 0,
-        .key_hash = glyphastore::hash_key(key),
+        .key_hash = glifistore::hash_key(key),
         .expire_at_ns = expire_at_ns,
         .key = bytes(key),
         .value = bytes(value),
@@ -267,7 +267,7 @@ void append_record(glyphastore::DurableSegmentFile& file, const std::uint64_t se
 
 struct CompactionHistoryOperation {
     std::uint64_t sequence{};
-    glyphastore::Opcode opcode{glyphastore::Opcode::put};
+    glifistore::Opcode opcode{glifistore::Opcode::put};
     std::size_t key_index{};
     std::string value;
     std::uint64_t expire_at_ns{};
@@ -290,14 +290,14 @@ struct CompactionHistory {
 
     std::uint64_t next_sequence{1};
     const auto append = [&](const std::size_t segment_index, const std::size_t key_index,
-                            const glyphastore::Opcode opcode, std::string value,
+                            const glifistore::Opcode opcode, std::string value,
                             const std::uint64_t expire_at_ns) {
         history.segments[segment_index].push_back({.sequence = next_sequence++,
                                                    .opcode = opcode,
                                                    .key_index = key_index,
                                                    .value = std::move(value),
                                                    .expire_at_ns = expire_at_ns});
-        if (opcode == glyphastore::Opcode::erase ||
+        if (opcode == glifistore::Opcode::erase ||
             (expire_at_ns != 0 && expire_at_ns <= kCompactionHistoryNowNs)) {
             history.expected[key_index].reset();
         } else {
@@ -305,7 +305,7 @@ struct CompactionHistory {
         }
     };
     for (std::size_t key_index = 0; key_index < kCompactionHistoryKeyCount; ++key_index) {
-        append(0, key_index, glyphastore::Opcode::put, "baseline-" + std::to_string(key_index), 0);
+        append(0, key_index, glifistore::Opcode::put, "baseline-" + std::to_string(key_index), 0);
     }
 
     std::mt19937_64 random{0xC2A5'4F17'5EED'2026ULL};
@@ -315,10 +315,10 @@ struct CompactionHistory {
             const auto key_index = static_cast<std::size_t>(random() % key_space);
             const auto choice = random() % 6U;
             if (choice == 0) {
-                append(segment_index, key_index, glyphastore::Opcode::erase, {}, 0);
+                append(segment_index, key_index, glifistore::Opcode::erase, {}, 0);
             } else {
                 const auto expiry = choice == 1 ? kCompactionHistoryNowNs - 1U : 0U;
-                append(segment_index, key_index, glyphastore::Opcode::put,
+                append(segment_index, key_index, glifistore::Opcode::put,
                        "history-value-" + std::to_string(next_sequence) + "-" + std::to_string(random()),
                        expiry);
             }
@@ -332,11 +332,11 @@ struct CompactionHistory {
 
 void seed_put_store(const std::filesystem::path& data_dir) {
     std::filesystem::create_directories(data_dir.parent_path());
-    auto opened = glyphastore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glyphastore::StoreConcurrencyMode::legacy_mutex,
-                                            .storage_mode = glyphastore::StorageMode::durable_sync,
+    auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
+                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
+                                            .storage_mode = glifistore::StorageMode::durable_sync,
                                             .data_directory = data_dir,
-                                            .durable_open_mode = glyphastore::DurableOpenMode::create_new});
+                                            .durable_open_mode = glifistore::DurableOpenMode::create_new});
     if (!opened) {
         throw std::runtime_error(std::string{"failed to seed durable store: "} + opened.error().message);
     }
@@ -348,23 +348,23 @@ void seed_put_store(const std::filesystem::path& data_dir) {
 void seed_rotate_store(const std::filesystem::path& data_dir) {
     std::filesystem::create_directories(data_dir.parent_path());
     const auto store_id = recovery_store_id();
-    const glyphastore::ManifestSegmentEntry active{
-        .segment_id = glyphastore::SegmentId{1},
-        .generation = glyphastore::GenerationId{1},
-        .owner_worker = glyphastore::WorkerId{0},
-        .role = glyphastore::ManifestSegmentRole::active,
+    const glifistore::ManifestSegmentEntry active{
+        .segment_id = glifistore::SegmentId{1},
+        .generation = glifistore::GenerationId{1},
+        .owner_worker = glifistore::WorkerId{0},
+        .role = glifistore::ManifestSegmentRole::active,
     };
     const std::string fill_key{"fill"};
     const std::string maximum_value(
-        glyphastore::kMaxNormalRecordSize - glyphastore::kEncodedRecordHeaderSize - fill_key.size(), 'x');
+        glifistore::kMaxNormalRecordSize - glifistore::kEncodedRecordHeaderSize - fill_key.size(), 'x');
     {
-        auto directory = glyphastore::DataDirectory::open_and_lock(
-            data_dir, glyphastore::DataDirectoryOpenMode::open_or_create);
+        auto directory = glifistore::DataDirectory::open_and_lock(
+            data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
         if (!directory) {
             throw std::runtime_error("failed to open data directory for rotate seed");
         }
         auto created =
-            glyphastore::DurableSegmentFile::create(*directory, {.store_id = store_id,
+            glifistore::DurableSegmentFile::create(*directory, {.store_id = store_id,
                                                                  .segment_id = active.segment_id,
                                                                  .generation = active.generation,
                                                                  .owner_worker = active.owner_worker});
@@ -374,21 +374,21 @@ void seed_rotate_store(const std::filesystem::path& data_dir) {
         for (std::uint64_t sequence = 1; sequence <= 63; ++sequence) {
             append_record(*created.file, sequence, fill_key, maximum_value);
         }
-        const glyphastore::Manifest manifest{
+        const glifistore::Manifest manifest{
             .store_id = store_id,
             .manifest_generation = 1,
-            .routing_algorithm = glyphastore::RoutingAlgorithm::fnv1a64_v1,
+            .routing_algorithm = glifistore::RoutingAlgorithm::fnv1a64_v1,
             .worker_count = 1,
             .routing_epoch = 1,
-            .next_segment_id = glyphastore::SegmentId{2},
-            .next_segment_generation = glyphastore::GenerationId{1},
+            .next_segment_id = glifistore::SegmentId{2},
+            .next_segment_generation = glifistore::GenerationId{1},
             .segments = {active},
         };
         if (!directory->publish_manifest(manifest).durable()) {
             throw std::runtime_error("failed to publish rotate seed manifest");
         }
     }
-    auto runtime = glyphastore::DurableRuntimeCatalog::open_existing(data_dir);
+    auto runtime = glifistore::DurableRuntimeCatalog::open_existing(data_dir);
     if (!runtime) {
         throw std::runtime_error("failed to open rotate seed runtime");
     }
@@ -401,27 +401,27 @@ void seed_compaction_store(const std::filesystem::path& data_dir) {
     std::filesystem::create_directories(data_dir.parent_path());
     const auto store_id = recovery_store_id();
     const std::vector entries{
-        glyphastore::ManifestSegmentEntry{.segment_id = glyphastore::SegmentId{1},
-                                          .generation = glyphastore::GenerationId{1},
-                                          .owner_worker = glyphastore::WorkerId{0},
-                                          .role = glyphastore::ManifestSegmentRole::sealed},
-        glyphastore::ManifestSegmentEntry{.segment_id = glyphastore::SegmentId{2},
-                                          .generation = glyphastore::GenerationId{1},
-                                          .owner_worker = glyphastore::WorkerId{0},
-                                          .role = glyphastore::ManifestSegmentRole::sealed},
-        glyphastore::ManifestSegmentEntry{.segment_id = glyphastore::SegmentId{3},
-                                          .generation = glyphastore::GenerationId{1},
-                                          .owner_worker = glyphastore::WorkerId{0},
-                                          .role = glyphastore::ManifestSegmentRole::active},
+        glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
+                                          .generation = glifistore::GenerationId{1},
+                                          .owner_worker = glifistore::WorkerId{0},
+                                          .role = glifistore::ManifestSegmentRole::sealed},
+        glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
+                                          .generation = glifistore::GenerationId{1},
+                                          .owner_worker = glifistore::WorkerId{0},
+                                          .role = glifistore::ManifestSegmentRole::sealed},
+        glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
+                                          .generation = glifistore::GenerationId{1},
+                                          .owner_worker = glifistore::WorkerId{0},
+                                          .role = glifistore::ManifestSegmentRole::active},
     };
-    auto directory = glyphastore::DataDirectory::open_and_lock(
-        data_dir, glyphastore::DataDirectoryOpenMode::open_or_create);
+    auto directory = glifistore::DataDirectory::open_and_lock(
+        data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
     if (!directory) {
         throw std::runtime_error("failed to open data directory for compaction seed");
     }
-    const auto create = [&](const glyphastore::ManifestSegmentEntry& entry) {
+    const auto create = [&](const glifistore::ManifestSegmentEntry& entry) {
         auto created =
-            glyphastore::DurableSegmentFile::create(*directory, {.store_id = store_id,
+            glifistore::DurableSegmentFile::create(*directory, {.store_id = store_id,
                                                                  .segment_id = entry.segment_id,
                                                                  .generation = entry.generation,
                                                                  .owner_worker = entry.owner_worker});
@@ -437,19 +437,19 @@ void seed_compaction_store(const std::filesystem::path& data_dir) {
             append_record(segment, operation.sequence, history.keys[operation.key_index], operation.value,
                           operation.opcode, operation.expire_at_ns);
         }
-        if (entries[segment_index].role == glyphastore::ManifestSegmentRole::sealed &&
+        if (entries[segment_index].role == glifistore::ManifestSegmentRole::sealed &&
             !segment.seal().committed()) {
             throw std::runtime_error("failed to seal generated compaction seed Segment");
         }
     }
-    const glyphastore::Manifest manifest{
+    const glifistore::Manifest manifest{
         .store_id = store_id,
         .manifest_generation = 1,
-        .routing_algorithm = glyphastore::RoutingAlgorithm::fnv1a64_v1,
+        .routing_algorithm = glifistore::RoutingAlgorithm::fnv1a64_v1,
         .worker_count = 1,
         .routing_epoch = 1,
-        .next_segment_id = glyphastore::SegmentId{4},
-        .next_segment_generation = glyphastore::GenerationId{1},
+        .next_segment_id = glifistore::SegmentId{4},
+        .next_segment_generation = glifistore::GenerationId{1},
         .segments = entries,
     };
     if (!directory->publish_manifest(manifest).durable()) {
@@ -458,46 +458,46 @@ void seed_compaction_store(const std::filesystem::path& data_dir) {
 }
 
 [[nodiscard]] auto multi_output_compaction_manifests()
-    -> std::pair<glyphastore::Manifest, glyphastore::Manifest> {
-    glyphastore::Manifest old{
+    -> std::pair<glifistore::Manifest, glifistore::Manifest> {
+    glifistore::Manifest old{
         .store_id = recovery_store_id(),
         .manifest_generation = 31,
-        .routing_algorithm = glyphastore::RoutingAlgorithm::fnv1a64_v1,
+        .routing_algorithm = glifistore::RoutingAlgorithm::fnv1a64_v1,
         .worker_count = 1,
         .routing_epoch = 1,
-        .next_segment_id = glyphastore::SegmentId{5},
-        .next_segment_generation = glyphastore::GenerationId{1},
+        .next_segment_id = glifistore::SegmentId{5},
+        .next_segment_generation = glifistore::GenerationId{1},
         .segments =
             {
-                {.segment_id = glyphastore::SegmentId{1},
-                 .generation = glyphastore::GenerationId{1},
-                 .owner_worker = glyphastore::WorkerId{0},
-                 .role = glyphastore::ManifestSegmentRole::sealed},
-                {.segment_id = glyphastore::SegmentId{2},
-                 .generation = glyphastore::GenerationId{1},
-                 .owner_worker = glyphastore::WorkerId{0},
-                 .role = glyphastore::ManifestSegmentRole::sealed},
-                {.segment_id = glyphastore::SegmentId{3},
-                 .generation = glyphastore::GenerationId{1},
-                 .owner_worker = glyphastore::WorkerId{0},
-                 .role = glyphastore::ManifestSegmentRole::sealed},
-                {.segment_id = glyphastore::SegmentId{4},
-                 .generation = glyphastore::GenerationId{1},
-                 .owner_worker = glyphastore::WorkerId{0},
-                 .role = glyphastore::ManifestSegmentRole::active},
+                {.segment_id = glifistore::SegmentId{1},
+                 .generation = glifistore::GenerationId{1},
+                 .owner_worker = glifistore::WorkerId{0},
+                 .role = glifistore::ManifestSegmentRole::sealed},
+                {.segment_id = glifistore::SegmentId{2},
+                 .generation = glifistore::GenerationId{1},
+                 .owner_worker = glifistore::WorkerId{0},
+                 .role = glifistore::ManifestSegmentRole::sealed},
+                {.segment_id = glifistore::SegmentId{3},
+                 .generation = glifistore::GenerationId{1},
+                 .owner_worker = glifistore::WorkerId{0},
+                 .role = glifistore::ManifestSegmentRole::sealed},
+                {.segment_id = glifistore::SegmentId{4},
+                 .generation = glifistore::GenerationId{1},
+                 .owner_worker = glifistore::WorkerId{0},
+                 .role = glifistore::ManifestSegmentRole::active},
             },
     };
     auto next = old;
     ++next.manifest_generation;
     next.segments = {
-        {.segment_id = glyphastore::SegmentId{1},
-         .generation = glyphastore::GenerationId{2},
-         .owner_worker = glyphastore::WorkerId{0},
-         .role = glyphastore::ManifestSegmentRole::sealed},
-        {.segment_id = glyphastore::SegmentId{2},
-         .generation = glyphastore::GenerationId{2},
-         .owner_worker = glyphastore::WorkerId{0},
-         .role = glyphastore::ManifestSegmentRole::sealed},
+        {.segment_id = glifistore::SegmentId{1},
+         .generation = glifistore::GenerationId{2},
+         .owner_worker = glifistore::WorkerId{0},
+         .role = glifistore::ManifestSegmentRole::sealed},
+        {.segment_id = glifistore::SegmentId{2},
+         .generation = glifistore::GenerationId{2},
+         .owner_worker = glifistore::WorkerId{0},
+         .role = glifistore::ManifestSegmentRole::sealed},
         old.segments.back(),
     };
     return {std::move(old), std::move(next)};
@@ -510,13 +510,13 @@ void seed_compaction_store(const std::filesystem::path& data_dir) {
 [[nodiscard]] auto multi_output_build_value() -> const std::string& {
     static const auto key = multi_output_build_key(0);
     static const std::string value(
-        glyphastore::kMaxNormalRecordSize - glyphastore::kEncodedRecordHeaderSize - key.size(), 'm');
+        glifistore::kMaxNormalRecordSize - glifistore::kEncodedRecordHeaderSize - key.size(), 'm');
     return value;
 }
 
 struct MultiOutputHistoryOperation {
     std::size_t key_index{};
-    glyphastore::Opcode opcode{glyphastore::Opcode::put};
+    glifistore::Opcode opcode{glifistore::Opcode::put};
     char value_fill{};
     std::uint64_t expire_at_ns{};
 };
@@ -532,7 +532,7 @@ struct MultiOutputRandomHistory {
 
 [[nodiscard]] auto multi_output_random_value_size() -> std::size_t {
     static const auto key = multi_output_random_key(0);
-    return glyphastore::kMaxNormalRecordSize - glyphastore::kEncodedRecordHeaderSize - key.size();
+    return glifistore::kMaxNormalRecordSize - glifistore::kEncodedRecordHeaderSize - key.size();
 }
 
 [[nodiscard]] auto generated_multi_output_history(const std::uint64_t seed) -> MultiOutputRandomHistory {
@@ -545,12 +545,12 @@ struct MultiOutputRandomHistory {
     std::mt19937_64 random{seed};
     std::shuffle(key_order.begin(), key_order.end(), random);
 
-    const auto append = [&](const std::size_t key_index, const glyphastore::Opcode opcode,
+    const auto append = [&](const std::size_t key_index, const glifistore::Opcode opcode,
                             const std::uint64_t expire_at_ns) {
         const auto fill = static_cast<char>('a' + (random() % 26U));
         history.operations.push_back(
             {.key_index = key_index, .opcode = opcode, .value_fill = fill, .expire_at_ns = expire_at_ns});
-        if (opcode == glyphastore::Opcode::erase ||
+        if (opcode == glifistore::Opcode::erase ||
             (expire_at_ns != 0 && expire_at_ns <= kCompactionHistoryNowNs)) {
             history.expected[key_index].reset();
         } else {
@@ -559,19 +559,19 @@ struct MultiOutputRandomHistory {
     };
 
     for (const auto key_index : key_order) {
-        append(key_index, glyphastore::Opcode::put, 0);
+        append(key_index, glifistore::Opcode::put, 0);
     }
     std::shuffle(key_order.begin(), key_order.end(), random);
     for (std::size_t pair = 0; pair < 16; ++pair) {
         const auto key_index = key_order[pair];
         if (pair % 3U == 0) {
-            append(key_index, glyphastore::Opcode::erase, 0);
+            append(key_index, glifistore::Opcode::erase, 0);
         } else if (pair % 3U == 1) {
-            append(key_index, glyphastore::Opcode::put, kCompactionHistoryNowNs - 1U);
+            append(key_index, glifistore::Opcode::put, kCompactionHistoryNowNs - 1U);
         } else {
-            append(key_index, glyphastore::Opcode::put, 0);
+            append(key_index, glifistore::Opcode::put, 0);
         }
-        append(key_index, glyphastore::Opcode::put, 0);
+        append(key_index, glifistore::Opcode::put, 0);
     }
     return history;
 }
@@ -580,14 +580,14 @@ void seed_multi_output_compaction_build(const std::filesystem::path& data_dir) {
     std::filesystem::create_directories(data_dir.parent_path());
     const auto [old, next] = multi_output_compaction_manifests();
     static_cast<void>(next);
-    auto directory = glyphastore::DataDirectory::open_and_lock(
-        data_dir, glyphastore::DataDirectoryOpenMode::open_or_create);
+    auto directory = glifistore::DataDirectory::open_and_lock(
+        data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
     if (!directory) {
         throw std::runtime_error("failed to open multi-output build seed directory");
     }
-    const auto create = [&](const glyphastore::ManifestSegmentEntry& entry) {
+    const auto create = [&](const glifistore::ManifestSegmentEntry& entry) {
         auto created =
-            glyphastore::DurableSegmentFile::create(*directory, {.store_id = old.store_id,
+            glifistore::DurableSegmentFile::create(*directory, {.store_id = old.store_id,
                                                                  .segment_id = entry.segment_id,
                                                                  .generation = entry.generation,
                                                                  .owner_worker = entry.owner_worker});
@@ -603,7 +603,7 @@ void seed_multi_output_compaction_build(const std::filesystem::path& data_dir) {
         auto segment = create(old.segments[segment_index]);
         for (std::size_t group_index = 0; group_index < kGroupSizes[segment_index]; ++group_index) {
             const auto key = multi_output_build_key(key_index++);
-            append_record(segment, sequence++, key, multi_output_build_value(), glyphastore::Opcode::put, 0,
+            append_record(segment, sequence++, key, multi_output_build_value(), glifistore::Opcode::put, 0,
                           false);
         }
         if (!segment.seal().committed()) {
@@ -620,14 +620,14 @@ void seed_multi_output_random_compaction(const std::filesystem::path& data_dir, 
     std::filesystem::create_directories(data_dir.parent_path());
     const auto [old, next] = multi_output_compaction_manifests();
     static_cast<void>(next);
-    auto directory = glyphastore::DataDirectory::open_and_lock(
-        data_dir, glyphastore::DataDirectoryOpenMode::open_or_create);
+    auto directory = glifistore::DataDirectory::open_and_lock(
+        data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
     if (!directory) {
         throw std::runtime_error("failed to open randomized multi-output seed directory");
     }
-    const auto create = [&](const glyphastore::ManifestSegmentEntry& entry) {
+    const auto create = [&](const glifistore::ManifestSegmentEntry& entry) {
         auto created =
-            glyphastore::DurableSegmentFile::create(*directory, {.store_id = old.store_id,
+            glifistore::DurableSegmentFile::create(*directory, {.store_id = old.store_id,
                                                                  .segment_id = entry.segment_id,
                                                                  .generation = entry.generation,
                                                                  .owner_worker = entry.owner_worker});
@@ -649,11 +649,11 @@ void seed_multi_output_random_compaction(const std::filesystem::path& data_dir, 
              ++operation_index) {
             const auto& operation = history.operations[operation_index];
             const auto key = multi_output_random_key(operation.key_index);
-            if (operation.opcode == glyphastore::Opcode::put) {
+            if (operation.opcode == glifistore::Opcode::put) {
                 std::fill(value.begin(), value.end(), operation.value_fill);
             }
             append_record(segment, sequence++, key,
-                          operation.opcode == glyphastore::Opcode::put ? std::string_view{value}
+                          operation.opcode == glifistore::Opcode::put ? std::string_view{value}
                                                                        : std::string_view{},
                           operation.opcode, operation.expire_at_ns, false);
         }
@@ -670,29 +670,29 @@ void seed_multi_output_random_compaction(const std::filesystem::path& data_dir, 
 void seed_multi_output_compaction_recovery(const std::filesystem::path& data_dir, const bool publish_next) {
     std::filesystem::create_directories(data_dir.parent_path());
     const auto [old, next] = multi_output_compaction_manifests();
-    auto directory = glyphastore::DataDirectory::open_and_lock(
-        data_dir, glyphastore::DataDirectoryOpenMode::open_or_create);
+    auto directory = glifistore::DataDirectory::open_and_lock(
+        data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
     if (!directory || !directory->publish_manifest(old).durable()) {
         throw std::runtime_error("failed to publish multi-output compaction seed manifest");
     }
-    const auto create = [&](const glyphastore::ManifestSegmentEntry& entry) {
+    const auto create = [&](const glifistore::ManifestSegmentEntry& entry) {
         auto created =
-            glyphastore::DurableSegmentFile::create(*directory, {.store_id = old.store_id,
+            glifistore::DurableSegmentFile::create(*directory, {.store_id = old.store_id,
                                                                  .segment_id = entry.segment_id,
                                                                  .generation = entry.generation,
                                                                  .owner_worker = entry.owner_worker});
         if (!created.durable() || !created.file) {
             throw std::runtime_error("failed to create multi-output compaction seed Segment");
         }
-        if (entry.role == glyphastore::ManifestSegmentRole::sealed && !created.file->seal().committed()) {
+        if (entry.role == glifistore::ManifestSegmentRole::sealed && !created.file->seal().committed()) {
             throw std::runtime_error("failed to seal multi-output compaction seed Segment");
         }
     };
     for (const auto& entry : old.segments) {
         create(entry);
     }
-    const glyphastore::DurableCompactionIntent intent{
-        .worker_id = glyphastore::WorkerId{0}, .old_manifest = old, .next_manifest = next};
+    const glifistore::DurableCompactionIntent intent{
+        .worker_id = glifistore::WorkerId{0}, .old_manifest = old, .next_manifest = next};
     if (!directory->publish_compaction_intent(intent).durable()) {
         throw std::runtime_error("failed to publish multi-output compaction intent");
     }
@@ -704,28 +704,28 @@ void seed_multi_output_compaction_recovery(const std::filesystem::path& data_dir
 }
 
 void run_worker(const Options& options) {
-    glyphastore::crash::remove_checkpoint_markers(options.checkpoint_dir);
+    glifistore::crash::remove_checkpoint_markers(options.checkpoint_dir);
     std::filesystem::create_directories(options.checkpoint_dir);
-    glyphastore::crash::CheckpointState checkpoint{
+    glifistore::crash::CheckpointState checkpoint{
         .checkpoint_dir = options.checkpoint_dir,
         .kill_at = options.boundary,
-        .action = options.checkpoint_action == "pause" ? glyphastore::crash::CheckpointAction::pause
-                                                       : glyphastore::crash::CheckpointAction::kill,
+        .action = options.checkpoint_action == "pause" ? glifistore::crash::CheckpointAction::pause
+                                                       : glifistore::crash::CheckpointAction::kill,
     };
     const auto hooks = checkpoint.hooks();
 
     if (options.scenario == "bootstrap") {
-        auto directory = glyphastore::DataDirectory::open_and_lock(
-            options.data_dir, glyphastore::DataDirectoryOpenMode::create_new, hooks);
+        auto directory = glifistore::DataDirectory::open_and_lock(
+            options.data_dir, glifistore::DataDirectoryOpenMode::create_new, hooks);
         if (!directory) {
             throw std::runtime_error("bootstrap worker failed to open data directory");
         }
-        if (auto prepared = glyphastore::prepare_durable_store(
-                *directory, glyphastore::DurableOpenMode::create_new, 1, std::optional<std::size_t>{1});
+        if (auto prepared = glifistore::prepare_durable_store(
+                *directory, glifistore::DurableOpenMode::create_new, 1, std::optional<std::size_t>{1});
             !prepared) {
             throw std::runtime_error("bootstrap worker failed to prepare store");
         }
-        auto runtime = glyphastore::DurableRuntimeCatalog::open_locked(std::move(*directory), 0,
+        auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory), 0,
                                                                        durable_runtime_options(options));
         if (!runtime) {
             throw std::runtime_error("bootstrap worker failed to open runtime");
@@ -752,8 +752,8 @@ void run_worker(const Options& options) {
         if (!runtime) {
             throw std::runtime_error("rotate worker failed to open runtime");
         }
-        const std::string rotate_value(glyphastore::kMaxNormalRecordSize -
-                                           glyphastore::kEncodedRecordHeaderSize - kRotateKey.size(),
+        const std::string rotate_value(glifistore::kMaxNormalRecordSize -
+                                           glifistore::kEncodedRecordHeaderSize - kRotateKey.size(),
                                        'r');
         if (!runtime->put(bytes(kRotateKey), bytes(rotate_value)).committed()) {
             throw std::runtime_error("rotate worker failed to commit rotation put");
@@ -805,7 +805,7 @@ enum class RecoveryExpectation { absent, optional, present };
     return RecoveryExpectation::absent;
 }
 
-[[nodiscard]] auto verify_expected_value(const glyphastore::Result<glyphastore::OwnedValue>& value,
+[[nodiscard]] auto verify_expected_value(const glifistore::Result<glifistore::OwnedValue>& value,
                                          const std::string_view expected,
                                          const RecoveryExpectation expectation, const std::string_view label)
     -> bool {
@@ -814,7 +814,7 @@ enum class RecoveryExpectation { absent, optional, present };
             std::cerr << "verify: " << label << " should be absent before the commit point\n";
             return false;
         }
-        if (value.error().code != glyphastore::ErrorCode::not_found) {
+        if (value.error().code != glifistore::ErrorCode::not_found) {
             std::cerr << "verify: " << label << " failed with an unexpected recovery error\n";
             return false;
         }
@@ -822,7 +822,7 @@ enum class RecoveryExpectation { absent, optional, present };
     }
     if (!value) {
         if (expectation == RecoveryExpectation::optional &&
-            value.error().code == glyphastore::ErrorCode::not_found) {
+            value.error().code == glifistore::ErrorCode::not_found) {
             return true;
         }
         std::cerr << "verify: " << label << " should be durable after the commit point\n";
@@ -842,7 +842,7 @@ enum class RecoveryExpectation { absent, optional, present };
 
 [[nodiscard]] auto verify_recovery(const Options& options) -> bool {
     if (options.scenario == "compact-multi-build") {
-        auto runtime = glyphastore::DurableRuntimeCatalog::open_existing(options.data_dir);
+        auto runtime = glifistore::DurableRuntimeCatalog::open_existing(options.data_dir);
         if (!runtime || !(*runtime)->verify_index() || !(*runtime)->namespace_audit().clean()) {
             std::cerr << "verify: multi-output compaction build did not reopen cleanly\n";
             return false;
@@ -868,7 +868,7 @@ enum class RecoveryExpectation { absent, optional, present };
 
     if (options.scenario == "compact-multi-random") {
         auto runtime =
-            glyphastore::DurableRuntimeCatalog::open_existing(options.data_dir, kCompactionHistoryNowNs);
+            glifistore::DurableRuntimeCatalog::open_existing(options.data_dir, kCompactionHistoryNowNs);
         if (!runtime || !(*runtime)->verify_index() || !(*runtime)->namespace_audit().clean()) {
             std::cerr << "verify: randomized multi-output compaction did not reopen cleanly\n";
             return false;
@@ -895,7 +895,7 @@ enum class RecoveryExpectation { absent, optional, present };
     }
 
     if (options.scenario == "compact-multi-rollback" || options.scenario == "compact-multi-retire") {
-        auto runtime = glyphastore::DurableRuntimeCatalog::open_existing(options.data_dir);
+        auto runtime = glifistore::DurableRuntimeCatalog::open_existing(options.data_dir);
         if (!runtime || !(*runtime)->verify_index() || !(*runtime)->namespace_audit().clean()) {
             std::cerr << "verify: multi-output compaction recovery did not reopen cleanly\n";
             return false;
@@ -909,12 +909,12 @@ enum class RecoveryExpectation { absent, optional, present };
         return true;
     }
 
-    auto opened = glyphastore::Store::open(
+    auto opened = glifistore::Store::open(
         {.worker_config = {.explicit_count = 1},
-         .concurrency = glyphastore::StoreConcurrencyMode::legacy_mutex,
+         .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
          .storage_mode = recovery_storage_mode(options),
          .data_directory = options.data_dir,
-         .durable_open_mode = glyphastore::DurableOpenMode::open_or_create,
+         .durable_open_mode = glifistore::DurableOpenMode::open_or_create,
          .durable_periodic = {.sync_interval_ms = 60'000},
          .durable_group = {.max_records = 32, .max_bytes = 65536, .max_wait_ms = 60'000}});
     if (!opened) {
@@ -947,8 +947,8 @@ enum class RecoveryExpectation { absent, optional, present };
             std::cerr << "verify: rotate seed key not preserved\n";
             return false;
         }
-        const std::string rotate_value(glyphastore::kMaxNormalRecordSize -
-                                           glyphastore::kEncodedRecordHeaderSize - kRotateKey.size(),
+        const std::string rotate_value(glifistore::kMaxNormalRecordSize -
+                                           glifistore::kEncodedRecordHeaderSize - kRotateKey.size(),
                                        'r');
         const auto rotated = (*opened)->get(kRotateKey);
         auto expectation = RecoveryExpectation::absent;
@@ -1074,7 +1074,7 @@ enum class RecoveryExpectation { absent, optional, present };
     }
 
     std::filesystem::create_directories(options.checkpoint_dir);
-    glyphastore::crash::remove_checkpoint_markers(options.checkpoint_dir);
+    glifistore::crash::remove_checkpoint_markers(options.checkpoint_dir);
 
     const pid_t child = ::fork();
     if (child < 0) {
@@ -1091,7 +1091,7 @@ enum class RecoveryExpectation { absent, optional, present };
         }
     }
 
-    if (!glyphastore::crash::wait_for_checkpoint(options.checkpoint_dir, options.boundary)) {
+    if (!glifistore::crash::wait_for_checkpoint(options.checkpoint_dir, options.boundary)) {
         std::cerr << "timed out waiting for checkpoint " << options.boundary << " in scenario "
                   << options.scenario << '\n';
         ::kill(child, SIGKILL);
@@ -1158,11 +1158,11 @@ void cleanup_matrix_case(const Options& options) {
             .boundary = boundary,
             .history_seed = history_seed,
             .data_dir = std::filesystem::temp_directory_path() /
-                        ("glyphastore-crash-" + crash_run_suffix() + "-" + std::string{scenario} + "-" +
+                        ("glifistore-crash-" + crash_run_suffix() + "-" + std::string{scenario} + "-" +
                          std::to_string(history_seed) + "-" + boundary) /
                         "store",
             .checkpoint_dir = std::filesystem::temp_directory_path() /
-                              ("glyphastore-crash-checkpoints-" + crash_run_suffix() + "-" +
+                              ("glifistore-crash-checkpoints-" + crash_run_suffix() + "-" +
                                std::string{scenario} + "-" + std::to_string(history_seed) + "-" + boundary),
         };
         std::cout << "# crash mode=" << mode << " scenario=" << scenario << " seed=" << history_seed
@@ -1202,10 +1202,10 @@ void cleanup_matrix_case(const Options& options) {
     options.scenario = "put";
     options.boundary = boundary;
     options.data_dir = std::filesystem::temp_directory_path() /
-                       ("glyphastore-crash-pause-" + crash_run_suffix() + "-put-" + boundary) / "store";
+                       ("glifistore-crash-pause-" + crash_run_suffix() + "-put-" + boundary) / "store";
     options.checkpoint_dir =
         std::filesystem::temp_directory_path() /
-        ("glyphastore-crash-pause-checkpoints-" + crash_run_suffix() + "-put-" + boundary);
+        ("glifistore-crash-pause-checkpoints-" + crash_run_suffix() + "-put-" + boundary);
     const auto passed = run_single_case(options);
     cleanup_matrix_case(options);
     return passed;
@@ -1275,7 +1275,7 @@ static_assert(campaign_prng_contract(), "random crash schedules must remain cros
         report.flush();
     }
 
-    std::cout << "# random-crash-campaign schema=glyphastore-random-crash-campaign-v1"
+    std::cout << "# random-crash-campaign schema=glifistore-random-crash-campaign-v1"
               << " campaign_seed=" << *campaign.campaign_seed
               << " iterations=" << campaign.campaign_iterations << '\n';
 
@@ -1320,10 +1320,10 @@ static_assert(campaign_prng_contract(), "random crash schedules must remain cros
             .storage = "periodic",
             .data_dir =
                 std::filesystem::temp_directory_path() /
-                ("glyphastore-crash-periodic-" + crash_run_suffix() + "-put-" + std::string{boundary}) /
+                ("glifistore-crash-periodic-" + crash_run_suffix() + "-put-" + std::string{boundary}) /
                 "store",
             .checkpoint_dir = std::filesystem::temp_directory_path() /
-                              ("glyphastore-crash-periodic-checkpoints-" + crash_run_suffix() + "-put-" +
+                              ("glifistore-crash-periodic-checkpoints-" + crash_run_suffix() + "-put-" +
                                std::string{boundary}),
         };
         std::cout << "# crash storage=periodic scenario=put boundary=" << boundary << '\n';
@@ -1346,10 +1346,10 @@ static_assert(campaign_prng_contract(), "random crash schedules must remain cros
             .boundary = std::string{boundary},
             .storage = "group",
             .data_dir = std::filesystem::temp_directory_path() /
-                        ("glyphastore-crash-group-" + crash_run_suffix() + "-put-" + std::string{boundary}) /
+                        ("glifistore-crash-group-" + crash_run_suffix() + "-put-" + std::string{boundary}) /
                         "store",
             .checkpoint_dir = std::filesystem::temp_directory_path() /
-                              ("glyphastore-crash-group-checkpoints-" + crash_run_suffix() + "-put-" +
+                              ("glifistore-crash-group-checkpoints-" + crash_run_suffix() + "-put-" +
                                std::string{boundary}),
         };
         std::cout << "# crash storage=group scenario=put boundary=" << boundary << '\n';
@@ -1452,7 +1452,7 @@ int main(int argc, char** argv) {
         print_usage(argv[0]);
         return 2;
     } catch (const std::exception& exception) {
-        std::cerr << "glyphastore_crash_persistence: fatal: " << exception.what() << '\n';
+        std::cerr << "glifistore_crash_persistence: fatal: " << exception.what() << '\n';
         return 1;
     }
 }

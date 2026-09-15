@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-07-25
 - Deciders: security maintainers
-- Applies to: `glyphastored` authz for wire `STATS` (opcode 9)
+- Applies to: `glifistored` authz for wire `STATS` (opcode 9)
 - Amends: [ADR 0022](0022-authorization-capabilities.md), [ADR 0025](0025-key-prefix-tenant-scope.md)
 - Supersedes: none
 - Depends on: [ADR 0025](0025-key-prefix-tenant-scope.md)

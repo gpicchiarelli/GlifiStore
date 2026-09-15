@@ -1,3 +1,3 @@
-module github.com/gpicchiarelli/GlyphaStore/sdk/go
+module github.com/gpicchiarelli/GlifiStore/sdk/go
 
 go 1.27

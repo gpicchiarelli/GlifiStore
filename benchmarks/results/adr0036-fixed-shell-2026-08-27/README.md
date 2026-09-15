@@ -17,7 +17,7 @@ production-runtime result.
 Command:
 
 ```text
-build/macos-release/glyphastore_generation_shell_benchmark \
+build/macos-release/glifistore_generation_shell_benchmark \
   --ops 20000 --warmup 2 --repeats 11
 ```
 

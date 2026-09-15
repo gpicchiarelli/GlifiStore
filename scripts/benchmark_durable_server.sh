@@ -4,7 +4,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cmake="${CMAKE:-$root/.tools/venv/bin/cmake}"
 preset="${BENCHMARK_PRESET:-macos-release}"
-binary="$root/build/$preset/glyphastore_server_benchmarks"
+binary="$root/build/$preset/glifistore_server_benchmarks"
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 output="${1:-$root/benchmark-results/durable-tcp-$stamp}"
 operations="${BENCHMARK_OPS:-500}"
@@ -18,7 +18,7 @@ modes="${BENCHMARK_STORAGE_MODES:-durable-sync durable-group durable-periodic}"
 
 mkdir -p "$output"
 "$cmake" --preset "$preset"
-"$cmake" --build --preset "$preset" --target glyphastore_server_benchmarks
+"$cmake" --build --preset "$preset" --target glifistore_server_benchmarks
 
 {
     echo "generated_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"

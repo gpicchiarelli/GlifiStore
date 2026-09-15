@@ -69,7 +69,7 @@ class ChangeDetectionTests(unittest.TestCase):
             "VERSION",
             "ABI_VERSION",
             "cmake/ToolchainOptimizations.cmake",
-            "include/glyphastore/core/little_endian.hpp",
+            "include/glifistore/core/little_endian.hpp",
             "src/daemon/main.cpp",
             "packaging/debian/templates/control.in",
             "engineering/distribution/package-matrix.yaml",
@@ -87,7 +87,7 @@ class ChangeDetectionTests(unittest.TestCase):
         self.assertFalse(skipped)
         self.assertIn("documentation-only", reason)
 
-        unknown, reason = scope("pr", ["sdk/python/glyphastore/client.py"])
+        unknown, reason = scope("pr", ["sdk/python/glifistore/client.py"])
         self.assertTrue(unknown)
         self.assertIn("outside the documented documentation-only set", reason)
 
@@ -224,7 +224,7 @@ class ClosureTests(unittest.TestCase):
     """The closure refuses a profile whose planned rows did not retain evidence."""
 
     def evidence_root(self) -> tuple[Path, Path]:
-        directory = tempfile.TemporaryDirectory(prefix="glyphastore-package-ci-plan-")
+        directory = tempfile.TemporaryDirectory(prefix="glifistore-package-ci-plan-")
         self.addCleanup(directory.cleanup)
         root = Path(directory.name)
         (root / "evidence").mkdir()

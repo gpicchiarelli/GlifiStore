@@ -1,19 +1,19 @@
-#include "glyphastore/server/mutation_window.hpp"
+#include "glifistore/server/mutation_window.hpp"
 #include "test.hpp"
 
-using glyphastore::server::kMaximumMutationWindow;
-using glyphastore::server::MutationVisibilityBarrier;
+using glifistore::server::kMaximumMutationWindow;
+using glifistore::server::MutationVisibilityBarrier;
 
-GLYPHA_TEST("mutation window visibility barrier enforces RAW epoch") {
+GLIFI_TEST("mutation window visibility barrier enforces RAW epoch") {
     MutationVisibilityBarrier barrier{};
-    GLYPHA_REQUIRE(!barrier.armed());
-    GLYPHA_REQUIRE(barrier.allows(0));
+    GLIFI_REQUIRE(!barrier.armed());
+    GLIFI_REQUIRE(barrier.allows(0));
     barrier.raise_to(7);
-    GLYPHA_REQUIRE(barrier.armed());
-    GLYPHA_REQUIRE(!barrier.allows(6));
-    GLYPHA_REQUIRE(barrier.allows(7));
-    GLYPHA_REQUIRE(barrier.allows(9));
+    GLIFI_REQUIRE(barrier.armed());
+    GLIFI_REQUIRE(!barrier.allows(6));
+    GLIFI_REQUIRE(barrier.allows(7));
+    GLIFI_REQUIRE(barrier.allows(9));
     barrier.clear();
-    GLYPHA_REQUIRE(!barrier.armed());
-    GLYPHA_REQUIRE(kMaximumMutationWindow == 32);
+    GLIFI_REQUIRE(!barrier.armed());
+    GLIFI_REQUIRE(kMaximumMutationWindow == 32);
 }

@@ -52,11 +52,11 @@ def link_tokens(build_dir: pathlib.Path) -> list[str]:
     if ninja is None:
         fail("ninja is required to inspect the generated link command")
     output = subprocess.check_output(
-        [ninja, "-C", str(build_dir), "-t", "commands", "glyphastored"], text=True
+        [ninja, "-C", str(build_dir), "-t", "commands", "glifistored"], text=True
     )
-    links = [line for line in output.splitlines() if " -o glyphastored " in f" {line} "]
+    links = [line for line in output.splitlines() if " -o glifistored " in f" {line} "]
     if len(links) != 1:
-        fail(f"expected one glyphastored link command, found {len(links)}")
+        fail(f"expected one glifistored link command, found {len(links)}")
     return expand_response_files(shlex.split(links[0]), build_dir)
 
 
@@ -126,7 +126,7 @@ def verify_commands(build_dir: pathlib.Path) -> None:
             preview = " ".join(link)
             if len(preview) > 400:
                 preview = preview[:400] + "…"
-            fail(f"glyphastored link command is missing {option}; link={preview}")
+            fail(f"glifistored link command is missing {option}; link={preview}")
 
 
 def readelf(binary: pathlib.Path, *options: str) -> str:
@@ -139,16 +139,16 @@ def readelf(binary: pathlib.Path, *options: str) -> str:
 def verify_elf(binary: pathlib.Path) -> None:
     header = readelf(binary, "-h")
     if "Type:" not in header or "DYN" not in header:
-        fail("glyphastored is not an ELF position-independent executable")
+        fail("glifistored is not an ELF position-independent executable")
     if "GNU_RELRO" not in readelf(binary, "-l"):
-        fail("glyphastored has no PT_GNU_RELRO segment")
+        fail("glifistored has no PT_GNU_RELRO segment")
     dynamic = readelf(binary, "-d")
     if "BIND_NOW" not in dynamic and not any(
         "FLAGS" in line and "NOW" in line for line in dynamic.splitlines()
     ):
-        fail("glyphastored does not request immediate dynamic binding")
+        fail("glifistored does not request immediate dynamic binding")
     if "__stack_chk_fail" not in readelf(binary, "-Ws"):
-        fail("glyphastored has no observable stack-protector dependency")
+        fail("glifistored has no observable stack-protector dependency")
 
 
 def main() -> int:
@@ -170,7 +170,7 @@ def main() -> int:
         return 0
     build_dir = args.build_dir.resolve()
     verify_commands(build_dir)
-    verify_elf(build_dir / "glyphastored")
+    verify_elf(build_dir / "glifistored")
     print("hardening verification passed: ISO C++23, emitted flags, and ELF properties")
     return 0
 

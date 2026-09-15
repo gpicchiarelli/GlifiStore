@@ -24,9 +24,9 @@ check "root/VERSION" "$expected"
 
 py_ver="$(
   PYTHONPATH="$root/sdk/python/src${PYTHONPATH:+:$PYTHONPATH}" \
-    "${PYTHON:-python3}" -c 'import glyphastore; print(glyphastore.__version__)'
+    "${PYTHON:-python3}" -c 'import glifistore; print(glifistore.__version__)'
 )"
-check "python/glyphastore.__version__" "$py_ver"
+check "python/glifistore.__version__" "$py_ver"
 
 perl_versions="$(
   { grep -RhoE "our \\\$VERSION = '[^']+'" "$root/sdk/perl/lib" || true; } |
@@ -43,24 +43,24 @@ else
 fi
 check "perl/VERSION (all modules)" "$perl_ver"
 
-go_ver="$("${GO:-go}" -C "$root/sdk/go" run ./cmd/glyphastore-version)"
+go_ver="$("${GO:-go}" -C "$root/sdk/go" run ./cmd/glifistore-version)"
 check "go/client.Version" "$go_ver"
 
 ruby_ver="$(
   sed -nE 's/^[[:space:]]*VERSION[[:space:]]*=[[:space:]]*"([^"]+)"[[:space:]]*$/\1/p' \
-    "$root/sdk/ruby/lib/glypha_store/version.rb"
+    "$root/sdk/ruby/lib/glifi_store/version.rb"
 )"
-check "ruby/GlyphaStore::VERSION" "$ruby_ver"
+check "ruby/GlifiStore::VERSION" "$ruby_ver"
 
 erlang_ver="$(
   sed -nE 's/^[[:space:]]*<<"([^"]+)">>\.[[:space:]]*$/\1/p' \
-    "$root/sdk/erlang/src/glyphastore_version.erl"
+    "$root/sdk/erlang/src/glifistore_version.erl"
 )"
 erlang_app_ver="$(
   sed -nE 's/^[[:space:]]*\{vsn,[[:space:]]*"([^"]+)"\},[[:space:]]*$/\1/p' \
-    "$root/sdk/erlang/src/glyphastore.app.src"
+    "$root/sdk/erlang/src/glifistore.app.src"
 )"
-check "erlang/glyphastore_version" "$erlang_ver"
+check "erlang/glifistore_version" "$erlang_ver"
 check "erlang/application.vsn" "$erlang_app_ver"
 
 check "cmake/PROJECT_VERSION (VERSION file)" "$expected"

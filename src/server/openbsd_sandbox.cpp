@@ -1,4 +1,4 @@
-#include "glyphastore/server/openbsd_sandbox.hpp"
+#include "glifistore/server/openbsd_sandbox.hpp"
 
 #include <cerrno>
 #include <string>
@@ -8,7 +8,7 @@
 #include <unistd.h>
 #endif
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 [[nodiscard]] auto absolute_existing(const std::filesystem::path& path) -> Result<std::filesystem::path> {
@@ -134,4 +134,4 @@ auto apply_openbsd_sandbox(const DaemonOptions& options) -> Status {
     return {};
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

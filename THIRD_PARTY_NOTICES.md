@@ -1,17 +1,17 @@
 # Third-party notices
 
 Status: normative for redistributors and contributors  
-Copyright (c) 2026 Giacomo Picchiarelli (catalog maintained with GlyphaStore)  
-Applies to: GlyphaStore core, official SDKs, CI tooling acknowledgements
+Copyright (c) 2026 Giacomo Picchiarelli (catalog maintained with GlifiStore)  
+Applies to: GlifiStore core, official SDKs, CI tooling acknowledgements
 Owner: maintainers
 Last reviewed: 2026-08-01
 
 This catalog lists third-party software, algorithms, and materials **involved**
-in GlyphaStore so copyright and license conditions can be respected. The product
+in GlifiStore so copyright and license conditions can be respected. The product
 license is BSD-3-Clause ([LICENSE](LICENSE)); project attribution is in
 [NOTICE](NOTICE). Operator policy: [docs/legal/licensing.md](docs/legal/licensing.md).
 
-GlyphaStore does **not** vendor OpenSSL, LibreSSL, Abseil, or other large
+GlifiStore does **not** vendor OpenSSL, LibreSSL, Abseil, or other large
 third-party source trees. Runtime SDK modules currently declare **no**
 third-party package dependencies (`sdk/go/go.mod`, `sdk/python/pyproject.toml`).
 
@@ -19,20 +19,20 @@ third-party package dependencies (`sdk/go/go.mod`, `sdk/python/pyproject.toml`).
 
 | Component | Typical use | License | Notes |
 | --- | --- | --- | --- |
-| OpenSSL 3.x | TLS 1.3 on Linux/macOS/FreeBSD when `GLYPHASTORE_ENABLE_TLS` finds OpenSSL | [Apache-2.0](https://www.openssl.org/source/license.html) | Not shipped as source here. Binary redistributors who link OpenSSL must retain Apache-2.0 notices for that library. See [docs/legal/tls-redistribution.md](docs/legal/tls-redistribution.md). |
+| OpenSSL 3.x | TLS 1.3 on Linux/macOS/FreeBSD when `GLIFISTORE_ENABLE_TLS` finds OpenSSL | [Apache-2.0](https://www.openssl.org/source/license.html) | Not shipped as source here. Binary redistributors who link OpenSSL must retain Apache-2.0 notices for that library. See [docs/legal/tls-redistribution.md](docs/legal/tls-redistribution.md). |
 | LibreSSL | TLS on OpenBSD (first-class) | [ISC / OpenSSL legacy dual](https://www.libressl.org/) as shipped by the OS | System library; follow OpenBSD packaging norms. See [docs/legal/tls-redistribution.md](docs/legal/tls-redistribution.md). |
 
-Disable TLS (`GLYPHASTORE_ENABLE_TLS=OFF`) for cleartext-only builds that must not link a TLS library.
+Disable TLS (`GLIFISTORE_ENABLE_TLS=OFF`) for cleartext-only builds that must not link a TLS library.
 Operator checklist for linked TLS binaries: [docs/legal/tls-redistribution.md](docs/legal/tls-redistribution.md).
 
 ## 2. Algorithms and designs (independent implementations)
 
-| Item | Role in GlyphaStore | Copyright / terms | Attribution |
+| Item | Role in GlifiStore | Copyright / terms | Attribution |
 | --- | --- | --- | --- |
-| SipHash-2-4 | Optional Worker routing (`siphash24-v1`, ADR 0030); C++/SDK implementations | Algorithm by Jean-Philippe Aumasson and Daniel J. Bernstein; reference code historically CC0 | Cite: Aumasson & Bernstein, *SipHash: a fast short-input PRF*. Test vectors in unit tests follow the published paper vectors. GlyphaStore’s code is an independent implementation, not a copy of a third-party source tree. |
+| SipHash-2-4 | Optional Worker routing (`siphash24-v1`, ADR 0030); C++/SDK implementations | Algorithm by Jean-Philippe Aumasson and Daniel J. Bernstein; reference code historically CC0 | Cite: Aumasson & Bernstein, *SipHash: a fast short-input PRF*. Test vectors in unit tests follow the published paper vectors. GlifiStore’s code is an independent implementation, not a copy of a third-party source tree. |
 | FNV-1a 64-bit | Default key hashing / routing | Public-domain style Fowler–Noll–Vo parameters | Independent implementation of the published FNV-1a parameters. |
 | CRC32C (Castagnoli) | Persistent Record/Manifest/Segment integrity (ADR 0014) | Castagnoli polynomial `0x82F63B78`; standard IEEE/IETF use | Independent table/hardware implementation; ASCII vector `123456789` → `0xE3069283`. Not a cryptographic MAC. |
-| SwissTable-style Index | Worker Index open addressing (ADR 0007) | Design popularized by Abseil Swiss Tables (Apache-2.0) | **Independent reimplementation.** No Abseil source is included. Layout/control-byte ideas are acknowledged; license obligations of Abseil do not attach to GlyphaStore source. |
+| SwissTable-style Index | Worker Index open addressing (ADR 0007) | Design popularized by Abseil Swiss Tables (Apache-2.0) | **Independent reimplementation.** No Abseil source is included. Layout/control-byte ideas are acknowledged; license obligations of Abseil do not attach to GlifiStore source. |
 
 ## 3. Official SDK runtime dependencies
 
@@ -49,8 +49,8 @@ CI `scripts/ci-license-check.sh` fails closed on exclusive GPL/AGPL/SSPL in scan
 
 ## 4. Build, test, and CI tooling (not shipped in runtime packages)
 
-These tools are **involved** when building or verifying GlyphaStore. They are not copied into
-`glyphastored` or SDK wheels by default. Operators who redistribute CI scripts or Action
+These tools are **involved** when building or verifying GlifiStore. They are not copied into
+`glifistored` or SDK wheels by default. Operators who redistribute CI scripts or Action
 wrappers must respect each tool’s license.
 
 | Tool / Action | Role | Typical license |
@@ -70,7 +70,7 @@ wrappers must respect each tool’s license.
 
 | Material | Role | Notes |
 | --- | --- | --- |
-| Apple Human Interface Guidelines / Icon Composer docs | Linked from `artwork/README.md` | External documentation; Apple’s copyright applies to Apple’s materials. GlyphaStore artwork under this repository is BSD-3-Clause with the project copyright. |
+| Apple Human Interface Guidelines / Icon Composer docs | Linked from `artwork/README.md` | External documentation; Apple’s copyright applies to Apple’s materials. GlifiStore artwork under this repository is BSD-3-Clause with the project copyright. |
 | ADRs / specs | Normative project docs | BSD-3-Clause as part of the repository |
 
 ## 6. Redistributor checklist

@@ -12,7 +12,7 @@ those integrations are started, health-checked and stopped. When native is
 skipped, both report OPEN_GATE until a retained native run exists.
 
 The native lifecycle mutates the host package manager, so it is opt-in:
-set GLYPHASTORE_PACKAGE_CI_NATIVE=1 on a runner that may install packages.
+set GLIFISTORE_PACKAGE_CI_NATIVE=1 on a runner that may install packages.
 """
 
 from __future__ import annotations
@@ -75,11 +75,11 @@ from engineering.tools.validate_package_evidence import (
     evidence_filename,
 )
 
-NATIVE_ENVIRONMENT = "GLYPHASTORE_PACKAGE_CI_NATIVE"
-SOURCE_URL_ENVIRONMENT = "GLYPHASTORE_SOURCE_ARCHIVE_URL"
-SOURCE_SHA256_ENVIRONMENT = "GLYPHASTORE_SOURCE_ARCHIVE_SHA256"
-SOURCE_SIZE_ENVIRONMENT = "GLYPHASTORE_SOURCE_ARCHIVE_SIZE"
-SOURCE_RMD160_ENVIRONMENT = "GLYPHASTORE_SOURCE_ARCHIVE_RMD160"
+NATIVE_ENVIRONMENT = "GLIFISTORE_PACKAGE_CI_NATIVE"
+SOURCE_URL_ENVIRONMENT = "GLIFISTORE_SOURCE_ARCHIVE_URL"
+SOURCE_SHA256_ENVIRONMENT = "GLIFISTORE_SOURCE_ARCHIVE_SHA256"
+SOURCE_SIZE_ENVIRONMENT = "GLIFISTORE_SOURCE_ARCHIVE_SIZE"
+SOURCE_RMD160_ENVIRONMENT = "GLIFISTORE_SOURCE_ARCHIVE_RMD160"
 
 TOOLS = {"macports": "port", "homebrew": "brew"}
 TEMPLATE_PATHS = {backend: path.as_posix() for backend, path in TEMPLATES.items()}
@@ -94,12 +94,12 @@ LIFECYCLE_CHAIN = (
 SERVICE_GATE = {
     "macports": (
         "The port declares an unprivileged launchd startup item "
-        "(startupitem.user/group glyphastore), but this run did not exercise "
-        "`port load/unload glyphastore` (native lifecycle not enabled)."
+        "(startupitem.user/group glifistore), but this run did not exercise "
+        "`port load/unload glifistore` (native lifecycle not enabled)."
     ),
     "homebrew": (
         "The formula declares a brew services block, but this run did not exercise "
-        "`brew services start/stop glyphastore` (native lifecycle not enabled)."
+        "`brew services start/stop glifistore` (native lifecycle not enabled)."
     ),
 }
 BUILD_TIMEOUT = 60 * 60
@@ -298,7 +298,7 @@ def working_source_archive(root: Path, directory: Path, product_version: str) ->
                     str(root),
                     "archive",
                     "--format=tar",
-                    f"--prefix=GlyphaStore-{product_version}/",
+                    f"--prefix=GlifiStore-{product_version}/",
                     "HEAD",
                 ],
                 check=False,
@@ -388,12 +388,12 @@ def wait_for_port(port: int, deadline: float) -> bool:
 
 
 class InstalledDaemon:
-    """The installed glyphastored under a driver-owned config and data directory."""
+    """The installed glifistored under a driver-owned config and data directory."""
 
     def __init__(self, executable: Path, work: Path, log: Path) -> None:
         self.executable = executable
         self.data = work / "data"
-        self.configuration = work / "glyphastored.conf"
+        self.configuration = work / "glifistored.conf"
         self.log = log
         self.port = free_port()
         self.process: subprocess.Popen[bytes] | None = None
@@ -460,8 +460,8 @@ def run_homebrew_service_lifecycle(
 ) -> None:
     """Start, health-check and stop the formula through `brew services`."""
     log = recorder.directory / "homebrew-service-lifecycle.log"
-    sample = prefix / "etc/glyphastore/glyphastored.conf.sample"
-    config = prefix / "etc/glyphastore/glyphastored.conf"
+    sample = prefix / "etc/glifistore/glifistored.conf.sample"
+    config = prefix / "etc/glifistore/glifistored.conf"
     if not sample.is_file():
         recorder.record(
             "service-lifecycle",
@@ -473,7 +473,7 @@ def run_homebrew_service_lifecycle(
     if not config.exists():
         shutil.copy2(sample, config)
         _note(log, f"installed operator configuration from {sample.name}")
-    started = _run(["brew", "services", "start", "glyphastore"], log=log)
+    started = _run(["brew", "services", "start", "glifistore"], log=log)
     ready = started and wait_for_port(7379, time.monotonic() + DAEMON_READY_TIMEOUT)
     _note(log, f"brew services reached 127.0.0.1:7379: {ready}")
     healthy = False
@@ -488,7 +488,7 @@ def run_homebrew_service_lifecycle(
             b"lifecycle".hex(),
         )
         healthy = _run(command, log=log, environment=environment, timeout=300)
-    stopped = _run(["brew", "services", "stop", "glyphastore"], log=log)
+    stopped = _run(["brew", "services", "stop", "glifistore"], log=log)
     # Ensure the port is released before later direct-daemon rows reuse the host.
     if ready:
         deadline = time.monotonic() + 30.0
@@ -611,7 +611,7 @@ def check_prefix_isolation(
 
 
 def _sudo(command: Sequence[str]) -> list[str]:
-    escalation = os.environ.get("GLYPHASTORE_PACKAGE_CI_SUDO", "sudo")
+    escalation = os.environ.get("GLIFISTORE_PACKAGE_CI_SUDO", "sudo")
     return [*escalation.split(), *command] if escalation else list(command)
 
 
@@ -628,8 +628,8 @@ def _inventory(
 def run_macports_service_lifecycle(recorder: Recorder, *, root: Path, prefix: Path) -> None:
     """Start, health-check and stop the port through `port load` / `port unload`."""
     log = recorder.directory / "macports-service-lifecycle.log"
-    sample = prefix / "etc/glyphastore/glyphastored.conf.sample"
-    config = prefix / "etc/glyphastore/glyphastored.conf"
+    sample = prefix / "etc/glifistore/glifistored.conf.sample"
+    config = prefix / "etc/glifistore/glifistored.conf"
     if not sample.is_file():
         recorder.record(
             "service-lifecycle",
@@ -641,7 +641,7 @@ def run_macports_service_lifecycle(recorder: Recorder, *, root: Path, prefix: Pa
     if not config.exists():
         shutil.copy2(sample, config)
         _note(log, f"installed operator configuration from {sample.name}")
-    started = _run(_sudo(["port", "load", "glyphastore"]), log=log)
+    started = _run(_sudo(["port", "load", "glifistore"]), log=log)
     ready = started and wait_for_port(7379, time.monotonic() + DAEMON_READY_TIMEOUT)
     _note(log, f"port load reached 127.0.0.1:7379: {ready}")
     healthy = False
@@ -656,7 +656,7 @@ def run_macports_service_lifecycle(recorder: Recorder, *, root: Path, prefix: Pa
             b"lifecycle".hex(),
         )
         healthy = _run(command, log=log, environment=environment, timeout=300)
-    stopped = _run(_sudo(["port", "unload", "glyphastore"]), log=log)
+    stopped = _run(_sudo(["port", "unload", "glifistore"]), log=log)
     if ready:
         deadline = time.monotonic() + 30.0
         while time.monotonic() < deadline:
@@ -697,7 +697,7 @@ def run_macports_lifecycle(
 
     install = logs / "macports-install.log"
     upgrade_log = logs / "macports-package-upgrade.log"
-    daemon_binary = prefix / "bin/glyphastored"
+    daemon_binary = prefix / "bin/glifistored"
     installed = False
     try:
         exercise = context is not None and upgrade_exercise_requested(context["previous"])
@@ -717,7 +717,7 @@ def run_macports_lifecycle(
                 directory=work / "n1-rendered",
                 root=root,
             )
-            n1_port = work / "n1-ports/databases/glyphastore"
+            n1_port = work / "n1-ports/databases/glifistore"
             if n1_port.exists():
                 shutil.rmtree(n1_port)
             n1_port.mkdir(parents=True)
@@ -731,7 +731,7 @@ def run_macports_lifecycle(
                 log=install,
                 cwd=n1_port,
                 timeout=BUILD_TIMEOUT,
-            ) and _run(["port", "installed", "glyphastore"], log=install)
+            ) and _run(["port", "installed", "glifistore"], log=install)
             if not n1_installed:
                 raise MacBackendError(f"sealed N-1 MacPorts package {n1_version} failed to install")
             if not seed_and_verify_upgrade(
@@ -744,7 +744,7 @@ def run_macports_lifecycle(
                 log=install,
                 cwd=port_directory,
                 timeout=BUILD_TIMEOUT,
-            ) and _run(["port", "installed", "glyphastore"], log=install)
+            ) and _run(["port", "installed", "glifistore"], log=install)
             if not installed:
                 raise MacBackendError("upgrade from sealed N-1 to the built N Portfile failed")
             recorder.record("package-install", "PASS", log=install.name)
@@ -773,22 +773,22 @@ def run_macports_lifecycle(
             log=install,
             cwd=port_directory,
             timeout=BUILD_TIMEOUT,
-        ) and _run(["port", "installed", "glyphastore"], log=install)
+        ) and _run(["port", "installed", "glifistore"], log=install)
         recorder.record("package-install", "PASS" if installed else "FAIL", log=install.name)
     if not installed and "package-install" not in recorder.statuses:
         recorder.record("package-install", "FAIL", log=install.name)
     if recorder.statuses.get("package-install") != "PASS":
         return
 
-    library = prefix / f"lib/libglyphastore.{abi_version}.dylib"
-    sample = prefix / "etc/glyphastore/glyphastored.conf.sample"
-    data = prefix / "var/db/glyphastore"
+    library = prefix / f"lib/libglifistore.{abi_version}.dylib"
+    sample = prefix / "etc/glifistore/glifistored.conf.sample"
+    data = prefix / "var/db/glifistore"
     inspection = logs / "macports-inspect.log"
     inspected = _inventory(
         recorder,
         inspection,
         (daemon_binary, library, sample, data),
-        satisfied=_run(["port", "contents", "glyphastore"], log=inspection),
+        satisfied=_run(["port", "contents", "glifistore"], log=inspection),
     )
     recorder.record("package-inspect", "PASS" if inspected else "FAIL", log=inspection.name)
 
@@ -802,13 +802,13 @@ def run_macports_lifecycle(
     remove = logs / "macports-remove.log"
     probe = data / "RETENTION-PROBE"
     removed = _run(_sudo(["/usr/bin/touch", str(probe)]), log=remove)
-    removed = removed and _run(_sudo(["port", "-v", "deactivate", "glyphastore"]), log=remove)
+    removed = removed and _run(_sudo(["port", "-v", "deactivate", "glifistore"]), log=remove)
     _note(remove, f"deactivated binary absent: {not daemon_binary.exists()}")
     removed = removed and not daemon_binary.exists()
-    removed = removed and _run(_sudo(["port", "-v", "activate", "glyphastore"]), log=remove)
+    removed = removed and _run(_sudo(["port", "-v", "activate", "glifistore"]), log=remove)
     _note(remove, f"reactivated binary present: {daemon_binary.exists()}")
     removed = removed and daemon_binary.exists()
-    removed = removed and _run(_sudo(["port", "-v", "uninstall", "glyphastore"]), log=remove)
+    removed = removed and _run(_sudo(["port", "-v", "uninstall", "glifistore"]), log=remove)
     removed = removed and _run(["port", "clean", "--all"], log=remove, cwd=port_directory)
     _note(remove, f"durable data retained after uninstall: {probe.exists()}")
     removed = removed and probe.exists()
@@ -839,11 +839,11 @@ def run_homebrew_lifecycle(
         ["brew", "--prefix"], check=False, stdout=subprocess.PIPE, text=True, timeout=120
     )
     prefix = Path(prefix_output.stdout.strip() or "/opt/homebrew")
-    keg = prefix / "opt/glyphastore"
-    daemon_binary = prefix / "bin/glyphastored"
-    library = keg / f"lib/libglyphastore.{abi_version}.dylib"
-    sample = prefix / "etc/glyphastore/glyphastored.conf.sample"
-    data = prefix / "var/glyphastore"
+    keg = prefix / "opt/glifistore"
+    daemon_binary = prefix / "bin/glifistored"
+    library = keg / f"lib/libglifistore.{abi_version}.dylib"
+    sample = prefix / "etc/glifistore/glifistored.conf.sample"
+    data = prefix / "var/glifistore"
 
     try:
         exercise = context is not None and upgrade_exercise_requested(context["previous"])
@@ -905,7 +905,7 @@ def run_homebrew_lifecycle(
                 recorder,
                 install,
                 (daemon_binary,),
-                satisfied=_run(["brew", "list", "--verbose", "glyphastore"], log=install),
+                satisfied=_run(["brew", "list", "--verbose", "glifistore"], log=install),
             )
             if not installed:
                 raise MacBackendError("upgrade from sealed N-1 to the built N formula failed")
@@ -944,7 +944,7 @@ def run_homebrew_lifecycle(
             recorder,
             install,
             (daemon_binary,),
-            satisfied=_run(["brew", "list", "--verbose", "glyphastore"], log=install),
+            satisfied=_run(["brew", "list", "--verbose", "glifistore"], log=install),
         )
         recorder.record("package-install", "PASS" if installed else "FAIL", log=install.name)
 
@@ -956,7 +956,7 @@ def run_homebrew_lifecycle(
         recorder,
         inspection,
         (library, sample, data),
-        satisfied=_run(["brew", "info", "glyphastore"], log=inspection),
+        satisfied=_run(["brew", "info", "glifistore"], log=inspection),
     )
     recorder.record("package-inspect", "PASS" if inspected else "FAIL", log=inspection.name)
 
@@ -964,14 +964,14 @@ def run_homebrew_lifecycle(
         recorder, backend="homebrew", root=root, paths=[daemon_binary, library]
     )
     if build_external_consumer(recorder, root=root, prefix=keg, work=work, backend="homebrew"):
-        _run(["brew", "test", "glyphastore"], log=logs / "homebrew-external-consumer.log")
+        _run(["brew", "test", "glifistore"], log=logs / "homebrew-external-consumer.log")
     run_homebrew_service_lifecycle(recorder, root=root, prefix=prefix)
     exercise_daemon(recorder, root=root, executable=daemon_binary, work=work, backend="homebrew")
 
     remove = logs / "homebrew-remove.log"
     probe = data / "RETENTION-PROBE"
     removed = _run(["/usr/bin/touch", str(probe)], log=remove)
-    removed = removed and _run(["brew", "uninstall", "glyphastore"], log=remove)
+    removed = removed and _run(["brew", "uninstall", "glifistore"], log=remove)
     _note(remove, f"uninstalled binary absent: {not daemon_binary.exists()}")
     removed = removed and not daemon_binary.exists()
     removed = removed and _run(["brew", "cleanup", "--prune=all"], log=remove)
@@ -1089,10 +1089,10 @@ def execute(
         "upstream-ports-acceptance",
         "OPEN_GATE",
         log=upstream,
-        detail=f"{distribution} has not accepted the GlyphaStore packaging",
+        detail=f"{distribution} has not accepted the GlifiStore packaging",
     )
     recorder.residuals.append(
-        f"{backend}-upstream-acceptance=In-repo packaging is the GlyphaStore pipeline, not an "
+        f"{backend}-upstream-acceptance=In-repo packaging is the GlifiStore pipeline, not an "
         f"accepted ports tree or official tap|upstream review by the {backend} project"
     )
 
@@ -1144,7 +1144,7 @@ def execute(
         if backend == "macports":
             # port lint checks the ports-tree layout, so the rendered Portfile is
             # staged as <category>/<name>/Portfile rather than linted in place.
-            port_directory = work / "ports/databases/glyphastore"
+            port_directory = work / "ports/databases/glifistore"
             if port_directory.exists():
                 shutil.rmtree(port_directory)
             port_directory.mkdir(parents=True)
@@ -1192,7 +1192,7 @@ def execute(
         recorder.record("service-lifecycle", "OPEN_GATE", detail=SERVICE_GATE[backend])
         recorder.residuals.append(
             f"{backend}-service-integration={SERVICE_GATE[backend]}"
-            "|a retained native start/health/stop run under GLYPHASTORE_PACKAGE_CI_NATIVE=1"
+            "|a retained native start/health/stop run under GLIFISTORE_PACKAGE_CI_NATIVE=1"
         )
 
     recorder.pending(declared, fallback, reason or "not reached in this run")
@@ -1203,7 +1203,7 @@ def execute(
             f"{backend} artifact is produced or admitted yet."
         )
     recorder.limitations.append(
-        f"In-repo {backend} packaging is the GlyphaStore packaging pipeline; it is not a claim "
+        f"In-repo {backend} packaging is the GlifiStore packaging pipeline; it is not a claim "
         "of upstream ports-tree or official-tap acceptance."
     )
     if not native:

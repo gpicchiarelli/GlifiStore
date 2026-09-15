@@ -1,9 +1,9 @@
-#include "glyphastore/persistence/store_migrate.hpp"
+#include "glifistore/persistence/store_migrate.hpp"
 
-#include "glyphastore/core/types.hpp"
-#include "glyphastore/core/worker_routing.hpp"
-#include "glyphastore/persistence/filesystem_hooks.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/core/types.hpp"
+#include "glifistore/core/worker_routing.hpp"
+#include "glifistore/persistence/filesystem_hooks.hpp"
+#include "glifistore/store/store.hpp"
 #include "store/store_internal.hpp"
 
 #include <algorithm>
@@ -19,10 +19,10 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
-constexpr std::string_view kCheckpointMagic = "GlyphaStore/migrate-state/1";
+constexpr std::string_view kCheckpointMagic = "GlifiStore/migrate-state/1";
 constexpr std::size_t kCheckpointMetadataAllowance = 1U << 10U;
 constexpr std::size_t kMaximumCheckpointBytes = 2U * kMaxNormalRecordSize + kCheckpointMetadataAllowance;
 
@@ -544,4 +544,4 @@ auto migrate_durable_store(const std::filesystem::path& source, const std::files
     return report;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

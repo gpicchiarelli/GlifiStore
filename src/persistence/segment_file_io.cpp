@@ -1,7 +1,7 @@
-#include "glyphastore/core/little_endian.hpp"
-#include "glyphastore/persistence/namespace_audit.hpp"
-#include "glyphastore/persistence/segment_file.hpp"
-#include "glyphastore/segment/record.hpp"
+#include "glifistore/core/little_endian.hpp"
+#include "glifistore/persistence/namespace_audit.hpp"
+#include "glifistore/persistence/segment_file.hpp"
+#include "glifistore/segment/record.hpp"
 #include "segment_file_detail.hpp"
 #include "system_error.hpp"
 
@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore {
+namespace glifistore {
 
 using le::get_u32;
 using segment_file_detail::commit_failure;
@@ -449,4 +449,4 @@ auto inspect_durable_segment(const std::filesystem::path& path, const bool scan_
     return report;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

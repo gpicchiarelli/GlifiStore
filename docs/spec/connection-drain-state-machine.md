@@ -53,7 +53,7 @@ Close-when-drained predicates appear in `read_ready`, `write_ready`, hangup hand
 
 Target: one `decide_connection_action(snapshot)` used by all I/O paths.
 
-**Implemented:** `include/glyphastore/server/connection_lifecycle.hpp` + Reactor
+**Implemented:** `include/glifistore/server/connection_lifecycle.hpp` + Reactor
 `read_ready` / `write_ready` / hangup use `connection_action_for(...)` (same predicates).
 
 ## 4. Decided output (ACK object)

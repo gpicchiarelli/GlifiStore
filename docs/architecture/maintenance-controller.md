@@ -1,7 +1,7 @@
 # MaintenanceController
 
 Status: Phase 5 critical fail-closed + lifecycle; Phase 6 wire retry mapping (ADR 0023 / 0019)
-Applies to: embedded Store and glyphastored
+Applies to: embedded Store and glifistored
 Owner: persistence maintainers
 Last reviewed: 2026-09-15
 

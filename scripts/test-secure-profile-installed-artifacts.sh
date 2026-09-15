@@ -7,9 +7,9 @@ python="${PYTHON:-python3}"
 perl="${PERL:-perl}"
 ruby="${RUBY:-}"
 make="${MAKE:-make}"
-daemon="${GLYPHASTORED:-}"
+daemon="${GLIFISTORED:-}"
 profile="${INSTALLED_INTEROP_PROFILE:-secure}"
-cpp_artifact="${GLYPHASTORE_CPP_PREFIX:-${GLYPHASTORE_CPP_BUILD:-}}"
+cpp_artifact="${GLIFISTORE_CPP_PREFIX:-${GLIFISTORE_CPP_BUILD:-}}"
 go_bin="${GO:-go}"
 
 if [[ "$profile" != "secure" && "$profile" != "plain" ]]; then
@@ -18,14 +18,14 @@ if [[ "$profile" != "secure" && "$profile" != "plain" ]]; then
 fi
 
 if [[ -z "$daemon" || ! -x "$daemon" ]]; then
-  echo "GLYPHASTORED must name a TLS-capable daemon" >&2
+  echo "GLIFISTORED must name a TLS-capable daemon" >&2
   exit 1
 fi
 if [[ -z "$cpp_artifact" ]]; then
   cpp_artifact="$(cd "$(dirname "$daemon")" && pwd -P)"
 fi
 if [[ ! -d "$cpp_artifact" ]]; then
-  echo "GLYPHASTORE_CPP_PREFIX/GLYPHASTORE_CPP_BUILD must name an installed prefix or build" >&2
+  echo "GLIFISTORE_CPP_PREFIX/GLIFISTORE_CPP_BUILD must name an installed prefix or build" >&2
   exit 1
 fi
 if ! command -v "$go_bin" >/dev/null 2>&1; then
@@ -61,11 +61,11 @@ if ! command -v erl >/dev/null 2>&1 || ! command -v escript >/dev/null 2>&1 || \
 fi
 
 shopt -s nullglob
-wheels=("$root"/sdk/python/dist/glyphastore-*.whl)
-perl_tarballs=("$root"/sdk/perl/dist/GlyphaStore-*.tar.gz)
-ruby_gems=("$root"/sdk/ruby/dist/glyphastore-*.gem)
-go_archives=("$root"/sdk/go/dist/glyphastore-go-*.tar.gz)
-erlang_archives=("$root"/sdk/erlang/dist/glyphastore-erlang-*.tar.gz)
+wheels=("$root"/sdk/python/dist/glifistore-*.whl)
+perl_tarballs=("$root"/sdk/perl/dist/GlifiStore-*.tar.gz)
+ruby_gems=("$root"/sdk/ruby/dist/glifistore-*.gem)
+go_archives=("$root"/sdk/go/dist/glifistore-go-*.tar.gz)
+erlang_archives=("$root"/sdk/erlang/dist/glifistore-erlang-*.tar.gz)
 shopt -u nullglob
 if [[ "${#wheels[@]}" -ne 1 ]]; then
   echo "expected exactly one built Python wheel under sdk/python/dist" >&2
@@ -93,7 +93,7 @@ ruby_gem="${ruby_gems[0]}"
 go_archive="${go_archives[0]}"
 erlang_archive="${erlang_archives[0]}"
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-installed-secure.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-installed-secure.XXXXXX")"
 cleanup() { rm -rf "$work"; }
 trap cleanup EXIT
 venv="$work/python-venv"
@@ -105,20 +105,20 @@ erlang_artifact="$work/erlang-artifact"
 mkdir -p "$work/bin" "$perl_artifact" "$perl_install" "$ruby_gem_home" "$go_artifact" \
   "$erlang_artifact"
 "$root/scripts/build-installed-cpp-interop.sh" \
-  "$cpp_artifact" "$work/bin/glyphastore-interop-cpp"
+  "$cpp_artifact" "$work/bin/glifistore-interop-cpp"
 
 "$python" -m venv "$venv"
 "$venv/bin/python" -m pip install --disable-pip-version-check -q --no-deps "$wheel"
-python_loaded_from="$("$venv/bin/python" -c 'import glyphastore; print(glyphastore.__file__)')"
+python_loaded_from="$("$venv/bin/python" -c 'import glifistore; print(glifistore.__file__)')"
 if [[ "$python_loaded_from" == "$root/"* ]]; then
   echo "wheel smoke resolved Python SDK from source: $python_loaded_from" >&2
   exit 1
 fi
 
 tar -xzf "$perl_tarball" -C "$perl_artifact"
-perl_roots=("$perl_artifact"/GlyphaStore-*)
+perl_roots=("$perl_artifact"/GlifiStore-*)
 if [[ "${#perl_roots[@]}" -ne 1 || ! -d "${perl_roots[0]}" ]]; then
-  echo "Perl tarball must contain exactly one GlyphaStore-VERSION root" >&2
+  echo "Perl tarball must contain exactly one GlifiStore-VERSION root" >&2
   exit 1
 fi
 (
@@ -128,8 +128,8 @@ fi
   "$make" install >/dev/null
 )
 perl_lib="$(cd "$perl_install/lib/perl5" && pwd -P)"
-perl_loaded_from="$(PERL5LIB="$perl_lib" "$perl" -MGlyphaStore::Client -e \
-  'use Cwd qw(abs_path); print abs_path($INC{q{GlyphaStore/Client.pm}})')"
+perl_loaded_from="$(PERL5LIB="$perl_lib" "$perl" -MGlifiStore::Client -e \
+  'use Cwd qw(abs_path); print abs_path($INC{q{GlifiStore/Client.pm}})')"
 if [[ "$perl_loaded_from" != "$perl_lib/"* || "$perl_loaded_from" == "$root/"* ]]; then
   echo "tarball smoke resolved Perl SDK outside isolated install: $perl_loaded_from" >&2
   exit 1
@@ -137,39 +137,39 @@ fi
 
 GEM_HOME="$ruby_gem_home" GEM_PATH="$ruby_gem_home" \
   "$ruby" -S gem install --local --no-document "$ruby_gem" >/dev/null
-ruby_package_root="$(cd "$ruby_gem_home/gems/glyphastore-$(tr -d '[:space:]' <"$root/VERSION")" && pwd -P)"
-ruby_helper="$ruby_package_root/exe/glyphastore-interop"
+ruby_package_root="$(cd "$ruby_gem_home/gems/glifistore-$(tr -d '[:space:]' <"$root/VERSION")" && pwd -P)"
+ruby_helper="$ruby_package_root/exe/glifistore-interop"
 if [[ ! -f "$ruby_helper" ]]; then
   echo "installed Ruby gem is missing its interop executable: $ruby_helper" >&2
   exit 1
 fi
 ruby_loaded_from="$(GEM_HOME="$ruby_gem_home" GEM_PATH="$ruby_gem_home" "$ruby" -e \
-  'require "glypha_store"; print $LOADED_FEATURES.find { |p| p.end_with?("/glypha_store.rb") }')"
+  'require "glifi_store"; print $LOADED_FEATURES.find { |p| p.end_with?("/glifi_store.rb") }')"
 if [[ "$ruby_loaded_from" != "$ruby_package_root/"* || "$ruby_loaded_from" == "$root/"* ]]; then
   echo "gem smoke resolved Ruby SDK outside isolated install: $ruby_loaded_from" >&2
   exit 1
 fi
 
 tar -xzf "$go_archive" -C "$go_artifact"
-go_roots=("$go_artifact"/glyphastore-go-*)
+go_roots=("$go_artifact"/glifistore-go-*)
 if [[ "${#go_roots[@]}" -ne 1 || ! -d "${go_roots[0]}" ]]; then
-  echo "Go archive must contain exactly one glyphastore-go-VERSION root" >&2
+  echo "Go archive must contain exactly one glifistore-go-VERSION root" >&2
   exit 1
 fi
 go_root="$(cd "${go_roots[0]}" && pwd -P)"
 (
   cd "$go_root"
-  "$go_bin" build -o "$work/bin/glyphastore-interop-go" ./cmd/glyphastore-interop
+  "$go_bin" build -o "$work/bin/glifistore-interop-go" ./cmd/glifistore-interop
 )
-if [[ ! -x "$work/bin/glyphastore-interop-go" ]]; then
-  echo "Go archive did not produce glyphastore-interop" >&2
+if [[ ! -x "$work/bin/glifistore-interop-go" ]]; then
+  echo "Go archive did not produce glifistore-interop" >&2
   exit 1
 fi
 
 tar -xzf "$erlang_archive" -C "$erlang_artifact"
-erlang_roots=("$erlang_artifact"/glyphastore-erlang-*)
+erlang_roots=("$erlang_artifact"/glifistore-erlang-*)
 if [[ "${#erlang_roots[@]}" -ne 1 || ! -d "${erlang_roots[0]}" ]]; then
-  echo "Erlang archive must contain exactly one glyphastore-erlang-VERSION root" >&2
+  echo "Erlang archive must contain exactly one glifistore-erlang-VERSION root" >&2
   exit 1
 fi
 erlang_root="$(cd "${erlang_roots[0]}" && pwd -P)"
@@ -178,9 +178,9 @@ erlang_root="$(cd "${erlang_roots[0]}" && pwd -P)"
   rebar3 compile >/dev/null
 )
 erlang_lib="$erlang_root/_build/default/lib"
-erlang_ebin="$erlang_lib/glyphastore/ebin"
+erlang_ebin="$erlang_lib/glifistore/ebin"
 erlang_loaded_from="$(ERL_LIBS="$erlang_lib" erl -noshell -pa "$erlang_ebin" \
-  -eval 'io:format("~s", [code:which(glyphastore_client)]), halt().')"
+  -eval 'io:format("~s", [code:which(glifistore_client)]), halt().')"
 if [[ "$erlang_loaded_from" != "$erlang_root/"* || "$erlang_loaded_from" == "$root/"* ]]; then
   echo "archive smoke resolved Erlang SDK outside isolated build: $erlang_loaded_from" >&2
   exit 1
@@ -193,12 +193,12 @@ echo "loaded Perl SDK: $perl_loaded_from"
 echo "installed Ruby gem: $ruby_gem"
 echo "loaded Ruby SDK: $ruby_loaded_from"
 echo "installed Go archive: $go_archive"
-echo "built Go interop peer: $work/bin/glyphastore-interop-go"
+echo "built Go interop peer: $work/bin/glifistore-interop-go"
 echo "installed Erlang archive: $erlang_archive"
 echo "loaded Erlang SDK: $erlang_loaded_from"
 
 common_environment=(
-  GLYPHASTORE_INTEROP_USE_INSTALLED=1
+  GLIFISTORE_INTEROP_USE_INSTALLED=1
   PYTHON="$venv/bin/python"
   PERL="$perl"
   RUBY="$ruby"
@@ -208,11 +208,11 @@ common_environment=(
   GEM_HOME="$ruby_gem_home"
   GEM_PATH="$ruby_gem_home"
   ERL_LIBS="$erlang_lib"
-  GLYPHASTORED="$daemon"
-  GLYPHASTORE_INTEROP_CLIENT="$work/bin/glyphastore-interop-cpp"
-  GLYPHASTORE_GO_INTEROP="$work/bin/glyphastore-interop-go"
-  GLYPHASTORE_RUBY_INTEROP="$ruby_helper"
-  GLYPHASTORE_ERLANG_INTEROP="$erlang_root/scripts/glyphastore-interop.escript"
+  GLIFISTORED="$daemon"
+  GLIFISTORE_INTEROP_CLIENT="$work/bin/glifistore-interop-cpp"
+  GLIFISTORE_GO_INTEROP="$work/bin/glifistore-interop-go"
+  GLIFISTORE_RUBY_INTEROP="$ruby_helper"
+  GLIFISTORE_ERLANG_INTEROP="$erlang_root/scripts/glifistore-interop.escript"
 )
 
 if [[ "$profile" == "secure" ]]; then

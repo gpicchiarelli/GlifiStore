@@ -1,10 +1,10 @@
-#include "glyphastore/persistence/durable_flush_coordinator.hpp"
+#include "glifistore/persistence/durable_flush_coordinator.hpp"
 
 #include <algorithm>
 #include <limits>
 #include <new>
 
-namespace glyphastore {
+namespace glifistore {
 
 DurableFlushCoordinator::DurableFlushCoordinator(const std::uint32_t sync_interval_ms,
                                                  const std::uint32_t batch_max_wait_ms,
@@ -179,4 +179,4 @@ void DurableFlushCoordinator::run() {
     }
 }
 
-} // namespace glyphastore
+} // namespace glifistore

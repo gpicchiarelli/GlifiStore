@@ -3,8 +3,8 @@
 // Internal types for PairReadGeneration translation units.
 // Not installed; behavior-neutral extraction (Phase C decomposition).
 
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/store/paired/read_generation.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/store/paired/read_generation.hpp"
 #include "store/paired/read_generation_immutable.hpp"
 #include "store/paired/read_generation_internals.hpp"
 
@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 class IncrementalBaseBuilder final {
   public:
@@ -569,4 +569,4 @@ struct IncrementalPublicationAccess final {
                              std::shared_ptr<const PairReadGeneration> next) noexcept;
 };
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

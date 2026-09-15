@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/gpicchiarelli/GlyphaStore/sdk/go/protocol"
+	"github.com/gpicchiarelli/GlifiStore/sdk/go/protocol"
 )
 
 // Category is the portable client-semantics v1 error category.
@@ -28,7 +28,7 @@ const (
 	RetryReconcileFirst Retryability = "reconcile_first"
 )
 
-// Error is a structured GlyphaStore client failure (§2.1).
+// Error is a structured GlifiStore client failure (§2.1).
 type Error struct {
 	Category        Category
 	Message         string

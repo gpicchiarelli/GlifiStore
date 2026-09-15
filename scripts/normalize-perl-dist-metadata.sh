@@ -10,7 +10,7 @@ fi
 
 archive="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 perl_bin="${PERL:-perl}"
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-norm-perl.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-norm-perl.XXXXXX")"
 cleanup() { rm -rf "$work"; }
 trap cleanup EXIT
 mkdir -p "$work/src"
@@ -29,13 +29,13 @@ if [[ ! -f "$meta_json" || ! -f "$meta_yaml" ]]; then
 fi
 
 "$perl_bin" -0pi -e '
-  $generated = s/"generated_by"\s*:\s*"[^"]*"/"generated_by" : "ExtUtils::MakeMaker, canonicalized by GlyphaStore"/;
-  $backend = s/"x_serialization_backend"\s*:\s*"[^"]*"/"x_serialization_backend" : "JSON::PP, canonicalized by GlyphaStore"/;
+  $generated = s/"generated_by"\s*:\s*"[^"]*"/"generated_by" : "ExtUtils::MakeMaker, canonicalized by GlifiStore"/;
+  $backend = s/"x_serialization_backend"\s*:\s*"[^"]*"/"x_serialization_backend" : "JSON::PP, canonicalized by GlifiStore"/;
   END { die "META.json generator fields missing\n" unless $generated == 1 && $backend == 1; }
 ' "$meta_json"
 "$perl_bin" -0pi -e '
-  $generated = s/^generated_by:.*$/generated_by: '\''ExtUtils::MakeMaker, canonicalized by GlyphaStore'\''/m;
-  $backend = s/^x_serialization_backend:.*$/x_serialization_backend: '\''CPAN::Meta::YAML, canonicalized by GlyphaStore'\''/m;
+  $generated = s/^generated_by:.*$/generated_by: '\''ExtUtils::MakeMaker, canonicalized by GlifiStore'\''/m;
+  $backend = s/^x_serialization_backend:.*$/x_serialization_backend: '\''CPAN::Meta::YAML, canonicalized by GlifiStore'\''/m;
   END { die "META.yml generator fields missing\n" unless $generated == 1 && $backend == 1; }
 ' "$meta_yaml"
 

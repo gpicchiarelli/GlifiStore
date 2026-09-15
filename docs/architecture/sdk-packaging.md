@@ -36,20 +36,20 @@ its single-root installable layout. Go has no registry archive in this workflow:
 reconstructs the nested module from tracked files, reruns tests there, and builds an external module
 consumer matching the VCS-tag distribution model.
 The `install-consumer` job covers CMake install + external consumer smokes (requires OpenSSL when
-the tree was built with TLS; `FindGlyphaStoreTls.cmake` is installed next to the package config).
+the tree was built with TLS; `FindGlifiStoreTls.cmake` is installed next to the package config).
 The installed secure-profile matrix additionally uses `scripts/build-installed-cpp-interop.sh` to
-build its C++ peer strictly through `GlyphaStore::client` from an isolated installation prefix.
+build its C++ peer strictly through `GlifiStore::client` from an isolated installation prefix.
 
 ## Version policy
 
 1. Root [`VERSION`](../../VERSION) is the canonical release number for **all** official SDKs while
    they remain in lockstep (current: `0.1.0`).
 2. Language sources:
-   - Python: `glyphastore.__version__`
+   - Python: `glifistore.__version__`
    - Perl: `our $VERSION` in every `lib/**/*.pm` (must be identical)
    - Go: `client.Version`
-   - Ruby: `GlyphaStore::VERSION`
-   - Erlang: `glyphastore_version:version/0`
+   - Ruby: `GlifiStore::VERSION`
+   - Erlang: `glifistore_version:version/0`
    - C++: CMake `PROJECT_VERSION` from root `VERSION`
 3. Diverging an SDK version requires an ADR; until then CI fails on drift.
 
@@ -71,7 +71,7 @@ build its C++ peer strictly through `GlyphaStore::client` from an isolated insta
    operator-owned.
 5. Publish:
    - Python: `twine upload` (Trusted Publisher preferred)
-   - Perl: PAUSE upload of `GlyphaStore-VERSION.tar.gz`
+   - Perl: PAUSE upload of `GlifiStore-VERSION.tar.gz`
    - Ruby: `gem push` (MFA required; `allowed_push_host=rubygems.org`)
    - Erlang: `rebar3 hex publish` when Hex credentials are configured
    - Go: `git tag sdk/go/vVERSION && git push origin sdk/go/vVERSION`

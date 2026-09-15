@@ -20,7 +20,7 @@ reuses deleted slots, and transactionally rebuilds at the same capacity when tom
 durable `erase_no_compact()` remains allocation-free and defers maintenance to prepared insertion.
 Index statistics expose effective load, tombstones, observed probe groups, and rebuild counters.
 
-Further layout and SIMD choices must be based on GlyphaStore workloads:
+Further layout and SIMD choices must be based on GlifiStore workloads:
 
 - key sizes 8, 16, 32, 64, and 256 bytes;
 - hit and miss ratios;

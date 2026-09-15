@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-export GLYPHASTORE_ROOT="$root"
+export GLIFISTORE_ROOT="$root"
 # shellcheck disable=SC1091
 source "$root/scripts/export-reproducible-build-env.sh"
 perl="${PERL:-perl}"
@@ -31,14 +31,14 @@ if [[ "$perl_count" -ne 1 || "$perl_versions" != "$expected" ]]; then
 fi
 echo "Perl VERSION $perl_versions OK"
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-perl-pack.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-perl-pack.XXXXXX")"
 cleanup() { rm -rf "$work"; }
 trap cleanup EXIT
 
 # Build from a clean copy so disttest does not fight the live tree.
 cp -R "$sdk/." "$work/sdk"
 cd "$work/sdk"
-rm -rf blib GlyphaStore-* Makefile Makefile.old pm_to_blib MYMETA.* *.tar.gz
+rm -rf blib GlifiStore-* Makefile Makefile.old pm_to_blib MYMETA.* *.tar.gz
 
 "$perl" Makefile.PL
 "$make" manifest
@@ -51,9 +51,9 @@ done
 "$make" disttest
 "$make" dist
 
-tarball=(GlyphaStore-*.tar.gz)
+tarball=(GlifiStore-*.tar.gz)
 if [[ ! -f "${tarball[0]}" ]]; then
-  echo "expected GlyphaStore-*.tar.gz was not produced" >&2
+  echo "expected GlifiStore-*.tar.gz was not produced" >&2
   exit 1
 fi
 
@@ -64,8 +64,8 @@ fi
   die "license missing\n" unless ($meta->{license} // "") =~ /bsd/i
       || grep { /bsd/i } @{$meta->{license} // []};
   for my $module (qw(
-    GlyphaStore GlyphaStore::Client GlyphaStore::Protocol
-    GlyphaStore::Error GlyphaStore::SendFailure
+    GlifiStore GlifiStore::Client GlifiStore::Protocol
+    GlifiStore::Error GlifiStore::SendFailure
   )) {
     die "$module missing from provides\n" unless $meta->{provides}{$module};
   }
@@ -76,8 +76,8 @@ fi
   my $text = <$fh>;
   die "license missing\n" unless $text =~ /license:\s*.*bsd/i;
   for my $module (qw(
-    GlyphaStore GlyphaStore::Client GlyphaStore::Protocol
-    GlyphaStore::Error GlyphaStore::SendFailure
+    GlifiStore GlifiStore::Client GlifiStore::Protocol
+    GlifiStore::Error GlifiStore::SendFailure
   )) {
     die "$module missing from provides\n" unless $text =~ /\Q$module\E/;
   }
@@ -116,16 +116,16 @@ tar -xzf "$tar_tz" -C "$artifact_root"
   "$make" install
 )
 installed_lib="$install_root/lib/perl5"
-if [[ ! -f "$installed_lib/GlyphaStore/Client.pm" ]]; then
-  echo "ERROR: installed Perl package is missing GlyphaStore::Client" >&2
+if [[ ! -f "$installed_lib/GlifiStore/Client.pm" ]]; then
+  echo "ERROR: installed Perl package is missing GlifiStore::Client" >&2
   exit 1
 fi
 cp -R "$artifact_root/$prefix/t" "$test_root/t"
 PERL5LIB="$installed_lib" "$perl" -e '
-  use GlyphaStore;
+  use GlifiStore;
   my $root = shift;
-  die "loaded GlyphaStore from outside isolated install: $INC{q{GlyphaStore.pm}}\n"
-      if index($INC{q{GlyphaStore.pm}}, $root) != 0;
+  die "loaded GlifiStore from outside isolated install: $INC{q{GlifiStore.pm}}\n"
+      if index($INC{q{GlifiStore.pm}}, $root) != 0;
 ' "$installed_lib"
 PERL5LIB="$installed_lib" "$perl" -MTest::Harness -e \
   'runtests(@ARGV)' "$test_root/t/01-protocol.t" "$test_root/t/02-client.t" \

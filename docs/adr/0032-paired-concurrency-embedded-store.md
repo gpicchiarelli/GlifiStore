@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-07-31
 - Deciders: project owner, storage, networking, performance e reliability maintainers
-- Applies to: embedded `Store::open` / `get` / `put` / `erase` and `glyphastored` thin I/O
+- Applies to: embedded `Store::open` / `get` / `put` / `erase` and `glifistored` thin I/O
 - Amends: [ADR 0031](paired-reader-writer-shards.md), [ADR 0005](0005-worker-auto-sizing.md),
   [ADR 0009](0009-public-read-ownership.md) (concurrency notes only; owning `get` unchanged)
 - Amended by: [ADR 0037](0037-shard-execution-token-flat-combining.md) (execution token + flat
@@ -12,7 +12,7 @@
 
 ## Context
 
-ADR 0031 made Reader/Writer shard pairs the mandatory runtime for `glyphastored`, with GET served
+ADR 0031 made Reader/Writer shard pairs the mandatory runtime for `glifistored`, with GET served
 from an immutable `ReadGeneration` and a single serial Writer per owner id. The embedded `Store`
 API still linearized ordinary `get` / `put` / `erase` on per-Worker mutexes
 (`Worker::mutex_` / `RuntimeWorker::mutex`). The daemon Writer mutated through
@@ -53,7 +53,7 @@ Deferred under ADR 0009. This ADR does not change the owning-read contract.
 1. **Default `Store::open` concurrency is paired.** Each owner Worker/shard has exactly one
    **mutation executor** (holder of the per-shard execution token — [ADR 0037](0037-shard-execution-token-flat-combining.md)),
    one immutable published `ReadGeneration`, and bounded mutation/completion structures owned by
-   `ShardPairRuntime` inside `glyphastore_core`. Embedded sync (`async_lane_capacity == 0`) does
+   `ShardPairRuntime` inside `glifistore_core`. Embedded sync (`async_lane_capacity == 0`) does
    **not** require a dedicated Writer `std::thread`; the caller that wins the token is the combiner.
    Daemon lanes (`async_lane_capacity > 0`) retain a dedicated executor thread.
 2. **Public API:**
@@ -68,7 +68,7 @@ Deferred under ADR 0009. This ADR does not change the owning-read contract.
 4. **Hot cache:** in paired mode the generation is the sole ordinary-read authority. Durable hot
    cache admission is disabled by default for paired opens (generation-only) so Index+hot and
    generation cannot disagree.
-5. **`glyphastored`:** becomes thin TCP/TLS/UDS I/O over the same Store paired runtime. It must not
+5. **`glifistored`:** becomes thin TCP/TLS/UDS I/O over the same Store paired runtime. It must not
    maintain a second publication spine for the same shard. Mutation windows / GET visibility barriers
    are specified under ADR 0037 Phase C.
 6. **Experimental** `src/experimental/paired_*` remains lab/microbench only and is not a selectable

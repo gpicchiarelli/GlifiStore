@@ -1,6 +1,6 @@
-#include "glyphastore/store/paired/lane_publication.hpp"
+#include "glifistore/store/paired/lane_publication.hpp"
 
-#include "glyphastore/core/fault_injection.hpp"
+#include "glifistore/core/fault_injection.hpp"
 #include "store/store_internal.hpp"
 
 #include <algorithm>
@@ -8,7 +8,7 @@
 #include <memory>
 #include <utility>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 namespace {
 
 [[nodiscard]] auto non_owning_generation_view(const PairReadGeneration* generation) noexcept
@@ -306,7 +306,7 @@ auto publish_incremental_read_mutations(
 [[nodiscard]] auto try_drain_durable_snapshot(LanePublicationContext& context, const bool allow_fail_closed,
                                               const std::function<void()>* after_drain) noexcept -> bool {
     try {
-        if (glyphastore::fault::consume_fail(glyphastore::fault::Site::drain_snapshot)) {
+        if (glifistore::fault::consume_fail(glifistore::fault::Site::drain_snapshot)) {
             return false;
         }
         auto snapshot =
@@ -368,4 +368,4 @@ auto finalize_generation_reader_shutdown(GenerationState& generation) -> Status 
     return {};
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

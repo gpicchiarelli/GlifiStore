@@ -1,13 +1,13 @@
-#include "glyphastore/server/daemon_log.hpp"
+#include "glifistore/server/daemon_log.hpp"
 
-#include "glyphastore/core/error.hpp"
+#include "glifistore/core/error.hpp"
 
 #include <cctype>
 #include <chrono>
 #include <iostream>
 #include <string>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 constexpr std::size_t kMaxLoggedFieldBytes = 256U;
@@ -412,4 +412,4 @@ void DaemonLog::emit_executor_failure(const std::string_view error_code,
     std::cerr << line;
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

@@ -4,7 +4,7 @@
 #include <chrono>
 #include <thread>
 
-namespace glyphastore::test {
+namespace glifistore::test {
 
 // Test-side handshake for the documented bounded-generation contract. A Writer
 // that receives reader-quiescence backpressure asks the Reader to remain between
@@ -44,4 +44,4 @@ class PairedReaderQuiescence final {
     std::atomic_bool quiescent_{};
 };
 
-} // namespace glyphastore::test
+} // namespace glifistore::test

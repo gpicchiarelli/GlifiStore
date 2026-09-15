@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate GlyphaStore assurance artifacts under engineering/.
+"""Validate GlifiStore assurance artifacts under engineering/.
 
 Checks JSON Schema conformance, unique IDs, referential integrity, critical
 requirements without proofs, closed gates without evidence, expired waivers,
@@ -373,14 +373,14 @@ class Validator:
         lines.append("# Production readiness")
         lines.append("")
         lines.append("> **Derived view.** Machine-readable authority lives under")
-        lines.append("> [`engineering/gates/`](../engineering/gates/). GlyphaStore remains an")
+        lines.append("> [`engineering/gates/`](../engineering/gates/). GlifiStore remains an")
         lines.append("> **architectural prototype**. A release level advances only when every")
         lines.append("> mandatory gate below has automated evidence. A design document or")
         lines.append("> implementation alone does not close a gate.")
         lines.append("")
         lines.append("## Daemon runtime boundary (0.1.0)")
         lines.append("")
-        lines.append("`glyphastored` runs only the paired Reader–Writer model")
+        lines.append("`glifistored` runs only the paired Reader–Writer model")
         lines.append("([ADR paired shards](adr/paired-reader-writer-shards.md),")
         lines.append("[server model](architecture/server-model.md)): one ShardPair (Reader + serial")
         lines.append("Writer + SPSC lanes) per owner id. There is no dual-select daemon runtime.")
@@ -447,7 +447,7 @@ class Validator:
             "",
             "# Hazard register",
             "",
-            "Generated from `engineering/hazards/`. GlyphaStore is an architectural prototype;",
+            "Generated from `engineering/hazards/`. GlifiStore is an architectural prototype;",
             "accepted residual risks do not imply production readiness.",
             "",
             "| ID | Event | Severity | Probability | Detectability | State | Requirements |",

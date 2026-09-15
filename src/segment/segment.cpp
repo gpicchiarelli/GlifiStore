@@ -1,12 +1,12 @@
-#include "glyphastore/segment/segment.hpp"
+#include "glifistore/segment/segment.hpp"
 
-#include "glyphastore/core/checked_math.hpp"
-#include "glyphastore/core/hot_path_phases.hpp"
+#include "glifistore/core/checked_math.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
 
 #include <cstring>
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 
 Segment::Segment(SegmentId id, WorkerId owner, GenerationId generation)
     : id_(id), owner_(owner), generation_(generation),
@@ -164,4 +164,4 @@ auto Segment::retire() -> Status {
     return {};
 }
 
-} // namespace glyphastore
+} // namespace glifistore

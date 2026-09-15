@@ -1,14 +1,14 @@
-#include "glyphastore/segment/record.hpp"
+#include "glifistore/segment/record.hpp"
 
-#include "glyphastore/core/checked_math.hpp"
-#include "glyphastore/core/little_endian.hpp"
-#include "glyphastore/segment/crc32c.hpp"
+#include "glifistore/core/checked_math.hpp"
+#include "glifistore/core/little_endian.hpp"
+#include "glifistore/segment/crc32c.hpp"
 
 #include <algorithm>
 #include <cstring>
 #include <limits>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 using le::get_u16;
@@ -201,4 +201,4 @@ auto decode_record(const std::span<const std::byte> bytes, const bool verify_che
     };
 }
 
-} // namespace glyphastore
+} // namespace glifistore

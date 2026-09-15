@@ -1,8 +1,8 @@
 #pragma once
 
-#include "glyphastore/core/error.hpp"
-#include "glyphastore/server/connection_lifecycle.hpp"
-#include "glyphastore/server/protocol.hpp"
+#include "glifistore/core/error.hpp"
+#include "glifistore/server/connection_lifecycle.hpp"
+#include "glifistore/server/protocol.hpp"
 
 #include <chrono>
 #include <cstddef>
@@ -11,7 +11,7 @@
 #include <string_view>
 #include <sys/socket.h>
 
-namespace glyphastore::server::reactor_detail {
+namespace glifistore::server::reactor_detail {
 
 // sendmsg avoids a value copy, but its fixed syscall/iovec setup cost is larger
 // than copying a cache-resident small value into the existing output buffer.
@@ -122,4 +122,4 @@ inline constexpr std::size_t kMinimumPipelinedScatterValueBytes = std::size_t{16
                                                       pending_output, residual_input));
 }
 
-} // namespace glyphastore::server::reactor_detail
+} // namespace glifistore::server::reactor_detail

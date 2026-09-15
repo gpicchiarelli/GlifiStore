@@ -1,9 +1,9 @@
-#include "glyphastore/store/paired/read_generation.hpp"
+#include "glifistore/store/paired/read_generation.hpp"
 #include "store/paired/read_generation_impl.hpp"
 
 #include <algorithm>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 auto PairReadGeneration::publish_incremental_direct(const PairReadGeneration& previous,
                                                     const std::span<const ReadMutation> mutations,
@@ -101,4 +101,4 @@ void PairReadGeneration::destroy_direct(const PairReadGeneration* generation,
     storage.release(concrete);
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

@@ -39,9 +39,9 @@ from engineering.tools.upgrade_baseline import (  # noqa: E402
 
 GIT_IDENTITY = (
     "-c",
-    "user.email=tests@glyphastore.invalid",
+    "user.email=tests@glifistore.invalid",
     "-c",
-    "user.name=GlyphaStore Tests",
+    "user.name=GlifiStore Tests",
     "-c",
     "commit.gpgsign=false",
     "-c",
@@ -68,15 +68,15 @@ def commit_version(repository: Path, version: str, abi: str = "1.0") -> str:
 
 
 def complete_assets(version: str, *, abi: int = 1, wire: int = 2, arch: str = "amd64") -> list[str]:
-    consumer = f"glyphastore-abi-v{abi}-consumer-{version}-linux-{arch}.tar.xz"
-    client = f"glyphastore-wire-v{wire}-client-{version}-linux-{arch}.tar.xz"
+    consumer = f"glifistore-abi-v{abi}-consumer-{version}-linux-{arch}.tar.xz"
+    client = f"glifistore-wire-v{wire}-client-{version}-linux-{arch}.tar.xz"
     return [
         "SHA256SUMS",
         "build-metadata.json",
         "release-manifest.json",
         "verified-seal.json",
-        f"GlyphaStore-{version}.tar.xz",
-        f"glyphastore-{version}-linux-{arch}.tar.xz",
+        f"GlifiStore-{version}.tar.xz",
+        f"glifistore-{version}-linux-{arch}.tar.xz",
         consumer,
         f"{consumer}.spdx.json",
         client,
@@ -108,7 +108,7 @@ def build_metadata(version: str, git_sha: str, abi: tuple[int, int] = (1, 0)) ->
         "wire_version": 2,
         "persistent_format_version": 1,
         "source": {
-            "repository": "https://github.com/gpicchiarelli/GlyphaStore",
+            "repository": "https://github.com/gpicchiarelli/GlifiStore",
             "tag": f"v{version}",
             "git_sha": git_sha,
             "source_date_epoch": 1767225600,
@@ -158,7 +158,7 @@ def write_bundle(directory: Path, version: str, git_sha: str, *, arch: str = "am
 
 class BaselineSelectionTests(unittest.TestCase):
     def repository(self, version: str, abi: str = "1.0") -> Path:
-        temporary = tempfile.TemporaryDirectory(prefix="glyphastore-upgrade-baseline-")
+        temporary = tempfile.TemporaryDirectory(prefix="glifistore-upgrade-baseline-")
         self.addCleanup(temporary.cleanup)
         repository = Path(temporary.name) / "repository"
         repository.mkdir()
@@ -284,9 +284,9 @@ class BaselineSelectionTests(unittest.TestCase):
             "SHA256SUMS",
             "release-manifest.json",
             "build-metadata.json",
-            "GlyphaStore-0.1.0.tar.xz",
-            "glyphastore-0.1.0-linux-amd64.tar.xz",
-            "glyphastore-abi-v1-consumer-0.1.0-linux-amd64.tar.xz.spdx.json",
+            "GlifiStore-0.1.0.tar.xz",
+            "glifistore-0.1.0-linux-amd64.tar.xz",
+            "glifistore-abi-v1-consumer-0.1.0-linux-amd64.tar.xz.spdx.json",
         ):
             assets = [name for name in complete_assets("0.1.0") if name != dropped]
             baseline = self.resolve(
@@ -426,10 +426,10 @@ class BaselineHonestyTests(unittest.TestCase):
                 "seal": "verified-seal.json",
                 "checksums": "SHA256SUMS",
                 "provenance": None,
-                "source_archive": "GlyphaStore-0.1.0.tar.xz",
-                "install_archive": "glyphastore-0.1.0-linux-amd64.tar.xz",
-                "abi_consumer_archive": "glyphastore-abi-v1-consumer-0.1.0-linux-amd64.tar.xz",
-                "wire_client_archive": "glyphastore-wire-v2-client-0.1.0-linux-amd64.tar.xz",
+                "source_archive": "GlifiStore-0.1.0.tar.xz",
+                "install_archive": "glifistore-0.1.0-linux-amd64.tar.xz",
+                "abi_consumer_archive": "glifistore-abi-v1-consumer-0.1.0-linux-amd64.tar.xz",
+                "wire_client_archive": "glifistore-wire-v2-client-0.1.0-linux-amd64.tar.xz",
             },
         }
         with self.assertRaisesRegex(UpgradeBaselineError, "only report NOT_RUN"):
@@ -448,7 +448,7 @@ class BaselineHonestyTests(unittest.TestCase):
             validate_baseline(baseline)
 
     def test_a_release_index_is_validated_fail_closed(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="glyphastore-release-index-")
+        temporary = tempfile.TemporaryDirectory(prefix="glifistore-release-index-")
         self.addCleanup(temporary.cleanup)
         path = Path(temporary.name) / "index.json"
         valid = {
@@ -511,7 +511,7 @@ class BaselineHonestyTests(unittest.TestCase):
 
 class DownloadedBundleTests(unittest.TestCase):
     def setUp(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="glyphastore-prior-bundle-")
+        temporary = tempfile.TemporaryDirectory(prefix="glifistore-prior-bundle-")
         self.addCleanup(temporary.cleanup)
         self.work = Path(temporary.name)
         self.repository = self.work / "repository"
@@ -549,7 +549,7 @@ class DownloadedBundleTests(unittest.TestCase):
 
     def test_a_tampered_artifact_is_refused(self) -> None:
         directory = self.bundle()
-        (directory / "glyphastore-0.1.0-linux-amd64.tar.xz").write_bytes(b"rebuilt bytes")
+        (directory / "glifistore-0.1.0-linux-amd64.tar.xz").write_bytes(b"rebuilt bytes")
         with self.assertRaisesRegex(BundleError, "mismatch"):
             verify_downloaded_bundle(self.baseline, directory)
 
@@ -611,7 +611,7 @@ class DownloadedBundleTests(unittest.TestCase):
 
 class CommandLineTests(unittest.TestCase):
     def test_resolve_writes_a_loadable_baseline_for_this_repository(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="glyphastore-baseline-cli-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="glifistore-baseline-cli-") as temporary:
             work = Path(temporary)
             context = work / "release-context.json"
             self.assertEqual(

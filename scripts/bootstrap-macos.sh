@@ -32,12 +32,12 @@ fi
 "$root/scripts/generate-xcode.sh" >/dev/null
 
 cat <<EOF
-GlyphaStore macOS environment is ready.
+GlifiStore macOS environment is ready.
 
 Xcode:  $(xcodebuild -version | paste -sd ' ' -)
 CMake:  $("$venv/bin/cmake" --version | head -1)
 Ninja:  $("$venv/bin/ninja" --version)
-Project: $root/build/xcode/GlyphaStore.xcodeproj
+Project: $root/build/xcode/GlifiStore.xcodeproj
 
 Open it with:
   $root/scripts/open-xcode.sh

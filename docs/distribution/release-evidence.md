@@ -108,10 +108,10 @@ upstream account-registration marker exists, and no native tagged result has yet
 
 `openbsd-package-evidence` mirrors that discipline on OpenBSD 7.9. It requires
 `packaging/openbsd/PORTS_ACCOUNT_REGISTERED`, copies the reference port into
-`$PORTSDIR/databases/glyphastore`, generates non-circular `distinfo`, builds with `DISTDIR` and
+`$PORTSDIR/databases/glifistore`, generates non-circular `distinfo`, builds with `DISTDIR` and
 `PACKAGE_REPOSITORY`, then `pkg_add`s the `.tgz`, checks ABI symbols on
-`libglyphastore.so.${ABI_VERSION}`, and exercises `rcctl` enable/start/stop, PUT/GET/ERASE, Store
-verify under `/var/glyphastore`, restart recovery, config preservation, and `pkg_delete`. Same
+`libglifistore.so.${ABI_VERSION}`, and exercises `rcctl` enable/start/stop, PUT/GET/ERASE, Store
+verify under `/var/glifistore`, restart recovery, config preservation, and `pkg_delete`. Same
 fail-closed residual: no account marker and no retained tagged run yet.
 
 `reproducibility-evidence` runs on a distinct runner after the candidate seal exists. It checks out

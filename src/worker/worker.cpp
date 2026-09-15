@@ -1,8 +1,8 @@
-#include "glyphastore/worker/worker.hpp"
+#include "glifistore/worker/worker.hpp"
 
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/core/key_hash.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/core/key_hash.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -11,7 +11,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 static_assert(std::is_nothrow_move_assignable_v<Index>);
@@ -95,7 +95,7 @@ auto Worker::next_sequence() -> SequenceNumber {
 auto Worker::append_record(const RecordInput& input) -> Result<RecordRef> {
     // Litmus: pre-append rotation/catalog failure (invalid_reference) must stay
     // known-not-committed at the Writer — not wire INTERNAL_ERROR / reconcile.
-    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::rotate)) {
+    if (glifistore::fault::consume_fail(glifistore::fault::Site::rotate)) {
         return fail(ErrorCode::invalid_reference, "injected volatile rotation failure before append");
     }
     auto ref = active_->append(input);
@@ -381,7 +381,7 @@ auto Worker::put_locked_published(const HashedKey& key, const std::span<const st
     }
     const auto segment = active_;
     // Litmus / post-append: Index publication crossed the append boundary.
-    if (glyphastore::fault::consume_fail(glyphastore::fault::Site::index_account)) {
+    if (glifistore::fault::consume_fail(glifistore::fault::Site::index_account)) {
         return unexpected(
             Error{ErrorCode::unavailable, "injected volatile post-append index publication failure"});
     }
@@ -450,4 +450,4 @@ auto Worker::erase_locked_published(const HashedKey& key) -> Result<WorkerMutati
     return WorkerMutationPublication{.record = *ref, .segment = segment, .opcode = Opcode::erase};
 }
 
-} // namespace glyphastore
+} // namespace glifistore

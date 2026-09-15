@@ -4,10 +4,10 @@
 // only to repository tests and dedicated benchmarks; it is not installed.
 
 #include "experimental/generation_slot_pool.hpp"
-#include "glyphastore/core/error.hpp"
-#include "glyphastore/core/worker_routing.hpp"
-#include "glyphastore/store/paired/generation_direct_storage.hpp"
-#include "glyphastore/store/paired/read_generation.hpp"
+#include "glifistore/core/error.hpp"
+#include "glifistore/core/worker_routing.hpp"
+#include "glifistore/store/paired/generation_direct_storage.hpp"
+#include "glifistore/store/paired/read_generation.hpp"
 
 #include <algorithm>
 #include <array>
@@ -20,7 +20,7 @@
 #include <span>
 #include <utility>
 
-namespace glyphastore::experimental {
+namespace glifistore::experimental {
 
 // Owns exactly one allocate_shared allocation at a time. Keeping this object in
 // a fixed generation slot removes the generation shell/control-block malloc
@@ -240,7 +240,7 @@ template <typename T> class PairReadGenerationBorrowedShellAllocator final {
 };
 
 // Narrow friend bridge into PairReadGeneration. It exists only in this
-// non-installed header, and cannot be selected by glyphastored.
+// non-installed header, and cannot be selected by glifistored.
 struct PairReadGenerationShellAccess final {
     [[nodiscard]] static auto
     publish_incremental(std::shared_ptr<const store::paired::PairReadGeneration> previous,
@@ -273,7 +273,7 @@ struct PairReadGenerationShellAccess final {
 
 // Construction/performance lab only. There is no Reader reclamation protocol:
 // each new generation retires the previous one synchronously on the same
-// Writer thread. It cannot be used by glyphastored.
+// Writer thread. It cannot be used by glifistored.
 template <std::size_t Capacity> class PairReadGenerationDirectRing final {
   public:
     static_assert(Capacity >= 2U);
@@ -778,4 +778,4 @@ template <std::size_t Capacity> class PairReadGenerationInlineSlotPool final {
     std::unique_ptr<Pool> pool_;
 };
 
-} // namespace glyphastore::experimental
+} // namespace glifistore::experimental

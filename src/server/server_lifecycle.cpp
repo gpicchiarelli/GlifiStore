@@ -1,11 +1,11 @@
-#include "glyphastore/server/server.hpp"
+#include "glifistore/server/server.hpp"
 
 #include <chrono>
 #include <exception>
 #include <string>
 #include <utility>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 auto Server::start() -> Status {
     if (started_.exchange(true, std::memory_order_acq_rel)) {
@@ -187,4 +187,4 @@ void Server::run(const std::size_t executor_id) noexcept {
     }
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

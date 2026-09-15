@@ -1,11 +1,11 @@
 #pragma once
 
-#include "glyphastore/core/types.hpp"
-#include "glyphastore/index/index_types.hpp"
-#include "glyphastore/persistence/filesystem.hpp"
-#include "glyphastore/persistence/manifest.hpp"
-#include "glyphastore/persistence/recovery.hpp"
-#include "glyphastore/segment/record.hpp"
+#include "glifistore/core/types.hpp"
+#include "glifistore/index/index_types.hpp"
+#include "glifistore/persistence/filesystem.hpp"
+#include "glifistore/persistence/manifest.hpp"
+#include "glifistore/persistence/recovery.hpp"
+#include "glifistore/segment/record.hpp"
 #include "persistence/recovery/recovery_budget.hpp"
 
 #include <cstdint>
@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace glyphastore::recovery {
+namespace glifistore::recovery {
 
 struct LatestRecord final {
     RecordRef reference;
@@ -54,4 +54,4 @@ class RecoveryScanner final {
     RecoveryMemoryBudget& budget_;
 };
 
-} // namespace glyphastore::recovery
+} // namespace glifistore::recovery

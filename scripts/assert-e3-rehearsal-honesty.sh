@@ -175,7 +175,7 @@ if [[ "$kind" == "harness" ]]; then
   assert_common_honesty "$artifact_dir/provenance.txt" "$artifact_dir/summary.md"
   require_file "$artifact_dir/results.tsv"
   verify_manifest "$artifact_dir"
-  require_grep "$artifact_dir/provenance.txt" '^schema=glyphastore-durability-e3-harness-v2$' \
+  require_grep "$artifact_dir/provenance.txt" '^schema=glifistore-durability-e3-harness-v2$' \
     "harness provenance must use the pause/reset-confirmation schema"
   require_grep "$artifact_dir/provenance.txt" '^checkpoint_action=pause$' \
     "harness provenance must record checkpoint_action=pause"
@@ -234,7 +234,7 @@ elif [[ "$kind" == "campaign" ]]; then
   note "Asserting E3 campaign honesty in $artifact_dir"
   assert_common_honesty "$artifact_dir/campaign-provenance.txt" "$artifact_dir/campaign-summary.md"
   verify_manifest "$artifact_dir"
-  require_grep "$artifact_dir/campaign-provenance.txt" '^schema=glyphastore-durability-e3-campaign-v2$' \
+  require_grep "$artifact_dir/campaign-provenance.txt" '^schema=glifistore-durability-e3-campaign-v2$' \
     "campaign provenance must use the fault-mode-aware schema"
   require_file "$artifact_dir/campaign-pin.txt"
   require_file "$artifact_dir/promotion-checklist.md"

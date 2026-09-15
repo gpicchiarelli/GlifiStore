@@ -1,6 +1,6 @@
-#include "glyphastore/worker/pool.hpp"
+#include "glifistore/worker/pool.hpp"
 
-namespace glyphastore {
+namespace glifistore {
 
 WorkerPool::WorkerPool(GlobalSegmentManager& manager, const std::size_t worker_count,
                        const WorkerRoutingState routing)
@@ -12,4 +12,4 @@ WorkerPool::WorkerPool(GlobalSegmentManager& manager, const std::size_t worker_c
     }
 }
 
-} // namespace glyphastore
+} // namespace glifistore

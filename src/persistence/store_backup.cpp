@@ -1,6 +1,6 @@
-#include "glyphastore/persistence/store_backup.hpp"
+#include "glifistore/persistence/store_backup.hpp"
 
-#include "glyphastore/persistence/segment_file.hpp"
+#include "glifistore/persistence/segment_file.hpp"
 #include "system_error.hpp"
 
 #include <algorithm>
@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 // Bounded concurrency for catalog Segment copies. Manifest is always copied last, alone.
@@ -331,4 +331,4 @@ auto backup_durable_store(const std::filesystem::path& source, const std::filesy
     return backed;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

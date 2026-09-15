@@ -51,56 +51,56 @@ python3 "$root/engineering/tools/release_bundle.py" verify-seal \
 python3 "$root/engineering/tools/validate_bsd_packaging.py" --root "$root" --release
 
 mapfile -t source_archives < <(
-  find "$candidate" -maxdepth 1 -type f -name "GlyphaStore-$version.tar.xz" -print
+  find "$candidate" -maxdepth 1 -type f -name "GlifiStore-$version.tar.xz" -print
 )
 [[ ${#source_archives[@]} -eq 1 ]] || {
   echo "error: expected exactly one sealed source archive" >&2
   exit 1
 }
 
-work="$(mktemp -d /tmp/glyphastore-openbsd-package.XXXXXX)"
+work="$(mktemp -d /tmp/glifistore-openbsd-package.XXXXXX)"
 cleanup() {
-  rcctl stop glyphastored >/dev/null 2>&1 || true
-  if pkg_info -e glyphastore >/dev/null 2>&1; then
-    pkg_delete glyphastore >/dev/null 2>&1 || true
+  rcctl stop glifistored >/dev/null 2>&1 || true
+  if pkg_info -e glifistore >/dev/null 2>&1; then
+    pkg_delete glifistore >/dev/null 2>&1 || true
   fi
   rm -rf "$work"
 }
 trap cleanup EXIT
 
-if pkg_info -e glyphastore >/dev/null 2>&1; then
-  echo "error: lifecycle proof requires a clean host without glyphastore installed" >&2
+if pkg_info -e glifistore >/dev/null 2>&1; then
+  echo "error: lifecycle proof requires a clean host without glifistore installed" >&2
   exit 1
 fi
 
 mkdir -p "$work/distfiles" "$work/packages" "$work/pobj"
-rm -rf "$ports_root/databases/glyphastore"
+rm -rf "$ports_root/databases/glifistore"
 mkdir -p "$ports_root/databases"
-cp -R "$root/packaging/openbsd/." "$ports_root/databases/glyphastore/"
-cp "${source_archives[0]}" "$work/distfiles/GlyphaStore-$version.tar.xz"
+cp -R "$root/packaging/openbsd/." "$ports_root/databases/glifistore/"
+cp "${source_archives[0]}" "$work/distfiles/GlifiStore-$version.tar.xz"
 
 package_build_log="$output/openbsd-package-build.log"
 {
-  make -C "$ports_root/databases/glyphastore" \
+  make -C "$ports_root/databases/glifistore" \
     DISTDIR="$work/distfiles" WRKOBJDIR="$work/pobj" makesum
-  make -C "$ports_root/databases/glyphastore" \
+  make -C "$ports_root/databases/glifistore" \
     DISTDIR="$work/distfiles" WRKOBJDIR="$work/pobj" checksum
-  make -C "$ports_root/databases/glyphastore" \
+  make -C "$ports_root/databases/glifistore" \
     DISTDIR="$work/distfiles" WRKOBJDIR="$work/pobj" \
     PACKAGE_REPOSITORY="$work/packages" package
   echo "OPENBSD-PACKAGE package-build PASSED"
 } 2>&1 | tee "$package_build_log"
-test -s "$ports_root/databases/glyphastore/distinfo"
-cp "$ports_root/databases/glyphastore/distinfo" "$output/openbsd-distinfo"
+test -s "$ports_root/databases/glifistore/distinfo"
+cp "$ports_root/databases/glifistore/distinfo" "$output/openbsd-distinfo"
 
-mapfile -t built_packages < <(find "$work/packages" -type f -name 'glyphastore-*.tgz' -print)
+mapfile -t built_packages < <(find "$work/packages" -type f -name 'glifistore-*.tgz' -print)
 [[ ${#built_packages[@]} -eq 1 ]] || {
   echo "error: expected exactly one native OpenBSD package" >&2
   exit 1
 }
 openbsd_version="$(uname -r)"
 architecture="$(uname -m)"
-package="$output/glyphastore-$version-openbsd$openbsd_version-$architecture.tgz"
+package="$output/glifistore-$version-openbsd$openbsd_version-$architecture.tgz"
 cp "${built_packages[0]}" "$package"
 
 # shellcheck source=scripts/lib/bsd-package-upgrade.sh
@@ -118,17 +118,17 @@ if [[ -n "$previous_version" ]]; then
   client=(python3 "$root/scripts/sdk_interop_py.py" --host 127.0.0.1 --port 7379)
   {
     echo "previous_version=$previous_version"
-    echo "GLYPHASTORE_N1_PACKAGE_DIR=$GLYPHASTORE_N1_PACKAGE_DIR"
+    echo "GLIFISTORE_N1_PACKAGE_DIR=$GLIFISTORE_N1_PACKAGE_DIR"
     printf 'n1_packages=%s\n' "${n1_packages[*]}"
     echo "n_package=$package"
     echo "installing sealed N-1 before N"
     for n1_package in "${n1_packages[@]}"; do
       pkg_add -D unsigned "$n1_package"
     done
-    pkg_info -e "glyphastore-$previous_version"
-    id _glyphastore
-    rcctl enable glyphastored
-    rcctl start glyphastored
+    pkg_info -e "glifistore-$previous_version"
+    id _glifistore
+    rcctl enable glifistored
+    rcctl start glifistored
     for _ in $(jot 50 1); do
       netstat -an -f inet | grep -Eq '127\.0\.0\.1\.7379.*LISTEN' && break
       sleep 1
@@ -136,12 +136,12 @@ if [[ -n "$previous_version" ]]; then
     netstat -an -f inet | grep -Eq '127\.0\.0\.1\.7379.*LISTEN'
     PYTHONPATH="$root/sdk/python/src" "${client[@]}" put \
       --key-hex "$upgrade_seed_key_hex" --value-hex "$upgrade_seed_value_hex"
-    rcctl stop glyphastored
+    rcctl stop glifistored
     echo "seeded durable value under N-1"
     echo "upgrading to N package: $package"
     pkg_add -r -D unsigned "$package"
-    pkg_info -e "glyphastore-$version"
-    rcctl start glyphastored
+    pkg_info -e "glifistore-$version"
+    rcctl start glifistored
     for _ in $(jot 50 1); do
       netstat -an -f inet | grep -Eq '127\.0\.0\.1\.7379.*LISTEN' && break
       sleep 1
@@ -150,14 +150,14 @@ if [[ -n "$previous_version" ]]; then
     got="$(PYTHONPATH="$root/sdk/python/src" "${client[@]}" get \
       --key-hex "$upgrade_seed_key_hex")"
     [[ "$got" == "$upgrade_seed_value_hex" ]]
-    rcctl stop glyphastored
+    rcctl stop glifistored
     echo "seeded value recovered byte-exact after upgrade to N"
     echo "OPENBSD-PACKAGE package-upgrade PASSED"
   } 2>&1 | tee "$output/openbsd-package-upgrade.log"
   {
     echo "upgrade path installed N from sealed N-1 ($previous_version)"
-    pkg_info -e "glyphastore-$version"
-    id _glyphastore
+    pkg_info -e "glifistore-$version"
+    id _glifistore
     echo "OPENBSD-PACKAGE package-install PASSED"
   } 2>&1 | tee "$output/openbsd-package-install.log"
   upgrade_exercised=1
@@ -166,19 +166,19 @@ fi
 if [[ "$upgrade_exercised" -eq 0 ]]; then
 {
   pkg_add -D unsigned "$package"
-  pkg_info -e "glyphastore-$version"
-  id _glyphastore
+  pkg_info -e "glifistore-$version"
+  id _glifistore
   echo "OPENBSD-PACKAGE package-install PASSED"
 } 2>&1 | tee "$output/openbsd-package-install.log"
 fi
 
 {
-  pkg_info -L glyphastore
-  test -x /usr/local/bin/glyphastored
-  test -f /etc/glyphastored.conf
-  test -f "/usr/local/lib/libglyphastore.so.${abi_version}"
+  pkg_info -L glifistore
+  test -x /usr/local/bin/glifistored
+  test -f /etc/glifistored.conf
+  test -f "/usr/local/lib/libglifistore.so.${abi_version}"
   python3 "$root/engineering/tools/check_abi_symbols.py" \
-    --library "/usr/local/lib/libglyphastore.so.${abi_version}" \
+    --library "/usr/local/lib/libglifistore.so.${abi_version}" \
     --allowlist "$root/abi/symbols-v1.txt"
   echo "OPENBSD-PACKAGE file-inventory PASSED"
 } 2>&1 | tee "$output/openbsd-file-inventory.log"
@@ -191,14 +191,14 @@ fi
 } 2>&1 | tee "$output/openbsd-external-consumer.log"
 
 {
-  rcctl enable glyphastored
-  rcctl start glyphastored
+  rcctl enable glifistored
+  rcctl start glifistored
   for _ in $(jot 50 1); do
     netstat -an -f inet | grep -Eq '127\.0\.0\.1\.7379.*LISTEN' && break
     sleep 1
   done
   netstat -an -f inet | grep -Eq '127\.0\.0\.1\.7379.*LISTEN'
-  pgrep -U _glyphastore -f '/usr/local/bin/glyphastored' >/dev/null
+  pgrep -U _glifistore -f '/usr/local/bin/glifistored' >/dev/null
   echo "OPENBSD-PACKAGE service-start PASSED"
 } 2>&1 | tee "$output/openbsd-service-start.log"
 
@@ -220,14 +220,14 @@ client=(python3 "$root/scripts/sdk_interop_py.py" --host 127.0.0.1 --port 7379)
 {
   PYTHONPATH="$root/sdk/python/src" "${client[@]}" put \
     --key-hex "$recovery_key_hex" --value-hex "$recovery_value_hex"
-  rcctl stop glyphastored
-  ! pgrep -U _glyphastore -f '/usr/local/bin/glyphastored' >/dev/null
-  /usr/local/bin/glyphastore_verify_store -- /var/glyphastore
+  rcctl stop glifistored
+  ! pgrep -U _glifistore -f '/usr/local/bin/glifistored' >/dev/null
+  /usr/local/bin/glifistore_verify_store -- /var/glifistore
   echo "OPENBSD-PACKAGE graceful-shutdown PASSED"
 } 2>&1 | tee "$output/openbsd-graceful-shutdown.log"
 
 {
-  rcctl start glyphastored
+  rcctl start glifistored
   for _ in $(jot 50 1); do
     netstat -an -f inet | grep -Eq '127\.0\.0\.1\.7379.*LISTEN' && break
     sleep 1
@@ -235,24 +235,24 @@ client=(python3 "$root/scripts/sdk_interop_py.py" --host 127.0.0.1 --port 7379)
   got="$(PYTHONPATH="$root/sdk/python/src" "${client[@]}" get \
     --key-hex "$recovery_key_hex")"
   [[ "$got" == "$recovery_value_hex" ]]
-  rcctl stop glyphastored
+  rcctl stop glifistored
   echo "OPENBSD-PACKAGE restart-recovery PASSED"
 } 2>&1 | tee "$output/openbsd-restart-recovery.log"
 
 config_marker="# retained-config-${GITHUB_RUN_ID:-local}"
 {
-  echo "$config_marker" >>/etc/glyphastored.conf
+  echo "$config_marker" >>/etc/glifistored.conf
   pkg_add -r -D unsigned "$package"
-  grep -Fqx "$config_marker" /etc/glyphastored.conf
+  grep -Fqx "$config_marker" /etc/glifistored.conf
   echo "OPENBSD-PACKAGE config-preservation PASSED"
 } 2>&1 | tee "$output/openbsd-config-preservation.log"
 
 {
-  pkg_delete glyphastore
-  ! pkg_info -e glyphastore >/dev/null 2>&1
-  test ! -e /usr/local/bin/glyphastored
-  grep -Fqx "$config_marker" /etc/glyphastored.conf
-  test -d /var/glyphastore
+  pkg_delete glifistore
+  ! pkg_info -e glifistore >/dev/null 2>&1
+  test ! -e /usr/local/bin/glifistored
+  grep -Fqx "$config_marker" /etc/glifistored.conf
+  test -d /var/glifistore
   echo "OPENBSD-PACKAGE uninstall PASSED"
 } 2>&1 | tee "$output/openbsd-uninstall.log"
 
@@ -265,7 +265,7 @@ plan = [
   {"id":"package-install","command":"pkg_add the native package and prove the dedicated service account","evidence_ref":"openbsd-package-install.log"},
   {"id":"file-inventory","command":"pkg inventory plus exact C ABI symbol allowlist","evidence_ref":"openbsd-file-inventory.log"},
   {"id":"external-consumer","command":"cmake/ctest packaging/common/consumer against /usr/local outside the checkout with isolation refused","evidence_ref":"openbsd-external-consumer.log"},
-  {"id":"service-start","command":"enable and start the rc.d service as _glyphastore on loopback","evidence_ref":"openbsd-service-start.log"},
+  {"id":"service-start","command":"enable and start the rc.d service as _glifistore on loopback","evidence_ref":"openbsd-service-start.log"},
   {"id":"put-get-erase","command":"protocol-v2 PUT, exact GET, ERASE and NOT_FOUND through the packaged service","evidence_ref":"openbsd-put-get-erase.log"},
   {"id":"graceful-shutdown","command":"persist a recovery key, stop through rcctl, prove process exit and verify the Store","evidence_ref":"openbsd-graceful-shutdown.log"},
   {"id":"restart-recovery","command":"restart the packaged service and recover the exact durable value","evidence_ref":"openbsd-restart-recovery.log"},

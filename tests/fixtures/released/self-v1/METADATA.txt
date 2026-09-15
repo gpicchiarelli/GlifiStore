@@ -1,6 +1,6 @@
 schema_version=2
 label=self-v1
-glyphastore_version=0.1.0
+glifistore_version=0.1.0
 persistence_format=1
 wire_protocol=2
 packaged_at=2026-07-23T19:58:33Z

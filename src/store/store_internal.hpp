@@ -1,15 +1,15 @@
 #pragma once
 
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/persistence/runtime_catalog.hpp"
-#include "glyphastore/segment/record.hpp"
-#include "glyphastore/segment/segment.hpp"
-#include "glyphastore/store/config.hpp"
-#include "glyphastore/store/maintenance.hpp"
-#include "glyphastore/store/paired/shard_pair_runtime.hpp"
-#include "glyphastore/store/prepared_read.hpp"
-#include "glyphastore/store/store.hpp"
-#include "glyphastore/worker/worker.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/persistence/runtime_catalog.hpp"
+#include "glifistore/segment/record.hpp"
+#include "glifistore/segment/segment.hpp"
+#include "glifistore/store/config.hpp"
+#include "glifistore/store/maintenance.hpp"
+#include "glifistore/store/paired/shard_pair_runtime.hpp"
+#include "glifistore/store/prepared_read.hpp"
+#include "glifistore/store/store.hpp"
+#include "glifistore/worker/worker.hpp"
 
 #include <atomic>
 #include <cstddef>
@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace glyphastore::detail {
+namespace glifistore::detail {
 
 // Internal bridge for the native server and white-box tests. This header is
 // never installed and is not part of the supported C++ API.
@@ -137,4 +137,4 @@ class StoreAccess final {
     [[nodiscard]] static auto concurrency(const Store& store) noexcept -> StoreConcurrencyMode;
 };
 
-} // namespace glyphastore::detail
+} // namespace glifistore::detail

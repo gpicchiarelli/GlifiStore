@@ -1,20 +1,20 @@
-#include "glyphastore/core/hot_path_phases.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
 
-#if defined(GLYPHASTORE_HOT_PATH_PHASES)
+#if defined(GLIFISTORE_HOT_PATH_PHASES)
 
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
 
-namespace glyphastore::hot_path {
+namespace glifistore::hot_path {
 namespace {
 
 std::atomic_bool g_enabled{true};
 
 struct ReportAtExit final {
     ReportAtExit() {
-        if (const char* flag = std::getenv("GLYPHASTORE_HOT_PATH_PHASE_REPORT");
+        if (const char* flag = std::getenv("GLIFISTORE_HOT_PATH_PHASE_REPORT");
             flag != nullptr && flag[0] != '\0' && flag[0] != '0') {
             std::atexit([] {
                 const auto report = format_report();
@@ -150,7 +150,7 @@ auto snapshot_tcp(const TcpPhase phase) noexcept -> PhaseSnapshot {
 auto format_report() -> std::string {
     std::string out;
     out.reserve(2048);
-    out += "GlyphaStore hot-path phase attribution (lab instrumentation)\n";
+    out += "GlifiStore hot-path phase attribution (lab instrumentation)\n";
     out += "Claim ceiling: architectural prototype / same-machine lab evidence only.\n";
     append_section(
         out, "[GET]", [](const std::size_t index) { return get_phase_name(static_cast<GetPhase>(index)); },
@@ -187,6 +187,6 @@ void PhaseScope::finish() noexcept {
     start_ns_ = 0;
 }
 
-} // namespace glyphastore::hot_path
+} // namespace glifistore::hot_path
 
 #endif

@@ -1,4 +1,4 @@
-#include "glyphastore/server/disk_read_executor.hpp"
+#include "glifistore/server/disk_read_executor.hpp"
 
 #include "store/store_internal.hpp"
 
@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 void set_error_code_without_allocation(std::optional<Error>& destination, const ErrorCode code) noexcept {
@@ -239,4 +239,4 @@ void DiskReadExecutor::run(const std::size_t worker_index) noexcept {
     }
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

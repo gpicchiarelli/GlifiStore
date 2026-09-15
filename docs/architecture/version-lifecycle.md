@@ -6,7 +6,7 @@ Owner: persistence maintainers
 Last reviewed: 2026-08-01
 
 This is the published upgrade, downgrade, Worker-count, ABI/API, and release-artifact policy for
-GlyphaStore before and at alpha. It amends the development-only matrix in
+GlifiStore before and at alpha. It amends the development-only matrix in
 [format-compatibility.md](format-compatibility.md) with operator-facing promises. Architectural
 decision: [ADR 0024](../adr/0024-offline-worker-migration.md). Machine-readable N↔N-1 rows:
 [n-n1-compatibility.md](n-n1-compatibility.md) and
@@ -27,7 +27,7 @@ Operator procedures: [compatibility-and-migration](../operations/compatibility-a
 ### Upgrade (newer binary, existing Store)
 
 1. Stop every writer that holds the data-directory lock.
-2. Run `glyphastore_verify_store` on the data directory.
+2. Run `glifistore_verify_store` on the data directory.
 3. Open with the newer binary using the **same** Worker count (omit override or pass the persisted
    count). Reopen is reopen-only: no silent rewrite.
 4. If the newer binary requires a higher format version than the Store encodes, open fails closed.
@@ -58,7 +58,7 @@ Operator procedures: [compatibility-and-migration](../operations/compatibility-a
 | Reopen with matching count | Yes |
 | Reopen with different count | **No** — fail closed |
 | Change count via backup/restore | **No** — restore preserves catalog bytes |
-| Change count via offline migrate | **Yes** — `glyphastore_migrate_store` |
+| Change count via offline migrate | **Yes** — `glifistore_migrate_store` |
 | Online / live reshard | **No** (deferred; design constraints in [ADR 0033](../adr/0033-online-rebalance-deferred.md)) |
 
 See [store-migration](store-migration.md) and [worker-resharding](../operations/worker-resharding.md).
@@ -82,7 +82,7 @@ producer establish mechanism but no release note may claim demonstrated N−1 bi
 | `scripts/package-release-compatibility-artifacts.sh` | Packages current fixtures for a release label |
 | `tests/fixtures/released-stores/<semver>/` | Complete stopped Store from a prior tagged release |
 | `engineering/tools/persistence_fixture.py` | Creates, validates, and strictly selects complete Store drops |
-| `glyphastore-abi-v<major>-consumer-<version>-linux-<arch>.tar.xz` | Sealed compiled consumer used by the next ABI release matrix |
+| `glifistore-abi-v<major>-consumer-<version>-linux-<arch>.tar.xz` | Sealed compiled consumer used by the next ABI release matrix |
 | `engineering/tools/prior_release.py` | Validates a complete official prior release before cross-version use |
 | `scripts/package-release-claim.sh` | Writes `engineering/claims/<tag>.yaml` for a version tag |
 | `engineering/claims/` | Claim ceiling + gate/evidence pointers per tag |

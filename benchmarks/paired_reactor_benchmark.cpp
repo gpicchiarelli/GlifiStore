@@ -1,7 +1,7 @@
 #include "benchmark_metadata.hpp"
 #include "experimental/paired_reactor.hpp"
-#include "glyphastore/client/client.hpp"
-#include "glyphastore/server/server.hpp"
+#include "glifistore/client/client.hpp"
+#include "glifistore/server/server.hpp"
 #include "parse.hpp"
 
 #include <algorithm>
@@ -62,7 +62,7 @@ struct Measurement final {
         throw std::invalid_argument{"missing " + std::string{flag}};
     }
     const std::string_view input{value};
-    const auto parsed = glyphastore::bench::parse_decimal_size(input);
+    const auto parsed = glifistore::bench::parse_decimal_size(input);
     if (!parsed || (!allow_zero && *parsed == 0)) {
         throw std::invalid_argument{"invalid " + std::string{flag}};
     }
@@ -74,7 +74,7 @@ struct Measurement final {
     for (int index = 1; index < argc; ++index) {
         const std::string_view argument{argv[index]};
         if (argument == "--help") {
-            std::cout << "usage: glyphastore_paired_reactor_benchmark [--ops N] [--keys N] "
+            std::cout << "usage: glifistore_paired_reactor_benchmark [--ops N] [--keys N] "
                          "[--value-bytes N] [--pipeline N] [--clients N] [--put-percent N] [--repeats N] "
                          "[--warmup N] [--batch-wait-us N]\n";
             std::exit(0);
@@ -149,7 +149,7 @@ class CurrentServer final {
   public:
     explicit CurrentServer(const std::size_t clients) {
         auto created =
-            glyphastore::server::Server::create({.port = 0,
+            glifistore::server::Server::create({.port = 0,
                                                  .maximum_connections = clients + 2U,
                                                  .worker_count = 1,
                                                  .maximum_input_bytes = std::size_t{4} * 1024U * 1024U,
@@ -171,13 +171,13 @@ class CurrentServer final {
     }
 
   private:
-    std::unique_ptr<glyphastore::server::Server> server_;
+    std::unique_ptr<glifistore::server::Server> server_;
 };
 
 class PairedServer final {
   public:
     PairedServer(const Options& options) {
-        auto created = glyphastore::experimental::PairedReactorPrototype::create(
+        auto created = glifistore::experimental::PairedReactorPrototype::create(
             {.maximum_connections = options.clients + 2U,
              .maximum_value_bytes = options.value_bytes,
              .merge_delta_entries = options.keys,
@@ -208,7 +208,7 @@ class PairedServer final {
         return reactor_->port();
     }
 
-    [[nodiscard]] auto reactor() noexcept -> glyphastore::experimental::PairedReactorPrototype& {
+    [[nodiscard]] auto reactor() noexcept -> glifistore::experimental::PairedReactorPrototype& {
         return *reactor_;
     }
 
@@ -217,15 +217,15 @@ class PairedServer final {
     }
 
   private:
-    std::unique_ptr<glyphastore::experimental::PairedReactorPrototype> reactor_;
+    std::unique_ptr<glifistore::experimental::PairedReactorPrototype> reactor_;
     std::thread thread_;
     std::atomic_bool stop_requested_{};
     std::atomic_bool failed_{};
 };
 
-[[nodiscard]] auto connect(const std::uint16_t port) -> glyphastore::client::Client {
+[[nodiscard]] auto connect(const std::uint16_t port) -> glifistore::client::Client {
     auto client =
-        glyphastore::client::Client::connect({.host = "127.0.0.1",
+        glifistore::client::Client::connect({.host = "127.0.0.1",
                                               .port = port,
                                               .request_timeout_ms = 30'000,
                                               .maximum_pipeline_requests = 256,
@@ -236,7 +236,7 @@ class PairedServer final {
     return std::move(*client);
 }
 
-void seed(glyphastore::client::Client& client, const Material& material) {
+void seed(glifistore::client::Client& client, const Material& material) {
     for (const auto& key : material.keys) {
         const auto stored = client.put(key_bytes(key), material.value);
         if (!stored.committed()) {
@@ -251,7 +251,7 @@ struct ThreadMeasurement final {
     std::exception_ptr failure;
 };
 
-[[nodiscard]] auto run(std::vector<glyphastore::client::Client>& clients, const Material& material,
+[[nodiscard]] auto run(std::vector<glifistore::client::Client>& clients, const Material& material,
                        const Options& options, std::string implementation, const std::size_t repeat)
     -> Measurement {
     std::vector<ThreadMeasurement> results(clients.size());
@@ -264,7 +264,7 @@ struct ThreadMeasurement final {
             const auto begin = options.operations * client_index / clients.size();
             const auto end = options.operations * (client_index + 1U) / clients.size();
             result.latencies.reserve((end - begin + options.pipeline - 1U) / options.pipeline);
-            std::vector<glyphastore::client::PipelineRequest> requests;
+            std::vector<glifistore::client::PipelineRequest> requests;
             requests.reserve(options.pipeline);
             start_gate.arrive_and_wait();
             try {
@@ -276,8 +276,8 @@ struct ThreadMeasurement final {
                         const auto& key = material.keys[material.order[operation]];
                         const auto put =
                             options.put_percent != 0 && (operation * 37U) % 100U < options.put_percent;
-                        requests.push_back({.opcode = put ? glyphastore::client::PipelineOpcode::put
-                                                          : glyphastore::client::PipelineOpcode::get,
+                        requests.push_back({.opcode = put ? glifistore::client::PipelineOpcode::put
+                                                          : glifistore::client::PipelineOpcode::get,
                                             .key = key_bytes(key),
                                             .value = put ? std::span<const std::byte>{material.update}
                                                          : std::span<const std::byte>{}});
@@ -358,8 +358,8 @@ int main(int argc, char** argv) {
         const auto material = make_material(options);
         CurrentServer current_server{options.clients};
         PairedServer paired_server{options};
-        std::vector<glyphastore::client::Client> current;
-        std::vector<glyphastore::client::Client> paired;
+        std::vector<glifistore::client::Client> current;
+        std::vector<glifistore::client::Client> paired;
         current.reserve(options.clients);
         paired.reserve(options.clients);
         for (std::size_t index = 0; index < options.clients; ++index) {
@@ -371,7 +371,7 @@ int main(int argc, char** argv) {
         const auto pair_before = paired_server.reactor().pair_stats();
         std::vector<Measurement> measurements;
         std::cout << "# paired Reactor TCP A/B\n";
-        glyphastore::bench::print_common_metadata(std::cout, options.warmup, options.repeats);
+        glifistore::bench::print_common_metadata(std::cout, options.warmup, options.repeats);
         std::cout << "# ops=" << options.operations << " keys=" << options.keys
                   << " value_bytes=" << options.value_bytes << " pipeline=" << options.pipeline
                   << " clients=" << options.clients << " put_percent=" << options.put_percent

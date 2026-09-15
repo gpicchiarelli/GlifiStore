@@ -1,15 +1,15 @@
-# GlyphaStore artwork
+# GlifiStore artwork
 
-This directory is the canonical home of the GlyphaStore visual identity.
+This directory is the canonical home of the GlifiStore visual identity.
 
 ## Production source
 
 For Apple platforms, build the app icon in Icon Composer from the three SVG layers under
 `apple/icon-composer/layers/`, in this order:
 
-1. `glyphastore-background-layer.svg`
-2. `glyphastore-g-layer.svg`
-3. `glyphastore-record-layer.svg`
+1. `glifistore-background-layer.svg`
+2. `glifistore-g-layer.svg`
+3. `glifistore-record-layer.svg`
 
 Keep the canvas square and let Icon Composer apply platform masks, materials, shadows, highlights
 and appearance variants. The SVGs deliberately contain no baked mask, glow or drop shadow.
@@ -37,13 +37,13 @@ sets, documentation and third-party packaging.
 All PNGs are square, RGB/RGBA, full-bleed and intentionally have sharp canvas corners. Do not add
 rounded corners: Apple applies the final platform mask.
 
-Artwork in this directory is part of GlyphaStore and is licensed under BSD-3-Clause with the
+Artwork in this directory is part of GlifiStore and is licensed under BSD-3-Clause with the
 project copyright ([LICENSE](../LICENSE), [docs/legal/licensing.md](../docs/legal/licensing.md)).
 Apple documentation links below are external materials under Apple’s copyright.
 
 ## Identity
 
-**GlyphaStore** combines *glyph* — a mark carved into a surface — with *store* — durable,
+**GlifiStore** combines *glyph* — a mark carved into a surface — with *store* — durable,
 addressable memory. The brand idea is **a mark that persists**: *il glifo della memoria*.
 
 The abstract `G` consists of three immutable Segment plates. The copper tile at its centre is one

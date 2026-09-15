@@ -4,14 +4,14 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-export GLYPHASTORE_ROOT="$root"
+export GLIFISTORE_ROOT="$root"
 # shellcheck disable=SC1091
 source "$root/scripts/export-reproducible-build-env.sh"
 
 epoch="${SOURCE_DATE_EPOCH}"
-echo "SOURCE_DATE_EPOCH=$epoch ($(glyphastore_repro_iso8601 "$epoch"))"
+echo "SOURCE_DATE_EPOCH=$epoch ($(glifistore_repro_iso8601 "$epoch"))"
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-repro.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-repro.XXXXXX")"
 cleanup() { rm -rf "$work"; }
 trap cleanup EXIT
 

@@ -1,6 +1,6 @@
 # Packaging and publishing (Go module)
 
-Module path: `github.com/gpicchiarelli/GlyphaStore/sdk/go`
+Module path: `github.com/gpicchiarelli/GlifiStore/sdk/go`
 
 Runtime dependencies: none (stdlib only). License: BSD-3-Clause.
 
@@ -20,18 +20,18 @@ The script:
 1. Confirms vendored wire fixtures match the repository corpus
 2. Asserts `client.Version` matches `VERSION`
 3. Runs `go test ./...` and race tests on `client` / `protocol`
-4. Builds `glyphastore-interop`, `glyphastore-bench`, and `glyphastore-version`
+4. Builds `glifistore-interop`, `glifistore-bench`, and `glifistore-version`
 5. Checks `go mod tidy` cleanliness when supported
 6. Reconstructs a tag-shaped module from tracked files only and reruns its tests
 7. Compiles and runs an external consumer of the snapshot's public `client` and `protocol` packages
-8. Produces a normalized `glyphastore-go-VERSION.tar.gz` from that tracked snapshot
+8. Produces a normalized `glifistore-go-VERSION.tar.gz` from that tracked snapshot
 9. Extracts the archive and rebuilds the interop executable outside the checkout
 10. Writes `sdk/go/dist/package-info.txt`
 
 ## Consumers
 
 ```bash
-go get github.com/gpicchiarelli/GlyphaStore/sdk/go@v0.1.0
+go get github.com/gpicchiarelli/GlifiStore/sdk/go@v0.1.0
 ```
 
 Nested-module tags **must** be of the form:

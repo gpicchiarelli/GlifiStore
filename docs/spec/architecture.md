@@ -1,4 +1,4 @@
-# GlyphaStore Architecture Specification
+# GlifiStore Architecture Specification
 
 Status: normative for the current implementation
 Applies to: repository format and API version `0.1.x`
@@ -7,7 +7,7 @@ Last reviewed: 2026-08-26
 
 ## 1. Purpose and scope
 
-GlyphaStore is an embedded, binary-safe key/value storage engine with an optional TCP daemon. Its
+GlifiStore is an embedded, binary-safe key/value storage engine with an optional TCP daemon. Its
 design optimizes predictable ownership, bounded synchronization, append-oriented persistence, and
 explicit crash-consistency boundaries.
 
@@ -62,7 +62,7 @@ The following statements are requirements, not implementation suggestions:
 flowchart TB
     Caller["C++ / C caller"]
     Client["Protocol-v2 client"]
-    Server["glyphastored: acceptors + Reader/Reactors"]
+    Server["glifistored: acceptors + Reader/Reactors"]
     ABI["C ABI v1 facade"]
     API["Store public C++ API"]
     Pair["ShardPairRuntime: immutable reads + serial mutation execution"]
@@ -123,7 +123,7 @@ the pair's Writer performs mutation and publication before returning a compact c
 one concurrency model with two admission forms, not two storage authorities.
 
 `StoreConcurrencyMode::legacy_mutex` retains the historical Worker-mutex path only as an explicit
-embedded compatibility escape hatch. It is never selectable by `glyphastored`, and paired and
+embedded compatibility escape hatch. It is never selectable by `glifistored`, and paired and
 legacy mutators cannot operate on the same Store instance.
 
 ## 6. Volatile backend
@@ -195,7 +195,7 @@ the offline migration tool. Online resharding and routing-seed rotation are not 
 
 ## 9. TCP runtime
 
-`glyphastored` runs one Reader/Reactor and one serial Writer per shard pair. Linux uses edge-triggered
+`glifistored` runs one Reader/Reactor and one serial Writer per shard pair. Linux uses edge-triggered
 `epoll`; macOS, FreeBSD, and OpenBSD use `kqueue`. Accepted sockets are non-blocking and
 close-on-exec.
 

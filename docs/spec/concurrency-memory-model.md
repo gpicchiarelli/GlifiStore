@@ -1,4 +1,4 @@
-# GlyphaStore Concurrency and Memory Model
+# GlifiStore Concurrency and Memory Model
 
 Status: normative for the current implementation
 Applies to: repository version `0.1.x`

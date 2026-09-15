@@ -11,7 +11,7 @@ is removed from the runtime; recovery scratch maps during segment scan remain of
 
 This is an **independent reimplementation** of SwissTable-style layout ideas popularized by Abseil
 Swiss Tables (Apache-2.0). No Abseil source is included; Abseil’s license does not attach to
-GlyphaStore source. See [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md).
+GlifiStore source. See [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md).
 
 The table is the production shape. SIMD group matching, reference-based keys, and incremental
 resize tuning are performance refinements on this layout, not alternate architectures.

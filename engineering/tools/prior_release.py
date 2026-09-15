@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Select and validate an official prior GlyphaStore release baseline."""
+"""Select and validate an official prior GlifiStore release baseline."""
 
 from __future__ import annotations
 
@@ -139,14 +139,14 @@ def validate(
     ):
         raise PriorReleaseError("prior release manifest disagrees with annotated tag or ABI")
     install_pattern = re.compile(
-        rf"^glyphastore-{re.escape(product_version)}-linux-{re.escape(architecture)}\.tar\.xz$"
+        rf"^glifistore-{re.escape(product_version)}-linux-{re.escape(architecture)}\.tar\.xz$"
     )
     consumer_pattern = re.compile(
-        rf"^glyphastore-abi-v{abi_major}-consumer-{re.escape(product_version)}-linux-"
+        rf"^glifistore-abi-v{abi_major}-consumer-{re.escape(product_version)}-linux-"
         rf"{re.escape(architecture)}\.tar\.xz$"
     )
     wire_client_pattern = re.compile(
-        rf"^glyphastore-wire-v{wire_version}-client-{re.escape(product_version)}-linux-"
+        rf"^glifistore-wire-v{wire_version}-client-{re.escape(product_version)}-linux-"
         rf"{re.escape(architecture)}\.tar\.xz$"
     )
     names = [entry["name"] for entry in manifest["artifacts"]]

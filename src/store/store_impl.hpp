@@ -1,23 +1,23 @@
 #pragma once
 
-#include "glyphastore/core/fault_injection.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/core/types.hpp"
-#include "glyphastore/persistence/bootstrap.hpp"
-#include "glyphastore/persistence/resource_limits.hpp"
-#include "glyphastore/persistence/runtime_catalog.hpp"
-#include "glyphastore/segment/global_manager.hpp"
-#include "glyphastore/segment/record.hpp"
-#include "glyphastore/store/config.hpp"
-#include "glyphastore/store/maintenance.hpp"
-#include "glyphastore/store/maintenance_types.hpp"
-#include "glyphastore/store/paired/shard_pair_runtime.hpp"
-#include "glyphastore/store/prepared_read.hpp"
-#include "glyphastore/store/store.hpp"
-#include "glyphastore/store/value.hpp"
-#include "glyphastore/worker/pool.hpp"
-#include "glyphastore/worker/topology.hpp"
-#include "glyphastore/worker/worker.hpp"
+#include "glifistore/core/fault_injection.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/core/types.hpp"
+#include "glifistore/persistence/bootstrap.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
+#include "glifistore/persistence/runtime_catalog.hpp"
+#include "glifistore/segment/global_manager.hpp"
+#include "glifistore/segment/record.hpp"
+#include "glifistore/store/config.hpp"
+#include "glifistore/store/maintenance.hpp"
+#include "glifistore/store/maintenance_types.hpp"
+#include "glifistore/store/paired/shard_pair_runtime.hpp"
+#include "glifistore/store/prepared_read.hpp"
+#include "glifistore/store/store.hpp"
+#include "glifistore/store/value.hpp"
+#include "glifistore/worker/pool.hpp"
+#include "glifistore/worker/topology.hpp"
+#include "glifistore/worker/worker.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -36,7 +36,7 @@
 #include <variant>
 #include <vector>
 
-namespace glyphastore {
+namespace glifistore {
 namespace store_detail {
 
 [[nodiscard]] inline auto as_string_view(const std::span<const std::byte> bytes) noexcept
@@ -545,4 +545,4 @@ struct detail::PreparedColdRead::State final {
     std::variant<DurableRuntimeCatalog::PinnedRead, DurableRuntimeCatalog::BorrowedPinnedRead> prepared;
 };
 
-} // namespace glyphastore
+} // namespace glifistore

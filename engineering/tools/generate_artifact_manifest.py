@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Record the identity graph of artifacts produced by GlyphaStore packaging CI.
+"""Record the identity graph of artifacts produced by GlifiStore packaging CI.
 
 Every packaged artifact is identified by id, kind, platform, architecture and
 SHA-256, and is bound to the SHA-256 of the sealed source archive it was derived

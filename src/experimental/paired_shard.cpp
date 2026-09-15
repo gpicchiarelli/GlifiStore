@@ -1,9 +1,9 @@
 #include "experimental/paired_shard.hpp"
 
 #include "experimental/spsc_ring.hpp"
-#include "glyphastore/core/integer_math.hpp"
-#include "glyphastore/core/key_hash.hpp"
-#include "glyphastore/index/swiss_control_group.hpp"
+#include "glifistore/core/integer_math.hpp"
+#include "glifistore/core/key_hash.hpp"
+#include "glifistore/index/swiss_control_group.hpp"
 
 #include <algorithm>
 #include <array>
@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::experimental {
+namespace glifistore::experimental {
 namespace {
 
 using Clock = std::chrono::steady_clock;
@@ -138,9 +138,9 @@ class ImmutableReadIndex final {
 
     [[nodiscard]] auto storage_bytes() const noexcept -> std::uint64_t {
         auto result = storage_payload_bytes(control_.capacity(), sizeof(std::uint8_t));
-        result = glyphastore::saturating_add(
+        result = glifistore::saturating_add(
             result, storage_payload_bytes(hashes_.capacity(), sizeof(std::uint64_t)));
-        return glyphastore::saturating_add(result,
+        return glifistore::saturating_add(result,
                                            storage_payload_bytes(records_.capacity(), sizeof(RecordHandle)));
     }
 
@@ -273,15 +273,15 @@ struct DeltaState final {
 
     [[nodiscard]] auto storage_bytes() const noexcept -> std::uint64_t {
         auto result = storage_payload_bytes(flat_pages.capacity(), sizeof(std::shared_ptr<const DeltaPage>));
-        result = glyphastore::saturating_add(
+        result = glifistore::saturating_add(
             result, storage_payload_bytes(page_views.capacity(), sizeof(const DeltaPage*)));
-        result = glyphastore::saturating_add(
+        result = glifistore::saturating_add(
             result,
             storage_payload_bytes(directory.capacity(), sizeof(std::shared_ptr<const DeltaDirectoryBlock>)));
         if (!hierarchical()) {
             for (const auto& page : flat_pages) {
                 if (page) {
-                    result = glyphastore::saturating_add(result, sizeof(DeltaPage));
+                    result = glifistore::saturating_add(result, sizeof(DeltaPage));
                 }
             }
             return result;
@@ -290,10 +290,10 @@ struct DeltaState final {
             if (!block) {
                 continue;
             }
-            result = glyphastore::saturating_add(result, sizeof(DeltaDirectoryBlock));
+            result = glifistore::saturating_add(result, sizeof(DeltaDirectoryBlock));
             for (const auto& page : block->pages) {
                 if (page) {
-                    result = glyphastore::saturating_add(result, sizeof(DeltaPage));
+                    result = glifistore::saturating_add(result, sizeof(DeltaPage));
                 }
             }
         }
@@ -1151,4 +1151,4 @@ auto VolatileShardPairPrototype::stats() const noexcept -> PrototypePairStats {
         .visible_through = impl_->local_publication->visible_through};
 }
 
-} // namespace glyphastore::experimental
+} // namespace glifistore::experimental

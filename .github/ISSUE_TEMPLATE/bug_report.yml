@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible GlyphaStore defect
+description: Report a reproducible GlifiStore defect
 title: "bug: "
 labels: [bug]
 body:

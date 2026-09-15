@@ -40,7 +40,7 @@ shopt -u nullglob
 {
   echo "schema_version=2"
   echo "label=${label}"
-  echo "glyphastore_version=$(tr -d '[:space:]' <"${root}/VERSION")"
+  echo "glifistore_version=$(tr -d '[:space:]' <"${root}/VERSION")"
   echo "persistence_format=1"
   echo "wire_protocol=2"
   echo "packaged_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"

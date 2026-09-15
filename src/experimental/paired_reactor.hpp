@@ -1,14 +1,14 @@
 #pragma once
 
 #include "experimental/paired_shard.hpp"
-#include "glyphastore/core/error.hpp"
+#include "glifistore/core/error.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>
 
-namespace glyphastore::experimental {
+namespace glifistore::experimental {
 
 struct PairedReactorPrototypeConfig final {
     std::size_t maximum_connections{64};
@@ -41,7 +41,7 @@ struct PairedReactorPrototypeStats final {
 };
 
 // Experimental, single-pair cleartext Reactor. It is compiled only into tests
-// and the paired benchmark; glyphastored cannot select it.
+// and the paired benchmark; glifistored cannot select it.
 class PairedReactorPrototype final {
   public:
     [[nodiscard]] static auto create(PairedReactorPrototypeConfig config = {})
@@ -69,4 +69,4 @@ class PairedReactorPrototype final {
     PrototypePairStats published_pair_stats_;
 };
 
-} // namespace glyphastore::experimental
+} // namespace glifistore::experimental

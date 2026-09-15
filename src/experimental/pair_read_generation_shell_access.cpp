@@ -5,7 +5,7 @@
 
 #include <utility>
 
-namespace glyphastore::experimental {
+namespace glifistore::experimental {
 
 auto PairReadGenerationShellAccess::publish_incremental(
     std::shared_ptr<const store::paired::PairReadGeneration> previous,
@@ -92,4 +92,4 @@ void PairReadGenerationShellAccess::destroy_direct(const store::paired::PairRead
     store::paired::PairReadGeneration::destroy_direct(generation, storage);
 }
 
-} // namespace glyphastore::experimental
+} // namespace glifistore::experimental

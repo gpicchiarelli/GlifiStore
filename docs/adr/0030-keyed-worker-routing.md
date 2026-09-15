@@ -4,7 +4,7 @@
 - Date: 2026-07-25
 - Deciders: security / persistence maintainers
 - Applies to: Worker ownership hash; Manifest v1 reserved header field; INIT identity value;
-  `glyphastored --worker-hash-seed`
+  `glifistored --worker-hash-seed`
 - Amends: [ADR 0006](0006-key-routing-hash.md), [ADR 0024](0024-offline-worker-migration.md),
   [ADR 0026](0026-keyed-index-hash-seed.md) (closes the deferred keyed-routing item)
 - Supersedes: none
@@ -13,7 +13,7 @@
 ## Context
 
 SipHash-2-4 is the keyed PRF of Jean-Philippe Aumasson and Daniel J. Bernstein
-(*SipHash: a fast short-input PRF*). GlyphaStore ships independent implementations and paper
+(*SipHash: a fast short-input PRF*). GlifiStore ships independent implementations and paper
 test vectors; see [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md).
 
 ADR 0026 keyed the in-memory Index mix seed but left Worker ownership on public FNV-1a. Threat
@@ -46,8 +46,8 @@ routing seed **must** be durable authority.
    `0`. Compaction refuses algorithm/seed drift.
 4. **Daemon.** `--worker-hash-seed=<u64>` selects SipHash. `--secure-profile` randomizes unless
    pinned. Explicit CLI seed that disagrees with Manifest fails closed on reopen.
-5. **Wire.** FNV INIT remains `GlyphaStore/2`. Keyed INIT is
-   `GlyphaStore/2 || 0x00 || u32 algorithm || u64 seed`. Official C++ client parses and routes.
+5. **Wire.** FNV INIT remains `GlifiStore/2`. Keyed INIT is
+   `GlifiStore/2 || 0x00 || u32 algorithm || u64 seed`. Official C++ client parses and routes.
 6. **Migration.** Offline Worker-count migration copies source algorithm/seed.
 
 ## Consequences

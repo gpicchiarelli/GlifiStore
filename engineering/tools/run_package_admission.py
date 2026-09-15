@@ -388,7 +388,7 @@ def run_admission(
     staged = stage_artifacts(discovered, staged_dir)
 
     parent_source = _file(
-        candidate / f"GlyphaStore-{context['product_version']}.tar.xz", "sealed source archive"
+        candidate / f"GlifiStore-{context['product_version']}.tar.xz", "sealed source archive"
     )
     manifest_path = output_dir / "artifact-manifest.json"
     write_json(

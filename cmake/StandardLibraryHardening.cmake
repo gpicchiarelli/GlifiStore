@@ -2,8 +2,8 @@ include_guard(GLOBAL)
 
 include(CheckCXXSourceCompiles)
 
-function(glyphastore_enable_standard_library_hardening target)
-    if(NOT GLYPHASTORE_ENABLE_STDLIB_HARDENING)
+function(glifistore_enable_standard_library_hardening target)
+    if(NOT GLIFISTORE_ENABLE_STDLIB_HARDENING)
         return()
     endif()
 
@@ -20,7 +20,7 @@ function(glyphastore_enable_standard_library_hardening target)
          #error libc++ debug hardening was not selected
          #endif
          int main() { return 0; }"
-        GLYPHASTORE_HAS_LIBCPP_DEBUG_HARDENING
+        GLIFISTORE_HAS_LIBCPP_DEBUG_HARDENING
     )
 
     set(CMAKE_REQUIRED_DEFINITIONS -D_GLIBCXX_ASSERTIONS)
@@ -30,21 +30,21 @@ function(glyphastore_enable_standard_library_hardening target)
          #error libstdc++ assertions unavailable
          #endif
          int main() { return 0; }"
-        GLYPHASTORE_HAS_GLIBCXX_ASSERTIONS
+        GLIFISTORE_HAS_GLIBCXX_ASSERTIONS
     )
 
     set(CMAKE_REQUIRED_DEFINITIONS "${saved_required_definitions}")
 
-    if(GLYPHASTORE_HAS_LIBCPP_DEBUG_HARDENING)
+    if(GLIFISTORE_HAS_LIBCPP_DEBUG_HARDENING)
         target_compile_definitions(
             ${target} INTERFACE _LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG)
-        message(STATUS "GlyphaStore diagnostic standard library: libc++ debug hardening")
-    elseif(GLYPHASTORE_HAS_GLIBCXX_ASSERTIONS)
+        message(STATUS "GlifiStore diagnostic standard library: libc++ debug hardening")
+    elseif(GLIFISTORE_HAS_GLIBCXX_ASSERTIONS)
         target_compile_definitions(${target} INTERFACE _GLIBCXX_ASSERTIONS)
-        message(STATUS "GlyphaStore diagnostic standard library: libstdc++ assertions")
+        message(STATUS "GlifiStore diagnostic standard library: libstdc++ assertions")
     else()
         message(FATAL_ERROR
-            "GLYPHASTORE_ENABLE_STDLIB_HARDENING=ON, but the selected standard library "
+            "GLIFISTORE_ENABLE_STDLIB_HARDENING=ON, but the selected standard library "
             "supports neither libc++ debug hardening nor libstdc++ assertions")
     endif()
 endfunction()

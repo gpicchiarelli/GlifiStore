@@ -64,7 +64,7 @@ requirements:
   stato: implementato
   descrizione: Absolute / hard-pinned release budgets are machine-readable and linked to
     GATE-PERFORMANCE. Hosted CI must not treat absolute numbers as product claims. Hardware
-    A/B remains specified_waiting_for_runner until glyphastore-linux-perf publishes pass-candidate.
+    A/B remains specified_waiting_for_runner until glifistore-linux-perf publishes pass-candidate.
   autorita:
   - docs/assurance/performance-budgets.md
   - docs/spec/benchmark-standard.md

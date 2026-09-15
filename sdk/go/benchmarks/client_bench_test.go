@@ -5,18 +5,18 @@ import (
 	"os"
 	"testing"
 
-	"github.com/gpicchiarelli/GlyphaStore/sdk/go/client"
+	"github.com/gpicchiarelli/GlifiStore/sdk/go/client"
 )
 
-// Benchmarks against a live glyphastored. Set GLYPHASTORE_BENCH_PORT to enable.
+// Benchmarks against a live glifistored. Set GLIFISTORE_BENCH_PORT to enable.
 func BenchmarkPutGetPipeline(b *testing.B) {
-	port := os.Getenv("GLYPHASTORE_BENCH_PORT")
+	port := os.Getenv("GLIFISTORE_BENCH_PORT")
 	if port == "" {
-		b.Skip("set GLYPHASTORE_BENCH_PORT to run against a live server")
+		b.Skip("set GLIFISTORE_BENCH_PORT to run against a live server")
 	}
 	var p int
 	if _, err := fmt.Sscanf(port, "%d", &p); err != nil || p <= 0 {
-		b.Fatalf("bad GLYPHASTORE_BENCH_PORT=%q", port)
+		b.Fatalf("bad GLIFISTORE_BENCH_PORT=%q", port)
 	}
 	c, err := client.Connect(client.Config{Port: p})
 	if err != nil {
@@ -41,13 +41,13 @@ func BenchmarkPutGetPipeline(b *testing.B) {
 }
 
 func BenchmarkPutGetBatch(b *testing.B) {
-	port := os.Getenv("GLYPHASTORE_BENCH_PORT")
+	port := os.Getenv("GLIFISTORE_BENCH_PORT")
 	if port == "" {
-		b.Skip("set GLYPHASTORE_BENCH_PORT to run against a live server")
+		b.Skip("set GLIFISTORE_BENCH_PORT to run against a live server")
 	}
 	var p int
 	if _, err := fmt.Sscanf(port, "%d", &p); err != nil || p <= 0 {
-		b.Fatalf("bad GLYPHASTORE_BENCH_PORT=%q", port)
+		b.Fatalf("bad GLIFISTORE_BENCH_PORT=%q", port)
 	}
 	c, err := client.Connect(client.Config{Port: p})
 	if err != nil {

@@ -11,9 +11,9 @@ rather than proof. The BSD and macOS backends have not executed it at all.
 
 | Category | Example | Install | Upgrade | Remove | Purge |
 | --- | --- | --- | --- | --- | --- |
-| Program files | `bin/glyphastored`, `lib/libglyphastore.so.*` | installed | replaced | removed | removed |
-| Configuration | `glyphastored.conf` | installed from the sample; an existing file is never overwritten | operator edits preserved | preserved | removed, and the now-empty `/etc/glyphastore` with it |
-| Durable data | Store directory (`/var/lib/glyphastore` on Linux, `/var/db/glyphastore` on FreeBSD) | created, owned by the service account | untouched | preserved | never removed by a package action |
+| Program files | `bin/glifistored`, `lib/libglifistore.so.*` | installed | replaced | removed | removed |
+| Configuration | `glifistored.conf` | installed from the sample; an existing file is never overwritten | operator edits preserved | preserved | removed, and the now-empty `/etc/glifistore` with it |
+| Durable data | Store directory (`/var/lib/glifistore` on Linux, `/var/db/glifistore` on FreeBSD) | created, owned by the service account | untouched | preserved | never removed by a package action |
 | Logs and runtime state | pid files, sockets | created at runtime | untouched | removed if empty | removed if empty |
 
 ## Rules
@@ -31,9 +31,9 @@ rather than proof. The BSD and macOS backends have not executed it at all.
 
 ## Per-backend resolution
 
-`apt purge` removes the configuration and the now-empty `/etc/glyphastore`, and
-leaves `/var/lib/glyphastore` and the service account alone. `dpkg` marks
-`glyphastored.conf` as a conffile, so an operator edit produces a prompt rather
+`apt purge` removes the configuration and the now-empty `/etc/glifistore`, and
+leaves `/var/lib/glifistore` and the service account alone. `dpkg` marks
+`glifistored.conf` as a conffile, so an operator edit produces a prompt rather
 than a silent overwrite; the lifecycle's reinstall states the policy explicitly
 with `--force-confdef --force-confold`, meaning the operator's version wins.
 

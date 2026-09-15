@@ -12,7 +12,7 @@
         "CMAKE_CXX_EXTENSIONS": "OFF",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "BUILD_TESTING": "ON",
-        "GLYPHASTORE_BUILD_BENCHMARKS": "ON"
+        "GLIFISTORE_BUILD_BENCHMARKS": "ON"
       }
     },
     {
@@ -22,7 +22,7 @@
       "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "GLYPHASTORE_FAULT_INJECTION": "ON"
+        "GLIFISTORE_FAULT_INJECTION": "ON"
       }
     },
     {
@@ -37,23 +37,23 @@
       "inherits": "macos-debug",
       "displayName": "macOS ASan + UBSan",
       "cacheVariables": {
-        "GLYPHASTORE_ENABLE_ASAN": "ON",
-        "GLYPHASTORE_ENABLE_UBSAN": "ON"
+        "GLIFISTORE_ENABLE_ASAN": "ON",
+        "GLIFISTORE_ENABLE_UBSAN": "ON"
       }
     },
     {
       "name": "macos-tsan",
       "inherits": "macos-debug",
       "displayName": "macOS TSan",
-      "cacheVariables": { "GLYPHASTORE_ENABLE_TSAN": "ON" }
+      "cacheVariables": { "GLIFISTORE_ENABLE_TSAN": "ON" }
     },
     {
       "name": "macos-correctness",
       "inherits": "macos-debug",
       "displayName": "macOS diagnostic standard-library hardening",
       "cacheVariables": {
-        "GLYPHASTORE_ENABLE_STDLIB_HARDENING": "ON",
-        "GLYPHASTORE_WARNINGS_AS_ERRORS": "ON"
+        "GLIFISTORE_ENABLE_STDLIB_HARDENING": "ON",
+        "GLIFISTORE_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
@@ -61,7 +61,7 @@
       "inherits": "macos-release",
       "displayName": "macOS Release + LTO",
       "cacheVariables": {
-        "GLYPHASTORE_ENABLE_LTO": "ON"
+        "GLIFISTORE_ENABLE_LTO": "ON"
       }
     },
     {
@@ -69,7 +69,7 @@
       "inherits": "macos-release",
       "displayName": "macOS PGO Instrumentation",
       "cacheVariables": {
-        "GLYPHASTORE_PGO": "GENERATE"
+        "GLIFISTORE_PGO": "GENERATE"
       }
     },
     {
@@ -77,8 +77,8 @@
       "inherits": "macos-release",
       "displayName": "macOS PGO Optimized",
       "cacheVariables": {
-        "GLYPHASTORE_PGO": "USE",
-        "GLYPHASTORE_ENABLE_LTO": "ON"
+        "GLIFISTORE_PGO": "USE",
+        "GLIFISTORE_ENABLE_LTO": "ON"
       }
     },
     {
@@ -86,7 +86,7 @@
       "inherits": "macos-release",
       "displayName": "macOS Release (-mcpu=native)",
       "cacheVariables": {
-        "GLYPHASTORE_NATIVE_CPU": "ON"
+        "GLIFISTORE_NATIVE_CPU": "ON"
       }
     },
     {
@@ -95,8 +95,8 @@
       "displayName": "macOS libFuzzer",
       "cacheVariables": {
         "BUILD_TESTING": "OFF",
-        "GLYPHASTORE_BUILD_BENCHMARKS": "OFF",
-        "GLYPHASTORE_BUILD_FUZZERS": "ON"
+        "GLIFISTORE_BUILD_BENCHMARKS": "OFF",
+        "GLIFISTORE_BUILD_FUZZERS": "ON"
       }
     },
     {
@@ -119,7 +119,7 @@
       "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "GLYPHASTORE_FAULT_INJECTION": "ON"
+        "GLIFISTORE_FAULT_INJECTION": "ON"
       }
     },
     {
@@ -135,7 +135,7 @@
       "displayName": "Unix strict ISO C++23 + hardening",
       "cacheVariables": {
         "CMAKE_CXX_EXTENSIONS": "OFF",
-        "GLYPHASTORE_WARNINGS_AS_ERRORS": "ON"
+        "GLIFISTORE_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
@@ -143,37 +143,37 @@
       "inherits": "unix-debug",
       "displayName": "Unix ASan + UBSan",
       "cacheVariables": {
-        "GLYPHASTORE_ENABLE_ASAN": "ON",
-        "GLYPHASTORE_ENABLE_UBSAN": "ON"
+        "GLIFISTORE_ENABLE_ASAN": "ON",
+        "GLIFISTORE_ENABLE_UBSAN": "ON"
       }
     },
     {
       "name": "unix-tsan",
       "inherits": "unix-debug",
       "displayName": "Unix TSan",
-      "cacheVariables": { "GLYPHASTORE_ENABLE_TSAN": "ON" }
+      "cacheVariables": { "GLIFISTORE_ENABLE_TSAN": "ON" }
     },
     {
       "name": "unix-correctness",
       "inherits": "unix-debug",
       "displayName": "Unix diagnostic standard-library hardening",
       "cacheVariables": {
-        "GLYPHASTORE_ENABLE_STDLIB_HARDENING": "ON",
-        "GLYPHASTORE_WARNINGS_AS_ERRORS": "ON"
+        "GLIFISTORE_ENABLE_STDLIB_HARDENING": "ON",
+        "GLIFISTORE_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
       "name": "unix-clang-tidy",
       "inherits": "unix-debug",
       "displayName": "Unix Clang-Tidy",
-      "cacheVariables": { "GLYPHASTORE_ENABLE_CLANG_TIDY": "ON" }
+      "cacheVariables": { "GLIFISTORE_ENABLE_CLANG_TIDY": "ON" }
     },
     {
       "name": "unix-release-lto",
       "inherits": "unix-release",
       "displayName": "Unix Release + LTO",
       "cacheVariables": {
-        "GLYPHASTORE_ENABLE_LTO": "ON"
+        "GLIFISTORE_ENABLE_LTO": "ON"
       }
     },
     {
@@ -181,7 +181,7 @@
       "inherits": "unix-release",
       "displayName": "Unix PGO Instrumentation",
       "cacheVariables": {
-        "GLYPHASTORE_PGO": "GENERATE"
+        "GLIFISTORE_PGO": "GENERATE"
       }
     },
     {
@@ -189,8 +189,8 @@
       "inherits": "unix-release",
       "displayName": "Unix PGO Optimized",
       "cacheVariables": {
-        "GLYPHASTORE_PGO": "USE",
-        "GLYPHASTORE_ENABLE_LTO": "ON"
+        "GLIFISTORE_PGO": "USE",
+        "GLIFISTORE_ENABLE_LTO": "ON"
       }
     },
     {
@@ -199,8 +199,8 @@
       "displayName": "Unix libFuzzer",
       "cacheVariables": {
         "BUILD_TESTING": "OFF",
-        "GLYPHASTORE_BUILD_BENCHMARKS": "OFF",
-        "GLYPHASTORE_BUILD_FUZZERS": "ON"
+        "GLIFISTORE_BUILD_BENCHMARKS": "OFF",
+        "GLIFISTORE_BUILD_FUZZERS": "ON"
       }
     }
   ],

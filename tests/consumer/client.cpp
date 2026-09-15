@@ -1,8 +1,8 @@
-#include "glyphastore/client/client.hpp"
+#include "glifistore/client/client.hpp"
 
 int main() {
-    auto invalid = glyphastore::client::Client::connect({.port = 0});
-    if (!invalid && invalid.error().code == glyphastore::ErrorCode::invalid_argument) {
+    auto invalid = glifistore::client::Client::connect({.port = 0});
+    if (!invalid && invalid.error().code == glifistore::ErrorCode::invalid_argument) {
         return 0;
     }
     return 1;

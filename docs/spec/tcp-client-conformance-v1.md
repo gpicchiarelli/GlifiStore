@@ -12,7 +12,7 @@ owned by:
 - [client semantics v1](client-semantics-v1.md) — deadlines, retries, mutation outcomes
 - [error taxonomy v1](error-taxonomy-v1.md) — portable categories and fixture vectors
 
-Passing this checklist is required for an “official” SDK claim. It does not raise the GlyphaStore
+Passing this checklist is required for an “official” SDK claim. It does not raise the GlifiStore
 product claim ceiling.
 
 ## 1. Session bootstrap (must)
@@ -91,7 +91,7 @@ that matrix or document an explicit waiver.
 | --- | --- |
 | TLS 1.3 outer transport | ADR 0020 / secure-profile; no new opcodes; refuse with AF_UNIX |
 | AF_UNIX dial | ADR 0029; mutually exclusive with TLS |
-| Typed `health` / `ready` / `stats` | Wire opcodes 7–9; OK bodies `GlyphaStore/live`, `GlyphaStore/ready`, bounded `GlyphaStore/stats`; do not treat HEALTH as traffic readiness |
+| Typed `health` / `ready` / `stats` | Wire opcodes 7–9; OK bodies `GlifiStore/live`, `GlifiStore/ready`, bounded `GlifiStore/stats`; do not treat HEALTH as traffic readiness |
 | Typed `backup` | Wire `BACKUP` (10); admin under secure authz; fenced semantics |
 | Per-call request timeout override | Overrides config for that call only; same §6 reset rules |
 | Async cancellation | Poison/reset Worker connection; classify via `bytes_sent` |

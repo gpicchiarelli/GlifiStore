@@ -1,4 +1,4 @@
-# GlyphaStore security implementation roadmap
+# GlifiStore security implementation roadmap
 
 Status: roadmap  
 Applies to: daemon TCP surface, official SDKs, durable namespace ops  
@@ -121,7 +121,7 @@ Phase 2 outer-transport TLS is complete; Phases 3–4 (mTLS principal + capabili
 
 | ID | Deliverable | Acceptance |
 | --- | --- | --- |
-| 2.1 | Daemon secure listen profile (cert, key, CA, min TLS 1.3, cipher policy) | **done** — `TlsContext` + `--tls-cert`/`--tls-key`/`--tls-client-ca`; TLS 1.3-only; explicit AEAD cipher suites; CMake `GLYPHASTORE_ENABLE_TLS` (LibreSSL on OpenBSD, OpenSSL 3.x elsewhere); [secure-profile.md](secure-profile.md) |
+| 2.1 | Daemon secure listen profile (cert, key, CA, min TLS 1.3, cipher policy) | **done** — `TlsContext` + `--tls-cert`/`--tls-key`/`--tls-client-ca`; TLS 1.3-only; explicit AEAD cipher suites; CMake `GLIFISTORE_ENABLE_TLS` (LibreSSL on OpenBSD, OpenSSL 3.x elsewhere); [secure-profile.md](secure-profile.md) |
 | 2.2 | Cleartext vs TLS listeners: explicit flags; no dual-mode “opportunistic TLS” | **done** (2026-07-20) — TLS without `--tls-port` keeps `--port` TLS-only; `--tls-port` enables dual cleartext+TLS on distinct ports (fail closed if ports collide); never opportunistic on one endpoint |
 | 2.3 | Official SDKs: TLS connect options (CA, cert, hostname verify on by default in secure profile) | **done** for C++ / Python / Perl / Go / Erlang / Ruby — opt-in TLS 1.3 (`tls`/`Enable`, `ca_file`/`tls_ca`, `cert_file`/`key_file`, `server_name`, insecure lab escape); fail closed; no silent cleartext fallback |
 | 2.4 | Interop matrix: every SDK PUT→GET over TLS | **done** — `test-sdk-interop.sh` cleartext + TLS matrices (ephemeral certs; Erlang included when OTP available; Perl TLS soft-excluded when `IO::Socket::SSL` is missing) |
@@ -132,21 +132,21 @@ Phase 2 outer-transport TLS is complete; Phases 3–4 (mTLS principal + capabili
 
 ```text
 # Cleartext (default; unchanged)
-glyphastored --bind 127.0.0.1 --port 7379
+glifistored --bind 127.0.0.1 --port 7379
 
 # TLS-only on --port (protocol v2 inside TLS 1.3)
-glyphastored --bind 127.0.0.1 --port 7379 \
+glifistored --bind 127.0.0.1 --port 7379 \
   --tls-cert /path/server.crt --tls-key /path/server.key
 
 # Dual listeners: cleartext on --port, TLS on --tls-port (ADR 0020)
-glyphastored --bind 127.0.0.1 --port 7379 --tls-port 7380 \
+glifistored --bind 127.0.0.1 --port 7379 --tls-port 7380 \
   --tls-cert /path/server.crt --tls-key /path/server.key
 
 # mTLS hook (ADR 0021): require client certs signed by this CA
-glyphastored ... --tls-cert ... --tls-key ... --tls-client-ca /path/clients-ca.crt
+glifistored ... --tls-cert ... --tls-key ... --tls-client-ca /path/clients-ca.crt
 ```
 
-Build: `GLYPHASTORE_ENABLE_TLS=AUTO` (default) enables TLS when LibreSSL/OpenSSL is found;
+Build: `GLIFISTORE_ENABLE_TLS=AUTO` (default) enables TLS when LibreSSL/OpenSSL is found;
 `ON` fails configure if missing; `OFF` forces cleartext-only builds. OpenBSD prefers system
 LibreSSL; macOS/Linux typically need OpenSSL 3.x (`OPENSSL_ROOT_DIR` if not on the default path).
 
@@ -230,7 +230,7 @@ revocation configuration on hostile binds.
 
 | ID | Deliverable | Acceptance |
 | --- | --- | --- |
-| 7.1 | Dependency + secret scanning in CI | **partial** — gitleaks + Trivy fs; PR dependency-review; OpenSSF Scorecard; actionlint + SHA-pin validator (incl. Dependabot `github-actions` SHA/floating-tag discipline check); CodeQL C/C++/Python/Go/Actions (SARIF upload opt-in via `GLYPHASTORE_UPLOAD_SARIF`) |
+| 7.1 | Dependency + secret scanning in CI | **partial** — gitleaks + Trivy fs; PR dependency-review; OpenSSF Scorecard; actionlint + SHA-pin validator (incl. Dependabot `github-actions` SHA/floating-tag discipline check); CodeQL C/C++/Python/Go/Actions (SARIF upload opt-in via `GLIFISTORE_UPLOAD_SARIF`) |
 | 7.2 | SBOM + checksums/signatures for release artifacts | **partial** — checksums + SPDX; checksum-pinned Syft install; tag Cosign keyless bundles; GitHub SLSA attestations; C++ install-prefix SBOM on tags; GitHub Release attach (`.github/workflows/release.yml`); project GPG optional. **Retained-evidence gap:** no tagged Cosign/SBOM/attestation pointers under `engineering/evidence/release/` yet |
 | 7.2a | Copyright / third-party notices | **done** — `NOTICE`, `THIRD_PARTY_NOTICES.md`, `docs/legal/licensing.md`, `REUSE.toml`, install + CI license/notice checks |
 | 7.3 | Fuzz regression intake for parsers (wire + persistence) | Documented owners |

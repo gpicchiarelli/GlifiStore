@@ -56,7 +56,7 @@ line:
 
 - Same-directory **reopen** across binaries that implement Manifest/Segment/Record v1 is the
   supported upgrade path when Worker count is unchanged.
-- Worker-count changes require offline `glyphastore_migrate_store` into a new destination Store.
+- Worker-count changes require offline `glifistore_migrate_store` into a new destination Store.
 - Newer required format versions fail closed on older binaries; there is no automatic downgrade
   rewrite.
 - Cross-release tagged artifact drops use `tests/fixtures/released/<label>/` and
@@ -87,6 +87,6 @@ Cross-release binary compatibility uses the optional `tests/fixtures/released/<l
 `tests/unit/released_artifact_compat_tests.cpp`; packaging is
 `scripts/package-release-compatibility-artifacts.sh`. Wire fixtures are generated independently,
 verified against the C++ codec, and compared byte-for-byte with every official SDK. Crash recovery
-for the persistent v1 runtime is in the `glyphastore_crash_persistence` CTest target and
+for the persistent v1 runtime is in the `glifistore_crash_persistence` CTest target and
 [durability and recovery](durability-recovery.md). Offline Worker reshard evidence is in
 `tests/unit/store_migrate_tests.cpp` and [store-migration](store-migration.md).

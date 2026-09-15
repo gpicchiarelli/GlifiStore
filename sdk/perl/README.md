@@ -1,12 +1,12 @@
-# GlyphaStore Perl client
+# GlifiStore Perl client
 
-Native synchronous Perl client for GlyphaStore wire protocol v2. It uses only core modules, keeps
+Native synchronous Perl client for GlifiStore wire protocol v2. It uses only core modules, keeps
 one bound TCP connection per Worker, supports arbitrary byte strings, retries safe reads (including
 transient `unavailable` reconnects while routing metadata is stable), and preserves indeterminate
 mutation outcomes. Portable error/retry/deadline rules:
 [client semantics v1](../../docs/spec/client-semantics-v1.md).
 
-Worker routing follows ADR 0030: plain `GlyphaStore/2` is FNV-1a; the extended INIT identity selects SipHash-2-4.
+Worker routing follows ADR 0030: plain `GlifiStore/2` is FNV-1a; the extended INIT identity selects SipHash-2-4.
 
 **Security posture:** cleartext TCP by default (no authentication). Opt-in TLS 1.3 via
 `tls => 1` with `tls_ca` / `ca_file`, `cert_file` / `key_file` (mTLS), `server_name`, and
@@ -18,14 +18,14 @@ License: BSD-3-Clause. Requires Perl ≥ 5.32.
 
 ### Thread and fork contract
 
-`GlyphaStore::Client` is **not** shareable across ithreads and has no internal mutexes. Do not use
+`GlifiStore::Client` is **not** shareable across ithreads and has no internal mutexes. Do not use
 sockets created before `fork` in the child; open a new client per process (and per thread if you
 use threads). Prefer `execute_worker_pipelines` to overlap Workers inside one process.
 
 ```perl
-use GlyphaStore::Client;
+use GlifiStore::Client;
 
-my $cache = GlyphaStore::Client->connect(host => '127.0.0.1', port => 7379);
+my $cache = GlifiStore::Client->connect(host => '127.0.0.1', port => 7379);
 my $stored = $cache->put("session\x00key", "payload");
 my $value = $cache->get("session\x00key") if $stored->{outcome} eq 'committed';
 $cache->close;
@@ -48,7 +48,7 @@ my $ordered = $cache->execute_batch(\@mixed_worker_requests);
 From CPAN (once published):
 
 ```bash
-cpanm GlyphaStore
+cpanm GlifiStore
 ```
 
 From this source tree:
@@ -70,7 +70,7 @@ cd sdk/perl && perl Makefile.PL && make && make test && make install
 The packaging script also installs the normalized tarball under an isolated prefix and reruns the
 suite away from its source tree, preventing local `lib/` files from masking packaging defects.
 
-`GlyphaStore::Protocol` exposes the full bidirectional codec and FNV-1a Worker routing. See
+`GlifiStore::Protocol` exposes the full bidirectional codec and FNV-1a Worker routing. See
 [PACKAGING.md](PACKAGING.md) for PAUSE/MetaCPAN upload steps.
 
 ## Performance model

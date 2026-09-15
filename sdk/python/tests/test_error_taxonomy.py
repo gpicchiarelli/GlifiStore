@@ -9,7 +9,7 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = PACKAGE_ROOT.parents[1]
 sys.path.insert(0, str(PACKAGE_ROOT / "src"))
 
-from glyphastore.client import (  # noqa: E402
+from glifistore.client import (  # noqa: E402
     Client,
     MutationOutcome,
     _enrich,

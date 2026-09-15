@@ -1,4 +1,4 @@
-#include "glyphastore/client/client.hpp"
+#include "glifistore/client/client.hpp"
 #include "test.hpp"
 
 #include <cstdint>
@@ -30,24 +30,24 @@ constexpr TaxonomyCase kCases[] = {
 
 } // namespace
 
-GLYPHA_TEST("error taxonomy maps wire status to category and retryability") {
+GLIFI_TEST("error taxonomy maps wire status to category and retryability") {
     for (const auto& expected : kCases) {
-        const auto error = glyphastore::client::error_from_wire_status(expected.wire_status);
-        GLYPHA_REQUIRE(error.category == expected.category);
-        GLYPHA_REQUIRE(error.wire_status.has_value());
-        GLYPHA_REQUIRE(*error.wire_status == expected.wire_status);
-        GLYPHA_REQUIRE(error.retryability == expected.read_retryability);
+        const auto error = glifistore::client::error_from_wire_status(expected.wire_status);
+        GLIFI_REQUIRE(error.category == expected.category);
+        GLIFI_REQUIRE(error.wire_status.has_value());
+        GLIFI_REQUIRE(*error.wire_status == expected.wire_status);
+        GLIFI_REQUIRE(error.retryability == expected.read_retryability);
         // Read-path mapping leaves mutation_outcome empty; fixture outcome is via helper.
-        GLYPHA_REQUIRE(error.mutation_outcome.empty());
-        GLYPHA_REQUIRE(glyphastore::client::portable_mutation_outcome(expected.wire_status) ==
+        GLIFI_REQUIRE(error.mutation_outcome.empty());
+        GLIFI_REQUIRE(glifistore::client::portable_mutation_outcome(expected.wire_status) ==
                        expected.mutation_outcome);
 
         const bool indeterminate = expected.mutation_outcome == "indeterminate";
-        const auto mutation_retry = glyphastore::client::portable_retryability(
+        const auto mutation_retry = glifistore::client::portable_retryability(
             expected.category, /*mutation_sent=*/true, indeterminate);
-        GLYPHA_REQUIRE(mutation_retry == expected.mutation_retryability);
+        GLIFI_REQUIRE(mutation_retry == expected.mutation_retryability);
 
         // Unhealthy statuses are WRONG_OWNER / NOT_BOUND (client marks session unusable).
-        GLYPHA_REQUIRE(expected.unhealthy == (expected.wire_status == 6 || expected.wire_status == 7));
+        GLIFI_REQUIRE(expected.unhealthy == (expected.wire_status == 6 || expected.wire_status == 7));
     }
 }

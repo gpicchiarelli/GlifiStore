@@ -43,18 +43,18 @@ jobs:
         run: |
           cmake --preset unix-debug
           cmake --build --preset unix-debug --target \
-            glyphastored \
-            glyphastore_interop_client \
-            glyphastore_verify_store \
-            glyphastore_backup_store \
-            glyphastore_repair_store
+            glifistored \
+            glifistore_interop_client \
+            glifistore_verify_store \
+            glifistore_backup_store \
+            glifistore_repair_store
       - name: Exercise backup / drain / corruption runbooks
         env:
-          GLYPHASTORED: ${{ github.workspace }}/build/unix-debug/glyphastored
-          GLYPHASTORE_INTEROP_CLIENT: ${{ github.workspace }}/build/unix-debug/glyphastore_interop_client
-          GLYPHASTORE_VERIFY_STORE: ${{ github.workspace }}/build/unix-debug/glyphastore_verify_store
-          GLYPHASTORE_BACKUP_STORE: ${{ github.workspace }}/build/unix-debug/glyphastore_backup_store
-          GLYPHASTORE_REPAIR_STORE: ${{ github.workspace }}/build/unix-debug/glyphastore_repair_store
+          GLIFISTORED: ${{ github.workspace }}/build/unix-debug/glifistored
+          GLIFISTORE_INTEROP_CLIENT: ${{ github.workspace }}/build/unix-debug/glifistore_interop_client
+          GLIFISTORE_VERIFY_STORE: ${{ github.workspace }}/build/unix-debug/glifistore_verify_store
+          GLIFISTORE_BACKUP_STORE: ${{ github.workspace }}/build/unix-debug/glifistore_backup_store
+          GLIFISTORE_REPAIR_STORE: ${{ github.workspace }}/build/unix-debug/glifistore_repair_store
         run: ./scripts/exercise_ops_runbooks.sh
 
   soak:
@@ -77,7 +77,7 @@ jobs:
           CXX: clang++
         run: |
           cmake --preset unix-debug
-          cmake --build --preset unix-debug --target glyphastored glyphastore_interop_client
+          cmake --build --preset unix-debug --target glifistored glifistore_interop_client
       - name: Resolve soak duration
         id: soak
         run: |
@@ -90,7 +90,7 @@ jobs:
           fi
       - name: Run soak
         env:
-          GLYPHASTORED: ${{ github.workspace }}/build/unix-debug/glyphastored
-          GLYPHASTORE_INTEROP_CLIENT: ${{ github.workspace }}/build/unix-debug/glyphastore_interop_client
+          GLIFISTORED: ${{ github.workspace }}/build/unix-debug/glifistored
+          GLIFISTORE_INTEROP_CLIENT: ${{ github.workspace }}/build/unix-debug/glifistore_interop_client
           SOAK_SECONDS: ${{ steps.soak.outputs.seconds }}
         run: ./scripts/soak_daemon.sh --seconds "$SOAK_SECONDS"

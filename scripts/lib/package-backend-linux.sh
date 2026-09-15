@@ -8,8 +8,8 @@
 # and writes the check plan and the evidence itself.
 #
 # Both dispatch modes are opt-in because both are destructive or expensive:
-#   GLYPHASTORE_PACKAGE_CI_CONTAINER=1  build and install inside the pinned image
-#   GLYPHASTORE_PACKAGE_CI_NATIVE=1     build and install on this host, as root
+#   GLIFISTORE_PACKAGE_CI_CONTAINER=1  build and install inside the pinned image
+#   GLIFISTORE_PACKAGE_CI_NATIVE=1     build and install on this host, as root
 # Without either, the backend reports the metadata rows it really resolved and
 # BLOCKED or NOT_RUN for the rest.
 #
@@ -21,8 +21,8 @@
 linux_backend_candidate() {
   local candidate="$1"
   [[ -n "$candidate" ]] || return 0
-  GLYPHASTORE_CANDIDATE_DIR="$candidate"
-  export GLYPHASTORE_CANDIDATE_DIR
+  GLIFISTORE_CANDIDATE_DIR="$candidate"
+  export GLIFISTORE_CANDIDATE_DIR
 }
 
 linux_backend_run() {

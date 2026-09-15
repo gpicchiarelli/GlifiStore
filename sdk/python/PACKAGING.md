@@ -9,7 +9,7 @@ This directory is a self-contained Python distribution. Runtime dependencies: no
 - Canonical wire fixtures under `tests/fixtures/` (vendored; must match repository
   `tests/fixtures/wire_*_v2.hex`). Refresh with `./scripts/sync-sdk-fixtures.sh`
   after changing the repository corpus.
-- License: BSD-3-Clause (`LICENSE`), matching the GlyphaStore project
+- License: BSD-3-Clause (`LICENSE`), matching the GlifiStore project
 
 ## Local verification
 
@@ -31,9 +31,9 @@ With a TLS daemon and the C++/Go interop peers already built, the wheel can also
 the fail-closed installed-artifact secure-profile matrix:
 
 ```bash
-GLYPHASTORED=/path/to/glyphastored \
-GLYPHASTORE_INTEROP_CLIENT=/path/to/glyphastore_interop_client \
-GLYPHASTORE_GO_INTEROP=/path/to/glyphastore-interop \
+GLIFISTORED=/path/to/glifistored \
+GLIFISTORE_INTEROP_CLIENT=/path/to/glifistore_interop_client \
+GLIFISTORE_GO_INTEROP=/path/to/glifistore-interop \
 ./scripts/test-secure-profile-installed-artifacts.sh
 ```
 
@@ -47,14 +47,14 @@ python -m twine check dist/*
 
 Artifacts land in `sdk/python/dist/`:
 
-- `glyphastore-0.1.0.tar.gz` (sdist)
-- `glyphastore-0.1.0-py3-none-any.whl` (wheel)
+- `glifistore-0.1.0.tar.gz` (sdist)
+- `glifistore-0.1.0-py3-none-any.whl` (wheel)
 
 ## Publish to TestPyPI
 
 ```bash
 python -m twine upload --repository testpypi dist/*
-pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple glyphastore
+pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple glifistore
 ```
 
 ## Publish to PyPI
@@ -63,11 +63,11 @@ pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/
 python -m twine upload dist/*
 ```
 
-Use a PyPI API token scoped to the `glyphastore` project. Do not commit tokens.
+Use a PyPI API token scoped to the `glifistore` project. Do not commit tokens.
 
 ## Version bump checklist
 
-1. Bump `__version__` in `src/glyphastore/__init__.py` (single source; `pyproject.toml` is dynamic)
+1. Bump `__version__` in `src/glifistore/__init__.py` (single source; `pyproject.toml` is dynamic)
 2. Update root `VERSION` and every other official SDK in lockstep (or land an ADR)
 3. Update `CHANGELOG.md`
 4. Run `./scripts/check-sdk-versions.sh` and `./scripts/package-python-client.sh`

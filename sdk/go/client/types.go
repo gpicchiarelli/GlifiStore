@@ -3,7 +3,7 @@ package client
 import (
 	"time"
 
-	"github.com/gpicchiarelli/GlyphaStore/sdk/go/protocol"
+	"github.com/gpicchiarelli/GlifiStore/sdk/go/protocol"
 )
 
 // MutationOutcome classifies standalone PUT/ERASE results.

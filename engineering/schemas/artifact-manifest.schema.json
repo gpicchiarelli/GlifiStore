@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.dev/schemas/artifact-manifest-v1.json",
-  "title": "GlyphaStore packaging artifact graph",
+  "$id": "https://glifistore.dev/schemas/artifact-manifest-v1.json",
+  "title": "GlifiStore packaging artifact graph",
   "description": "Identity graph for artifacts produced by packaging CI: every artifact is bound to the sealed parent source archive it was derived from. This manifest accompanies release-manifest.schema.json (the release bundle authority) and does not replace it. Produced by engineering/tools/generate_artifact_manifest.py.",
   "type": "object",
   "additionalProperties": false,

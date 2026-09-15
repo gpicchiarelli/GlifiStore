@@ -1,6 +1,6 @@
 #include "persistence/recovery/recovery_budget.hpp"
 
-namespace glyphastore::recovery {
+namespace glifistore::recovery {
 
 RecoveryMemoryBudget::RecoveryMemoryBudget(const std::uint64_t maximum) : maximum_(maximum) {}
 
@@ -26,4 +26,4 @@ auto RecoveryMemoryBudget::retain_repeated(const std::uint64_t unit, const std::
     return retain(unit * static_cast<std::uint64_t>(count));
 }
 
-} // namespace glyphastore::recovery
+} // namespace glifistore::recovery

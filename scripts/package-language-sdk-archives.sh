@@ -7,7 +7,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-export GLYPHASTORE_ROOT="$root"
+export GLIFISTORE_ROOT="$root"
 # shellcheck disable=SC1091
 source "$root/scripts/export-reproducible-build-env.sh"
 
@@ -20,11 +20,11 @@ source "$root/scripts/export-reproducible-build-env.sh"
 "$root/scripts/package-erlang-client.sh"
 
 shopt -s nullglob
-python_wheels=("$root"/sdk/python/dist/glyphastore-*.whl)
-perl_tarballs=("$root"/sdk/perl/dist/GlyphaStore-*.tar.gz)
-ruby_gems=("$root"/sdk/ruby/dist/glyphastore-*.gem)
-go_archives=("$root"/sdk/go/dist/glyphastore-go-*.tar.gz)
-erlang_archives=("$root"/sdk/erlang/dist/glyphastore-erlang-*.tar.gz)
+python_wheels=("$root"/sdk/python/dist/glifistore-*.whl)
+perl_tarballs=("$root"/sdk/perl/dist/GlifiStore-*.tar.gz)
+ruby_gems=("$root"/sdk/ruby/dist/glifistore-*.gem)
+go_archives=("$root"/sdk/go/dist/glifistore-go-*.tar.gz)
+erlang_archives=("$root"/sdk/erlang/dist/glifistore-erlang-*.tar.gz)
 shopt -u nullglob
 
 missing=()

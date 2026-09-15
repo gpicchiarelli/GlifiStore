@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Cross-SDK post-install matrix against a package-installed GlyphaStore daemon.
+# Cross-SDK post-install matrix against a package-installed GlifiStore daemon.
 #
 # scripts/test-secure-profile-installed-artifacts.sh already proves the
 # C++/Python/Perl/Ruby/Go/Erlang SDKs against a distributed daemon. This wrapper
@@ -9,12 +9,12 @@
 # as a packaged-daemon proof.
 #
 # Inputs (environment):
-#   GLYPHASTORE_PACKAGE_DAEMON    installed glyphastored path (default: $GLYPHASTORED)
-#   GLYPHASTORE_PACKAGE_FILE_LIST file inventory owned by the package manager,
+#   GLIFISTORE_PACKAGE_DAEMON    installed glifistored path (default: $GLIFISTORED)
+#   GLIFISTORE_PACKAGE_FILE_LIST file inventory owned by the package manager,
 #                                 one absolute path per line, as produced by
 #                                 dpkg -L / rpm -ql / pkg list / pkg_info -L /
 #                                 port contents / brew list
-#   GLYPHASTORE_PACKAGE_PREFIX    installed prefix (default: dirname of the daemon)
+#   GLIFISTORE_PACKAGE_PREFIX    installed prefix (default: dirname of the daemon)
 #   INSTALLED_INTEROP_PROFILE     secure (default) or plain
 #
 # The report written to --report is the only claim this script makes. Missing
@@ -44,9 +44,9 @@ done
 [[ -n "$report" ]] || usage
 command -v python3 >/dev/null 2>&1 || { echo "error: python3 is required" >&2; exit 1; }
 
-daemon="${GLYPHASTORE_PACKAGE_DAEMON:-${GLYPHASTORED:-}}"
-file_list="${GLYPHASTORE_PACKAGE_FILE_LIST:-}"
-prefix="${GLYPHASTORE_PACKAGE_PREFIX:-}"
+daemon="${GLIFISTORE_PACKAGE_DAEMON:-${GLIFISTORED:-}}"
+file_list="${GLIFISTORE_PACKAGE_FILE_LIST:-}"
+prefix="${GLIFISTORE_PACKAGE_PREFIX:-}"
 languages=""
 
 # Writes the report through the schema, so a malformed or over-claiming report
@@ -106,7 +106,7 @@ blocked() {
 }
 
 if [[ -z "$daemon" || -z "$file_list" ]]; then
-  not_run "GLYPHASTORE_PACKAGE_DAEMON and GLYPHASTORE_PACKAGE_FILE_LIST are required to claim a package-installed daemon; neither is inferred"
+  not_run "GLIFISTORE_PACKAGE_DAEMON and GLIFISTORE_PACKAGE_FILE_LIST are required to claim a package-installed daemon; neither is inferred"
 fi
 [[ -x "$daemon" ]] || blocked "the declared packaged daemon is not executable: $daemon"
 [[ -f "$file_list" && ! -L "$file_list" ]] || blocked "the package file inventory is missing or not a regular file: $file_list"
@@ -139,11 +139,11 @@ shopt -s nullglob
 missing=()
 for name in python perl ruby go erlang; do
   case "$name" in
-    python) found=("$root/sdk/python/dist/glyphastore-"*.whl) ;;
-    perl) found=("$root/sdk/perl/dist/GlyphaStore-"*.tar.gz) ;;
-    ruby) found=("$root/sdk/ruby/dist/glyphastore-"*.gem) ;;
-    go) found=("$root/sdk/go/dist/glyphastore-go-"*.tar.gz) ;;
-    erlang) found=("$root/sdk/erlang/dist/glyphastore-erlang-"*.tar.gz) ;;
+    python) found=("$root/sdk/python/dist/glifistore-"*.whl) ;;
+    perl) found=("$root/sdk/perl/dist/GlifiStore-"*.tar.gz) ;;
+    ruby) found=("$root/sdk/ruby/dist/glifistore-"*.gem) ;;
+    go) found=("$root/sdk/go/dist/glifistore-go-"*.tar.gz) ;;
+    erlang) found=("$root/sdk/erlang/dist/glifistore-erlang-"*.tar.gz) ;;
   esac
   (( ${#found[@]} == 1 )) || missing+=("$name")
 done
@@ -156,11 +156,11 @@ if (( ${#missing[@]} > 0 )); then
 fi
 
 profile="${INSTALLED_INTEROP_PROFILE:-secure}"
-log="$(mktemp "${TMPDIR:-/tmp}/glyphastore-installed-sdk-matrix.XXXXXX")"
+log="$(mktemp "${TMPDIR:-/tmp}/glifistore-installed-sdk-matrix.XXXXXX")"
 status=0
 env \
-  GLYPHASTORED="$daemon" \
-  GLYPHASTORE_CPP_PREFIX="$prefix" \
+  GLIFISTORED="$daemon" \
+  GLIFISTORE_CPP_PREFIX="$prefix" \
   INSTALLED_INTEROP_PROFILE="$profile" \
   "$root/scripts/test-secure-profile-installed-artifacts.sh" >"$log" 2>&1 || status=$?
 cat "$log"

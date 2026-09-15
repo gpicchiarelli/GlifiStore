@@ -2,7 +2,7 @@
 
 Date: 2026-08-02
 Preset: `macos-release` (Apple Silicon)
-Harness: `glyphastore_allocation_fault_tests` (process-wide allocation fault arm)
+Harness: `glifistore_allocation_fault_tests` (process-wide allocation fault arm)
 
 ## Hole fixed
 

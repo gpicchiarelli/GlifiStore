@@ -1,8 +1,8 @@
-#include "glyphastore/server/connection_handoff.hpp"
+#include "glifistore/server/connection_handoff.hpp"
 
 #include <utility>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 
 ConnectionHandoffMesh::ConnectionHandoffMesh(const std::size_t executor_count,
                                              const std::size_t queue_capacity) {
@@ -54,4 +54,4 @@ auto ConnectionHandoffMesh::has_pending(const std::size_t executor) const noexce
     return endpoints_[executor]->pending.load(std::memory_order_acquire) != 0;
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

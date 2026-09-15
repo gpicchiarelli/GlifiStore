@@ -477,7 +477,7 @@ hazards:
   - tests/crash/crash_backup.cpp
   - tests/crash/crash_backup_wire.cpp
   - tests/crash/crash_backup_daemon.cpp
-  rischio_residuo: Zero-fence hot backup deferred (ADR 0034); online path remains admission-fenced; Store + in-process Server/wire + real glyphastored exec mid-BACKUP kill covered (lab hooks)
+  rischio_residuo: Zero-fence hot backup deferred (ADR 0034); online path remains admission-fenced; Store + in-process Server/wire + real glifistored exec mid-BACKUP kill covered (lab hooks)
   stato: mitigato
   accettazione_rischio: Online backup is fenced not zero-impact; operator verify required before promotion
   requisiti:
@@ -905,7 +905,7 @@ hazards:
   rischio_residuo: La matrice cross-SDK package-installed ha PASS nightly trattenuti per deb/rpm
     (run 34666166603); admitted resta false finche package-upgrade non esercita un predecessore
     SemVer N-1 sigillato. Linux deb/rpm, FreeBSD/OpenBSD e MacPorts/Homebrew implementano
-    install→seed→upgrade→verify quando GLYPHASTORE_N1_PACKAGE_DIR fornisce quei byte (mai
+    install→seed→upgrade→verify quando GLIFISTORE_N1_PACKAGE_DIR fornisce quei byte (mai
     ricostruiti da HEAD); manca ancora un PASS trattenuto su pacchetti N-1 pubblicati. I
     lifecycle nativi MacPorts/Homebrew e BSD restano senza run trattenuto, quindi la difesa
     positiva non e ancora completa

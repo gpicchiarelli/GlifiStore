@@ -1,6 +1,6 @@
 # Prototipo volatile a coppia Reader–Writer
 
-Status: sperimentale, lab-only (test e benchmark dedicati; non raggiungibile da `glyphastored`)
+Status: sperimentale, lab-only (test e benchmark dedicati; non raggiungibile da `glifistored`)
 Applies to: prototipo volatile Reader–Writer e Reactor TCP a coppia singola sotto `src/experimental/`
 Owner: storage, networking e performance maintainers
 Last reviewed: 2026-08-27
@@ -56,10 +56,10 @@ incrementino push/pop di nessuna ring.
 
 ## Confinamento
 
-`paired_shard.cpp` e `paired_reactor.cpp` vengono compilati direttamente in `glyphastore_tests` e
-nei target `glyphastore_paired_benchmark` / `glyphastore_paired_reactor_benchmark`. Non appartengono
-a `glyphastore_core` o `glyphastore_server_core`, non sono installati e non sono raggiungibili da
-`glyphastored`. Il prototipo non apre Segment persistenti e non cambia Store, wire v2 o persistence
+`paired_shard.cpp` e `paired_reactor.cpp` vengono compilati direttamente in `glifistore_tests` e
+nei target `glifistore_paired_benchmark` / `glifistore_paired_reactor_benchmark`. Non appartengono
+a `glifistore_core` o `glifistore_server_core`, non sono installati e non sono raggiungibili da
+`glifistored`. Il prototipo non apre Segment persistenti e non cambia Store, wire v2 o persistence
 v1. Questa separazione impedisce un'attivazione accidentale del runtime incompleto.
 
 ## Reclamation implementata
@@ -93,8 +93,8 @@ classifica comunque ogni mutazione già ammessa con un completion esplicito.
 - Il Reactor è cleartext, volatile e a coppia singola: non implementa TLS, handoff, durable cold
   read, Segment v1, durability, rotation, recovery o compaction.
 - Il prototipo implementa una sola coppia e non certifica scaling.
-- Il benchmark `glyphastore_paired_benchmark` resta un microbenchmark del motore; il nuovo
-  `glyphastore_paired_reactor_benchmark` è invece wire-to-wire, usa lo stesso client pubblico e
+- Il benchmark `glifistore_paired_benchmark` resta un microbenchmark del motore; il nuovo
+  `glifistore_paired_reactor_benchmark` è invece wire-to-wire, usa lo stesso client pubblico e
   interlaccia baseline corrente e prototipo. Le latenze TCP attuali sono di completamento batch,
   non ancora istogrammi separati per singolo GET e PUT.
 
@@ -118,7 +118,7 @@ architetturale richiede ancora lo stesso protocol path, Segment immutabili, dura
   ASan+UBSan e TSan; il contatore `generation_slot_reuses` prova che il test non si limita a slot
   mai riutilizzati;
 - benchmark A/B interleaved GET 100% e GET/PUT 95/5 nel target dedicato
-  `glyphastore_paired_benchmark`.
+  `glifistore_paired_benchmark`.
 - secondo gate P0: delta paged e record stabili portano il 95/5 a 11,30 Mops/s (64 B) e
   10,90 Mops/s (1 KiB), superando rispettivamente la baseline di 2,15× e 4,57×.
 - directory ownership persistente + vista Reader piatta riducono del 65% circa le copie di handle
@@ -140,7 +140,7 @@ architetturale richiede ancora lo stesso protocol path, Segment immutabili, dura
 ## Prossimo gate
 
 Il prototipo sotto `src/experimental/` resta **lab-only**: non è un secondo runtime selezionabile e
-non verrà promosso in `glyphastored`. Il daemon di produzione è già il modello paired
+non verrà promosso in `glifistored`. Il daemon di produzione è già il modello paired
 ([ADR 0031](../adr/paired-reader-writer-shards.md), [server model](server-model.md)).
 
 I residuali di adozione e performance sono i gate P1 del piano di produzione, non un cutover del
@@ -150,7 +150,7 @@ prototipo volatile ([paired-shards-plan](../benchmarks/paired-shards-plan.md)):
    hard-pinned ([paired-delta-directory-chunks-2026-07-31](../benchmarks/paired-delta-directory-chunks-2026-07-31.md));
 2. P1 — `get-into` / scatter multi-extent: **rejected** pending bounded+win proof
    ([paired-get-into-multi-extent-reject-2026-07-31](../benchmarks/paired-get-into-multi-extent-reject-2026-07-31.md));
-3. P1 — A/B 1/2/4/8 pair Linux hard-pinned: harness ready, waiting on `glyphastore-linux-perf`
+3. P1 — A/B 1/2/4/8 pair Linux hard-pinned: harness ready, waiting on `glifistore-linux-perf`
    ([paired-shards-linux-p1](../benchmarks/paired-shards-linux-p1.md));
 4. P1 — backend I/O Linux opzionale: **deferred** for 0.1.0 (no proven win without ordering risk).
 

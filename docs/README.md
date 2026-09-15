@@ -1,18 +1,18 @@
-# GlyphaStore documentation system
+# GlifiStore documentation system
 
-This directory is the entry point for GlyphaStore's technical documentation. Its purpose is to
+This directory is the entry point for GlifiStore's technical documentation. Its purpose is to
 make the project maintainable without relying on oral history or knowledge held by one maintainer.
 
 ## Current implementation boundary
 
-For 0.1.0, `glyphastored` uses a single runtime: paired Reader–Writer shard pairs
+For 0.1.0, `glifistored` uses a single runtime: paired Reader–Writer shard pairs
 ([ADR 0031](adr/paired-reader-writer-shards.md)). Each pair has one Reader/Reactor and one serial
 Writer connected by bounded SPSC mutation and completion lanes; GET adopts an immutable
 `ReadGeneration` on the Reader. There is no second selectable daemon model.
 
 The volatile TCP engine under `src/experimental/` (`paired_shard` / `paired_reactor`) remains
 **lab-only**: compiled into tests and dedicated benchmarks, not installed, and not reachable from
-`glyphastored`. Residual P1 performance and Linux hard-pinned A/B work is tracked in the
+`glifistored`. Residual P1 performance and Linux hard-pinned A/B work is tracked in the
 benchmark plan — it does not reopen a dual-runtime choice.
 
 - Daemon runtime: [architecture specification](spec/architecture.md) and
@@ -65,7 +65,7 @@ format, acknowledgement point, ownership rule, or compatibility guarantee.
 
 ## Normative and versioned specifications
 
-"Versioned" describes the contract domain; it does not mean the GlyphaStore product has reached a
+"Versioned" describes the contract domain; it does not mean the GlifiStore product has reached a
 stable release. The current release-claim ceiling remains architectural prototype.
 
 | Document | Authority |
@@ -101,7 +101,7 @@ algorithms. Their stable rules are summarized by the specifications above. In pa
 - `paired-write-pressure-coordinator.md` records measured write-path costs, rejected wait/notification
   policies, and the pressure-aware coordinator boundary that still requires evidence before wiring;
 - `paired-shard-volatile-prototype.md` records the lab-only volatile TCP prototype under
-  `src/experimental/`; it is not the `glyphastored` runtime;
+  `src/experimental/`; it is not the `glifistored` runtime;
 - `where-performance-matters.md` frames when engine speed helps real apps (and when it does not);
 - `sdk-roadmap.md` prioritizes shared SDK contract work versus more languages.
 

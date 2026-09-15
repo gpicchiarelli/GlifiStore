@@ -160,4 +160,4 @@ and BSD rows; platform results remain separate.
 - crash matrix: passed;
 - assurance validation: 30 requirements, 30 hazards, 26 gates, 2 waivers, zero warnings.
 
-These checks do not change the project claim ceiling: GlyphaStore remains an architectural prototype.
+These checks do not change the project claim ceiling: GlifiStore remains an architectural prototype.

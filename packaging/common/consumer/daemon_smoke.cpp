@@ -1,14 +1,14 @@
 // Protocol-v2 driver for the packaging lifecycle checks.
 //
-// Built from outside the GlyphaStore checkout against an installed package and
-// run against the packaged glyphastored. Every packaging backend uses this one
+// Built from outside the GlifiStore checkout against an installed package and
+// run against the packaged glifistored. Every packaging backend uses this one
 // binary for health, PUT, exact GET, ERASE, NOT_FOUND and BACKUP so that the
 // checks do not quietly fall back to the in-tree SDKs.
 //
 // Each invocation performs exactly one operation and reports the outcome through
 // the exit status, which keeps the retained logs readable as evidence.
 
-#include <glyphastore/client/client.hpp>
+#include <glifistore/client/client.hpp>
 
 #include <cstdint>
 #include <iostream>
@@ -24,7 +24,7 @@ constexpr int exit_operation = 4;
 constexpr int exit_mismatch = 5;
 
 void usage() {
-    std::cerr << "usage: glyphastore_daemon_smoke --port N [--host H] [--timeout-ms N]\n"
+    std::cerr << "usage: glifistore_daemon_smoke --port N [--host H] [--timeout-ms N]\n"
                  "                               --command "
                  "{health|put|get|erase|expect-not-found|backup}\n"
                  "                               [--key K] [--value V] [--expect V] "
@@ -42,7 +42,7 @@ auto option(std::string_view name, int& index, int argc, char** argv, std::strin
     return true;
 }
 
-auto describe(const glyphastore::Error& error) -> std::string {
+auto describe(const glifistore::Error& error) -> std::string {
     std::string text = error.message;
     if (!error.category.empty()) {
         text += " [" + error.category + "]";
@@ -91,13 +91,13 @@ int main(int argc, char** argv) try {
         return exit_usage;
     }
 
-    glyphastore::client::ClientConfig config{};
+    glifistore::client::ClientConfig config{};
     config.host = host;
     config.port = static_cast<std::uint16_t>(parsed_port);
     config.connect_timeout_ms = static_cast<std::uint32_t>(parsed_timeout);
     config.request_timeout_ms = static_cast<std::uint32_t>(parsed_timeout);
 
-    auto connected = glyphastore::client::Client::connect(config);
+    auto connected = glifistore::client::Client::connect(config);
     if (!connected) {
         std::cerr << "connect failed: " << describe(connected.error()) << '\n';
         return exit_connect;
@@ -183,7 +183,7 @@ int main(int argc, char** argv) try {
             std::cerr << "expected NOT_FOUND but the key still resolves\n";
             return exit_mismatch;
         }
-        if (got.error().code != glyphastore::ErrorCode::not_found) {
+        if (got.error().code != glifistore::ErrorCode::not_found) {
             std::cerr << "expected NOT_FOUND, observed: " << describe(got.error()) << '\n';
             return exit_mismatch;
         }
@@ -194,6 +194,6 @@ int main(int argc, char** argv) try {
     usage();
     return exit_usage;
 } catch (const std::exception& error) {
-    std::cerr << "glyphastore_daemon_smoke failed: " << error.what() << '\n';
+    std::cerr << "glifistore_daemon_smoke failed: " << error.what() << '\n';
     return exit_usage;
 }

@@ -4,7 +4,7 @@
     {
       "id": "capability-bitmask-combinations",
       "check": "clang-analyzer-optin.core.EnumCastOutOfRange",
-      "file": "include/glyphastore/server/authz.hpp",
+      "file": "include/glifistore/server/authz.hpp",
       "message": "The value '*' provided to the cast expression is not in the valid range of values for 'Capability'",
       "classification": "D",
       "rationale": "Capability is an explicitly uint8_t-backed flags type. operator| forms only combinations of the three declared bits, normalize_capabilities tests those bits, and no value is used as an enum discriminator. The analyzer models only named enumerators and therefore rejects valid flag combinations."
@@ -12,7 +12,7 @@
     {
       "id": "io-interest-bitmask-combinations",
       "check": "clang-analyzer-optin.core.EnumCastOutOfRange",
-      "file": "include/glyphastore/server/poller.hpp",
+      "file": "include/glifistore/server/poller.hpp",
       "message": "The value '*' provided to the cast expression is not in the valid range of values for 'IoInterest'",
       "classification": "D",
       "rationale": "IoInterest is an explicitly uint8_t-backed two-bit flags type. The only constructed combination is read|write and consumers inspect individual bits; the analyzer treats the flags type as a closed discriminator."
@@ -20,7 +20,7 @@
     {
       "id": "io-flags-bitmask-combinations",
       "check": "clang-analyzer-optin.core.EnumCastOutOfRange",
-      "file": "include/glyphastore/server/poller.hpp",
+      "file": "include/glifistore/server/poller.hpp",
       "message": "The value '*' provided to the cast expression is not in the valid range of values for 'IoFlags'",
       "classification": "D",
       "rationale": "IoFlags is an explicitly uint8_t-backed four-bit flags type populated by the poller backends. operator| combines only declared bits and every consumer uses has_flag; the analyzer cannot represent unnamed but valid bit combinations."
@@ -28,7 +28,7 @@
     {
       "id": "generation-retirement-preallocated-vector",
       "check": "bugprone-exception-escape",
-      "file": "include/glyphastore/store/paired/publication_coordinator.hpp",
+      "file": "include/glifistore/store/paired/publication_coordinator.hpp",
       "message": "an exception may be thrown in function 'install_writer_generation' which should not throw exceptions",
       "classification": "D",
       "rationale": "Every Lane reserves kMaximumRetiredReadGenerations cells during construction. Admission is checked immediately before push_back, shared_ptr copy/move is non-throwing, and a contract breach terminates before publication. clang-tidy does not propagate the reserved-capacity invariant across callers."
@@ -103,7 +103,7 @@
       "file": "src/server/poller_kqueue.cpp",
       "message": "integer to pointer cast pessimizes optimization opportunities",
       "classification": "D",
-      "rationale": "The kqueue kevent ABI exposes udata as an opaque void pointer. GlyphaStore round-trips the uint64 connection token through uintptr_t without dereferencing it; the cast is the platform ABI boundary and is guarded by pointer-width static assertions."
+      "rationale": "The kqueue kevent ABI exposes udata as an opaque void pointer. GlifiStore round-trips the uint64 connection token through uintptr_t without dereferencing it; the cast is the platform ABI boundary and is guarded by pointer-width static assertions."
     },
     {
       "id": "reactor-preallocated-close",

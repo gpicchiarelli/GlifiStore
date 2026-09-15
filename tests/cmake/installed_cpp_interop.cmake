@@ -1,18 +1,18 @@
 cmake_minimum_required(VERSION 3.25)
 
-foreach(required IN ITEMS GLYPHASTORE_BINARY_DIR GLYPHASTORE_SOURCE_DIR
-                          GLYPHASTORE_TEST_ROOT GLYPHASTORE_BASH)
+foreach(required IN ITEMS GLIFISTORE_BINARY_DIR GLIFISTORE_SOURCE_DIR
+                          GLIFISTORE_TEST_ROOT GLIFISTORE_BASH)
     if(NOT DEFINED ${required} OR "${${required}}" STREQUAL "")
         message(FATAL_ERROR "${required} is required")
     endif()
 endforeach()
 
-file(REMOVE_RECURSE "${GLYPHASTORE_TEST_ROOT}")
-set(prefix "${GLYPHASTORE_TEST_ROOT}/prefix")
-set(output "${GLYPHASTORE_TEST_ROOT}/glyphastore-interop-cpp")
+file(REMOVE_RECURSE "${GLIFISTORE_TEST_ROOT}")
+set(prefix "${GLIFISTORE_TEST_ROOT}/prefix")
+set(output "${GLIFISTORE_TEST_ROOT}/glifistore-interop-cpp")
 
 execute_process(
-    COMMAND "${CMAKE_COMMAND}" --install "${GLYPHASTORE_BINARY_DIR}" --prefix "${prefix}"
+    COMMAND "${CMAKE_COMMAND}" --install "${GLIFISTORE_BINARY_DIR}" --prefix "${prefix}"
     RESULT_VARIABLE install_result
     OUTPUT_VARIABLE install_output
     ERROR_VARIABLE install_error
@@ -23,10 +23,10 @@ endif()
 
 execute_process(
     COMMAND "${CMAKE_COMMAND}" -E env "CMAKE=${CMAKE_COMMAND}"
-            "CXX=${GLYPHASTORE_CXX_COMPILER}"
-            "GLYPHASTORE_SANITIZERS=${GLYPHASTORE_SANITIZERS}"
-            "${GLYPHASTORE_BASH}"
-            "${GLYPHASTORE_SOURCE_DIR}/scripts/build-installed-cpp-interop.sh"
+            "CXX=${GLIFISTORE_CXX_COMPILER}"
+            "GLIFISTORE_SANITIZERS=${GLIFISTORE_SANITIZERS}"
+            "${GLIFISTORE_BASH}"
+            "${GLIFISTORE_SOURCE_DIR}/scripts/build-installed-cpp-interop.sh"
             "${prefix}" "${output}"
     RESULT_VARIABLE build_result
     OUTPUT_VARIABLE build_output

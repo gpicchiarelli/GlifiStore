@@ -46,7 +46,7 @@ jobs:
           format: sarif
           output: trivy-fs.sarif
       - name: Upload Trivy SARIF
-        if: ${{ always() && vars.GLYPHASTORE_UPLOAD_SARIF == 'true' }}
+        if: ${{ always() && vars.GLIFISTORE_UPLOAD_SARIF == 'true' }}
         # The Trivy scan above remains the blocking security gate. Publishing
         # is opt-in because code scanning may be disabled even when the token
         # has security-events access. Enable the repository variable only when

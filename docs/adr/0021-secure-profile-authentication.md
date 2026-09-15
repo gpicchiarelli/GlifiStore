@@ -3,7 +3,7 @@
 - Status: accepted
 - Date: 2026-07-20
 - Deciders: security maintainers, networking maintainers
-- Applies to: `glyphastored` secure profile; official SDK credential options
+- Applies to: `glifistored` secure profile; official SDK credential options
 - Amends: none
 - Supersedes: none
 - Depends on: [ADR 0020](0020-tls-outer-transport.md)
@@ -18,7 +18,7 @@ FreeBSD, and **OpenBSD**, including environments that use LibreSSL and may later
 ## Decision drivers
 
 - Fail closed: secure profile rejects anonymous peers.
-- Prefer standard TLS mechanisms over inventing a GlyphaStore crypto handshake.
+- Prefer standard TLS mechanisms over inventing a GlifiStore crypto handshake.
 - Credential material must not appear in logs, errors, or core-dump–friendly default diagnostics.
 - Same principal model across all official SDKs.
 - OpenBSD: client certificates and CA files must be compatible with LibreSSL verification.

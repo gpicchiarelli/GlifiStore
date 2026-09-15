@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate or independently verify GlyphaStore v1 format fixtures."""
+"""Generate or independently verify GlifiStore v1 format fixtures."""
 
 from __future__ import annotations
 

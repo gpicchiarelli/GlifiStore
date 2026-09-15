@@ -7,7 +7,7 @@ macOS advisory affinity remain **inconclusive** for this P1. Closure needs an is
 with hard CPU pins, NUMA binding, `perf`, disjoint client/server CPU lists, zero unexpected
 `cpu-migrations`, and a working set above LLC.
 
-Evidence class: `hardware` only after runner `glyphastore-linux-perf` publishes
+Evidence class: `hardware` only after runner `glifistore-linux-perf` publishes
 `status=pass-candidate`. Absolute budget placeholders remain
 `specified_waiting_for_runner` — see
 [`performance-budgets.md`](../assurance/performance-budgets.md) and
@@ -15,7 +15,7 @@ Evidence class: `hardware` only after runner `glyphastore-linux-perf` publishes
 
 Wave 6 is **blocked** on:
 
-1. `glyphastore-linux-perf` self-hosted runner + retained pass-candidate;
+1. `glifistore-linux-perf` self-hosted runner + retained pass-candidate;
 2. Physical E3 durability lab (separate campaign; not this A/B script).
 
 Do not invent runner results. Do not claim `ACCETTATA_PER_RILASCIO`, E3, or E4 from this harness alone.
@@ -33,8 +33,8 @@ Do not invent runner results. Do not claim `ACCETTATA_PER_RILASCIO`, E3, or E4 f
 ```bash
 # Linux self-hosted / dedicated box (Wave 6 matrix)
 SERVER_CPUS=0-7 CLIENT_CPUS=8-15 NUMA_NODE=0 \
-OLD_BIN=/path/to/baseline/glyphastore_server_benchmarks \
-NEW_BIN=/path/to/candidate/glyphastore_server_benchmarks \
+OLD_BIN=/path/to/baseline/glifistore_server_benchmarks \
+NEW_BIN=/path/to/candidate/glifistore_server_benchmarks \
 PAIRS='1 2 4 8' \
 CHECK_CPU_MIGRATION=1 \
 LATENCY_SAMPLE_STRIDE=1 \
@@ -95,7 +95,7 @@ Order: interleaved `old/new/new/old`. Invalid if responses, request ids, or fina
 ## CI
 
 `.github/workflows/paired-linux-performance.yml` is `workflow_dispatch` only and skips unless the
-runner label `glyphastore-linux-perf` is present (self-hosted). Hosted Ubuntu jobs must not claim
+runner label `glifistore-linux-perf` is present (self-hosted). Hosted Ubuntu jobs must not claim
 this gate.
 
 ## Residual

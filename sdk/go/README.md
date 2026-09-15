@@ -1,6 +1,6 @@
-# GlyphaStore Go client
+# GlifiStore Go client
 
-Native Go client for GlyphaStore wire protocol v2. It opens one TCP connection per Worker
+Native Go client for GlifiStore wire protocol v2. It opens one TCP connection per Worker
 (`TCP_NODELAY`), routes binary keys with canonical FNV-1a 64-bit, retries safe reads after a
 transient disconnect, and never reports an uncertain mutation as rejected.
 
@@ -10,9 +10,9 @@ categories, monotonic request deadlines, at-most-one automatic retry, and
 `ExecuteBatch` groups by Worker, overlaps goroutines, and restores caller order.
 `ExecuteWorkerPipelines` accepts one pre-sharded vector per Worker.
 
-Worker routing follows ADR 0030: plain `GlyphaStore/2` is FNV-1a; the extended INIT identity selects SipHash-2-4.
+Worker routing follows ADR 0030: plain `GlifiStore/2` is FNV-1a; the extended INIT identity selects SipHash-2-4.
 
-Module: `github.com/gpicchiarelli/GlyphaStore/sdk/go`  
+Module: `github.com/gpicchiarelli/GlifiStore/sdk/go`  
 Version: `client.Version` (must match repository `VERSION`)  
 License: BSD-3-Clause. Requires Go ≥ 1.27.  
 Packaging: [PACKAGING.md](PACKAGING.md)
@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gpicchiarelli/GlyphaStore/sdk/go/client"
+	"github.com/gpicchiarelli/GlifiStore/sdk/go/client"
 )
 
 func main() {
@@ -62,7 +62,7 @@ func main() {
 ## Install
 
 ```bash
-go get github.com/gpicchiarelli/GlyphaStore/sdk/go@latest
+go get github.com/gpicchiarelli/GlifiStore/sdk/go@latest
 ```
 
 From this source tree:
@@ -77,7 +77,7 @@ cd sdk/go && go test ./...
 | --- | --- |
 | `protocol` | Wire codec, FNV/SipHash routing, golden fixture tests |
 | `client` | Sync TCP/AF_UNIX client (Get/Put/Erase/Ping/Backup/Health/Ready/Stats, pipeline, batch; TLS not with AF_UNIX) |
-| `cmd/glyphastore-interop` | CLI for `scripts/test-sdk-interop.sh` |
+| `cmd/glifistore-interop` | CLI for `scripts/test-sdk-interop.sh` |
 
 ## Online backup
 
@@ -88,7 +88,7 @@ reconciliation and are not blindly retried.
 
 ## Benchmarks
 
-Against a live `glyphastored` (same PUT/GET pipeline matrix as Python/Perl):
+Against a live `glifistored` (same PUT/GET pipeline matrix as Python/Perl):
 
 ```bash
 ./scripts/benchmark_go_client.sh
@@ -97,8 +97,8 @@ Against a live `glyphastored` (same PUT/GET pipeline matrix as Python/Perl):
 Or build the harness and point it at an existing server:
 
 ```bash
-cd sdk/go && go build -o bin/glyphastore-bench ./cmd/glyphastore-bench
-./bin/glyphastore-bench --port 7379 --workers 4 --ops 100000 --pipeline 128 --execution concurrent
+cd sdk/go && go build -o bin/glifistore-bench ./cmd/glifistore-bench
+./bin/glifistore-bench --port 7379 --workers 4 --ops 100000 --pipeline 128 --execution concurrent
 ```
 
 Use `--execution batch` to measure mixed-owner `ExecuteBatch` grouping and fan-out. The benchmark

@@ -38,9 +38,9 @@ it, plus a reset that is confirmed below the process boundary (and ideally a phy
 
 1. Clean git worktree at the commit under test.
 2. Built tree containing at least:
-   - `glyphastore_tests`
-   - `glyphastore_allocation_fault_tests`
-   - `glyphastore_crash_persistence`
+   - `glifistore_tests`
+   - `glifistore_allocation_fault_tests`
+   - `glifistore_crash_persistence`
    - daemon crash binaries required by the E2 collector
 3. Linux: root/`sudo` for loop, mount, fsck, optional `dm-flakey` (`e2fsprogs`, `lvm2`).
 4. macOS: ability to run `hdiutil` attach/detach and `diskutil`; non-interactive `sudo` for the
@@ -52,13 +52,13 @@ Suggested builds:
 ```bash
 cmake --preset unix-debug    # Linux
 cmake --build --preset unix-debug --target \
-  glyphastore_tests glyphastore_allocation_fault_tests \
-  glyphastore_crash_persistence glyphastore_crash_daemon glyphastored
+  glifistore_tests glifistore_allocation_fault_tests \
+  glifistore_crash_persistence glifistore_crash_daemon glifistored
 
 cmake --preset macos-debug   # macOS
 cmake --build --preset macos-debug --target \
-  glyphastore_tests glyphastore_allocation_fault_tests \
-  glyphastore_crash_persistence glyphastore_crash_daemon glyphastored
+  glifistore_tests glifistore_allocation_fault_tests \
+  glifistore_crash_persistence glifistore_crash_daemon glifistored
 ```
 
 ## Pin the row (before any E3 arming)
@@ -81,8 +81,8 @@ The orchestrator runs stages in order and stops further heavy stages after a har
 
 | Stage | Mechanism | Default command inside orchestrator |
 |---|---|---|
-| E0 | Unit / codec / reopen | `ctest -R '^glyphastore_tests$'` |
-| E1 | Allocation fault injection | `ctest -R '^glyphastore_allocation_fault_tests$'` |
+| E0 | Unit / codec / reopen | `ctest -R '^glifistore_tests$'` |
+| E1 | Allocation fault injection | `ctest -R '^glifistore_allocation_fault_tests$'` |
 | E2 | Process-kill collector | `collect-durability-evidence.sh --run process-kill` |
 | E3 | Block-reset harness | `run-e3-block-reset.sh --profile campaign` |
 
@@ -127,7 +127,7 @@ Campaign-level result:
 ```bash
 sudo -v   # harness needs privileged loop/mount/fsck
 ./scripts/run-e3-campaign.sh \
-  --output "$HOME/glypha-evidence/e3-campaign-$(date -u +%Y%m%dT%H%M%SZ)" \
+  --output "$HOME/glifi-evidence/e3-campaign-$(date -u +%Y%m%dT%H%M%SZ)" \
   --build-dir build/unix-debug \
   --pin-label lab-host-ext4-loop-a \
   --hardware-class diskimage-rehearsal \
@@ -145,7 +145,7 @@ sudo -v   # harness needs privileged loop/mount/fsck
 
 ```bash
 ./scripts/run-e3-campaign.sh \
-  --output "$HOME/glypha-evidence/e3-campaign-$(date -u +%Y%m%dT%H%M%SZ)" \
+  --output "$HOME/glifi-evidence/e3-campaign-$(date -u +%Y%m%dT%H%M%SZ)" \
   --build-dir build/macos-debug \
   --pin-label lab-mac-apfs-image-a \
   --hardware-class diskimage-rehearsal \

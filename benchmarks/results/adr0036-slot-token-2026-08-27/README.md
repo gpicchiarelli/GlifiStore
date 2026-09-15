@@ -2,7 +2,7 @@
 
 Date: 2026-08-27
 Host: Apple arm64, macOS, Apple Clang
-Scope: lab-only `glyphastore_paired_benchmark`; not the official production publication path.
+Scope: lab-only `glifistore_paired_benchmark`; not the official production publication path.
 
 ## Method
 
@@ -43,4 +43,4 @@ local cost is within diagnostic noise. Do **not** promote the slot pool to produ
 remains proposed; durable refresh/crash integration and a production-congruent interleaved V11/V12
 campaign remain open.
 
-GlyphaStore remains an architectural prototype.
+GlifiStore remains an architectural prototype.

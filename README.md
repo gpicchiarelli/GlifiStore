@@ -1,27 +1,27 @@
 <p align="center">
-  <img src="artwork/apple/raster/glyphastore-app-icon-128.png" width="72" height="72" alt="GlyphaStore logo">
+  <img src="artwork/apple/raster/glifistore-app-icon-128.png" width="72" height="72" alt="GlifiStore logo">
 </p>
 
-<h1 align="center">GlyphaStore</h1>
+<h1 align="center">GlifiStore</h1>
 
 <p align="center">
   <strong>A segmented, log-indexed, memory-first key-value store in C++23.</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/gpicchiarelli/GlyphaStore/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/gpicchiarelli/GlyphaStore/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://github.com/gpicchiarelli/GlyphaStore/actions/workflows/benchmarks.yml"><img alt="Benchmarks" src="https://github.com/gpicchiarelli/GlyphaStore/actions/workflows/benchmarks.yml/badge.svg"></a>
+  <a href="https://github.com/gpicchiarelli/GlifiStore/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/gpicchiarelli/GlifiStore/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/gpicchiarelli/GlifiStore/actions/workflows/benchmarks.yml"><img alt="Benchmarks" src="https://github.com/gpicchiarelli/GlifiStore/actions/workflows/benchmarks.yml/badge.svg"></a>
   <a href="CHANGELOG.md"><img alt="Version 0.1.0" src="https://img.shields.io/badge/version-0.1.0-blue"></a>
   <a href="#project-status"><img alt="Architectural prototype" src="https://img.shields.io/badge/status-architectural%20prototype-orange"></a>
   <a href="LICENSE"><img alt="BSD-3-Clause" src="https://img.shields.io/badge/license-BSD--3--Clause-blue"></a>
 </p>
 
-![GlyphaStore storage engine laboratory](docs/assets/glyphastore-hero.png)
+![GlifiStore storage engine laboratory](docs/assets/glifistore-hero.png)
 
-GlyphaStore stores opaque binary keys and values in one logical key-space. Keys are routed to
+GlifiStore stores opaque binary keys and values in one logical key-space. Keys are routed to
 independent paired Reader–Writer ownership domains; immutable records are appended to fixed 64 MiB
 Segments and an exact-key Index points to the latest visible record. The project can be embedded
-through the C++ API or the separately versioned C ABI, or run through the native `glyphastored`
+through the C++ API or the separately versioned C ABI, or run through the native `glifistored`
 daemon and wire protocol v2.
 
 It is a key-value engine, not a SQL or document database. See
@@ -61,7 +61,7 @@ PUT/ERASE ── Reader ── SPSC ── Writer ── append Record ─┤
 GET       <── ReadGeneration (Reader-local) <── Segment ┘
 ```
 
-For 0.1.0, `glyphastored` runs only the paired Reader–Writer model ([ADR 0031](docs/adr/paired-reader-writer-shards.md)):
+For 0.1.0, `glifistored` runs only the paired Reader–Writer model ([ADR 0031](docs/adr/paired-reader-writer-shards.md)):
 each shard pair has one Reader/Reactor and one serial Writer. After `INIT`, a client binds each
 connection to one owner id; if necessary, the daemon hands the socket and its buffered state to the
 owning Reader exactly once. Requests for a different owner return `WRONG_OWNER` and are not
@@ -71,7 +71,7 @@ the compatibility name `worker_count` for the shard-pair count. `--shard-pairs` 
 daemon option; `--workers` is its deprecated 0.1.x alias.
 
 The volatile TCP engine under `src/experimental/` is a **lab-only** prototype (tests and dedicated
-benchmarks). It is not installed and is not reachable from `glyphastored`. Residual P1 performance
+benchmarks). It is not installed and is not reachable from `glifistored`. Residual P1 performance
 gates are tracked in [paired-shards-plan.md](docs/benchmarks/paired-shards-plan.md).
 
 Authoritative details live in the [architecture specification](docs/spec/architecture.md),
@@ -109,24 +109,24 @@ sanitizers, fuzzing and hardening options are in [docs/development.md](docs/deve
 ### Run the daemon
 
 ```bash
-./build/macos-debug/glyphastored --bind 127.0.0.1 --port 7379 --shard-pairs 4
+./build/macos-debug/glifistored --bind 127.0.0.1 --port 7379 --shard-pairs 4
 ```
 
 Use the corresponding `build/unix-debug` path on Linux or BSD. The default endpoint is cleartext
 loopback with volatile storage. A durable deployment is explicit:
 
 ```bash
-./build/macos-release/glyphastored \
+./build/macos-release/glifistored \
   --profile production \
-  --data-dir /private/path/to/glyphastore \
+  --data-dir /private/path/to/glifistore \
   --bind 127.0.0.1 --port 7379
 ```
 
 Inspect every resolved default and override without opening a Store or listener:
 
 ```bash
-./build/macos-release/glyphastored --profile production \
-  --data-dir /private/path/to/glyphastore --dump-config
+./build/macos-release/glifistored --profile production \
+  --data-dir /private/path/to/glifistore --dump-config
 ```
 
 The [CLI reference](docs/cli.md) documents configuration precedence, profiles, durable limits,
@@ -159,8 +159,8 @@ Use the [public C++ API reference](docs/reference/cpp-api.md),
 [platform evidence matrix](docs/architecture/platform-durability-evidence.md) for the exact
 acknowledgement and recovery contracts.
 
-The installed shared-library boundary is C ABI v1 (`GlyphaStore::abi` or
-`pkg-config glyphastore-abi`). Its deliberately smaller surface and compatibility limits are in the
+The installed shared-library boundary is C ABI v1 (`GlifiStore::abi` or
+`pkg-config glifistore-abi`). Its deliberately smaller surface and compatibility limits are in the
 [C ABI specification](docs/spec/c-abi-v1.md) and [ABI guide](docs/abi/README.md). The C++ ABI remains
 unstable before 1.0, and an ABI contract does not raise the product above architectural-prototype
 status.
@@ -173,7 +173,7 @@ one Worker; batch APIs group by Worker and restore caller order. A batch is not 
 
 | Language | Implementation | Concurrency surface |
 | --- | --- | --- |
-| [C++](docs/reference/cpp-client-api.md) | Installable `GlyphaStore::client` library | Thread-safe Worker connections; pipeline and batch |
+| [C++](docs/reference/cpp-client-api.md) | Installable `GlifiStore::client` library | Thread-safe Worker connections; pipeline and batch |
 | [Python](sdk/python/README.md) | Standard-library sync and `asyncio` clients | Thread-safe sync client; native async client |
 | [Perl](sdk/perl/README.md) | Synchronous, binary-safe client | One client per process/thread; concurrent per-Worker pipelines in one select loop |
 | [Go](sdk/go/README.md) | Synchronous native module | Mutex per Worker; batch fan-out with goroutines |
@@ -193,7 +193,7 @@ release state are tracked by the [SDK roadmap](docs/architecture/sdk-roadmap.md)
 
 > [!NOTE]
 > Keyed SipHash Worker routing ([ADR 0030](docs/adr/0030-keyed-worker-routing.md)) is implemented by
-> the daemon and every official SDK (C++ / Python / Perl / Go / Erlang / Ruby): plain `GlyphaStore/2`
+> the daemon and every official SDK (C++ / Python / Perl / Go / Erlang / Ruby): plain `GlifiStore/2`
 > keeps FNV-1a; the extended INIT identity selects SipHash-2-4. Secure-profile smoke
 > (`scripts/test-secure-profile-interop.sh`, CI) covers mTLS, authz, prefix, CRL, quotas, and keyed
 > routing for cpp/python/go plus perl/ruby/erlang when those toolchains are present.
@@ -222,7 +222,7 @@ output is intentionally gitignored.
 
 ## Manual pages
 
-Installed Runtime builds ship portable mdoc manuals (`man 8 glyphastored`, `man 7 glyphastore`,
+Installed Runtime builds ship portable mdoc manuals (`man 8 glifistored`, `man 7 glifistore`,
 and section-1 pages for offline tools). See [`man/README.md`](man/README.md).
 
 ## Documentation
@@ -259,7 +259,7 @@ multi-tenant deployment. Read [SECURITY.md](SECURITY.md) before reporting a vuln
 
 ## Contributing and license
 
-Development and review rules are in [CONTRIBUTING.md](CONTRIBUTING.md). GlyphaStore is licensed
+Development and review rules are in [CONTRIBUTING.md](CONTRIBUTING.md). GlifiStore is licensed
 under BSD-3-Clause; see [LICENSE](LICENSE), [NOTICE](NOTICE), and
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Licensing policy:
 [docs/legal/licensing.md](docs/legal/licensing.md).

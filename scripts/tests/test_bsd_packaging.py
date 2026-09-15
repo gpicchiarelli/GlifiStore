@@ -20,7 +20,7 @@ class BsdPackagingTests(unittest.TestCase):
             validate(ROOT, release=True)
 
     def test_release_mode_does_not_require_a_circular_source_archive_distinfo(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="glyphastore-bsd-release-test-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="glifistore-bsd-release-test-") as temporary:
             copied = Path(temporary)
             shutil.copy2(ROOT / "VERSION", copied / "VERSION")
             shutil.copy2(ROOT / "ABI_VERSION", copied / "ABI_VERSION")
@@ -39,7 +39,7 @@ class BsdPackagingTests(unittest.TestCase):
         for script in (freebsd_script, openbsd_script):
             self.assertIn("cmake --install", script)
             self.assertIn("tests/consumer/abi.c", script)
-            self.assertIn("pkg-config --cflags --libs glyphastore-abi", script)
+            self.assertIn("pkg-config --cflags --libs glifistore-abi", script)
             self.assertIn('LD_LIBRARY_PATH="$install_root/lib"', script)
         freebsd_workflow = (ROOT / ".github/workflows/freebsd.yml").read_text(encoding="utf-8")
         openbsd_workflow = (ROOT / ".github/workflows/openbsd-libressl.yml").read_text(
@@ -55,11 +55,11 @@ class BsdPackagingTests(unittest.TestCase):
             self.assertIn("if (( native_status != 0 )); then", workflow)
         self.assertIn("fail-fast: false", openbsd_workflow)
         self.assertEqual(openbsd_workflow.count("shard_index:"), 2)
-        self.assertIn("GLYPHASTORE_TEST_SHARD_COUNT=2", openbsd_workflow)
-        self.assertIn("GLYPHASTORE_TEST_SHARD_INDEX=${{ matrix.shard_index }}", openbsd_workflow)
+        self.assertIn("GLIFISTORE_TEST_SHARD_COUNT=2", openbsd_workflow)
+        self.assertIn("GLIFISTORE_TEST_SHARD_INDEX=${{ matrix.shard_index }}", openbsd_workflow)
         self.assertIn("openbsd-${{ matrix.shard_label }}.log", openbsd_workflow)
-        self.assertIn("GLYPHASTORE_TEST_SHARD_COUNT", openbsd_script)
-        self.assertIn("GLYPHASTORE_TEST_SHARD_INDEX", openbsd_script)
+        self.assertIn("GLIFISTORE_TEST_SHARD_COUNT", openbsd_script)
+        self.assertIn("GLIFISTORE_TEST_SHARD_INDEX", openbsd_script)
         self.assertIn('ctest --preset "$preset" --verbose --timeout 900', openbsd_script)
         self.assertIn("ensure_go_toolchain", openbsd_script)
         self.assertIn("1.27.1", openbsd_script)
@@ -68,7 +68,7 @@ class BsdPackagingTests(unittest.TestCase):
         self.assertIn('actual_sha="$(sha256 -q "$work/$archive")"', openbsd_script)
 
     def test_abi_drift_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="glyphastore-bsd-port-test-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="glifistore-bsd-port-test-") as temporary:
             copied = Path(temporary)
             shutil.copy2(ROOT / "VERSION", copied / "VERSION")
             shutil.copy2(ROOT / "ABI_VERSION", copied / "ABI_VERSION")
@@ -78,7 +78,7 @@ class BsdPackagingTests(unittest.TestCase):
             abi = (ROOT / "ABI_VERSION").read_text(encoding="utf-8").strip()
             makefile.write_text(
                 makefile.read_text(encoding="utf-8").replace(
-                    f"SHARED_LIBS +=  glyphastore {abi}", "SHARED_LIBS +=  glyphastore 2.0"
+                    f"SHARED_LIBS +=  glifistore {abi}", "SHARED_LIBS +=  glifistore 2.0"
                 ),
                 encoding="utf-8",
             )
@@ -86,7 +86,7 @@ class BsdPackagingTests(unittest.TestCase):
                 validate(copied)
 
     def test_license_metadata_drift_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="glyphastore-bsd-license-test-") as temporary:
+        with tempfile.TemporaryDirectory(prefix="glifistore-bsd-license-test-") as temporary:
             copied = Path(temporary)
             shutil.copy2(ROOT / "VERSION", copied / "VERSION")
             shutil.copy2(ROOT / "ABI_VERSION", copied / "ABI_VERSION")

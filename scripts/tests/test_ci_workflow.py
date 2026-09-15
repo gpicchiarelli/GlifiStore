@@ -16,7 +16,7 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("-DBUILD_TESTING=OFF", workflow)
         self.assertIn("cmake --build build/man-ci\n", workflow)
         self.assertNotIn(
-            "cmake --build build/man-ci --target glyphastore_manpages",
+            "cmake --build build/man-ci --target glifistore_manpages",
             workflow,
         )
         self.assertIn(
@@ -33,12 +33,12 @@ class CiWorkflowTests(unittest.TestCase):
             ROOT / "scripts/test-secure-profile-installed-artifacts.sh"
         ).read_text(encoding="utf-8")
 
-        self.assertIn('PATHS "\\${GLYPHASTORE_PACKAGE_DIR}"', builder)
+        self.assertIn('PATHS "\\${GLIFISTORE_PACKAGE_DIR}"', builder)
         self.assertIn("NO_DEFAULT_PATH", builder)
-        self.assertIn('-DGLYPHASTORE_PACKAGE_DIR="$package_dir"', builder)
-        self.assertNotIn('-DGlyphaStore_DIR="$package_dir"', builder)
+        self.assertIn('-DGLIFISTORE_PACKAGE_DIR="$package_dir"', builder)
+        self.assertNotIn('-DGlifiStore_DIR="$package_dir"', builder)
         self.assertIn(
-            '--target glyphastore_client glyphastore_abi',
+            '--target glifistore_client glifistore_abi',
             builder,
         )
         self.assertIn('--component AbiRuntime', builder)
@@ -50,21 +50,21 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertNotIn('$(dirname "$daemon")/..', installed)
 
     def test_lto_package_propagates_compatible_link_requirements(self) -> None:
-        config = (ROOT / "cmake/GlyphaStoreConfig.cmake.in").read_text(
+        config = (ROOT / "cmake/GlifiStoreConfig.cmake.in").read_text(
             encoding="utf-8"
         )
         optimizations = (ROOT / "cmake/ToolchainOptimizations.cmake").read_text(
             encoding="utf-8"
         )
 
-        self.assertIn('set(GLYPHASTORE_BUILT_WITH_LTO', config)
+        self.assertIn('set(GLIFISTORE_BUILT_WITH_LTO', config)
         self.assertIn("check_ipo_supported", config)
         self.assertIn(
             'CMAKE_CXX_COMPILER_VERSION}" VERSION_EQUAL',
             config,
         )
         self.assertIn("INTERFACE_LINK_OPTIONS", config)
-        self.assertIn("GLYPHASTORE_IPO_LINK_OPTIONS", optimizations)
+        self.assertIn("GLIFISTORE_IPO_LINK_OPTIONS", optimizations)
 
     def test_supply_chain_retains_primary_archives_for_cross_builder_diagnostics(self) -> None:
         workflow = (ROOT / ".github/workflows/supply-chain.yml").read_text(encoding="utf-8")
@@ -146,7 +146,7 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn("random-campaign-${iteration}.tsv", collector)
         self.assertIn("manifest.sha256", collector)
         self.assertIn("kMaxRandomCampaignIterations{10'000}", harness)
-        self.assertIn("glyphastore-random-crash-campaign-v1", harness)
+        self.assertIn("glifistore-random-crash-campaign-v1", harness)
         self.assertIn("random campaign report already exists", harness)
         self.assertIn("CampaignPrng", harness)
 
@@ -169,7 +169,7 @@ class CiWorkflowTests(unittest.TestCase):
         self.assertIn('if perform_reset >>"$case_log" 2>&1; then', script)
         self.assertIn('reset_confirmed_global="yes"', script)
         self.assertNotIn('reset_confirmed="$(perform_reset', script)
-        self.assertIn('work_root="$work_parent/glyphastore-e3-work-$$"', script)
+        self.assertIn('work_root="$work_parent/glifistore-e3-work-$$"', script)
         self.assertIn('[[ "$candidate" != "$mount_point"/store-?* ]]', script)
         self.assertIn('rm -rf -- "$candidate"', script)
         self.assertGreaterEqual(
@@ -204,8 +204,8 @@ class CiWorkflowTests(unittest.TestCase):
     def test_diagnostic_coverage_runs_only_the_built_test_target(self) -> None:
         script = (ROOT / "scripts/ci-coverage.sh").read_text(encoding="utf-8")
         workflow = (ROOT / ".github/workflows/coverage.yml").read_text(encoding="utf-8")
-        self.assertIn('cmake --build "$builddir" --target glyphastore_tests', script)
-        self.assertIn("--tests-regex '^glyphastore_tests$'", script)
+        self.assertIn('cmake --build "$builddir" --target glifistore_tests', script)
+        self.assertIn("--tests-regex '^glifistore_tests$'", script)
         self.assertIn('--gcov-tool "$root/scripts/llvm-gcov.sh"', script)
         self.assertIn("--ignore-errors mismatch,inconsistent,unused", script)
         self.assertIn("--ignore-errors inconsistent,unused", script)
@@ -227,8 +227,8 @@ class CiWorkflowTests(unittest.TestCase):
             encoding="utf-8"
         )
         use_mode = optimizations.split(
-            'if(GLYPHASTORE_PGO STREQUAL "USE")', 1
-        )[1].split('message(FATAL_ERROR "GLYPHASTORE_PGO must', 1)[0]
+            'if(GLIFISTORE_PGO STREQUAL "USE")', 1
+        )[1].split('message(FATAL_ERROR "GLIFISTORE_PGO must', 1)[0]
         self.assertIn("-Wno-error=profile-instr-unprofiled", use_mode)
 
     def test_e3_artifact_validator_rejects_unconfirmed_pass(self) -> None:
@@ -242,7 +242,7 @@ class CiWorkflowTests(unittest.TestCase):
             (artifact / "provenance.txt").write_text(
                 "\n".join(
                     (
-                        "schema=glyphastore-durability-e3-harness-v2",
+                        "schema=glifistore-durability-e3-harness-v2",
                         "checkpoint_action=pause",
                         "dm_fault_mode=drop-writes",
                         "passed=1",

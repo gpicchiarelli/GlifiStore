@@ -1,7 +1,7 @@
 # Secure profile reference
 
 Status: normative for the secure daemon profile (ADR 0020–0022)  
-Applies to: `glyphastored` TLS/mTLS/authz; official SDK TLS credential options  
+Applies to: `glifistored` TLS/mTLS/authz; official SDK TLS credential options  
 Owner: security maintainers  
 Last reviewed: 2026-07-28
 
@@ -57,13 +57,13 @@ TLS 1.2 and earlier are rejected at protocol version policy. Hostname/CA verific
 default for SDK connects; lab-only insecure escapes remain explicit.
 
 ```bash
-glyphastored --secure-profile \
+glifistored --secure-profile \
   --bind 127.0.0.1 --port 7379 \
-  --tls-cert /etc/glyphastore/server.crt \
-  --tls-key /etc/glyphastore/server.key \
-  --tls-client-ca /etc/glyphastore/clients-ca.crt \
-  --authz-map /etc/glyphastore/authz.map \
-  --tls-crl /etc/glyphastore/clients.crl \
+  --tls-cert /etc/glifistore/server.crt \
+  --tls-key /etc/glifistore/server.key \
+  --tls-client-ca /etc/glifistore/clients-ca.crt \
+  --authz-map /etc/glifistore/authz.map \
+  --tls-crl /etc/glifistore/clients.crl \
   --tls-ocsp-fail-closed \
   --log-format json
 ```

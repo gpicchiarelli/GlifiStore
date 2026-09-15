@@ -1,4 +1,4 @@
-# GlyphaStore Threat Model
+# GlifiStore Threat Model
 
 Status: initial normative security boundary
 Applies to: embedded engine and TCP protocol v2

@@ -1,13 +1,13 @@
 # Public C++ API Reference
 
 Status: normative for the current public headers
-Applies to: `glyphastore::Store` version `0.1.x`
+Applies to: `glifistore::Store` version `0.1.x`
 Owner: API maintainers
 Last reviewed: 2026-09-15
 
 ## 1. General contract
 
-The public API is declared under `include/glyphastore`. Keys and values are arbitrary byte spans. Unless stated otherwise, member operations are safe to call concurrently on the same open `Store`; this provides per-key operation safety, not transactions across calls or keys.
+The public API is declared under `include/glifistore`. Keys and values are arbitrary byte spans. Unless stated otherwise, member operations are safe to call concurrently on the same open `Store`; this provides per-key operation safety, not transactions across calls or keys.
 
 Fallible operations return `Result<T>` or `Status`, based on `std::expected`. No failure category requires parsing an error message. Error messages are diagnostic, non-stable text.
 

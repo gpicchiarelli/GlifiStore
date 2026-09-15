@@ -41,19 +41,19 @@ if [[ ! -x "$prior_consumer" ]]; then
   exit 1
 fi
 for prefix in "$candidate_prefix" "$prior_prefix"; do
-  test -f "$prefix/include/glyphastore/abi/glyphastore.h"
-  test -f "$prefix/share/GlyphaStore/ABI_VERSION"
-  test -e "$prefix/lib/libglyphastore.so.1"
+  test -f "$prefix/include/glifistore/abi/glifistore.h"
+  test -f "$prefix/share/GlifiStore/ABI_VERSION"
+  test -e "$prefix/lib/libglifistore.so.1"
 done
-test "$(cut -d. -f1 "$candidate_prefix/share/GlyphaStore/ABI_VERSION")" = "1"
-test "$(cut -d. -f1 "$prior_prefix/share/GlyphaStore/ABI_VERSION")" = "1"
+test "$(cut -d. -f1 "$candidate_prefix/share/GlifiStore/ABI_VERSION")" = "1"
+test "$(cut -d. -f1 "$prior_prefix/share/GlifiStore/ABI_VERSION")" = "1"
 
 compile_consumer() {
   local source="$1"
   local output="$2"
   PKG_CONFIG_PATH="$candidate_prefix/lib/pkgconfig" \
     cc -std=c11 "$source" $(PKG_CONFIG_PATH="$candidate_prefix/lib/pkgconfig" \
-      pkg-config --cflags --libs glyphastore-abi) -o "$output"
+      pkg-config --cflags --libs glifistore-abi) -o "$output"
 }
 
 prove_library_resolution() {
@@ -62,12 +62,12 @@ prove_library_resolution() {
   local resolution
   resolution="$(LD_LIBRARY_PATH="$library_directory" ldd "$binary")"
   printf '%s\n' "$resolution"
-  grep -F "$library_directory/libglyphastore.so.1" <<<"$resolution" >/dev/null
+  grep -F "$library_directory/libglifistore.so.1" <<<"$resolution" >/dev/null
 }
 
 case "$check" in
   exact-symbols)
-    library="$(readlink -f "$candidate_prefix/lib/libglyphastore.so.1")"
+    library="$(readlink -f "$candidate_prefix/lib/libglifistore.so.1")"
     python3 "$root/engineering/tools/check_abi_symbols.py" \
       --library "$library" --allowlist "$root/abi/symbols-v1.txt"
     ;;

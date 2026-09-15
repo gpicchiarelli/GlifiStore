@@ -1,4 +1,4 @@
-# glyphastore paired-shard A/B benchmark
+# glifistore paired-shard A/B benchmark
 # git=9ba7397
 # operations=5000 keys=512 value_bytes=262144 repeats=7 warmup=1 batch_records=32 batch_wait_us=2
 # latency sampling=1/64 GET operations; current returns an owning copy; paired returns a span

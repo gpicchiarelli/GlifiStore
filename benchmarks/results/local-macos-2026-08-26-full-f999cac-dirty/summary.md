@@ -1,4 +1,4 @@
-# GlyphaStore local performance profile — 2026-08-26
+# GlifiStore local performance profile — 2026-08-26
 
 ## Verdict
 

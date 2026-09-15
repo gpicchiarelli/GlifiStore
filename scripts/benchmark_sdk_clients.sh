@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Complete native SDK client benchmark suite against an external glyphastored.
+# Complete native SDK client benchmark suite against an external glifistored.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 stamp="$(date -u +%Y%m%d-%H%M%S)"
 sdk_version="$(tr -d '[:space:]' <"$root/VERSION")"
 outdir="${1:-$root/benchmark-results-sdk-${sdk_version}-${stamp}}"
-daemon="${GLYPHASTORED:-$root/build/macos-native-release/glyphastored}"
-cpp_bench="${CPP_CLIENT_BENCHMARK:-$(dirname "$daemon")/glyphastore_client_benchmark}"
+daemon="${GLIFISTORED:-$root/build/macos-native-release/glifistored}"
+cpp_bench="${CPP_CLIENT_BENCHMARK:-$(dirname "$daemon")/glifistore_client_benchmark}"
 python="${PYTHON:-python3}"
 perl="${PERL:-perl}"
 ruby_bin="${RUBY:-}"
@@ -60,11 +60,11 @@ IFS=',' read -r -a workers <<<"$workers_csv"
 IFS=',' read -r -a pipelines <<<"$pipelines_csv"
 
 if [[ ! -x "$daemon" ]]; then
-  echo "missing glyphastored at $daemon; build macos-native-release first" >&2
+  echo "missing glifistored at $daemon; build macos-native-release first" >&2
   exit 1
 fi
 if [[ ! -x "$cpp_bench" ]]; then
-  echo "missing C++ client benchmark at $cpp_bench; build glyphastore_client_benchmark first" >&2
+  echo "missing C++ client benchmark at $cpp_bench; build glifistore_client_benchmark first" >&2
   exit 1
 fi
 
@@ -72,16 +72,16 @@ mkdir -p "$outdir/cpp" "$outdir/python" "$outdir/perl" "$outdir/go" "$outdir/erl
   "$outdir/ruby" "$outdir/logs"
 export PYTHONPATH="$root/sdk/python/src"
 export PERL5LIB="$root/sdk/perl/lib${PERL5LIB:+:$PERL5LIB}"
-python_sdk_version="$($python -c 'import glyphastore; print(glyphastore.__version__)')"
-perl_sdk_version="$($perl -MGlyphaStore -e 'print $GlyphaStore::VERSION')"
+python_sdk_version="$($python -c 'import glifistore; print(glifistore.__version__)')"
+perl_sdk_version="$($perl -MGlifiStore -e 'print $GlifiStore::VERSION')"
 if [[ "$python_sdk_version" != "$sdk_version" || "$perl_sdk_version" != "$sdk_version" ]]; then
   echo "source SDK version does not match VERSION (Python=$python_sdk_version Perl=$perl_sdk_version root=$sdk_version)" >&2
   exit 1
 fi
 go_bin="${GO:-go}"
 mkdir -p "$root/sdk/go/bin"
-(cd "$root/sdk/go" && "$go_bin" build -o bin/glyphastore-bench ./cmd/glyphastore-bench)
-go_bench="$root/sdk/go/bin/glyphastore-bench"
+(cd "$root/sdk/go" && "$go_bin" build -o bin/glifistore-bench ./cmd/glifistore-bench)
+go_bench="$root/sdk/go/bin/glifistore-bench"
 available_sdks="cpp,python,perl,go"
 
 ruby_ready=0
@@ -97,7 +97,7 @@ if [[ -n "$ruby_bin" ]] && "$ruby_bin" -rrubygems -e \
 then
   ruby_ready=1
   ruby_sdk_version="$("$ruby_bin" -I"$root/sdk/ruby/lib" \
-    -e 'require "glypha_store"; print GlyphaStore::VERSION')"
+    -e 'require "glifi_store"; print GlifiStore::VERSION')"
   if [[ "$ruby_sdk_version" != "$sdk_version" ]]; then
     echo "Ruby SDK version '$ruby_sdk_version' does not match '$sdk_version'" >&2
     exit 1
@@ -115,7 +115,7 @@ if command -v erl >/dev/null 2>&1 && command -v rebar3 >/dev/null 2>&1; then
   erlang_bench="$root/sdk/erlang/benchmarks/client_benchmark.escript"
   chmod +x "$erlang_bench"
   erlang_ready=1
-  erlang_sdk_version="$(erl -noshell -pa "$root/sdk/erlang/_build/default/lib/glyphastore/ebin" -eval 'io:format("~s",[glyphastore_version:version()]),halt().')"
+  erlang_sdk_version="$(erl -noshell -pa "$root/sdk/erlang/_build/default/lib/glifistore/ebin" -eval 'io:format("~s",[glifistore_version:version()]),halt().')"
   if [[ "$erlang_sdk_version" != "$sdk_version" ]]; then
     echo "Erlang SDK version '$erlang_sdk_version' does not match '$sdk_version'" >&2
     exit 1
@@ -169,8 +169,8 @@ PY
     else
       echo "erlang=skipped"
     fi
-    echo "glyphastored=$daemon"
-    echo "glyphastored_version=$("$daemon" --version 2>&1 | tr '\n' ' ')"
+    echo "glifistored=$daemon"
+    echo "glifistored_version=$("$daemon" --version 2>&1 | tr '\n' ' ')"
     echo "ops=$ops warmup=$warmup repeats=$repeats"
     echo "workers=$workers_csv pipelines=$pipelines_csv"
     echo "available_sdks=$available_sdks require_all=$require_all"
@@ -194,11 +194,11 @@ start_server() {
     >"$log_file" 2>&1 &
   local pid=$!
   echo "$pid" >"${port_file}.pid"
-  # glyphastored with --port 0 prints nothing when quiet; discover via lsof.
+  # glifistored with --port 0 prints nothing when quiet; discover via lsof.
   local port=""
   for _ in $(seq 1 50); do
     if ! kill -0 "$pid" 2>/dev/null; then
-      echo "glyphastored exited early; see $log_file" >&2
+      echo "glifistored exited early; see $log_file" >&2
       cat "$log_file" >&2 || true
       return 1
     fi
@@ -209,7 +209,7 @@ start_server() {
     fi
     sleep 0.1
   done
-  echo "could not discover glyphastored listen port" >&2
+  echo "could not discover glifistored listen port" >&2
   kill "$pid" 2>/dev/null || true
   return 1
 }
@@ -237,7 +237,7 @@ run_matrix() {
     echo "- Workers: \`$workers_csv\`"
     echo "- Pipeline pairs: \`$pipelines_csv\`"
     echo "- Available SDKs: \`$available_sdks\`"
-    echo "- Server: volatile \`glyphastored\` with \`--executor-affinity\`"
+    echo "- Server: volatile \`glifistored\` with \`--executor-affinity\`"
     echo
   } >"$outdir/commands.md"
 
@@ -358,7 +358,7 @@ write_validated_summary() {
 
 write_readme() {
   cat >"$outdir/README.md" <<EOF
-# GlyphaStore SDK benchmarks — ${sdk_version}
+# GlifiStore SDK benchmarks — ${sdk_version}
 
 Generated client-side pipeline benchmarks for the native C++, Python, Perl, Go, Erlang, and Ruby SDKs at version
 \`${sdk_version}\`.
@@ -395,7 +395,7 @@ Language-only:
 \`\`\`
 
 Optional overrides: \`OPS\`, \`WARMUP\`, \`REPEATS\`, \`WORKERS\`, \`PIPELINES\`,
-\`SDK_BENCH_REQUIRE_ALL\`, \`GLYPHASTORED\`, \`CPP_CLIENT_BENCHMARK\`, \`PYTHON\`,
+\`SDK_BENCH_REQUIRE_ALL\`, \`GLIFISTORED\`, \`CPP_CLIENT_BENCHMARK\`, \`PYTHON\`,
 \`PERL\`, \`GO\`, \`RUBY\`.
 EOF
 }

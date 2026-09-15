@@ -19,7 +19,7 @@ It is **not** a second product runtime and must not grow feature surface.
 | --- | --- |
 | 0.1.x | Deprecated but supported for embedded `Store::open` when explicitly selected. |
 | 0.2 | **Removed.** Opening with `legacy_mutex` must fail closed (clear error). |
-| Daemon (`glyphastored`) | Paired-only for the entire 0.1.x line; never offers `legacy_mutex`. |
+| Daemon (`glifistored`) | Paired-only for the entire 0.1.x line; never offers `legacy_mutex`. |
 
 Experimental `src/experimental/paired_*` remains lab/microbench only and is not a selectable
 product runtime (ADR 0032).
@@ -42,7 +42,7 @@ Allowed work on the legacy path:
 ## 4. Deprecation
 
 1. API: `StoreConcurrencyMode::legacy_mutex` remains marked deprecated in
-   [`config.hpp`](../../include/glyphastore/store/config.hpp) and public docs.
+   [`config.hpp`](../../include/glifistore/store/config.hpp) and public docs.
 2. Docs: glossary, public API contract, worker model, and this policy state removal in 0.2.
 3. Release notes: each 0.1.x release that still ships the hatch must mention the 0.2 removal date
    intent.

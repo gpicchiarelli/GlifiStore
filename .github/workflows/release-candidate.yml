@@ -59,12 +59,12 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX="${GITHUB_WORKSPACE}/build/release-prefix" \
             -DBUILD_TESTING=ON \
-            -DGLYPHASTORE_BUILD_BENCHMARKS=OFF \
-            -DGLYPHASTORE_BUILD_FUZZERS=OFF \
-            -DGLYPHASTORE_ENABLE_TLS=OFF \
-            -DGLYPHASTORE_FAULT_INJECTION=OFF \
-            -DGLYPHASTORE_NATIVE_CPU=OFF \
-            -DGLYPHASTORE_WARNINGS_AS_ERRORS=ON
+            -DGLIFISTORE_BUILD_BENCHMARKS=OFF \
+            -DGLIFISTORE_BUILD_FUZZERS=OFF \
+            -DGLIFISTORE_ENABLE_TLS=OFF \
+            -DGLIFISTORE_FAULT_INJECTION=OFF \
+            -DGLIFISTORE_NATIVE_CPU=OFF \
+            -DGLIFISTORE_WARNINGS_AS_ERRORS=ON
           cmake --build build/release-candidate --parallel 2
           ctest --test-dir build/release-candidate --output-on-failure
           cmake --install build/release-candidate
@@ -77,7 +77,7 @@ jobs:
           ctest --test-dir build/release-consumer --output-on-failure
           read -r -a pkg_config_flags <<< "$(
             PKG_CONFIG_PATH="${GITHUB_WORKSPACE}/build/release-prefix/lib/pkgconfig" \
-              pkg-config --cflags --libs glyphastore-abi
+              pkg-config --cflags --libs glifistore-abi
           )"
           cc -std=c11 tests/consumer/abi.c \
             "${pkg_config_flags[@]}" \
@@ -100,13 +100,13 @@ jobs:
             --output-directory dist/release-candidate
           python scripts/package-abi-consumer.py \
             --tag "$RELEASE_TAG" \
-            --consumer build/release-consumer/glyphastore_abi_consumer_smoke \
+            --consumer build/release-consumer/glifistore_abi_consumer_smoke \
             --target-os linux \
             --architecture "$(uname -m)" \
             --output-directory dist/release-candidate
           python scripts/package-wire-client.py \
             --tag "$RELEASE_TAG" \
-            --client build/release-candidate/glyphastore_interop_client \
+            --client build/release-candidate/glifistore_interop_client \
             --target-os linux \
             --architecture "$(uname -m)" \
             --output-directory dist/release-candidate
@@ -125,12 +125,12 @@ jobs:
             --tls-backend none \
             --build-option BUILD_TESTING=ON \
             --build-option CMAKE_BUILD_TYPE=Release \
-            --build-option GLYPHASTORE_BUILD_BENCHMARKS=OFF \
-            --build-option GLYPHASTORE_BUILD_FUZZERS=OFF \
-            --build-option GLYPHASTORE_ENABLE_TLS=OFF \
-            --build-option GLYPHASTORE_FAULT_INJECTION=OFF \
-            --build-option GLYPHASTORE_NATIVE_CPU=OFF \
-            --build-option GLYPHASTORE_WARNINGS_AS_ERRORS=ON
+            --build-option GLIFISTORE_BUILD_BENCHMARKS=OFF \
+            --build-option GLIFISTORE_BUILD_FUZZERS=OFF \
+            --build-option GLIFISTORE_ENABLE_TLS=OFF \
+            --build-option GLIFISTORE_FAULT_INJECTION=OFF \
+            --build-option GLIFISTORE_NATIVE_CPU=OFF \
+            --build-option GLIFISTORE_WARNINGS_AS_ERRORS=ON
           python engineering/tools/release_bundle.py validate-metadata \
             dist/release-candidate/build-metadata.json
       - name: Install checksum-pinned Syft

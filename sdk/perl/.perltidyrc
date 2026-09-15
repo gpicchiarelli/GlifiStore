@@ -1,4 +1,4 @@
-# Perltidy profile for GlyphaStore Perl SDK (paired with .perlcriticrc).
+# Perltidy profile for GlifiStore Perl SDK (paired with .perlcriticrc).
 -l=100
 -i=4
 -ci=4

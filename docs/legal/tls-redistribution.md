@@ -1,12 +1,12 @@
 # TLS library redistribution notes
 
-Status: normative for redistributors who ship TLS-enabled GlyphaStore binaries
+Status: normative for redistributors who ship TLS-enabled GlifiStore binaries
 Applies to: OpenSSL 3.x and LibreSSL linked builds
 Owner: maintainers
 Last reviewed: 2026-08-01
 
-GlyphaStore does not vendor OpenSSL or LibreSSL source. When
-`GLYPHASTORE_ENABLE_TLS` is enabled, the build links against a system or
+GlifiStore does not vendor OpenSSL or LibreSSL source. When
+`GLIFISTORE_ENABLE_TLS` is enabled, the build links against a system or
 user-provided TLS library.
 
 ## OpenSSL 3.x (Apache License 2.0)
@@ -27,7 +27,7 @@ Upstream: https://www.openssl.org/source/license.html
 
 LibreSSL is typically provided by the OS or ports tree. Follow the license files
 shipped with that package (often ISC and related notices). Do not strip those
-files from OS packages. GlyphaStore’s OpenBSD CI uses system LibreSSL only.
+files from OS packages. GlifiStore’s OpenBSD CI uses system LibreSSL only.
 
 ## Cleartext builds
 

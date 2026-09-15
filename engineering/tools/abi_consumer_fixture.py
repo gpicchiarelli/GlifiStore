@@ -14,7 +14,7 @@ from pathlib import Path, PurePosixPath
 
 
 ARCHIVE = re.compile(
-    r"^glyphastore-abi-v([0-9]+)-consumer-"
+    r"^glifistore-abi-v([0-9]+)-consumer-"
     r"((?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*))-"
     r"([a-z0-9_-]+)-([a-z0-9_-]+)\.tar\.xz$"
 )
@@ -42,7 +42,7 @@ def validate(
     if int(abi_major) != expected_abi_major or product_version != expected_version:
         raise ConsumerFixtureError("ABI consumer archive identity differs from prior release")
     basename = archive_path.name.removesuffix(".tar.xz")
-    binary_name = f"glyphastore-abi-v{abi_major}-consumer"
+    binary_name = f"glifistore-abi-v{abi_major}-consumer"
     expected_names = {
         f"{basename}",
         f"{basename}/{binary_name}",

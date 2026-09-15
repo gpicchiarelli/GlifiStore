@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the immutable source identity used by a GlyphaStore release."""
+"""Validate the immutable source identity used by a GlifiStore release."""
 
 from __future__ import annotations
 

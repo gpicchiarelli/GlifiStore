@@ -3,10 +3,10 @@
 // generation_internals: delta arena, record helpers, compact records.
 // Structure-debt extraction from read_generation_impl.
 
-#include "glyphastore/core/hot_path_phases.hpp"
-#include "glyphastore/index/swiss_control_group.hpp"
-#include "glyphastore/store/paired/generation_slot_pool.hpp"
-#include "glyphastore/store/paired/read_generation.hpp"
+#include "glifistore/core/hot_path_phases.hpp"
+#include "glifistore/index/swiss_control_group.hpp"
+#include "glifistore/store/paired/generation_slot_pool.hpp"
+#include "glifistore/store/paired/read_generation.hpp"
 
 #include <algorithm>
 #include <array>
@@ -29,7 +29,7 @@
 #include <unistd.h>
 #endif
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 inline namespace generation_internals {
 
 inline constexpr std::size_t kDeltaPageSlots = 16;
@@ -664,4 +664,4 @@ struct KeyBlock final {
 
 } // namespace generation_internals
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

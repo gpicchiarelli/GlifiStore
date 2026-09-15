@@ -1,10 +1,10 @@
 #include "persistence/recovery/recovery_catalog.hpp"
 
-#include "glyphastore/persistence/resource_limits.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
 
 #include <utility>
 
-namespace glyphastore::recovery {
+namespace glifistore::recovery {
 
 auto load_recovery_catalog(DataDirectory& directory, const DurableResourceLimits& limits,
                            const DurableCompactionIntent* compaction_intent, RecoveryMemoryBudget& budget)
@@ -57,4 +57,4 @@ auto load_recovery_catalog(DataDirectory& directory, const DurableResourceLimits
     };
 }
 
-} // namespace glyphastore::recovery
+} // namespace glifistore::recovery

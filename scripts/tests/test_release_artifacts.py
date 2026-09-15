@@ -110,10 +110,10 @@ def run_git(root: Path, *arguments: str, env: dict[str, str] | None = None) -> N
 
 class ReleaseIdentityTests(unittest.TestCase):
     def make_repository(self) -> tuple[tempfile.TemporaryDirectory[str], Path]:
-        temporary = tempfile.TemporaryDirectory(prefix="glyphastore-release-test-")
+        temporary = tempfile.TemporaryDirectory(prefix="glifistore-release-test-")
         root = Path(temporary.name)
-        (root / "include/glyphastore/abi").mkdir(parents=True)
-        (root / "include/glyphastore/server").mkdir(parents=True)
+        (root / "include/glifistore/abi").mkdir(parents=True)
+        (root / "include/glifistore/server").mkdir(parents=True)
         files = {
             "VERSION": "0.1.0\n",
             "ABI_VERSION": "1.0\n",
@@ -121,8 +121,8 @@ class ReleaseIdentityTests(unittest.TestCase):
             "LICENSE": "test license\n",
             "NOTICE": "test notice\n",
             "THIRD_PARTY_NOTICES.md": "none\n",
-            "include/glyphastore/abi/glyphastore.h": "#pragma once\n",
-            "include/glyphastore/server/protocol.hpp": (
+            "include/glifistore/abi/glifistore.h": "#pragma once\n",
+            "include/glifistore/server/protocol.hpp": (
                 "inline constexpr unsigned short kProtocolVersion = 2;\n"
             ),
         }
@@ -182,18 +182,18 @@ class ReleaseIdentityTests(unittest.TestCase):
         prefix = root / "prefix"
         for directory in (
             prefix / "bin",
-            prefix / "include/glyphastore/abi",
-            prefix / "share/GlyphaStore",
+            prefix / "include/glifistore/abi",
+            prefix / "share/GlifiStore",
             prefix / "lib",
         ):
             directory.mkdir(parents=True, exist_ok=True)
-        (prefix / "bin/glyphastored").write_bytes(b"binary")
-        (prefix / "bin/glyphastored").chmod(0o755)
-        (prefix / "include/glyphastore/abi/glyphastore.h").write_text("#pragma once\n")
-        (prefix / "share/GlyphaStore/VERSION").write_text("0.1.0\n")
-        (prefix / "share/GlyphaStore/ABI_VERSION").write_text("1.0\n")
-        (prefix / "lib/libglyphastore.so.1.0").write_bytes(b"shared")
-        (prefix / "lib/libglyphastore.so.1").symlink_to("libglyphastore.so.1.0")
+        (prefix / "bin/glifistored").write_bytes(b"binary")
+        (prefix / "bin/glifistored").chmod(0o755)
+        (prefix / "include/glifistore/abi/glifistore.h").write_text("#pragma once\n")
+        (prefix / "share/GlifiStore/VERSION").write_text("0.1.0\n")
+        (prefix / "share/GlifiStore/ABI_VERSION").write_text("1.0\n")
+        (prefix / "lib/libglifistore.so.1.0").write_bytes(b"shared")
+        (prefix / "lib/libglifistore.so.1").symlink_to("libglifistore.so.1.0")
 
         first = PREFIX_PACKAGER.package_prefix(
             root, "v0.1.0", prefix, root / "binary-a", "linux", "x86_64"
@@ -202,9 +202,9 @@ class ReleaseIdentityTests(unittest.TestCase):
             root, "v0.1.0", prefix, root / "binary-b", "linux", "x86_64"
         )
         self.assertEqual(SOURCE_PACKAGER.sha256(first), SOURCE_PACKAGER.sha256(second))
-        (prefix / "lib/libglyphastore.so.1.0").unlink()
-        (prefix / "lib/libglyphastore.so.1").unlink()
-        (prefix / "lib/libglyphastore.so").write_bytes(b"unversioned linker input")
+        (prefix / "lib/libglifistore.so.1.0").unlink()
+        (prefix / "lib/libglifistore.so.1").unlink()
+        (prefix / "lib/libglifistore.so").write_bytes(b"unversioned linker input")
         with self.assertRaisesRegex(ReleaseIdentityError, "versioned shared C ABI"):
             PREFIX_PACKAGER.package_prefix(
                 root, "v0.1.0", prefix, root / "binary-c", "linux", "x86_64"
@@ -306,7 +306,7 @@ class ReleaseIdentityTests(unittest.TestCase):
             validate_wire_client_fixture(first, "0.1.0", metadata["git_sha"], 2, extracted)
 
     def test_independent_release_comparison_requires_exact_complete_identical_set(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="glyphastore-rebuild-compare-")
+        temporary = tempfile.TemporaryDirectory(prefix="glifistore-rebuild-compare-")
         self.addCleanup(temporary.cleanup)
         root = Path(temporary.name)
         reference = root / "reference"
@@ -314,10 +314,10 @@ class ReleaseIdentityTests(unittest.TestCase):
         reference.mkdir()
         rebuilt.mkdir()
         names = (
-            "GlyphaStore-0.1.0.tar.xz",
-            "glyphastore-0.1.0-linux-x86_64.tar.xz",
-            "glyphastore-abi-v1-consumer-0.1.0-linux-x86_64.tar.xz",
-            "glyphastore-wire-v2-client-0.1.0-linux-x86_64.tar.xz",
+            "GlifiStore-0.1.0.tar.xz",
+            "glifistore-0.1.0-linux-x86_64.tar.xz",
+            "glifistore-abi-v1-consumer-0.1.0-linux-x86_64.tar.xz",
+            "glifistore-wire-v2-client-0.1.0-linux-x86_64.tar.xz",
         )
         for name in names:
             payload = f"deterministic {name}".encode("ascii")
@@ -383,7 +383,7 @@ def minimal_spdx(name: str = "artifact", packages: list[dict[str, object]] | Non
         "spdxVersion": "SPDX-2.3",
         "SPDXID": "SPDXRef-DOCUMENT",
         "name": name,
-        "documentNamespace": f"https://glyphastore.dev/sbom/{name}",
+        "documentNamespace": f"https://glifistore.dev/sbom/{name}",
         "creationInfo": {"creators": ["Tool: test"]},
         "packages": packages or [],
     }
@@ -445,9 +445,9 @@ def write_release_evidence(
 
 class ReleaseBundleTests(unittest.TestCase):
     def make_bundle(self) -> tuple[tempfile.TemporaryDirectory[str], Path]:
-        temporary = tempfile.TemporaryDirectory(prefix="glyphastore-bundle-test-")
+        temporary = tempfile.TemporaryDirectory(prefix="glifistore-bundle-test-")
         root = Path(temporary.name)
-        (root / "GlyphaStore-0.1.0.tar.xz").write_bytes(b"source")
+        (root / "GlifiStore-0.1.0.tar.xz").write_bytes(b"source")
         metadata = {
             "schema_version": 1,
             "product_version": "0.1.0",
@@ -455,7 +455,7 @@ class ReleaseBundleTests(unittest.TestCase):
             "wire_version": 2,
             "persistent_format_version": 1,
             "source": {
-                "repository": "https://github.com/gpicchiarelli/GlyphaStore",
+                "repository": "https://github.com/gpicchiarelli/GlifiStore",
                 "tag": "v0.1.0",
                 "git_sha": "a" * 40,
                 "source_date_epoch": 1767225600,
@@ -482,7 +482,7 @@ class ReleaseBundleTests(unittest.TestCase):
         }
         metadata_path = root / "build-metadata.json"
         metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
-        write_bound_sbom(root, "GlyphaStore-0.1.0.tar.xz", metadata_path)
+        write_bound_sbom(root, "GlifiStore-0.1.0.tar.xz", metadata_path)
         (root / "candidate-seal.json").write_text("candidate seal subject\n", encoding="utf-8")
         return temporary, root
 
@@ -491,11 +491,11 @@ class ReleaseBundleTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         seal(root, "candidate-seal.json", "candidate")
         verify_seal(root, "candidate-seal.json")
-        (root / "GlyphaStore-0.1.0.tar.xz").write_bytes(b"tampered")
+        (root / "GlifiStore-0.1.0.tar.xz").write_bytes(b"tampered")
         with self.assertRaisesRegex(BundleError, "mismatch"):
             verify_seal(root, "candidate-seal.json")
 
-        (root / "GlyphaStore-0.1.0.tar.xz").write_bytes(b"source")
+        (root / "GlifiStore-0.1.0.tar.xz").write_bytes(b"source")
         (root / "unexpected.pkg").write_bytes(b"extra")
         with self.assertRaisesRegex(BundleError, "file set mismatch"):
             verify_seal(root, "candidate-seal.json")
@@ -507,7 +507,7 @@ class ReleaseBundleTests(unittest.TestCase):
         write_candidate_admission(root)
         validate_candidate_admission(root)
 
-        staging_temporary = tempfile.TemporaryDirectory(prefix="glyphastore-evidence-test-")
+        staging_temporary = tempfile.TemporaryDirectory(prefix="glifistore-evidence-test-")
         self.addCleanup(staging_temporary.cleanup)
         staging = Path(staging_temporary.name)
         (staging / "post-admission-evidence.log").write_text(
@@ -520,7 +520,7 @@ class ReleaseBundleTests(unittest.TestCase):
         verification = write_verification(root, "candidate-seal.json")
         self.assertTrue(verification.is_file())
 
-        (root / "GlyphaStore-0.1.0.tar.xz").write_bytes(b"tampered")
+        (root / "GlifiStore-0.1.0.tar.xz").write_bytes(b"tampered")
         with self.assertRaisesRegex(BundleError, "mismatch"):
             write_verification(root, "candidate-seal.json")
 
@@ -538,15 +538,15 @@ class ReleaseBundleTests(unittest.TestCase):
         seal(root, "candidate-seal.json", "candidate")
         write_candidate_admission(root)
 
-        protected_temporary = tempfile.TemporaryDirectory(prefix="glyphastore-protected-test-")
+        protected_temporary = tempfile.TemporaryDirectory(prefix="glifistore-protected-test-")
         self.addCleanup(protected_temporary.cleanup)
         protected = Path(protected_temporary.name)
         (protected / "verification.json").write_text("forged\n", encoding="utf-8")
         with self.assertRaisesRegex(BundleError, "protected file"):
             write_evidence_import(root, [protected])
 
-        first_temporary = tempfile.TemporaryDirectory(prefix="glyphastore-first-test-")
-        second_temporary = tempfile.TemporaryDirectory(prefix="glyphastore-second-test-")
+        first_temporary = tempfile.TemporaryDirectory(prefix="glifistore-first-test-")
+        second_temporary = tempfile.TemporaryDirectory(prefix="glifistore-second-test-")
         self.addCleanup(first_temporary.cleanup)
         self.addCleanup(second_temporary.cleanup)
         first = Path(first_temporary.name)
@@ -568,7 +568,7 @@ class ReleaseBundleTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         seal(root, "candidate-seal.json", "candidate")
         write_candidate_admission(root)
-        staging_temporary = tempfile.TemporaryDirectory(prefix="glyphastore-import-test-")
+        staging_temporary = tempfile.TemporaryDirectory(prefix="glifistore-import-test-")
         self.addCleanup(staging_temporary.cleanup)
         staging = Path(staging_temporary.name)
         (staging / "evidence.log").write_text("original\n", encoding="utf-8")
@@ -592,15 +592,15 @@ class ReleaseBundleTests(unittest.TestCase):
     def test_manifest_checksums_and_sbom_are_bound(self) -> None:
         temporary, root = self.make_bundle()
         self.addCleanup(temporary.cleanup)
-        validate_sbom(root / "GlyphaStore-0.1.0.tar.xz.spdx.json")
+        validate_sbom(root / "GlifiStore-0.1.0.tar.xz.spdx.json")
         write_release_manifest(root)
         validate_release_manifest(root)
         write_checksums(root)
         verify_checksums(root)
 
-        (root / "GlyphaStore-0.1.0.tar.xz.spdx.json").write_text("{}", encoding="utf-8")
+        (root / "GlifiStore-0.1.0.tar.xz.spdx.json").write_text("{}", encoding="utf-8")
         with self.assertRaisesRegex(BundleError, "SPDX 2.3"):
-            validate_sbom(root / "GlyphaStore-0.1.0.tar.xz.spdx.json")
+            validate_sbom(root / "GlifiStore-0.1.0.tar.xz.spdx.json")
         with self.assertRaisesRegex(BundleError, "mismatch"):
             verify_checksums(root)
 
@@ -644,9 +644,9 @@ class ReleaseBundleTests(unittest.TestCase):
     def test_sbom_is_cryptographically_bound_to_subject(self) -> None:
         temporary, root = self.make_bundle()
         self.addCleanup(temporary.cleanup)
-        sbom = root / "GlyphaStore-0.1.0.tar.xz.spdx.json"
+        sbom = root / "GlifiStore-0.1.0.tar.xz.spdx.json"
         validate_sbom(sbom)
-        (root / "GlyphaStore-0.1.0.tar.xz").write_bytes(b"different bytes")
+        (root / "GlifiStore-0.1.0.tar.xz").write_bytes(b"different bytes")
         with self.assertRaisesRegex(BundleError, "checksum disagrees"):
             validate_sbom(sbom)
 
@@ -671,10 +671,10 @@ class ReleaseBundleTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(BundleError, "no resolved license"):
             bind_sbom(
-                root / "GlyphaStore-0.1.0.tar.xz",
+                root / "GlifiStore-0.1.0.tar.xz",
                 raw,
                 root / "build-metadata.json",
-                root / "GlyphaStore-0.1.0.tar.xz.spdx.json",
+                root / "GlifiStore-0.1.0.tar.xz.spdx.json",
             )
 
     def test_release_evidence_requires_complete_checks_and_retained_logs(self) -> None:
@@ -835,15 +835,15 @@ class ReleaseBundleTests(unittest.TestCase):
             },
         ):
             write_candidate_admission(root)
-        staging_temporary = tempfile.TemporaryDirectory(prefix="glyphastore-policy-inputs-")
+        staging_temporary = tempfile.TemporaryDirectory(prefix="glifistore-policy-inputs-")
         self.addCleanup(staging_temporary.cleanup)
         staging = Path(staging_temporary.name)
         for artifact in (
-            "glyphastore-0.1.0-linux-x86_64.tar.xz",
-            "glyphastore-abi-v1-consumer-0.1.0-linux-x86_64.tar.xz",
-            "glyphastore-wire-v2-client-0.1.0-linux-x86_64.tar.xz",
-            "glyphastore-0.1.0-freebsd14.3-amd64.pkg",
-            "glyphastore-0.1.0-openbsd7.9-amd64.tgz",
+            "glifistore-0.1.0-linux-x86_64.tar.xz",
+            "glifistore-abi-v1-consumer-0.1.0-linux-x86_64.tar.xz",
+            "glifistore-wire-v2-client-0.1.0-linux-x86_64.tar.xz",
+            "glifistore-0.1.0-freebsd14.3-amd64.pkg",
+            "glifistore-0.1.0-openbsd7.9-amd64.tgz",
         ):
             (staging / artifact).write_bytes(artifact.encode("ascii"))
             write_bound_sbom(staging, artifact, root / "build-metadata.json")
@@ -858,11 +858,11 @@ class ReleaseBundleTests(unittest.TestCase):
             "wire-compatibility-evidence.json": ("wire_compatibility", "candidate-seal.json"),
             "freebsd-package-evidence.json": (
                 "freebsd_package",
-                "glyphastore-0.1.0-freebsd14.3-amd64.pkg",
+                "glifistore-0.1.0-freebsd14.3-amd64.pkg",
             ),
             "openbsd-package-evidence.json": (
                 "openbsd_package",
-                "glyphastore-0.1.0-openbsd7.9-amd64.tgz",
+                "glifistore-0.1.0-openbsd7.9-amd64.tgz",
             ),
             "reproducibility-evidence.json": ("reproducibility", "candidate-seal.json"),
         }

@@ -1,7 +1,7 @@
 #include "benchmark_metadata.hpp"
 #include "experimental/paired_shard.hpp"
-#include "glyphastore/store/config.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/store/config.hpp"
+#include "glifistore/store/store.hpp"
 #include "parse.hpp"
 
 #include <algorithm>
@@ -23,9 +23,9 @@
 namespace {
 
 using Clock = std::chrono::steady_clock;
-using glyphastore::experimental::PrototypeSubmitStatus;
-using glyphastore::experimental::PrototypeWriterBatchConfig;
-using glyphastore::experimental::VolatileShardPairPrototype;
+using glifistore::experimental::PrototypeSubmitStatus;
+using glifistore::experimental::PrototypeWriterBatchConfig;
+using glifistore::experimental::VolatileShardPairPrototype;
 
 struct Options final {
     std::size_t operations{500'000};
@@ -64,7 +64,7 @@ struct Measurement final {
         throw std::invalid_argument{"missing value for " + std::string{flag}};
     }
     const std::string_view input{text};
-    const auto value = glyphastore::bench::parse_decimal_size(input);
+    const auto value = glifistore::bench::parse_decimal_size(input);
     if (!value || (!allow_zero && *value == 0)) {
         throw std::invalid_argument{"invalid value for " + std::string{flag}};
     }
@@ -76,7 +76,7 @@ struct Measurement final {
     for (int index = 1; index < argc; ++index) {
         const std::string_view argument{argv[index]};
         if (argument == "--help" || argument == "-h") {
-            std::cout << "usage: glyphastore_paired_benchmark [--ops N] [--keys N] "
+            std::cout << "usage: glifistore_paired_benchmark [--ops N] [--keys N] "
                          "[--value-bytes N] [--repeats N] [--warmup N] "
                          "[--batch-records N] [--batch-wait-us N]\n";
             std::exit(0);
@@ -162,9 +162,9 @@ struct Measurement final {
     return result;
 }
 
-[[nodiscard]] auto open_current_store(const Material& material) -> std::unique_ptr<glyphastore::Store> {
-    glyphastore::StoreConfig config{.worker_config = {.explicit_count = 1}};
-    auto opened = glyphastore::Store::open(config);
+[[nodiscard]] auto open_current_store(const Material& material) -> std::unique_ptr<glifistore::Store> {
+    glifistore::StoreConfig config{.worker_config = {.explicit_count = 1}};
+    auto opened = glifistore::Store::open(config);
     if (!opened) {
         throw std::runtime_error{"cannot open current Store baseline"};
     }
@@ -177,7 +177,7 @@ struct Measurement final {
 }
 
 [[nodiscard]] auto wait_completion(VolatileShardPairPrototype& pair)
-    -> glyphastore::experimental::PrototypeCompletion {
+    -> glifistore::experimental::PrototypeCompletion {
     for (;;) {
         if (auto completion = pair.try_pop_completion()) {
             return *completion;
@@ -219,7 +219,7 @@ struct Measurement final {
     return pair;
 }
 
-[[nodiscard]] auto run_current_get(glyphastore::Store& store, const Material& material,
+[[nodiscard]] auto run_current_get(glifistore::Store& store, const Material& material,
                                    const std::size_t repeat) -> Measurement {
     std::vector<double> latencies;
     latencies.reserve(material.order.size() / 64U + 1U);
@@ -266,7 +266,7 @@ struct Measurement final {
                               std::move(latencies), checksum);
 }
 
-[[nodiscard]] auto run_current_mixed(glyphastore::Store& store, const Material& material,
+[[nodiscard]] auto run_current_mixed(glifistore::Store& store, const Material& material,
                                      const std::size_t repeat) -> Measurement {
     std::vector<double> get_latencies;
     get_latencies.reserve(material.order.size() / 64U + 1U);
@@ -392,7 +392,7 @@ void print_summaries(const std::vector<Measurement>& measurements) {
     }
 }
 
-void verify_final_state(glyphastore::Store& current, VolatileShardPairPrototype& pair,
+void verify_final_state(glifistore::Store& current, VolatileShardPairPrototype& pair,
                         const Material& material) {
     pair.adopt_publication();
     for (const auto& key : material.keys) {
@@ -417,8 +417,8 @@ int main(int argc, char** argv) {
         std::vector<Measurement> measurements;
         measurements.reserve((options.warmup + options.repeats) * 4U);
 
-        std::cout << "# glyphastore paired-shard A/B benchmark\n";
-        glyphastore::bench::print_common_metadata(std::cout, options.warmup, options.repeats);
+        std::cout << "# glifistore paired-shard A/B benchmark\n";
+        glifistore::bench::print_common_metadata(std::cout, options.warmup, options.repeats);
         std::cout << "# operations=" << options.operations << " keys=" << options.keys
                   << " value_bytes=" << options.value_bytes << " repeats=" << options.repeats
                   << " warmup=" << options.warmup << " batch_records=" << options.batch_records

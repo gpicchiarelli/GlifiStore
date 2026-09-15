@@ -1,4 +1,4 @@
-#include "glyphastore/index/index.hpp"
+#include "glifistore/index/index.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -11,7 +11,7 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
     if (size > 4096) {
         return 0;
     }
-    auto segment = std::make_shared<glyphastore::Segment>(glyphastore::SegmentId{1});
+    auto segment = std::make_shared<glifistore::Segment>(glifistore::SegmentId{1});
     const auto input = std::span<const std::byte>{reinterpret_cast<const std::byte*>(data), size};
     std::uint64_t sequence{1};
     for (std::size_t offset = 0; offset < size && sequence <= 64; ++sequence) {
@@ -22,16 +22,16 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size
         const auto value_size = std::min<std::size_t>(size - offset, 16U);
         const auto value = input.subspan(offset, value_size);
         offset += value_size;
-        const auto opcode = data[offset == 0 ? 0 : offset - 1] % 5U == 0U ? glyphastore::Opcode::erase
-                                                                          : glyphastore::Opcode::put;
+        const auto opcode = data[offset == 0 ? 0 : offset - 1] % 5U == 0U ? glifistore::Opcode::erase
+                                                                          : glifistore::Opcode::put;
         static_cast<void>(segment->append({
-            .sequence = glyphastore::SequenceNumber{sequence},
+            .sequence = glifistore::SequenceNumber{sequence},
             .opcode = opcode,
             .key = key,
-            .value = opcode == glyphastore::Opcode::erase ? std::span<const std::byte>{} : value,
+            .value = opcode == glifistore::Opcode::erase ? std::span<const std::byte>{} : value,
         }));
     }
-    const std::vector<glyphastore::SegmentPtr> segments{segment};
-    static_cast<void>(glyphastore::rebuild_index_from_segments(segments));
+    const std::vector<glifistore::SegmentPtr> segments{segment};
+    static_cast<void>(glifistore::rebuild_index_from_segments(segments));
     return 0;
 }

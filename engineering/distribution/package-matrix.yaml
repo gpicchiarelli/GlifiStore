@@ -1,4 +1,4 @@
-# GlyphaStore package backend matrix (Wave A framework).
+# GlifiStore package backend matrix (Wave A framework).
 #
 # Authority for which packaging backends exist, which CI profile exercises them,
 # which lifecycle checks each backend owes, and which artifacts the release policy
@@ -122,7 +122,7 @@ lifecycle_checks:
     description: >-
       upgrade from the sealed N-1 package and prove dataset continuity
       (Linux deb/rpm, FreeBSD/OpenBSD, and MacPorts/Homebrew run
-      install→seed→upgrade→verify when GLYPHASTORE_N1_PACKAGE_DIR supplies sealed
+      install→seed→upgrade→verify when GLIFISTORE_N1_PACKAGE_DIR supplies sealed
       predecessor packages or macOS source archives; package bytes / source archives
       are never rebuilt from HEAD. MacPorts/Homebrew still render the Portfile/formula
       from tip templates against that sealed source digest until archive-owned recipes
@@ -141,7 +141,7 @@ lifecycle_checks:
 # silently accepting a new target later.
 out_of_scope:
   - id: windows
-    reason: Windows is not a supported GlyphaStore platform; no runtime, durability or service model exists.
+    reason: Windows is not a supported GlifiStore platform; no runtime, durability or service model exists.
     required_before_scope: accepted ADR plus platform durability evidence rows
   - id: apple-pkg
     reason: >-
@@ -157,7 +157,7 @@ out_of_scope:
 # only for freebsd and openbsd; new backends stay false until a gate promotes them.
 release_policy_artifacts:
   - id: source
-    description: sealed source archive GlyphaStore-<version>.tar.xz
+    description: sealed source archive GlifiStore-<version>.tar.xz
     required_for_release: true
   - id: linux
     description: Linux install prefix archive
@@ -228,8 +228,8 @@ backends:
         packaging/debian/templates is rendered by
         engineering/tools/render_package_metadata.py; the build, install, service and removal
         rows only run inside the digest-pinned container
-        (GLYPHASTORE_PACKAGE_CI_CONTAINER=1) or on a disposable root host
-        (GLYPHASTORE_PACKAGE_CI_NATIVE=1). Every other environment reports them BLOCKED.
+        (GLIFISTORE_PACKAGE_CI_CONTAINER=1) or on a disposable root host
+        (GLIFISTORE_PACKAGE_CI_NATIVE=1). Every other environment reports them BLOCKED.
       - >-
         .github/workflows/package-ci.yml retains this backend's evidence per profile.
         Retained nightly container runs reach LIFECYCLE_VERIFIED with service-lifecycle PASS
@@ -237,12 +237,12 @@ backends:
         candidate. required_for_release stays false until a gate promotes this backend.
       - >-
         package-upgrade selects the SemVer predecessor from the release context. When
-        GLYPHASTORE_N1_PACKAGE_DIR supplies sealed predecessor packages, the container
+        GLIFISTORE_N1_PACKAGE_DIR supplies sealed predecessor packages, the container
         lifecycle runs install→seed→upgrade→verify; otherwise the check stays
         NOT_APPLICABLE_INITIAL_BASELINE or NOT_RUN. N-1 is never rebuilt from HEAD.
       - >-
         The library package is not Multi-Arch: same and installs into a non-multiarch libdir,
-        because the installed glyphastore-abi.pc derives its prefix two levels above itself.
+        because the installed glifistore-abi.pc derives its prefix two levels above itself.
       - >-
         Only the executed Debian and Ubuntu rows may ever be reported; no other Debian
         derivative is claimed.
@@ -285,11 +285,11 @@ backends:
       release: [structural-metadata, package-metadata-render, sealed-source-admission]
     limitations:
       - >-
-        packaging/rpm/templates/glyphastore.spec.in is rendered by
+        packaging/rpm/templates/glifistore.spec.in is rendered by
         engineering/tools/render_package_metadata.py; the build, install, service and removal
         rows only run inside the digest-pinned container
-        (GLYPHASTORE_PACKAGE_CI_CONTAINER=1) or on a disposable root host
-        (GLYPHASTORE_PACKAGE_CI_NATIVE=1). Every other environment reports them BLOCKED.
+        (GLIFISTORE_PACKAGE_CI_CONTAINER=1) or on a disposable root host
+        (GLIFISTORE_PACKAGE_CI_NATIVE=1). Every other environment reports them BLOCKED.
       - >-
         .github/workflows/package-ci.yml retains this backend's evidence per profile.
         Retained nightly container runs reach LIFECYCLE_VERIFIED with service-lifecycle PASS
@@ -298,7 +298,7 @@ backends:
         (Fedora 41 is EOL). required_for_release stays false until a gate promotes this backend.
       - >-
         package-upgrade selects the SemVer predecessor from the release context. When
-        GLYPHASTORE_N1_PACKAGE_DIR supplies sealed predecessor packages, the container
+        GLIFISTORE_N1_PACKAGE_DIR supplies sealed predecessor packages, the container
         lifecycle runs install→seed→upgrade→verify; otherwise the check stays
         NOT_APPLICABLE_INITIAL_BASELINE or NOT_RUN. N-1 is never rebuilt from HEAD.
       - >-
@@ -346,15 +346,15 @@ backends:
       - >-
         packaging/macports/Portfile.in is rendered by
         engineering/tools/render_macos_packaging.py; the native port, install and daemon rows
-        only run on a macOS host with MacPorts and GLYPHASTORE_PACKAGE_CI_NATIVE=1.
+        only run on a macOS host with MacPorts and GLIFISTORE_PACKAGE_CI_NATIVE=1.
       - >-
         The port declares an unprivileged launchd startup item
-        (startupitem.user/group glyphastore); the native lifecycle loads and unloads it when
-        GLYPHASTORE_PACKAGE_CI_NATIVE=1. Without a retained native run, service-lifecycle
+        (startupitem.user/group glifistore); the native lifecycle loads and unloads it when
+        GLIFISTORE_PACKAGE_CI_NATIVE=1. Without a retained native run, service-lifecycle
         stays an open gate and this backend cannot report PASS.
       - >-
         package-upgrade stays NOT_APPLICABLE_INITIAL_BASELINE or NOT_RUN until sealed N-1
-        source archives are supplied via GLYPHASTORE_N1_PACKAGE_DIR; the native lifecycle
+        source archives are supplied via GLIFISTORE_N1_PACKAGE_DIR; the native lifecycle
         then runs install→seed→upgrade→verify. Sealed source bytes are never rebuilt from
         HEAD; the Portfile is still rendered from tip templates against that sealed digest
         until archive-owned packaging recipes are retained.
@@ -393,16 +393,16 @@ backends:
       - package-remove
     limitations:
       - >-
-        packaging/homebrew/glyphastore.rb.in is rendered by
+        packaging/homebrew/glifistore.rb.in is rendered by
         engineering/tools/render_macos_packaging.py; the native audit, build, install and daemon
-        rows only run on a macOS host with Homebrew and GLYPHASTORE_PACKAGE_CI_NATIVE=1.
+        rows only run on a macOS host with Homebrew and GLIFISTORE_PACKAGE_CI_NATIVE=1.
       - >-
         The formula declares a brew services block; the native lifecycle starts, health-checks and
-        stops it when GLYPHASTORE_PACKAGE_CI_NATIVE=1. Without a retained native run,
+        stops it when GLIFISTORE_PACKAGE_CI_NATIVE=1. Without a retained native run,
         service-lifecycle stays an open gate and this backend cannot report PASS.
       - >-
         package-upgrade stays NOT_APPLICABLE_INITIAL_BASELINE or NOT_RUN until sealed N-1
-        source archives are supplied via GLYPHASTORE_N1_PACKAGE_DIR; the native lifecycle
+        source archives are supplied via GLIFISTORE_N1_PACKAGE_DIR; the native lifecycle
         then runs install→seed→upgrade→verify. Sealed source bytes are never rebuilt from
         HEAD; the formula is still rendered from tip templates against that sealed digest
         until archive-owned packaging recipes are retained.
@@ -466,7 +466,7 @@ backends:
         acceptance; upstream-ports-acceptance stays an open gate until upstream accepts it.
       - >-
         package-upgrade stays NOT_APPLICABLE_INITIAL_BASELINE or NOT_RUN until sealed N-1
-        .pkg packages are supplied via GLYPHASTORE_N1_PACKAGE_DIR; the native lifecycle
+        .pkg packages are supplied via GLIFISTORE_N1_PACKAGE_DIR; the native lifecycle
         then runs install→seed→upgrade→verify (never rebuilds N-1 from HEAD).
 
   - id: openbsd
@@ -524,5 +524,5 @@ backends:
         acceptance; upstream-ports-acceptance stays an open gate until upstream accepts it.
       - >-
         package-upgrade stays NOT_APPLICABLE_INITIAL_BASELINE or NOT_RUN until sealed N-1
-        .tgz packages are supplied via GLYPHASTORE_N1_PACKAGE_DIR; the native lifecycle
+        .tgz packages are supplied via GLIFISTORE_N1_PACKAGE_DIR; the native lifecycle
         then runs install→seed→upgrade→verify (never rebuilds N-1 from HEAD).

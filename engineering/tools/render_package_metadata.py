@@ -41,12 +41,12 @@ from engineering.tools.package_framework import (
 PLACEHOLDER = re.compile(r"@[A-Z0-9_]+@")
 
 MAINTAINER = "Giacomo Picchiarelli <gpicchiarelli@gmail.com>"
-HOMEPAGE = "https://github.com/gpicchiarelli/GlyphaStore"
+HOMEPAGE = "https://github.com/gpicchiarelli/GlifiStore"
 LICENSE_ID = "BSD-3-Clause"
-SERVICE_USER = "glyphastore"
-SERVICE_GROUP = "glyphastore"
+SERVICE_USER = "glifistore"
+SERVICE_GROUP = "glifistore"
 
-RUNTIME_PACKAGE = "glyphastore"
+RUNTIME_PACKAGE = "glifistore"
 DEV_PACKAGE_SUFFIX = "-dev"
 
 # Backend layouts. Only the values a distribution genuinely decides are
@@ -62,7 +62,7 @@ LAYOUTS: dict[str, dict[str, str]] = {
         "mandir": "/usr/share/man",
         "sysconfdir": "/etc",
         "unitdir": "/lib/systemd/system",
-        "statedir": "/var/lib/glyphastore",
+        "statedir": "/var/lib/glifistore",
     },
     "rpm": {
         "prefix": "/usr",
@@ -73,7 +73,7 @@ LAYOUTS: dict[str, dict[str, str]] = {
         "mandir": "/usr/share/man",
         "sysconfdir": "/etc",
         "unitdir": "/usr/lib/systemd/system",
-        "statedir": "/var/lib/glyphastore",
+        "statedir": "/var/lib/glifistore",
     },
 }
 
@@ -95,14 +95,14 @@ DEB_OUTPUTS: dict[str, tuple[str, int]] = {
 }
 
 RPM_OUTPUTS: dict[str, tuple[str, int]] = {
-    "glyphastore.spec.in": ("@RUNTIME_PACKAGE@.spec", 0o644),
+    "glifistore.spec.in": ("@RUNTIME_PACKAGE@.spec", 0o644),
 }
 
 # dh_installsystemd installs debian/<package>.<unit>.service as <unit>.service.
-DEB_UNIT_OUTPUT = "debian/@RUNTIME_PACKAGE@.glyphastored.service"
-RPM_UNIT_OUTPUT = "glyphastored.service"
+DEB_UNIT_OUTPUT = "debian/@RUNTIME_PACKAGE@.glifistored.service"
+RPM_UNIT_OUTPUT = "glifistored.service"
 
-SERVICE_TEMPLATE = "packaging/common/service/glyphastored.service.in"
+SERVICE_TEMPLATE = "packaging/common/service/glifistored.service.in"
 ACCOUNT_TEMPLATE = "packaging/common/service/service-account.sh.in"
 
 
@@ -149,7 +149,7 @@ def build_tokens(
     product_version = context["product_version"]
     abi = context["abi"]
     commit = context["git"]["commit"]
-    config_file = f"{layout['sysconfdir']}/glyphastore/glyphastored.conf"
+    config_file = f"{layout['sysconfdir']}/glifistore/glifistored.conf"
     library_package = f"lib{RUNTIME_PACKAGE}{abi['major']}"
 
     tokens: dict[str, str] = {
@@ -167,8 +167,8 @@ def build_tokens(
         "RUNTIME_PACKAGE": RUNTIME_PACKAGE,
         "LIB_PACKAGE": library_package,
         "DEV_PACKAGE": f"lib{RUNTIME_PACKAGE}{DEV_PACKAGE_SUFFIX}",
-        "SOURCE_ARCHIVE": f"GlyphaStore-{product_version}.tar.xz",
-        "SOURCE_DIRECTORY": f"GlyphaStore-{product_version}",
+        "SOURCE_ARCHIVE": f"GlifiStore-{product_version}.tar.xz",
+        "SOURCE_DIRECTORY": f"GlifiStore-{product_version}",
         "MAINTAINER": maintainer,
         "HOMEPAGE": HOMEPAGE,
         "LICENSE_ID": LICENSE_ID,

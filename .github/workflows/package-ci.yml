@@ -238,10 +238,10 @@ jobs:
             arguments+=(--candidate dist/release-candidate)
           fi
           if [[ "$CONTAINER_LIFECYCLE" == "true" ]]; then
-            export GLYPHASTORE_PACKAGE_CI_CONTAINER=1
+            export GLIFISTORE_PACKAGE_CI_CONTAINER=1
           fi
           if [[ "$NATIVE_LIFECYCLE" == "true" ]]; then
-            export GLYPHASTORE_PACKAGE_CI_NATIVE=1
+            export GLIFISTORE_PACKAGE_CI_NATIVE=1
           fi
           ./scripts/package-ci.sh "${arguments[@]}"
       - name: Validate the retained evidence against the matrix

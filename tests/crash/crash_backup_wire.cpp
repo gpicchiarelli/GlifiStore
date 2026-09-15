@@ -1,9 +1,9 @@
 #include "crash_checkpoint.hpp"
-#include "glyphastore/client/client.hpp"
-#include "glyphastore/persistence/filesystem.hpp"
-#include "glyphastore/persistence/store_verify.hpp"
-#include "glyphastore/server/server.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/client/client.hpp"
+#include "glifistore/persistence/filesystem.hpp"
+#include "glifistore/persistence/store_verify.hpp"
+#include "glifistore/server/server.hpp"
+#include "glifistore/store/store.hpp"
 
 #include <chrono>
 #include <cstdlib>
@@ -21,7 +21,7 @@
 
 namespace {
 
-[[nodiscard]] auto value_string(const glyphastore::OwnedValue& value) -> std::string_view {
+[[nodiscard]] auto value_string(const glifistore::OwnedValue& value) -> std::string_view {
     return {reinterpret_cast<const char*>(value.bytes.data()), value.bytes.size()};
 }
 
@@ -85,20 +85,20 @@ void print_usage(const char* argv0) {
     std::cerr << "usage: " << argv0
               << " [--boundary copy_backup_segment|copy_backup_manifest|sync_backup_destination]"
               << " [--data-dir PATH] [--backup-dir PATH] [--checkpoint-dir PATH]\n"
-              << "  Wire BACKUP process-kill matrix (in-process Server + Client; not glyphastored exec).\n";
+              << "  Wire BACKUP process-kill matrix (in-process Server + Client; not glifistored exec).\n";
 }
 
 void run_worker(const Options& options) {
-    glyphastore::crash::CheckpointState checkpoint{
+    glifistore::crash::CheckpointState checkpoint{
         .checkpoint_dir = options.checkpoint_dir,
         .kill_at = options.boundary,
     };
 
-    auto opened = glyphastore::server::Server::create(
+    auto opened = glifistore::server::Server::create(
         {.port = 0, .maximum_connections = 4}, {.worker_config = {.explicit_count = 1},
-                                                .storage_mode = glyphastore::StorageMode::durable_sync,
+                                                .storage_mode = glifistore::StorageMode::durable_sync,
                                                 .data_directory = options.data_dir,
-                                                .durable_open_mode = glyphastore::DurableOpenMode::create_new,
+                                                .durable_open_mode = glifistore::DurableOpenMode::create_new,
                                                 .filesystem_hooks = checkpoint.hooks()});
     if (!opened) {
         throw std::runtime_error(opened.error().message);
@@ -108,7 +108,7 @@ void run_worker(const Options& options) {
         throw std::runtime_error("server start failed");
     }
 
-    auto connected = glyphastore::client::Client::connect({
+    auto connected = glifistore::client::Client::connect({
         .port = server.port(),
         .request_timeout_ms = 60'000,
     });
@@ -138,14 +138,14 @@ void run_worker(const Options& options) {
 }
 
 [[nodiscard]] auto verify_after_kill(const Options& options) -> bool {
-    const auto verified_backup = glyphastore::verify_durable_store_path(options.backup_dir);
+    const auto verified_backup = glifistore::verify_durable_store_path(options.backup_dir);
     if (options.boundary == "copy_backup_segment" || options.boundary == "copy_backup_segment#1") {
         if (verified_backup.has_value()) {
             std::cerr << "incomplete wire backup unexpectedly verified after kill at " << options.boundary
                       << '\n';
             return false;
         }
-        if (std::filesystem::exists(options.backup_dir / glyphastore::kManifestFilename)) {
+        if (std::filesystem::exists(options.backup_dir / glifistore::kManifestFilename)) {
             std::cerr << "manifest present after mid-segment wire BACKUP kill\n";
             return false;
         }
@@ -154,11 +154,11 @@ void run_worker(const Options& options) {
         return false;
     }
 
-    auto reopened = glyphastore::Store::open({
+    auto reopened = glifistore::Store::open({
         .worker_config = {.explicit_count = 1},
-        .storage_mode = glyphastore::StorageMode::durable_sync,
+        .storage_mode = glifistore::StorageMode::durable_sync,
         .data_directory = options.data_dir,
-        .durable_open_mode = glyphastore::DurableOpenMode::open_existing,
+        .durable_open_mode = glifistore::DurableOpenMode::open_existing,
     });
     if (!reopened) {
         std::cerr << "source reopen failed: " << reopened.error().message << '\n';
@@ -175,12 +175,12 @@ void run_worker(const Options& options) {
     }
 
     // Restart an in-process Server on the same data dir and read via wire GET.
-    auto restarted = glyphastore::server::Server::create(
+    auto restarted = glifistore::server::Server::create(
         {.port = 0, .maximum_connections = 4},
         {.worker_config = {.explicit_count = 1},
-         .storage_mode = glyphastore::StorageMode::durable_sync,
+         .storage_mode = glifistore::StorageMode::durable_sync,
          .data_directory = options.data_dir,
-         .durable_open_mode = glyphastore::DurableOpenMode::open_existing});
+         .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     if (!restarted) {
         std::cerr << "server restart failed: " << restarted.error().message << '\n';
         return false;
@@ -190,7 +190,7 @@ void run_worker(const Options& options) {
         std::cerr << "server restart start failed\n";
         return false;
     }
-    auto connected = glyphastore::client::Client::connect({.port = server.port()});
+    auto connected = glifistore::client::Client::connect({.port = server.port()});
     if (!connected) {
         std::cerr << "client reconnect failed: " << connected.error().message << '\n';
         return false;
@@ -221,7 +221,7 @@ void run_worker(const Options& options) {
 [[nodiscard]] auto run_case(Options options) -> bool {
     if (options.data_dir.empty()) {
         options.data_dir = std::filesystem::temp_directory_path() /
-                           ("glyphastore-crash-backup-wire-" + crash_run_suffix()) / "store";
+                           ("glifistore-crash-backup-wire-" + crash_run_suffix()) / "store";
     }
     if (options.backup_dir.empty()) {
         options.backup_dir = options.data_dir.parent_path() / "backup";
@@ -233,7 +233,7 @@ void run_worker(const Options& options) {
     std::error_code ignored;
     std::filesystem::remove_all(options.data_dir.parent_path(), ignored);
     std::filesystem::create_directories(options.checkpoint_dir);
-    glyphastore::crash::remove_checkpoint_markers(options.checkpoint_dir);
+    glifistore::crash::remove_checkpoint_markers(options.checkpoint_dir);
 
     const pid_t child = ::fork();
     if (child < 0) {
@@ -251,7 +251,7 @@ void run_worker(const Options& options) {
         }
     }
 
-    if (!glyphastore::crash::wait_for_checkpoint(options.checkpoint_dir, options.boundary)) {
+    if (!glifistore::crash::wait_for_checkpoint(options.checkpoint_dir, options.boundary)) {
         std::cerr << "timed out waiting for checkpoint " << options.boundary << '\n';
         ::kill(child, SIGKILL);
         int status = 0;

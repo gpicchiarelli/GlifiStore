@@ -1,6 +1,6 @@
-# Agent guidance for GlyphaStore
+# Agent guidance for GlifiStore
 
-GlyphaStore is an **architectural prototype**. Do not claim production readiness,
+GlifiStore is an **architectural prototype**. Do not claim production readiness,
 alpha/beta/stable closure, E3/E4 durability certification, or “ready for hostile
 public deployment” unless the corresponding quality gates in `engineering/gates/`
 are in `PROVATA_IN_CI` / `ACCETTATA_PER_RILASCIO` with existing evidence paths.
@@ -25,7 +25,7 @@ Design text or code presence alone never closes a gate.
 - Official runtime: paired Reader–Writer shard pairs (ADR 0031/0032); no silent dual-runtime.
 - Partition ownership, immutable read generations, bounded lanes, fail-closed recovery.
 - No unbounded client-controlled work; no raw owning `new`/`delete` in production paths.
-- No persisted struct casts; explicit little-endian codecs (`include/glyphastore/core/little_endian.hpp`);
+- No persisted struct casts; explicit little-endian codecs (`include/glifistore/core/little_endian.hpp`);
   checked size/offset/capacity arithmetic.
 - macOS, Linux, FreeBSD, and OpenBSD remain in documented scope; durability claims are
   platform-row specific (see platform durability evidence matrix).

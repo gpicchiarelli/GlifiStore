@@ -8,9 +8,9 @@ Last reviewed: 2026-08-27
 Machine-readable authority: [`engineering/performance/budgets.yaml`](../../engineering/performance/budgets.yaml).
 Validator: `python3 engineering/tools/validate_perf_budgets.py`.
 
-GlyphaStore claim ceiling remains **architectural prototype**. Hosted GitHub runners produce
+GlifiStore claim ceiling remains **architectural prototype**. Hosted GitHub runners produce
 **regression signals only**. Absolute throughput or p99 product claims require a labeled
-hardware runner (`glyphastore-linux-perf`) and a `pass-candidate` manifest
+hardware runner (`glifistore-linux-perf`) and a `pass-candidate` manifest
 ([evidence taxonomy](evidence-taxonomy.md) label `hardware`).
 
 Wave 6 scaffolding prepares absolute placeholders below. They stay
@@ -33,7 +33,7 @@ Wave 6 scaffolding prepares absolute placeholders below. They stay
 
 ## Absolute placeholders (Wave 6 — not enforced)
 
-Fill numeric thresholds only from a `glyphastore-linux-perf` `pass-candidate` artifact. Until then,
+Fill numeric thresholds only from a `glifistore-linux-perf` `pass-candidate` artifact. Until then,
 treat every cell as scaffolding:
 
 | Placeholder | Intended metric | Draft rule (not enforced) | Evidence class | Status |
@@ -50,7 +50,7 @@ Methodology: [`paired-shards-linux-p1.md`](../benchmarks/paired-shards-linux-p1.
 
 ## Wave 6 blockers (honest open)
 
-1. Self-hosted runner labeled `glyphastore-linux-perf` publishing a retained `pass-candidate`
+1. Self-hosted runner labeled `glifistore-linux-perf` publishing a retained `pass-candidate`
    manifest (hard pins, NUMA, disjoint client/server CPUs, migration counters).
 2. Physical E3 durability lab (separate from this A/B harness); E3/E4 remain open — rehearsal ≠
    certification ([evidence taxonomy](evidence-taxonomy.md)).

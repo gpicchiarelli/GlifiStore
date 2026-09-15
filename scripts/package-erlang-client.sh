@@ -3,11 +3,11 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-export GLYPHASTORE_ROOT="$root"
+export GLIFISTORE_ROOT="$root"
 # shellcheck disable=SC1091
 source "$root/scripts/export-reproducible-build-env.sh"
 sdk="$root/sdk/erlang"
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-erlang-pack.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-erlang-pack.XXXXXX")"
 cleanup() { rm -rf "$work"; }
 trap cleanup EXIT
 
@@ -35,26 +35,26 @@ done
 )
 
 expected="$(tr -d '[:space:]' <"$root/VERSION")"
-got="$(erl -noshell -pa "$sdk/_build/default/lib/glyphastore/ebin" \
-  -eval 'io:format("~s", [glyphastore_version:version()]), halt().')"
+got="$(erl -noshell -pa "$sdk/_build/default/lib/glifistore/ebin" \
+  -eval 'io:format("~s", [glifistore_version:version()]), halt().')"
 if [[ "$got" != "$expected" ]]; then
-  echo "erlang glyphastore_version:version()='$got' does not match VERSION='$expected'" >&2
+  echo "erlang glifistore_version:version()='$got' does not match VERSION='$expected'" >&2
   exit 1
 fi
 
-chmod +x "$sdk/scripts/glyphastore-interop.escript" "$sdk/scripts/glyphastore-version.escript" \
+chmod +x "$sdk/scripts/glifistore-interop.escript" "$sdk/scripts/glifistore-version.escript" \
   "$sdk/benchmarks/client_benchmark.escript"
-escript "$sdk/scripts/glyphastore-version.escript" >/dev/null
+escript "$sdk/scripts/glifistore-version.escript" >/dev/null
 
 mkdir -p "$sdk/dist"
-rm -f "$sdk/dist"/glyphastore-erlang-*.tar.gz
+rm -f "$sdk/dist"/glifistore-erlang-*.tar.gz
 {
-  echo "package=glyphastore"
+  echo "package=glifistore"
   echo "version=$got"
   echo "otp=$(erl -noshell -eval 'io:format("~s", [erlang:system_info(otp_release)]), halt().')"
   echo "rebar3=$(rebar3 version | head -1)"
   echo "source_date_epoch=$SOURCE_DATE_EPOCH"
-  echo "built_at=$(glyphastore_repro_iso8601)"
+  echo "built_at=$(glifistore_repro_iso8601)"
 } >"$sdk/dist/package-info.txt"
 
 for required in LICENSE NOTICE THIRD_PARTY_NOTICES.md; do
@@ -69,8 +69,8 @@ if ! grep -q 'LICENSE' "$sdk/rebar.config" || ! grep -q 'NOTICE' "$sdk/rebar.con
 fi
 
 # Build a reproducible, tracked-source archive without claiming that it is a published Hex package.
-archive_name="glyphastore-erlang-$got.tar.gz"
-archive_root="$work/glyphastore-erlang-$got"
+archive_name="glifistore-erlang-$got.tar.gz"
+archive_root="$work/glifistore-erlang-$got"
 mkdir -p "$archive_root"
 while IFS= read -r -d '' path; do
   relative="${path#sdk/erlang/}"
@@ -88,9 +88,9 @@ tar -xzf "$sdk/dist/$archive_name" -C "$verify_root"
   cd "$verify_root/$(basename "$archive_root")"
   rebar3 compile >/dev/null
 )
-artifact_ebin="$verify_root/$(basename "$archive_root")/_build/default/lib/glyphastore/ebin"
+artifact_ebin="$verify_root/$(basename "$archive_root")/_build/default/lib/glifistore/ebin"
 artifact_version="$(erl -noshell -pa "$artifact_ebin" \
-  -eval 'io:format("~s", [glyphastore_version:version()]), halt().')"
+  -eval 'io:format("~s", [glifistore_version:version()]), halt().')"
 if [[ "$artifact_version" != "$got" ]]; then
   echo "Erlang source archive version '$artifact_version' does not match '$got'" >&2
   exit 1
@@ -102,4 +102,4 @@ fi
 } >>"$sdk/dist/package-info.txt"
 
 echo "Erlang packaging verification OK ($sdk/dist/$archive_name)"
-echo "Publish path: Hex package glyphastore@$got (see sdk/erlang/PACKAGING.md)"
+echo "Publish path: Hex package glifistore@$got (see sdk/erlang/PACKAGING.md)"

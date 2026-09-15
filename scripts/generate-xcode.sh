@@ -8,7 +8,7 @@ fi
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cmake="$root/.tools/venv/bin/cmake"
-project="$root/build/xcode/GlyphaStore.xcodeproj"
+project="$root/build/xcode/GlifiStore.xcodeproj"
 shared_schemes="$project/xcshareddata/xcschemes"
 
 if ! xcodebuild -version >/dev/null 2>&1; then

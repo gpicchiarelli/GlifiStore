@@ -1,13 +1,13 @@
 #pragma once
 
-#include "glyphastore/core/error.hpp"
+#include "glifistore/core/error.hpp"
 
 #include <cerrno>
 #include <string>
 #include <string_view>
 #include <system_error>
 
-namespace glyphastore {
+namespace glifistore {
 
 [[nodiscard]] inline auto persistence_system_error(const std::string_view operation,
                                                    const int error_number = errno) -> Unexpected {
@@ -36,4 +36,4 @@ namespace glyphastore {
                           std::error_code{error_number, std::system_category()}.message());
 }
 
-} // namespace glyphastore
+} // namespace glifistore

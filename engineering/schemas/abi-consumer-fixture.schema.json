@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.dev/schemas/abi-consumer-fixture.schema.json",
-  "title": "GlyphaStore compiled C ABI consumer fixture",
+  "$id": "https://glifistore.dev/schemas/abi-consumer-fixture.schema.json",
+  "title": "GlifiStore compiled C ABI consumer fixture",
   "type": "object",
   "additionalProperties": false,
   "required": [

@@ -1,30 +1,30 @@
 #!/usr/bin/env bash
-# Run GlyphaStore libFuzzer targets with a bounded wall-clock budget.
+# Run GlifiStore libFuzzer targets with a bounded wall-clock budget.
 #
 # Intended for:
 #   - GitHub Actions (Sanitizers workflow fuzz-run job)
 #   - Local smoke after `cmake --preset unix-fuzz` / `macos-fuzz`
 #
 # Environment:
-#   GLYPHASTORE_FUZZ_BUILD_DIR   build directory (default: build/unix-fuzz)
-#   GLYPHASTORE_FUZZ_SECONDS     max_total_time per target (default: 60)
-#   GLYPHASTORE_FUZZ_TARGET      single target name, or empty for all
-#   GLYPHASTORE_FUZZ_JOBS        libFuzzer -jobs (default: 1)
-#   GLYPHASTORE_FUZZ_TIMEOUT     per-input timeout seconds (default: 10)
-#   GLYPHASTORE_FUZZ_CORPUS_ROOT corpus root (default: fuzz/corpus)
-#   GLYPHASTORE_FUZZ_ARTIFACT_DIR crash/timeout artifact dir (default: build dir)
+#   GLIFISTORE_FUZZ_BUILD_DIR   build directory (default: build/unix-fuzz)
+#   GLIFISTORE_FUZZ_SECONDS     max_total_time per target (default: 60)
+#   GLIFISTORE_FUZZ_TARGET      single target name, or empty for all
+#   GLIFISTORE_FUZZ_JOBS        libFuzzer -jobs (default: 1)
+#   GLIFISTORE_FUZZ_TIMEOUT     per-input timeout seconds (default: 10)
+#   GLIFISTORE_FUZZ_CORPUS_ROOT corpus root (default: fuzz/corpus)
+#   GLIFISTORE_FUZZ_ARTIFACT_DIR crash/timeout artifact dir (default: build dir)
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
 
-build_dir="${GLYPHASTORE_FUZZ_BUILD_DIR:-$root/build/unix-fuzz}"
-seconds="${GLYPHASTORE_FUZZ_SECONDS:-60}"
-jobs="${GLYPHASTORE_FUZZ_JOBS:-1}"
-timeout_s="${GLYPHASTORE_FUZZ_TIMEOUT:-10}"
-corpus_root="${GLYPHASTORE_FUZZ_CORPUS_ROOT:-$root/fuzz/corpus}"
-artifact_dir="${GLYPHASTORE_FUZZ_ARTIFACT_DIR:-$build_dir/fuzz-artifacts}"
-selected="${GLYPHASTORE_FUZZ_TARGET:-}"
+build_dir="${GLIFISTORE_FUZZ_BUILD_DIR:-$root/build/unix-fuzz}"
+seconds="${GLIFISTORE_FUZZ_SECONDS:-60}"
+jobs="${GLIFISTORE_FUZZ_JOBS:-1}"
+timeout_s="${GLIFISTORE_FUZZ_TIMEOUT:-10}"
+corpus_root="${GLIFISTORE_FUZZ_CORPUS_ROOT:-$root/fuzz/corpus}"
+artifact_dir="${GLIFISTORE_FUZZ_ARTIFACT_DIR:-$build_dir/fuzz-artifacts}"
+selected="${GLIFISTORE_FUZZ_TARGET:-}"
 
 all_targets=(record_decoder segment_scanner index_rebuild protocol_decoder store_state_machine)
 
@@ -35,13 +35,13 @@ else
 fi
 
 if ! [[ "$seconds" =~ ^[1-9][0-9]*$ ]]; then
-  echo "error: GLYPHASTORE_FUZZ_SECONDS must be a positive integer (got '$seconds')" >&2
+  echo "error: GLIFISTORE_FUZZ_SECONDS must be a positive integer (got '$seconds')" >&2
   exit 1
 fi
 
 mkdir -p "$artifact_dir"
 
-echo "== GlyphaStore continuous fuzz =="
+echo "== GlifiStore continuous fuzz =="
 echo "build_dir=$build_dir"
 echo "seconds_per_target=$seconds"
 echo "jobs=$jobs"

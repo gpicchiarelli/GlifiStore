@@ -51,7 +51,7 @@ jobs:
           CXX: clang++
         run: |
           cmake --preset unix-debug
-          cmake --build --preset unix-debug --target glyphastored glyphastore_interop_client
+          cmake --build --preset unix-debug --target glifistored glifistore_interop_client
       - name: Resolve soak profile
         id: soak
         run: |
@@ -64,8 +64,8 @@ jobs:
           fi
       - name: Run extended soak
         env:
-          GLYPHASTORED: ${{ github.workspace }}/build/unix-debug/glyphastored
-          GLYPHASTORE_INTEROP_CLIENT: ${{ github.workspace }}/build/unix-debug/glyphastore_interop_client
+          GLIFISTORED: ${{ github.workspace }}/build/unix-debug/glifistored
+          GLIFISTORE_INTEROP_CLIENT: ${{ github.workspace }}/build/unix-debug/glifistore_interop_client
           SOAK_PROFILE: ${{ steps.soak.outputs.profile }}
           SOAK_SECONDS: ${{ steps.soak.outputs.seconds }}
         run: |

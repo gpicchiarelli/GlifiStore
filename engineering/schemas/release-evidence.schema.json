@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.dev/schemas/release-evidence-v1.json",
-  "title": "GlyphaStore retained release evidence",
+  "$id": "https://glifistore.dev/schemas/release-evidence-v1.json",
+  "title": "GlifiStore retained release evidence",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "evidence_type", "result", "git_sha", "product_version", "generated_at", "producer", "subject", "checks", "limitations"],

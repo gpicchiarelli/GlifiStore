@@ -1,4 +1,4 @@
-// Package protocol implements GlyphaStore wire protocol v2 encoding, decoding,
+// Package protocol implements GlifiStore wire protocol v2 encoding, decoding,
 // and Worker routing (FNV-1a / SipHash-2-4 per ADR 0030).
 package protocol
 
@@ -14,7 +14,7 @@ const (
 	ResponseHeaderBytes         = 40
 	MaxFrameBytes               = 2 * 1024 * 1024
 	NoWorker                    = 0xFFFF_FFFF
-	Identity                    = "GlyphaStore/2"
+	Identity                    = "GlifiStore/2"
 	RoutingAlgFNV1a64V1         = 1
 	RoutingAlgSipHash24V1       = 2
 	WorkerRoutingSipKey1Xor     = 0x6a09e667f3bcc909

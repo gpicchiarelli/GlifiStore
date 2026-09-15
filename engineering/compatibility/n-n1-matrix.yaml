@@ -26,7 +26,7 @@ store_open:
     reader: "0.1.x"
     status: supported_offline_only
     conditions:
-      - offline_glyphastore_migrate_store
+      - offline_glifistore_migrate_store
       - new_destination_directory
     evidence:
       - docs/adr/0024-offline-worker-migration.md

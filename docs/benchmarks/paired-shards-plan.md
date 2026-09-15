@@ -21,7 +21,7 @@ Gate Reactor TCP, una coppia:
 
 Le sezioni storiche sotto documentano i gate che hanno preceduto la migrazione. Il daemon non offre
 due modelli concorrenti: Reader/Reactor e Writer seriale per shard sono il **solo** runtime di
-`glyphastored` 0.1.0. Il prototipo volatile sotto `src/experimental/` resta lab-only e non è un
+`glifistored` 0.1.0. Il prototipo volatile sotto `src/experimental/` resta lab-only e non è un
 secondo modello selezionabile. Sono chiusi e coperti da test il routing multi-pair, mutation/completion
 SPSC, publication immutabile, refresh per rotation/compaction, Base Index compatto, merge
 incrementale, cold-read lane per pair, task slot preallocati, lease QSBR del cold I/O, output lease
@@ -37,7 +37,7 @@ Ordine operativo residuo (P1 — non riapre un dual-runtime):
    ([`paired-get-into-multi-extent-reject-2026-07-31.md`](paired-get-into-multi-extent-reject-2026-07-31.md));
 3. P1 — A/B 1/2/4/8 pair Linux hard-pinned: harness ready, gate **not closed on macOS**
    ([`paired-shards-linux-p1.md`](paired-shards-linux-p1.md)); runner label
-   `glyphastore-linux-perf` required — no fabricated pass-candidate;
+   `glifistore-linux-perf` required — no fabricated pass-candidate;
 4. P1 — backend I/O Linux opzionale (`io_uring` / batched completion): **deferred / skipped for
    0.1.0 adoption**. No measured queue/syscall win that preserves persistence write ordering and
    acknowledgement points; re-open only with a versioned A/B under the Linux hard-pinned harness

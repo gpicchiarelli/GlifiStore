@@ -1,13 +1,13 @@
 #pragma once
 
 #include "cli/arguments.hpp"
-#include "glyphastore/core/types.hpp"
-#include "glyphastore/core/worker_routing.hpp"
-#include "glyphastore/index/index_hash_seed.hpp"
-#include "glyphastore/server/authz.hpp"
-#include "glyphastore/server/daemon_config.hpp"
-#include "glyphastore/server/peercred.hpp"
-#include "glyphastore/server/tls.hpp"
+#include "glifistore/core/types.hpp"
+#include "glifistore/core/worker_routing.hpp"
+#include "glifistore/index/index_hash_seed.hpp"
+#include "glifistore/server/authz.hpp"
+#include "glifistore/server/daemon_config.hpp"
+#include "glifistore/server/peercred.hpp"
+#include "glifistore/server/tls.hpp"
 
 #include <array>
 #include <cctype>
@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore::server::daemon_config_detail {
+namespace glifistore::server::daemon_config_detail {
 
 enum OptionId : std::size_t {
     help,
@@ -482,4 +482,4 @@ inline void apply_layer(SettingMap& destination, const SettingMap& layer) {
     return {};
 }
 
-} // namespace glyphastore::server::daemon_config_detail
+} // namespace glifistore::server::daemon_config_detail

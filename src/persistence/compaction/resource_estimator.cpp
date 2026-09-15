@@ -1,12 +1,12 @@
 #include "persistence/compaction/resource_estimator.hpp"
 
-#include "glyphastore/persistence/compaction_intent.hpp"
-#include "glyphastore/persistence/resource_limits.hpp"
-#include "glyphastore/segment/segment_header.hpp"
+#include "glifistore/persistence/compaction_intent.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
+#include "glifistore/segment/segment_header.hpp"
 
 #include <limits>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 [[nodiscard]] auto checked_add(const std::uint64_t left, const std::uint64_t right, const char* description)
@@ -119,4 +119,4 @@ auto validate_compaction_resources(const CompactionResourceEstimate& estimate,
     return {};
 }
 
-} // namespace glyphastore
+} // namespace glifistore

@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cstddef>
 
-namespace glyphastore::detail {
+namespace glifistore::detail {
 
 class AdaptiveBatchSizer final {
   public:
@@ -34,4 +34,4 @@ class AdaptiveBatchSizer final {
     std::size_t target_{1};
 };
 
-} // namespace glyphastore::detail
+} // namespace glifistore::detail

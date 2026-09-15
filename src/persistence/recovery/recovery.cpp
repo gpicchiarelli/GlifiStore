@@ -1,4 +1,4 @@
-#include "glyphastore/persistence/recovery.hpp"
+#include "glifistore/persistence/recovery.hpp"
 
 #include "persistence/recovery/recovery_budget.hpp"
 #include "persistence/recovery/recovery_catalog.hpp"
@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-namespace glyphastore {
+namespace glifistore {
 namespace {
 
 struct RecoveredWorkers final {
@@ -98,4 +98,4 @@ auto recover_durable_state(DataDirectory& directory, const std::uint64_t now_ns,
     return assemble_recovery_state(std::move(*catalog), std::move(*workers));
 }
 
-} // namespace glyphastore
+} // namespace glifistore

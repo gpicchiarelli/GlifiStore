@@ -1,4 +1,4 @@
-release glyphastore_tests: 629 tests, 0 failures
+release glifistore_tests: 629 tests, 0 failures
 release ctest: 53/53 passed; real time 272.79 s
 release allocation fault injection: passed
 asan+ubsan paired Delta arena retains immutable overwrite versions in fixed record blocks: passed

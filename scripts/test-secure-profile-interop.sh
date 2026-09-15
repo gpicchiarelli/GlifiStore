@@ -8,10 +8,10 @@
 # Usage:
 #   ./scripts/test-secure-profile-interop.sh
 # Env:
-#   GLYPHASTORED / GLYPHASTORE_INTEROP_CLIENT
-#   GLYPHASTORE_PYTHON_INTEROP / GLYPHASTORE_PERL_INTEROP / GLYPHASTORE_GO_INTEROP
-#   GLYPHASTORE_RUBY_INTEROP / GLYPHASTORE_ERLANG_INTEROP
-#   GLYPHASTORE_INTEROP_USE_INSTALLED=1 (forbid SDK libraries/binaries from this source tree)
+#   GLIFISTORED / GLIFISTORE_INTEROP_CLIENT
+#   GLIFISTORE_PYTHON_INTEROP / GLIFISTORE_PERL_INTEROP / GLIFISTORE_GO_INTEROP
+#   GLIFISTORE_RUBY_INTEROP / GLIFISTORE_ERLANG_INTEROP
+#   GLIFISTORE_INTEROP_USE_INSTALLED=1 (forbid SDK libraries/binaries from this source tree)
 #   SECURE_INTEROP_SKIP_PERL / SECURE_INTEROP_SKIP_RUBY / SECURE_INTEROP_SKIP_ERLANG
 #   INTEROP_WORKER_HASH_SEED (default 13957458623937596)
 #   INTEROP_SECURE_WORKERS (default 2)
@@ -22,18 +22,18 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 python="${PYTHON:-python3}"
 perl="${PERL:-perl}"
-daemon="${GLYPHASTORED:-}"
-cpp_client="${GLYPHASTORE_INTEROP_CLIENT:-}"
+daemon="${GLIFISTORED:-}"
+cpp_client="${GLIFISTORE_INTEROP_CLIENT:-}"
 hash_seed="${INTEROP_WORKER_HASH_SEED:-13957458623937596}"
 workers="${INTEROP_SECURE_WORKERS:-2}"
 require_all="${SECURE_INTEROP_REQUIRE_ALL:-0}"
-use_installed="${GLYPHASTORE_INTEROP_USE_INSTALLED:-0}"
+use_installed="${GLIFISTORE_INTEROP_USE_INSTALLED:-0}"
 if [[ "$use_installed" != "0" && "$use_installed" != "1" ]]; then
-  echo "GLYPHASTORE_INTEROP_USE_INSTALLED must be 0 or 1" >&2
+  echo "GLIFISTORE_INTEROP_USE_INSTALLED must be 0 or 1" >&2
   exit 1
 fi
-export GLYPHASTORE_INTEROP_USE_INSTALLED="$use_installed"
-export GLYPHASTORE_SOURCE_ROOT="$root"
+export GLIFISTORE_INTEROP_USE_INSTALLED="$use_installed"
+export GLIFISTORE_SOURCE_ROOT="$root"
 # Principal extracted by daemon: URI SAN → DNS SAN → CN (secure-profile.md §2).
 client_principal="interop.client"
 
@@ -47,36 +47,36 @@ prefer_bins=(
 
 if [[ -z "$daemon" ]]; then
   for dir in "${prefer_bins[@]}"; do
-    if [[ -x "$dir/glyphastored" ]] && "$dir/glyphastored" --help 2>&1 | grep -q -- '--secure-profile'; then
-      daemon="$dir/glyphastored"
+    if [[ -x "$dir/glifistored" ]] && "$dir/glifistored" --help 2>&1 | grep -q -- '--secure-profile'; then
+      daemon="$dir/glifistored"
       break
     fi
   done
 fi
 if [[ -z "$cpp_client" && "$use_installed" != "1" ]]; then
   daemon_dir="$(dirname "${daemon:-.}")"
-  if [[ -n "$daemon" && -x "$daemon_dir/glyphastore_interop_client" ]]; then
-    cpp_client="$daemon_dir/glyphastore_interop_client"
+  if [[ -n "$daemon" && -x "$daemon_dir/glifistore_interop_client" ]]; then
+    cpp_client="$daemon_dir/glifistore_interop_client"
   else
     for dir in "${prefer_bins[@]}"; do
-      if [[ -x "$dir/glyphastore_interop_client" ]]; then
-        cpp_client="$dir/glyphastore_interop_client"
+      if [[ -x "$dir/glifistore_interop_client" ]]; then
+        cpp_client="$dir/glifistore_interop_client"
         break
       fi
     done
   fi
 fi
 if [[ "$use_installed" == "1" && -z "$cpp_client" ]]; then
-  echo "installed-artifact mode requires GLYPHASTORE_INTEROP_CLIENT" >&2
+  echo "installed-artifact mode requires GLIFISTORE_INTEROP_CLIENT" >&2
   exit 1
 fi
 
 if [[ -z "$daemon" || ! -x "$daemon" ]]; then
-  echo "missing TLS-capable glyphastored with --secure-profile; build first" >&2
+  echo "missing TLS-capable glifistored with --secure-profile; build first" >&2
   exit 1
 fi
 if [[ -z "$cpp_client" || ! -x "$cpp_client" ]]; then
-  echo "missing glyphastore_interop_client; build target glyphastore_interop_client first" >&2
+  echo "missing glifistore_interop_client; build target glifistore_interop_client first" >&2
   exit 1
 fi
 if ! command -v openssl >/dev/null 2>&1; then
@@ -84,7 +84,7 @@ if ! command -v openssl >/dev/null 2>&1; then
   exit 1
 fi
 if ! "$daemon" --help 2>&1 | grep -q -- '--tls-client-ca'; then
-  echo "daemon built without mTLS (--tls-client-ca); rebuild with GLYPHASTORE_ENABLE_TLS=ON" >&2
+  echo "daemon built without mTLS (--tls-client-ca); rebuild with GLIFISTORE_ENABLE_TLS=ON" >&2
   exit 1
 fi
 
@@ -92,19 +92,19 @@ if [[ "$use_installed" != "1" ]]; then
   export PYTHONPATH="$root/sdk/python/src${PYTHONPATH:+:$PYTHONPATH}"
   export PERL5LIB="$root/sdk/perl/lib${PERL5LIB:+:$PERL5LIB}"
 fi
-py_helper="${GLYPHASTORE_PYTHON_INTEROP:-$root/scripts/sdk_interop_py.py}"
-pl_helper="${GLYPHASTORE_PERL_INTEROP:-$root/scripts/sdk_interop_perl.pl}"
-ruby_helper="${GLYPHASTORE_RUBY_INTEROP:-$root/sdk/ruby/exe/glyphastore-interop}"
-erlang_helper="${GLYPHASTORE_ERLANG_INTEROP:-$root/sdk/erlang/scripts/glyphastore-interop.escript}"
-go_helper="${GLYPHASTORE_GO_INTEROP:-}"
+py_helper="${GLIFISTORE_PYTHON_INTEROP:-$root/scripts/sdk_interop_py.py}"
+pl_helper="${GLIFISTORE_PERL_INTEROP:-$root/scripts/sdk_interop_perl.pl}"
+ruby_helper="${GLIFISTORE_RUBY_INTEROP:-$root/sdk/ruby/exe/glifistore-interop}"
+erlang_helper="${GLIFISTORE_ERLANG_INTEROP:-$root/sdk/erlang/scripts/glifistore-interop.escript}"
+go_helper="${GLIFISTORE_GO_INTEROP:-}"
 if [[ -z "$go_helper" || ! -x "$go_helper" ]]; then
   if [[ "$use_installed" == "1" ]]; then
-    echo "installed-artifact mode requires GLYPHASTORE_GO_INTEROP" >&2
+    echo "installed-artifact mode requires GLIFISTORE_GO_INTEROP" >&2
     exit 1
   fi
   mkdir -p "$root/sdk/go/bin"
-  (cd "$root/sdk/go" && "${GO:-go}" build -o bin/glyphastore-interop ./cmd/glyphastore-interop)
-  go_helper="$root/sdk/go/bin/glyphastore-interop"
+  (cd "$root/sdk/go" && "${GO:-go}" build -o bin/glifistore-interop ./cmd/glifistore-interop)
+  go_helper="$root/sdk/go/bin/glifistore-interop"
 fi
 if [[ "$use_installed" == "1" ]]; then
   for entry in "cpp:$cpp_client" "go:$go_helper"; do
@@ -185,7 +185,7 @@ if [[ "$require_all" == "1" ]]; then
   fi
 fi
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/glyphastore-secure-interop.XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/glifistore-secure-interop.XXXXXX")"
 port_file="$work/port"
 log_file="$work/server.log"
 active_pid=""
@@ -218,7 +218,7 @@ x509_extensions = v3_ca
 prompt = no
 
 [req_distinguished_name]
-CN = glyphastore-interop-ca
+CN = glifistore-interop-ca
 
 [v3_ca]
 basicConstraints = critical,CA:TRUE
@@ -397,7 +397,7 @@ start_server() {
       ! grep -qx "shard-pairs=$workers" <<<"$resolved"; } ||
       ! grep -qx "secure-profile=true" <<<"$resolved" ||
       ! grep -qx "worker-hash-seed=$hash_seed" <<<"$resolved"; then
-    echo "glyphastored secure-profile configuration mismatch" >&2
+    echo "glifistored secure-profile configuration mismatch" >&2
     echo "$resolved" >&2
     return 1
   fi
@@ -410,7 +410,7 @@ start_server() {
   local port=""
   for _ in $(seq 1 50); do
     if ! kill -0 "$active_pid" 2>/dev/null; then
-      echo "glyphastored exited early; see $log_file" >&2
+      echo "glifistored exited early; see $log_file" >&2
       cat "$log_file" >&2 || true
       return 1
     fi
@@ -423,7 +423,7 @@ start_server() {
     fi
     sleep 0.1
   done
-  echo "could not discover glyphastored listen port; log:" >&2
+  echo "could not discover glifistored listen port; log:" >&2
   cat "$log_file" >&2 || true
   return 1
 }
@@ -578,7 +578,7 @@ while IFS=: read -r owner route_key; do
 done < <("$python" - "$workers" "$hash_seed" <<'PY'
 import sys
 
-from glyphastore.protocol import (
+from glifistore.protocol import (
     ROUTING_ALG_SIPHASH24_V1,
     WorkerRouting,
     hash_key_routing,

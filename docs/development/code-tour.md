@@ -1,4 +1,4 @@
-# GlyphaStore Code Tour
+# GlifiStore Code Tour
 
 Status: maintained onboarding guide
 Applies to: repository version `0.1.x`
@@ -13,14 +13,14 @@ Start with [Architecture](../spec/architecture.md), [Glossary](../glossary.md), 
 
 | Area | Public headers | Implementation | Responsibility |
 |---|---|---|---|
-| Core | `include/glyphastore/core` | mostly header-only | result/error types, checked arithmetic, key hash |
-| Store | `include/glyphastore/store` | `src/store` | public facade, configuration, lifecycle, routing, runtime selection |
-| Worker | `include/glyphastore/worker` | `src/worker` | volatile ownership and per-Worker serialized operations |
-| Index | `include/glyphastore/index` | `src/index` | Swiss-style map and long-key arena |
-| Segment/record | `include/glyphastore/segment` | `src/segment` | record codec, CRC32C, in-memory Segment and manager |
-| Persistence | `include/glyphastore/persistence` | `src/persistence` | manifest, file Segment, recovery, namespace, flush, compaction |
-| Networking | `include/glyphastore/server` | `src/server` | sockets, pollers, reactor, framing, executor handoff |
-| Vacuum | `include/glyphastore/vacuum` | `src/vacuum` | volatile maintenance/reclamation policy |
+| Core | `include/glifistore/core` | mostly header-only | result/error types, checked arithmetic, key hash |
+| Store | `include/glifistore/store` | `src/store` | public facade, configuration, lifecycle, routing, runtime selection |
+| Worker | `include/glifistore/worker` | `src/worker` | volatile ownership and per-Worker serialized operations |
+| Index | `include/glifistore/index` | `src/index` | Swiss-style map and long-key arena |
+| Segment/record | `include/glifistore/segment` | `src/segment` | record codec, CRC32C, in-memory Segment and manager |
+| Persistence | `include/glifistore/persistence` | `src/persistence` | manifest, file Segment, recovery, namespace, flush, compaction |
+| Networking | `include/glifistore/server` | `src/server` | sockets, pollers, reactor, framing, executor handoff |
+| Vacuum | `include/glifistore/vacuum` | `src/vacuum` | volatile maintenance/reclamation policy |
 | CLI/daemon | — | `src/main.cpp`, `src/cli`, `src/server/daemon_main.cpp` | executable entry points |
 | Benchmarks | `benchmarks` | `benchmarks` | isolated engine and loopback TCP measurement |
 | Tests | `tests` | `tests` | unit, integration, property, crash, quality, consumer coverage |

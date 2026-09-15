@@ -7,7 +7,7 @@ Claim ceiling: lab evidence for status-quo durable boundaries; does not land slo
 ## Command
 
 ```text
-./build/macos-release/glyphastore_crash_persistence --mode matrix
+./build/macos-release/glifistore_crash_persistence --mode matrix
 ```
 
 ## Results

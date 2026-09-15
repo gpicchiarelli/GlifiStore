@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and expand the GlyphaStore package matrix.
+"""Validate and expand the GlifiStore package matrix.
 
 The YAML matrix is the only description of packaging backends, targets, CI
 profiles and the check vocabulary. This tool validates it fail-closed, expands

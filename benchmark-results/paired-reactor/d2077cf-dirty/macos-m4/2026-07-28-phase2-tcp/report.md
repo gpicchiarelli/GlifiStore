@@ -107,7 +107,7 @@ mutazione ancora inefficiente. Il prossimo P0 deve misurare e ridurre separatame
 4. completion → adozione → ACK;
 5. barriera per connessione e opportunità di coalescing di PUT consecutivi prima del primo GET.
 
-L'integrazione in `glyphastored`, la durabilità e il multi-pair restano non autorizzati finché 99/1
+L'integrazione in `glifistored`, la durabilità e il multi-pair restano non autorizzati finché 99/1
 a 64 B non rientra almeno nel rumore della baseline e il p99 del solo GET viene misurato sotto un
 Writer concorrente separato.
 

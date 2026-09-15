@@ -3,16 +3,16 @@ use warnings;
 use ExtUtils::MakeMaker 7.12;
 use Config;
 
-die "GlyphaStore requires a Perl with 64-bit integers\n"
+die "GlifiStore requires a Perl with 64-bit integers\n"
     unless defined($Config{use64bitint}) && $Config{use64bitint} eq 'define'
         && ($Config{uvsize} // 0) >= 8;
 
 my $version = '0.1.0';
 
 WriteMakefile(
-    NAME             => 'GlyphaStore',
-    VERSION_FROM     => 'lib/GlyphaStore.pm',
-    ABSTRACT_FROM    => 'lib/GlyphaStore.pm',
+    NAME             => 'GlifiStore',
+    VERSION_FROM     => 'lib/GlifiStore.pm',
+    ABSTRACT_FROM    => 'lib/GlifiStore.pm',
     AUTHOR           => 'Giacomo Picchiarelli',
     # MetaCPAN / CPAN::Meta recognize 'bsd' as the BSD family; the authoritative
     # text in LICENSE is BSD-3-Clause (same grant as the repository root).
@@ -48,14 +48,14 @@ WriteMakefile(
         resources => {
             license    => ['https://opensource.org/licenses/BSD-3-Clause'],
             bugtracker => {
-                web => 'https://github.com/gpicchiarelli/GlyphaStore/issues',
+                web => 'https://github.com/gpicchiarelli/GlifiStore/issues',
             },
             repository => {
                 type => 'git',
-                url  => 'https://github.com/gpicchiarelli/GlyphaStore.git',
-                web  => 'https://github.com/gpicchiarelli/GlyphaStore',
+                url  => 'https://github.com/gpicchiarelli/GlifiStore.git',
+                web  => 'https://github.com/gpicchiarelli/GlifiStore',
             },
-            homepage => 'https://github.com/gpicchiarelli/GlyphaStore',
+            homepage => 'https://github.com/gpicchiarelli/GlifiStore',
         },
         x_copyright => 'Copyright (c) 2026 Giacomo Picchiarelli',
         prereqs => {
@@ -81,29 +81,29 @@ WriteMakefile(
             },
         },
         provides => {
-            'GlyphaStore' => {
-                file    => 'lib/GlyphaStore.pm',
+            'GlifiStore' => {
+                file    => 'lib/GlifiStore.pm',
                 version => $version,
             },
-            'GlyphaStore::Client' => {
-                file    => 'lib/GlyphaStore/Client.pm',
+            'GlifiStore::Client' => {
+                file    => 'lib/GlifiStore/Client.pm',
                 version => $version,
             },
-            'GlyphaStore::Protocol' => {
-                file    => 'lib/GlyphaStore/Protocol.pm',
+            'GlifiStore::Protocol' => {
+                file    => 'lib/GlifiStore/Protocol.pm',
                 version => $version,
             },
-            'GlyphaStore::Error' => {
-                file    => 'lib/GlyphaStore/Error.pm',
+            'GlifiStore::Error' => {
+                file    => 'lib/GlifiStore/Error.pm',
                 version => $version,
             },
-            'GlyphaStore::SendFailure' => {
-                file    => 'lib/GlyphaStore/SendFailure.pm',
+            'GlifiStore::SendFailure' => {
+                file    => 'lib/GlifiStore/SendFailure.pm',
                 version => $version,
             },
         },
         x_static_install => 1,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
-    clean => { FILES => 'GlyphaStore-*' },
+    clean => { FILES => 'GlifiStore-*' },
 );

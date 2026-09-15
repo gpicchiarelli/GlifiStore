@@ -1,11 +1,11 @@
-#include "glyphastore/persistence/compaction.hpp"
-#include "glyphastore/persistence/resource_limits.hpp"
+#include "glifistore/persistence/compaction.hpp"
+#include "glifistore/persistence/resource_limits.hpp"
 #include "persistence/compaction/resource_estimator.hpp"
 
 #include <limits>
 #include <utility>
 
-namespace glyphastore {
+namespace glifistore {
 
 auto plan_durable_worker_compaction(const Manifest& current, const WorkerId worker_id,
                                     const std::size_t output_segment_count,
@@ -86,4 +86,4 @@ auto plan_durable_worker_compaction(const Manifest& current, const WorkerId work
     return plan;
 }
 
-} // namespace glyphastore
+} // namespace glifistore

@@ -13,7 +13,7 @@ requirements:
   - docs/spec/architecture.md
   - docs/spec/index-v1.md
   implementazione:
-  - include/glyphastore/store/store.hpp
+  - include/glifistore/store/store.hpp
   - src/store/store.cpp
   prove:
   - tests/integration/store_tests.cpp
@@ -70,7 +70,7 @@ requirements:
   criticita: media
   stato: provato
   descrizione: The build uses add_subdirectory for src/tools/tests/benchmarks/fuzz, keeps installed
-    GlyphaStore::core/server/client aliases, and enforces a documented dependency matrix,
+    GlifiStore::core/server/client aliases, and enforces a documented dependency matrix,
     size/TODO waiver CI, pinned formatting, and a fail-closed high-signal static-analysis pass over
     the production sources present in the compile database.
   autorita:
@@ -84,7 +84,7 @@ requirements:
   - tests/CMakeLists.txt
   - benchmarks/CMakeLists.txt
   - fuzz/CMakeLists.txt
-  - include/glyphastore/core/little_endian.hpp
+  - include/glifistore/core/little_endian.hpp
   - engineering/tools/validate_structure_debt.py
   - engineering/tools/validate_cmake_deps.py
   - engineering/tools/run_clang_tidy_gate.py

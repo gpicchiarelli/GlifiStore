@@ -43,60 +43,60 @@ case "${1:-help}" in
     benchmark)
         require_tools
         "$cmake" --preset macos-release
-        "$cmake" --build --preset macos-release --target glyphastore_benchmarks
-        "$root/build/macos-release/glyphastore_benchmarks" "${@:2}"
+        "$cmake" --build --preset macos-release --target glifistore_benchmarks
+        "$root/build/macos-release/glifistore_benchmarks" "${@:2}"
         ;;
     benchmark-lto)
         require_tools
         "$cmake" --preset macos-release-lto
-        "$cmake" --build --preset macos-release-lto --target glyphastore_benchmarks
-        "$root/build/macos-release-lto/glyphastore_benchmarks" "${@:2}"
+        "$cmake" --build --preset macos-release-lto --target glifistore_benchmarks
+        "$root/build/macos-release-lto/glifistore_benchmarks" "${@:2}"
         ;;
     benchmark-server)
         require_tools
         "$cmake" --preset macos-release
-        "$cmake" --build --preset macos-release --target glyphastore_server_benchmarks
-        "$root/build/macos-release/glyphastore_server_benchmarks" "${@:2}"
+        "$cmake" --build --preset macos-release --target glifistore_server_benchmarks
+        "$root/build/macos-release/glifistore_server_benchmarks" "${@:2}"
         ;;
     benchmark-pgo)
         require_tools
         "$cmake" --preset macos-pgo-use
-        "$cmake" --build --preset macos-pgo-use --target glyphastore_benchmarks
-        "$root/build/macos-pgo-use/glyphastore_benchmarks" "${@:2}"
+        "$cmake" --build --preset macos-pgo-use --target glifistore_benchmarks
+        "$root/build/macos-pgo-use/glifistore_benchmarks" "${@:2}"
         ;;
     benchmark-durable)
         require_tools
         "$cmake" --preset macos-release
-        "$cmake" --build --preset macos-release --target glyphastore_benchmarks
-        "$root/build/macos-release/glyphastore_benchmarks" --filter store-durable-all "${@:2}"
+        "$cmake" --build --preset macos-release --target glifistore_benchmarks
+        "$root/build/macos-release/glifistore_benchmarks" --filter store-durable-all "${@:2}"
         ;;
     benchmark-compaction)
         require_tools
         "$cmake" --preset macos-release
-        "$cmake" --build --preset macos-release --target glyphastore_compaction_benchmark
-        "$root/build/macos-release/glyphastore_compaction_benchmark" "${@:2}"
+        "$cmake" --build --preset macos-release --target glifistore_compaction_benchmark
+        "$root/build/macos-release/glifistore_compaction_benchmark" "${@:2}"
         ;;
     benchmark-maintenance)
         require_tools
         "$cmake" --preset macos-release
-        "$cmake" --build --preset macos-release --target glyphastore_maintenance_benchmark
-        "$root/build/macos-release/glyphastore_maintenance_benchmark" "${@:2}"
+        "$cmake" --build --preset macos-release --target glifistore_maintenance_benchmark
+        "$root/build/macos-release/glifistore_maintenance_benchmark" "${@:2}"
         ;;
     pgo-generate)
         require_tools
         "$cmake" --preset macos-pgo-generate
-        "$cmake" --build --preset macos-pgo-generate --target glyphastore_benchmarks
+        "$cmake" --build --preset macos-pgo-generate --target glifistore_benchmarks
         ;;
     pgo-train)
         require_tools
         "$cmake" --preset macos-pgo-generate
-        "$cmake" --build --preset macos-pgo-generate --target glyphastore_benchmarks glyphastore_pgo_durable
+        "$cmake" --build --preset macos-pgo-generate --target glifistore_benchmarks glifistore_pgo_durable
         PGO_PRESET=macos-pgo-generate "$root/scripts/pgo-train.sh"
         ;;
     pgo-use)
         require_tools
         "$cmake" --preset macos-pgo-use
-        "$cmake" --build --preset macos-pgo-use --target glyphastore_benchmarks
+        "$cmake" --build --preset macos-pgo-use --target glifistore_benchmarks
         ;;
     fuzz-build)
         require_tools
@@ -105,8 +105,8 @@ case "${1:-help}" in
         ;;
     fuzz-run)
         require_tools
-        export GLYPHASTORE_FUZZ_BUILD_DIR="${GLYPHASTORE_FUZZ_BUILD_DIR:-$root/build/macos-fuzz}"
-        export GLYPHASTORE_FUZZ_SECONDS="${GLYPHASTORE_FUZZ_SECONDS:-60}"
+        export GLIFISTORE_FUZZ_BUILD_DIR="${GLIFISTORE_FUZZ_BUILD_DIR:-$root/build/macos-fuzz}"
+        export GLIFISTORE_FUZZ_SECONDS="${GLIFISTORE_FUZZ_SECONDS:-60}"
         bash "$root/scripts/run-fuzzers.sh" "$@"
         ;;
     test-lto)
@@ -176,7 +176,7 @@ case "${1:-help}" in
     *)
         echo "usage: $0 {configure|build|test|asan|tsan|correctness|test-lto|benchmark|benchmark-durable|benchmark-compaction|benchmark-maintenance|benchmark-server|benchmark-lto|benchmark-pgo|pgo-generate|pgo-train|pgo-use|fuzz-build|fuzz-run|xcode-build|format|verify|clean} [benchmark args]"
         echo "PGO: pgo-generate builds instrumented benchmarks; pgo-train runs volatile + durable workloads; pgo-use rebuilds optimized benchmarks."
-        echo "Fuzz: fuzz-build configures macos-fuzz; fuzz-run executes targets (GLYPHASTORE_FUZZ_SECONDS, GLYPHASTORE_FUZZ_BUILD_DIR)."
+        echo "Fuzz: fuzz-build configures macos-fuzz; fuzz-run executes targets (GLIFISTORE_FUZZ_SECONDS, GLIFISTORE_FUZZ_BUILD_DIR)."
         echo "Correctness: complete local matrix with strict builds, hardening, sanitizers, static analysis, and explicit optional-tool gaps."
         ;;
 esac

@@ -7,8 +7,8 @@ Claim ceiling: lab evidence only; does not accept ADR 0036 for production landin
 ## Command
 
 ```text
-./build/macos-asan/glyphastore_tests 'ADR 0036'
-./build/macos-asan/glyphastore_tests 'paired Store'
+./build/macos-asan/glifistore_tests 'ADR 0036'
+./build/macos-asan/glifistore_tests 'paired Store'
 ```
 
 ## Results

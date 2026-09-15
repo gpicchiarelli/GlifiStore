@@ -6,7 +6,7 @@
   [0031](paired-reader-writer-shards.md) / [0032](0032-paired-concurrency-embedded-store.md)
   (paired runtime; Worker count remains the ownership identity)
 
-GlyphaStore detects usable physical CPU and memory topology at startup, applies reserved-core,
+GlifiStore detects usable physical CPU and memory topology at startup, applies reserved-core,
 maximum-Worker, memory-per-Worker, and explicit-override policies, and fixes the Worker count for
 the process lifetime. The Store remains one logical key-space; physical Index partitions and
 Segment assignment are internal.

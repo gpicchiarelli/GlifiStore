@@ -1,4 +1,4 @@
-# glyphastore benchmark
+# glifistore benchmark
 # git_sha=1ff35c3
 # arch=arm64
 # platform=macos

@@ -97,9 +97,9 @@ requirements:
     matrices (future Manifest/Record versions, truncated Manifest, Worker mismatch) are
     covered in store_backup_tests
   - Zero-fence hot backup deferred (ADR 0034); online path remains admission-fenced
-  - Daemon wire BACKUP process-kill via real glyphastored exec covered by
-    glyphastore_crash_backup_daemon (lab-only GLYPHASTORE_CRASH_TEST hooks); in-process
-    Server/wire by glyphastore_crash_backup_wire; Store path by glyphastore_crash_backup
+  - Daemon wire BACKUP process-kill via real glifistored exec covered by
+    glifistore_crash_backup_daemon (lab-only GLIFISTORE_CRASH_TEST hooks); in-process
+    Server/wire by glifistore_crash_backup_wire; Store path by glifistore_crash_backup
   hazards:
   - HAZ-021
   - HAZ-022
@@ -147,7 +147,7 @@ requirements:
   categoria: operations
   criticita: alta
   stato: implementato
-  descrizione: Offline migrate_durable_store / glyphastore_migrate_store copies live keys into a new
+  descrizione: Offline migrate_durable_store / glifistore_migrate_store copies live keys into a new
     Store with target Worker count, checkpoints after each put, and resumes from a matching sibling
     checkpoint. Checkpoints use a bounded strict schema; existing destination keys must be a subset
     of the source and every still-live skipped prefix value/expiry must match before resume. Corrupt or

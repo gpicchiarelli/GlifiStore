@@ -38,7 +38,7 @@ jobs:
       - name: Build PGO training targets
         run: >-
           cmake --build --preset unix-pgo-generate --target
-          glyphastore_benchmarks glyphastore_pgo_durable
+          glifistore_benchmarks glifistore_pgo_durable
 
       - name: Train profile
         env:
@@ -52,7 +52,7 @@ jobs:
         run: cmake --preset unix-pgo-use
 
       - name: Build optimized benchmarks
-        run: cmake --build --preset unix-pgo-use --target glyphastore_benchmarks
+        run: cmake --build --preset unix-pgo-use --target glifistore_benchmarks
 
       - name: Run optimized smoke benchmark
-        run: ./build/unix-pgo-use/glyphastore_benchmarks --filter store-put-get --ops 50000 --warmup 1 --repeats 3
+        run: ./build/unix-pgo-use/glifistore_benchmarks --filter store-put-get --ops 50000 --warmup 1 --repeats 3

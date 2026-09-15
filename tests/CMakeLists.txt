@@ -1,9 +1,9 @@
 # Test suites, crash harnesses, CLI contract tests, and check target.
 if(BUILD_TESTING)
-    add_executable(glyphastore_c_abi_tests
+    add_executable(glifistore_c_abi_tests
         ${CMAKE_SOURCE_DIR}/tests/abi/c_abi_tests.c
     )
-    set_target_properties(glyphastore_c_abi_tests PROPERTIES
+    set_target_properties(glifistore_c_abi_tests PROPERTIES
         C_STANDARD 11
         C_STANDARD_REQUIRED ON
         C_EXTENSIONS OFF
@@ -14,82 +14,82 @@ if(BUILD_TESTING)
     # linked, and the C++ driver performs the final link, so sanitizer builds
     # pull every runtime required by the instrumented C++ shared library into
     # this C-owned executable (including UBSan's C++ vptr handlers on Linux).
-    target_link_libraries(glyphastore_c_abi_tests
-        PRIVATE GlyphaStore::abi glyphastore_project_options
+    target_link_libraries(glifistore_c_abi_tests
+        PRIVATE GlifiStore::abi glifistore_project_options
     )
-    add_test(NAME glyphastore_c_abi_tests COMMAND glyphastore_c_abi_tests)
-    set_tests_properties(glyphastore_c_abi_tests PROPERTIES LABELS "abi")
+    add_test(NAME glifistore_c_abi_tests COMMAND glifistore_c_abi_tests)
+    set_tests_properties(glifistore_c_abi_tests PROPERTIES LABELS "abi")
 
-    add_executable(glyphastore_c_abi_durable_tests
+    add_executable(glifistore_c_abi_durable_tests
         ${CMAKE_SOURCE_DIR}/tests/abi/c_abi_durable_tests.cpp
     )
-    target_compile_features(glyphastore_c_abi_durable_tests PRIVATE cxx_std_23)
-    target_link_libraries(glyphastore_c_abi_durable_tests
-        PRIVATE GlyphaStore::abi Threads::Threads glyphastore_project_options
+    target_compile_features(glifistore_c_abi_durable_tests PRIVATE cxx_std_23)
+    target_link_libraries(glifistore_c_abi_durable_tests
+        PRIVATE GlifiStore::abi Threads::Threads glifistore_project_options
     )
     if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD|OpenBSD")
         # FindThreads can resolve an empty interface on BSD even though this
         # executable directly creates std::threads and therefore needs pthread mode.
-        target_compile_options(glyphastore_c_abi_durable_tests PRIVATE -pthread)
-        target_link_options(glyphastore_c_abi_durable_tests PRIVATE -pthread)
+        target_compile_options(glifistore_c_abi_durable_tests PRIVATE -pthread)
+        target_link_options(glifistore_c_abi_durable_tests PRIVATE -pthread)
     endif()
-    glyphastore_set_warnings(glyphastore_c_abi_durable_tests)
-    glyphastore_enable_hardening(glyphastore_c_abi_durable_tests)
-    glyphastore_enable_ipo(glyphastore_c_abi_durable_tests)
-    set_target_properties(glyphastore_c_abi_durable_tests PROPERTIES FOLDER "Quality")
-    add_test(NAME glyphastore_c_abi_durable_tests COMMAND glyphastore_c_abi_durable_tests)
-    set_tests_properties(glyphastore_c_abi_durable_tests PROPERTIES LABELS "abi;durability")
+    glifistore_set_warnings(glifistore_c_abi_durable_tests)
+    glifistore_enable_hardening(glifistore_c_abi_durable_tests)
+    glifistore_enable_ipo(glifistore_c_abi_durable_tests)
+    set_target_properties(glifistore_c_abi_durable_tests PROPERTIES FOLDER "Quality")
+    add_test(NAME glifistore_c_abi_durable_tests COMMAND glifistore_c_abi_durable_tests)
+    set_tests_properties(glifistore_c_abi_durable_tests PROPERTIES LABELS "abi;durability")
 
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
     add_test(
-        NAME glyphastore_abi_symbols
+        NAME glifistore_abi_symbols
         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/engineering/tools/check_abi_symbols.py"
-                --library $<TARGET_FILE:glyphastore_abi>
+                --library $<TARGET_FILE:glifistore_abi>
                 --allowlist "${CMAKE_SOURCE_DIR}/abi/symbols-v1.txt"
     )
-    set_tests_properties(glyphastore_abi_symbols PROPERTIES LABELS "abi")
+    set_tests_properties(glifistore_abi_symbols PROPERTIES LABELS "abi")
     add_test(
-        NAME glyphastore_abi_symbol_gate_rejects_unexpected
+        NAME glifistore_abi_symbol_gate_rejects_unexpected
         COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/engineering/tools/check_abi_symbols.py"
                 --actual-list "${CMAKE_SOURCE_DIR}/tests/abi/unexpected-symbols.txt"
                 --allowlist "${CMAKE_SOURCE_DIR}/abi/symbols-v1.txt"
     )
-    set_tests_properties(glyphastore_abi_symbol_gate_rejects_unexpected PROPERTIES
+    set_tests_properties(glifistore_abi_symbol_gate_rejects_unexpected PROPERTIES
         LABELS "abi;negative"
         WILL_FAIL TRUE
     )
     add_test(
-        NAME glyphastore_release_artifact_tests
+        NAME glifistore_release_artifact_tests
         COMMAND "${Python3_EXECUTABLE}" -m unittest -v scripts.tests.test_release_artifacts
     )
-    set_tests_properties(glyphastore_release_artifact_tests PROPERTIES
+    set_tests_properties(glifistore_release_artifact_tests PROPERTIES
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         LABELS "release;negative"
         TIMEOUT 30
     )
     add_test(
-        NAME glyphastore_bsd_packaging_tests
+        NAME glifistore_bsd_packaging_tests
         COMMAND "${Python3_EXECUTABLE}" -m unittest -v scripts.tests.test_bsd_packaging
     )
-    set_tests_properties(glyphastore_bsd_packaging_tests PROPERTIES
+    set_tests_properties(glifistore_bsd_packaging_tests PROPERTIES
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         LABELS "release;packaging;negative"
         TIMEOUT 15
     )
     add_test(
-        NAME glyphastore_artifact_release_workflow_tests
+        NAME glifistore_artifact_release_workflow_tests
         COMMAND "${Python3_EXECUTABLE}" -m unittest -v scripts.tests.test_artifact_release_workflow
     )
-    set_tests_properties(glyphastore_artifact_release_workflow_tests PROPERTIES
+    set_tests_properties(glifistore_artifact_release_workflow_tests PROPERTIES
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         LABELS "release;negative"
         TIMEOUT 15
     )
     add_test(
-        NAME glyphastore_persistence_fixture_tests
+        NAME glifistore_persistence_fixture_tests
         COMMAND "${Python3_EXECUTABLE}" -m unittest -v scripts.tests.test_persistence_fixture
     )
-    set_tests_properties(glyphastore_persistence_fixture_tests PROPERTIES
+    set_tests_properties(glifistore_persistence_fixture_tests PROPERTIES
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         LABELS "release;persistence;negative"
         # This test creates and validates several real Git repositories. Under
@@ -98,38 +98,38 @@ if(BUILD_TESTING)
         TIMEOUT 30
     )
     add_test(
-        NAME glyphastore_install_components
+        NAME glifistore_install_components
         COMMAND "${CMAKE_COMMAND}"
-                -DGLYPHASTORE_BINARY_DIR=${CMAKE_BINARY_DIR}
-                -DGLYPHASTORE_TEST_ROOT=${CMAKE_BINARY_DIR}/install-component-test
+                -DGLIFISTORE_BINARY_DIR=${CMAKE_BINARY_DIR}
+                -DGLIFISTORE_TEST_ROOT=${CMAKE_BINARY_DIR}/install-component-test
                 -P "${CMAKE_SOURCE_DIR}/tests/cmake/install_components.cmake"
     )
-    set_tests_properties(glyphastore_install_components PROPERTIES
+    set_tests_properties(glifistore_install_components PROPERTIES
         LABELS "install;packaging"
         TIMEOUT 30
     )
     if(UNIX)
-        find_program(GLYPHASTORE_BASH_EXECUTABLE bash REQUIRED)
-        glyphastore_resolve_sanitizers(glyphastore_test_sanitizers)
-        list(JOIN glyphastore_test_sanitizers "," glyphastore_test_sanitizer_flags)
+        find_program(GLIFISTORE_BASH_EXECUTABLE bash REQUIRED)
+        glifistore_resolve_sanitizers(glifistore_test_sanitizers)
+        list(JOIN glifistore_test_sanitizers "," glifistore_test_sanitizer_flags)
         add_test(
-            NAME glyphastore_installed_cpp_interop
+            NAME glifistore_installed_cpp_interop
             COMMAND "${CMAKE_COMMAND}"
-                    -DGLYPHASTORE_BINARY_DIR=${CMAKE_BINARY_DIR}
-                    -DGLYPHASTORE_SOURCE_DIR=${CMAKE_SOURCE_DIR}
-                    -DGLYPHASTORE_TEST_ROOT=${CMAKE_BINARY_DIR}/installed-cpp-interop-test
-                    -DGLYPHASTORE_BASH=${GLYPHASTORE_BASH_EXECUTABLE}
-                    -DGLYPHASTORE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                    -DGLYPHASTORE_SANITIZERS=${glyphastore_test_sanitizer_flags}
+                    -DGLIFISTORE_BINARY_DIR=${CMAKE_BINARY_DIR}
+                    -DGLIFISTORE_SOURCE_DIR=${CMAKE_SOURCE_DIR}
+                    -DGLIFISTORE_TEST_ROOT=${CMAKE_BINARY_DIR}/installed-cpp-interop-test
+                    -DGLIFISTORE_BASH=${GLIFISTORE_BASH_EXECUTABLE}
+                    -DGLIFISTORE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                    -DGLIFISTORE_SANITIZERS=${glifistore_test_sanitizer_flags}
                     -P "${CMAKE_SOURCE_DIR}/tests/cmake/installed_cpp_interop.cmake"
         )
-        set_tests_properties(glyphastore_installed_cpp_interop PROPERTIES
+        set_tests_properties(glifistore_installed_cpp_interop PROPERTIES
             LABELS "install;packaging;sdk"
             TIMEOUT 60
         )
     endif()
 
-    add_executable(glyphastore_tests
+    add_executable(glifistore_tests
         ${CMAKE_SOURCE_DIR}/src/experimental/paired_reactor.cpp
         ${CMAKE_SOURCE_DIR}/src/experimental/paired_shard.cpp
         ${CMAKE_SOURCE_DIR}/src/experimental/pair_read_generation_shell_access.cpp
@@ -225,331 +225,331 @@ if(BUILD_TESTING)
         ${CMAKE_SOURCE_DIR}/tests/property/store_state_machine_tests.cpp
         ${CMAKE_SOURCE_DIR}/tests/concurrency/linearizability_tests.cpp
     )
-    target_link_libraries(glyphastore_tests
-        PRIVATE GlyphaStore::server GlyphaStore::client glyphastore_cli_support glyphastore_project_options
+    target_link_libraries(glifistore_tests
+        PRIVATE GlifiStore::server GlifiStore::client glifistore_cli_support glifistore_project_options
     )
-    if(GLYPHASTORE_TLS_ENABLED)
-        target_link_libraries(glyphastore_tests PRIVATE GlyphaStore::tls)
+    if(GLIFISTORE_TLS_ENABLED)
+        target_link_libraries(glifistore_tests PRIVATE GlifiStore::tls)
     endif()
-    target_include_directories(glyphastore_tests PRIVATE
+    target_include_directories(glifistore_tests PRIVATE
         "${CMAKE_SOURCE_DIR}/benchmarks"
         "${CMAKE_SOURCE_DIR}/src"
         "${CMAKE_SOURCE_DIR}/tests"
     )
-    target_compile_definitions(glyphastore_tests
-        PRIVATE GLYPHASTORE_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    target_compile_definitions(glifistore_tests
+        PRIVATE GLIFISTORE_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
     )
-    glyphastore_set_warnings(glyphastore_tests)
-    glyphastore_enable_hardening(glyphastore_tests)
-    glyphastore_enable_ipo(glyphastore_tests)
-    add_test(NAME glyphastore_tests COMMAND glyphastore_tests)
+    glifistore_set_warnings(glifistore_tests)
+    glifistore_enable_hardening(glifistore_tests)
+    glifistore_enable_ipo(glifistore_tests)
+    add_test(NAME glifistore_tests COMMAND glifistore_tests)
     add_test(
-        NAME glyphastore_test_harness_rejects_partial_shard
+        NAME glifistore_test_harness_rejects_partial_shard
         COMMAND "${CMAKE_COMMAND}"
-                -DGLYPHASTORE_TEST_EXECUTABLE=$<TARGET_FILE:glyphastore_tests>
+                -DGLIFISTORE_TEST_EXECUTABLE=$<TARGET_FILE:glifistore_tests>
                 -DSHARD_COUNT=2
                 "-DEXPECTED_DIAGNOSTIC=must be set together"
                 -P "${CMAKE_SOURCE_DIR}/tests/cmake/test_shard_failure.cmake"
     )
     add_test(
-        NAME glyphastore_test_harness_rejects_zero_shards
+        NAME glifistore_test_harness_rejects_zero_shards
         COMMAND "${CMAKE_COMMAND}"
-                -DGLYPHASTORE_TEST_EXECUTABLE=$<TARGET_FILE:glyphastore_tests>
+                -DGLIFISTORE_TEST_EXECUTABLE=$<TARGET_FILE:glifistore_tests>
                 -DSHARD_COUNT=0
                 -DSHARD_INDEX=0
                 "-DEXPECTED_DIAGNOSTIC=must be greater than zero"
                 -P "${CMAKE_SOURCE_DIR}/tests/cmake/test_shard_failure.cmake"
     )
     add_test(
-        NAME glyphastore_test_harness_rejects_malformed_shards
+        NAME glifistore_test_harness_rejects_malformed_shards
         COMMAND "${CMAKE_COMMAND}"
-                -DGLYPHASTORE_TEST_EXECUTABLE=$<TARGET_FILE:glyphastore_tests>
+                -DGLIFISTORE_TEST_EXECUTABLE=$<TARGET_FILE:glifistore_tests>
                 -DSHARD_COUNT=2x
                 -DSHARD_INDEX=0
                 "-DEXPECTED_DIAGNOSTIC=expected an unsigned decimal integer"
                 -P "${CMAKE_SOURCE_DIR}/tests/cmake/test_shard_failure.cmake"
     )
     add_test(
-        NAME glyphastore_test_harness_rejects_excessive_shards
+        NAME glifistore_test_harness_rejects_excessive_shards
         COMMAND "${CMAKE_COMMAND}"
-                -DGLYPHASTORE_TEST_EXECUTABLE=$<TARGET_FILE:glyphastore_tests>
+                -DGLIFISTORE_TEST_EXECUTABLE=$<TARGET_FILE:glifistore_tests>
                 -DSHARD_COUNT=999999
                 -DSHARD_INDEX=0
                 "-DEXPECTED_DIAGNOSTIC=must not exceed the registered test count"
                 -P "${CMAKE_SOURCE_DIR}/tests/cmake/test_shard_failure.cmake"
     )
     add_test(
-        NAME glyphastore_test_harness_rejects_out_of_range_shard
+        NAME glifistore_test_harness_rejects_out_of_range_shard
         COMMAND "${CMAKE_COMMAND}"
-                -DGLYPHASTORE_TEST_EXECUTABLE=$<TARGET_FILE:glyphastore_tests>
+                -DGLIFISTORE_TEST_EXECUTABLE=$<TARGET_FILE:glifistore_tests>
                 -DSHARD_COUNT=2
                 -DSHARD_INDEX=2
-                "-DEXPECTED_DIAGNOSTIC=must be less than GLYPHASTORE_TEST_SHARD_COUNT"
+                "-DEXPECTED_DIAGNOSTIC=must be less than GLIFISTORE_TEST_SHARD_COUNT"
                 -P "${CMAKE_SOURCE_DIR}/tests/cmake/test_shard_failure.cmake"
     )
     add_test(
-        NAME glyphastore_released_artifact_compat
-        COMMAND glyphastore_tests "released artifact harness"
+        NAME glifistore_released_artifact_compat
+        COMMAND glifistore_tests "released artifact harness"
     )
-    set_tests_properties(glyphastore_released_artifact_compat PROPERTIES LABELS "compatibility")
-    set_target_properties(glyphastore_tests PROPERTIES FOLDER "Quality")
-    glyphastore_xcode_scheme(glyphastore_tests)
+    set_tests_properties(glifistore_released_artifact_compat PROPERTIES LABELS "compatibility")
+    set_target_properties(glifistore_tests PROPERTIES FOLDER "Quality")
+    glifistore_xcode_scheme(glifistore_tests)
 
-    if(NOT CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" AND NOT GLYPHASTORE_ENABLE_TSAN)
+    if(NOT CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" AND NOT GLIFISTORE_ENABLE_TSAN)
         # FreeBSD libc++ rejects replaced sized/aligned operator delete as non-usual when
         # paired with __builtin_operator_delete (GS residual: allocation fault suite is
         # Linux/macOS primary). TSan's runtime already owns operator new/delete, so the
         # fault-injection overrides cannot link under -fsanitize=thread.
-        add_executable(glyphastore_allocation_fault_tests
+        add_executable(glifistore_allocation_fault_tests
             ${CMAKE_SOURCE_DIR}/tests/quality/allocation_fault_harness.cpp
             ${CMAKE_SOURCE_DIR}/tests/quality/allocation_fault_core_tests.cpp
             ${CMAKE_SOURCE_DIR}/tests/quality/allocation_fault_paired_tests.cpp
             ${CMAKE_SOURCE_DIR}/tests/quality/allocation_fault_paired_async_tests.cpp
             ${CMAKE_SOURCE_DIR}/tests/quality/allocation_fault_main.cpp
         )
-        target_link_libraries(glyphastore_allocation_fault_tests
-            PRIVATE GlyphaStore::server glyphastore_project_options
+        target_link_libraries(glifistore_allocation_fault_tests
+            PRIVATE GlifiStore::server glifistore_project_options
         )
-        target_include_directories(glyphastore_allocation_fault_tests PRIVATE
+        target_include_directories(glifistore_allocation_fault_tests PRIVATE
             "${CMAKE_SOURCE_DIR}/src"
             "${CMAKE_SOURCE_DIR}/tests"
         )
-        glyphastore_set_warnings(glyphastore_allocation_fault_tests)
-        glyphastore_enable_hardening(glyphastore_allocation_fault_tests)
-        glyphastore_enable_ipo(glyphastore_allocation_fault_tests)
-        set_target_properties(glyphastore_allocation_fault_tests PROPERTIES FOLDER "Quality")
-        if(GLYPHASTORE_ENABLE_CLANG_TIDY AND APPLE)
+        glifistore_set_warnings(glifistore_allocation_fault_tests)
+        glifistore_enable_hardening(glifistore_allocation_fault_tests)
+        glifistore_enable_ipo(glifistore_allocation_fault_tests)
+        set_target_properties(glifistore_allocation_fault_tests PROPERTIES FOLDER "Quality")
+        if(GLIFISTORE_ENABLE_CLANG_TIDY AND APPLE)
             # clang-tidy 21 asks libc++ to resolve __builtin_operator_delete while this harness
             # deliberately supplies every global delete overload. That combination is rejected as
             # a non-usual deallocation function even though the same TU compiles and runs normally.
             # Keep the executable in the build/test matrix; omit only clang-tidy on this test-only
             # replacement-allocation target. Production sources remain covered by the fail-closed
             # compile-database gate.
-            set_target_properties(glyphastore_allocation_fault_tests PROPERTIES CXX_CLANG_TIDY "")
+            set_target_properties(glifistore_allocation_fault_tests PROPERTIES CXX_CLANG_TIDY "")
         endif()
-        add_test(NAME glyphastore_allocation_fault_tests COMMAND glyphastore_allocation_fault_tests)
-        set_tests_properties(glyphastore_allocation_fault_tests PROPERTIES
+        add_test(NAME glifistore_allocation_fault_tests COMMAND glifistore_allocation_fault_tests)
+        set_tests_properties(glifistore_allocation_fault_tests PROPERTIES
             TIMEOUT 180
             LABELS "fault-injection"
         )
-        glyphastore_xcode_scheme(glyphastore_allocation_fault_tests)
+        glifistore_xcode_scheme(glifistore_allocation_fault_tests)
     endif()
 
-    add_executable(glyphastore_crash_persistence ${CMAKE_SOURCE_DIR}/tests/crash/crash_persistence.cpp)
-    target_link_libraries(glyphastore_crash_persistence PRIVATE GlyphaStore::core glyphastore_project_options)
-    target_include_directories(glyphastore_crash_persistence PRIVATE "${CMAKE_SOURCE_DIR}/tests")
-    glyphastore_set_warnings(glyphastore_crash_persistence)
-    glyphastore_enable_hardening(glyphastore_crash_persistence)
-    glyphastore_enable_ipo(glyphastore_crash_persistence)
-    set_target_properties(glyphastore_crash_persistence PROPERTIES FOLDER "Quality")
-    add_test(NAME glyphastore_crash_sync COMMAND glyphastore_crash_persistence --mode matrix)
-    add_test(NAME glyphastore_crash_periodic COMMAND glyphastore_crash_persistence --mode periodic-matrix)
-    add_test(NAME glyphastore_crash_group COMMAND glyphastore_crash_persistence --mode group-matrix)
-    add_test(NAME glyphastore_crash_random_smoke COMMAND glyphastore_crash_persistence
+    add_executable(glifistore_crash_persistence ${CMAKE_SOURCE_DIR}/tests/crash/crash_persistence.cpp)
+    target_link_libraries(glifistore_crash_persistence PRIVATE GlifiStore::core glifistore_project_options)
+    target_include_directories(glifistore_crash_persistence PRIVATE "${CMAKE_SOURCE_DIR}/tests")
+    glifistore_set_warnings(glifistore_crash_persistence)
+    glifistore_enable_hardening(glifistore_crash_persistence)
+    glifistore_enable_ipo(glifistore_crash_persistence)
+    set_target_properties(glifistore_crash_persistence PROPERTIES FOLDER "Quality")
+    add_test(NAME glifistore_crash_sync COMMAND glifistore_crash_persistence --mode matrix)
+    add_test(NAME glifistore_crash_periodic COMMAND glifistore_crash_persistence --mode periodic-matrix)
+    add_test(NAME glifistore_crash_group COMMAND glifistore_crash_persistence --mode group-matrix)
+    add_test(NAME glifistore_crash_random_smoke COMMAND glifistore_crash_persistence
         --mode random-campaign --campaign-seed 11636782997727379457 --iterations 2)
-    add_test(NAME glyphastore_crash_pause_smoke COMMAND glyphastore_crash_persistence --mode pause-smoke)
+    add_test(NAME glifistore_crash_pause_smoke COMMAND glifistore_crash_persistence --mode pause-smoke)
     # Sync matrix is large; TSan instrumentation of recovery/encode paths routinely
     # exceeds 10 minutes on hosted/macOS runners even when making forward progress.
-    set_tests_properties(glyphastore_crash_sync PROPERTIES TIMEOUT 2400 LABELS "crash")
-    set_tests_properties(glyphastore_crash_periodic glyphastore_crash_group PROPERTIES TIMEOUT 600
+    set_tests_properties(glifistore_crash_sync PROPERTIES TIMEOUT 2400 LABELS "crash")
+    set_tests_properties(glifistore_crash_periodic glifistore_crash_group PROPERTIES TIMEOUT 600
                          LABELS "crash")
-    set_tests_properties(glyphastore_crash_random_smoke PROPERTIES TIMEOUT 600 LABELS "crash")
-    set_tests_properties(glyphastore_crash_pause_smoke PROPERTIES TIMEOUT 120 LABELS "crash")
+    set_tests_properties(glifistore_crash_random_smoke PROPERTIES TIMEOUT 600 LABELS "crash")
+    set_tests_properties(glifistore_crash_pause_smoke PROPERTIES TIMEOUT 120 LABELS "crash")
 
-    add_executable(glyphastore_crash_daemon ${CMAKE_SOURCE_DIR}/tests/crash/crash_daemon.cpp)
-    target_link_libraries(glyphastore_crash_daemon
-        PRIVATE GlyphaStore::client GlyphaStore::server glyphastore_project_options
+    add_executable(glifistore_crash_daemon ${CMAKE_SOURCE_DIR}/tests/crash/crash_daemon.cpp)
+    target_link_libraries(glifistore_crash_daemon
+        PRIVATE GlifiStore::client GlifiStore::server glifistore_project_options
     )
-    glyphastore_set_warnings(glyphastore_crash_daemon)
-    glyphastore_enable_hardening(glyphastore_crash_daemon)
-    glyphastore_enable_ipo(glyphastore_crash_daemon)
-    set_target_properties(glyphastore_crash_daemon PROPERTIES FOLDER "Quality")
-    add_test(NAME glyphastore_crash_daemon_sync
-        COMMAND glyphastore_crash_daemon --daemon $<TARGET_FILE:glyphastored> --storage durable-sync)
-    add_test(NAME glyphastore_crash_daemon_group
-        COMMAND glyphastore_crash_daemon --daemon $<TARGET_FILE:glyphastored> --storage durable-group)
-    add_test(NAME glyphastore_crash_daemon_periodic
-        COMMAND glyphastore_crash_daemon --daemon $<TARGET_FILE:glyphastored> --storage durable-periodic)
-    add_test(NAME glyphastore_crash_daemon_pre_commit
-        COMMAND glyphastore_crash_daemon --daemon $<TARGET_FILE:glyphastored> --storage durable-sync
+    glifistore_set_warnings(glifistore_crash_daemon)
+    glifistore_enable_hardening(glifistore_crash_daemon)
+    glifistore_enable_ipo(glifistore_crash_daemon)
+    set_target_properties(glifistore_crash_daemon PROPERTIES FOLDER "Quality")
+    add_test(NAME glifistore_crash_daemon_sync
+        COMMAND glifistore_crash_daemon --daemon $<TARGET_FILE:glifistored> --storage durable-sync)
+    add_test(NAME glifistore_crash_daemon_group
+        COMMAND glifistore_crash_daemon --daemon $<TARGET_FILE:glifistored> --storage durable-group)
+    add_test(NAME glifistore_crash_daemon_periodic
+        COMMAND glifistore_crash_daemon --daemon $<TARGET_FILE:glifistored> --storage durable-periodic)
+    add_test(NAME glifistore_crash_daemon_pre_commit
+        COMMAND glifistore_crash_daemon --daemon $<TARGET_FILE:glifistored> --storage durable-sync
                 --checkpoint pre-commit)
-    add_test(NAME glyphastore_crash_daemon_erase
-        COMMAND glyphastore_crash_daemon --daemon $<TARGET_FILE:glyphastored> --storage durable-sync
+    add_test(NAME glifistore_crash_daemon_erase
+        COMMAND glifistore_crash_daemon --daemon $<TARGET_FILE:glifistored> --storage durable-sync
                 --checkpoint post-ack-erase)
     set_tests_properties(
-        glyphastore_crash_daemon_sync
-        glyphastore_crash_daemon_group
-        glyphastore_crash_daemon_periodic
-        glyphastore_crash_daemon_pre_commit
-        glyphastore_crash_daemon_erase
+        glifistore_crash_daemon_sync
+        glifistore_crash_daemon_group
+        glifistore_crash_daemon_periodic
+        glifistore_crash_daemon_pre_commit
+        glifistore_crash_daemon_erase
         PROPERTIES TIMEOUT 120 LABELS "crash"
     )
 
-    add_executable(glyphastore_crash_backup ${CMAKE_SOURCE_DIR}/tests/crash/crash_backup.cpp)
-    target_link_libraries(glyphastore_crash_backup PRIVATE GlyphaStore::core glyphastore_project_options)
-    target_include_directories(glyphastore_crash_backup PRIVATE "${CMAKE_SOURCE_DIR}/tests")
-    glyphastore_set_warnings(glyphastore_crash_backup)
-    glyphastore_enable_hardening(glyphastore_crash_backup)
-    glyphastore_enable_ipo(glyphastore_crash_backup)
-    set_target_properties(glyphastore_crash_backup PROPERTIES FOLDER "Quality")
-    add_test(NAME glyphastore_crash_backup COMMAND glyphastore_crash_backup)
-    set_tests_properties(glyphastore_crash_backup PROPERTIES TIMEOUT 120 LABELS "crash")
+    add_executable(glifistore_crash_backup ${CMAKE_SOURCE_DIR}/tests/crash/crash_backup.cpp)
+    target_link_libraries(glifistore_crash_backup PRIVATE GlifiStore::core glifistore_project_options)
+    target_include_directories(glifistore_crash_backup PRIVATE "${CMAKE_SOURCE_DIR}/tests")
+    glifistore_set_warnings(glifistore_crash_backup)
+    glifistore_enable_hardening(glifistore_crash_backup)
+    glifistore_enable_ipo(glifistore_crash_backup)
+    set_target_properties(glifistore_crash_backup PROPERTIES FOLDER "Quality")
+    add_test(NAME glifistore_crash_backup COMMAND glifistore_crash_backup)
+    set_tests_properties(glifistore_crash_backup PROPERTIES TIMEOUT 120 LABELS "crash")
 
-    add_executable(glyphastore_crash_backup_wire ${CMAKE_SOURCE_DIR}/tests/crash/crash_backup_wire.cpp)
-    target_link_libraries(glyphastore_crash_backup_wire
-        PRIVATE GlyphaStore::client GlyphaStore::server glyphastore_project_options
+    add_executable(glifistore_crash_backup_wire ${CMAKE_SOURCE_DIR}/tests/crash/crash_backup_wire.cpp)
+    target_link_libraries(glifistore_crash_backup_wire
+        PRIVATE GlifiStore::client GlifiStore::server glifistore_project_options
     )
-    target_include_directories(glyphastore_crash_backup_wire PRIVATE "${CMAKE_SOURCE_DIR}/tests")
-    glyphastore_set_warnings(glyphastore_crash_backup_wire)
-    glyphastore_enable_hardening(glyphastore_crash_backup_wire)
-    glyphastore_enable_ipo(glyphastore_crash_backup_wire)
-    set_target_properties(glyphastore_crash_backup_wire PROPERTIES FOLDER "Quality")
-    add_test(NAME glyphastore_crash_backup_wire COMMAND glyphastore_crash_backup_wire)
-    set_tests_properties(glyphastore_crash_backup_wire PROPERTIES TIMEOUT 180 LABELS "crash")
+    target_include_directories(glifistore_crash_backup_wire PRIVATE "${CMAKE_SOURCE_DIR}/tests")
+    glifistore_set_warnings(glifistore_crash_backup_wire)
+    glifistore_enable_hardening(glifistore_crash_backup_wire)
+    glifistore_enable_ipo(glifistore_crash_backup_wire)
+    set_target_properties(glifistore_crash_backup_wire PROPERTIES FOLDER "Quality")
+    add_test(NAME glifistore_crash_backup_wire COMMAND glifistore_crash_backup_wire)
+    set_tests_properties(glifistore_crash_backup_wire PROPERTIES TIMEOUT 180 LABELS "crash")
 
-    add_executable(glyphastore_crash_backup_daemon ${CMAKE_SOURCE_DIR}/tests/crash/crash_backup_daemon.cpp)
-    target_link_libraries(glyphastore_crash_backup_daemon
-        PRIVATE GlyphaStore::client GlyphaStore::server glyphastore_project_options
+    add_executable(glifistore_crash_backup_daemon ${CMAKE_SOURCE_DIR}/tests/crash/crash_backup_daemon.cpp)
+    target_link_libraries(glifistore_crash_backup_daemon
+        PRIVATE GlifiStore::client GlifiStore::server glifistore_project_options
     )
-    target_include_directories(glyphastore_crash_backup_daemon PRIVATE "${CMAKE_SOURCE_DIR}/tests")
-    glyphastore_set_warnings(glyphastore_crash_backup_daemon)
-    glyphastore_enable_hardening(glyphastore_crash_backup_daemon)
-    glyphastore_enable_ipo(glyphastore_crash_backup_daemon)
-    set_target_properties(glyphastore_crash_backup_daemon PROPERTIES FOLDER "Quality")
-    add_test(NAME glyphastore_crash_backup_daemon
-             COMMAND glyphastore_crash_backup_daemon --daemon $<TARGET_FILE:glyphastored>)
-    set_tests_properties(glyphastore_crash_backup_daemon PROPERTIES TIMEOUT 180 LABELS "crash"
-                         DEPENDS glyphastored)
+    target_include_directories(glifistore_crash_backup_daemon PRIVATE "${CMAKE_SOURCE_DIR}/tests")
+    glifistore_set_warnings(glifistore_crash_backup_daemon)
+    glifistore_enable_hardening(glifistore_crash_backup_daemon)
+    glifistore_enable_ipo(glifistore_crash_backup_daemon)
+    set_target_properties(glifistore_crash_backup_daemon PROPERTIES FOLDER "Quality")
+    add_test(NAME glifistore_crash_backup_daemon
+             COMMAND glifistore_crash_backup_daemon --daemon $<TARGET_FILE:glifistored>)
+    set_tests_properties(glifistore_crash_backup_daemon PROPERTIES TIMEOUT 180 LABELS "crash"
+                         DEPENDS glifistored)
 endif()
 
 if(BUILD_TESTING)
-    add_test(NAME glyphastore_cli_daemon_help COMMAND glyphastored --help)
-    set_tests_properties(glyphastore_cli_daemon_help PROPERTIES
-        PASS_REGULAR_EXPRESSION "GlyphaStore native binary key-value server"
+    add_test(NAME glifistore_cli_daemon_help COMMAND glifistored --help)
+    set_tests_properties(glifistore_cli_daemon_help PROPERTIES
+        PASS_REGULAR_EXPRESSION "GlifiStore native binary key-value server"
     )
-    add_test(NAME glyphastore_cli_daemon_version COMMAND glyphastored --version)
-    set_tests_properties(glyphastore_cli_daemon_version PROPERTIES
-        PASS_REGULAR_EXPRESSION "glyphastored ${PROJECT_VERSION}"
+    add_test(NAME glifistore_cli_daemon_version COMMAND glifistored --version)
+    set_tests_properties(glifistore_cli_daemon_version PROPERTIES
+        PASS_REGULAR_EXPRESSION "glifistored ${PROJECT_VERSION}"
     )
-    add_test(NAME glyphastore_cli_inspect_help COMMAND glyphastore_inspect_segment --help)
-    set_tests_properties(glyphastore_cli_inspect_help PROPERTIES
-        PASS_REGULAR_EXPRESSION "Inspect a GlyphaStore durable Segment file"
+    add_test(NAME glifistore_cli_inspect_help COMMAND glifistore_inspect_segment --help)
+    set_tests_properties(glifistore_cli_inspect_help PROPERTIES
+        PASS_REGULAR_EXPRESSION "Inspect a GlifiStore durable Segment file"
     )
-    add_test(NAME glyphastore_cli_verify_help COMMAND glyphastore_verify_store --help)
-    set_tests_properties(glyphastore_cli_verify_help PROPERTIES
-        PASS_REGULAR_EXPRESSION "Verify a GlyphaStore durable data directory"
+    add_test(NAME glifistore_cli_verify_help COMMAND glifistore_verify_store --help)
+    set_tests_properties(glifistore_cli_verify_help PROPERTIES
+        PASS_REGULAR_EXPRESSION "Verify a GlifiStore durable data directory"
     )
-    add_test(NAME glyphastore_cli_backup_help COMMAND glyphastore_backup_store --help)
-    set_tests_properties(glyphastore_cli_backup_help PROPERTIES
+    add_test(NAME glifistore_cli_backup_help COMMAND glifistore_backup_store --help)
+    set_tests_properties(glifistore_cli_backup_help PROPERTIES
         PASS_REGULAR_EXPRESSION "Offline backup"
     )
-    add_test(NAME glyphastore_cli_migrate_help COMMAND glyphastore_migrate_store --help)
-    set_tests_properties(glyphastore_cli_migrate_help PROPERTIES
+    add_test(NAME glifistore_cli_migrate_help COMMAND glifistore_migrate_store --help)
+    set_tests_properties(glifistore_cli_migrate_help PROPERTIES
         PASS_REGULAR_EXPRESSION "Offline Worker reshard"
     )
-    add_test(NAME glyphastore_cli_repair_help COMMAND glyphastore_repair_store --help)
-    set_tests_properties(glyphastore_cli_repair_help PROPERTIES
+    add_test(NAME glifistore_cli_repair_help COMMAND glifistore_repair_store --help)
+    set_tests_properties(glifistore_cli_repair_help PROPERTIES
         PASS_REGULAR_EXPRESSION "Offline repair"
     )
-    add_test(NAME glyphastore_cli_rebuild_help COMMAND glyphastore_rebuild_index --help)
-    set_tests_properties(glyphastore_cli_rebuild_help PROPERTIES
+    add_test(NAME glifistore_cli_rebuild_help COMMAND glifistore_rebuild_index --help)
+    set_tests_properties(glifistore_cli_rebuild_help PROPERTIES
         PASS_REGULAR_EXPRESSION "Offline Index rebuild is not supported"
     )
-    add_test(NAME glyphastore_cli_rebuild_not_implemented
-        COMMAND glyphastore_rebuild_index -- /tmp/does-not-matter.glypha
+    add_test(NAME glifistore_cli_rebuild_not_implemented
+        COMMAND glifistore_rebuild_index -- /tmp/does-not-matter.glifi
     )
-    set_tests_properties(glyphastore_cli_rebuild_not_implemented PROPERTIES WILL_FAIL TRUE)
-    add_test(NAME glyphastore_cli_rejects_invalid_workers COMMAND glyphastored --workers 257)
-    set_tests_properties(glyphastore_cli_rejects_invalid_workers PROPERTIES WILL_FAIL TRUE)
-    add_test(NAME glyphastore_cli_daemon_rejects_missing_data_directory
-        COMMAND glyphastored --storage-mode durable-sync
+    set_tests_properties(glifistore_cli_rebuild_not_implemented PROPERTIES WILL_FAIL TRUE)
+    add_test(NAME glifistore_cli_rejects_invalid_workers COMMAND glifistored --workers 257)
+    set_tests_properties(glifistore_cli_rejects_invalid_workers PROPERTIES WILL_FAIL TRUE)
+    add_test(NAME glifistore_cli_daemon_rejects_missing_data_directory
+        COMMAND glifistored --storage-mode durable-sync
     )
-    set_tests_properties(glyphastore_cli_daemon_rejects_missing_data_directory PROPERTIES WILL_FAIL TRUE)
-    add_test(NAME glyphastore_cli_daemon_rejects_durable_options_in_volatile_mode
-        COMMAND glyphastored --data-dir unused
+    set_tests_properties(glifistore_cli_daemon_rejects_missing_data_directory PROPERTIES WILL_FAIL TRUE)
+    add_test(NAME glifistore_cli_daemon_rejects_durable_options_in_volatile_mode
+        COMMAND glifistored --data-dir unused
     )
-    set_tests_properties(glyphastore_cli_daemon_rejects_durable_options_in_volatile_mode
+    set_tests_properties(glifistore_cli_daemon_rejects_durable_options_in_volatile_mode
         PROPERTIES WILL_FAIL TRUE
     )
-    add_test(NAME glyphastore_cli_daemon_rejects_resource_flags_in_volatile_mode
-        COMMAND glyphastored --max-store-bytes 1GiB
+    add_test(NAME glifistore_cli_daemon_rejects_resource_flags_in_volatile_mode
+        COMMAND glifistored --max-store-bytes 1GiB
     )
-    set_tests_properties(glyphastore_cli_daemon_rejects_resource_flags_in_volatile_mode
+    set_tests_properties(glifistore_cli_daemon_rejects_resource_flags_in_volatile_mode
         PROPERTIES WILL_FAIL TRUE
     )
-    add_test(NAME glyphastore_cli_daemon_rejects_zero_group_max_records
-        COMMAND glyphastored --storage-mode durable-group --data-dir /tmp/glyphastore-cli-group
+    add_test(NAME glifistore_cli_daemon_rejects_zero_group_max_records
+        COMMAND glifistored --storage-mode durable-group --data-dir /tmp/glifistore-cli-group
                 --group-max-records 0
     )
-    set_tests_properties(glyphastore_cli_daemon_rejects_zero_group_max_records
+    set_tests_properties(glifistore_cli_daemon_rejects_zero_group_max_records
         PROPERTIES WILL_FAIL TRUE
     )
-    add_test(NAME glyphastore_cli_daemon_rejects_zero_durable_mutation_queue
-        COMMAND glyphastored --durable-mutation-queue-capacity 0
+    add_test(NAME glifistore_cli_daemon_rejects_zero_durable_mutation_queue
+        COMMAND glifistored --durable-mutation-queue-capacity 0
     )
-    set_tests_properties(glyphastore_cli_daemon_rejects_zero_durable_mutation_queue
+    set_tests_properties(glifistore_cli_daemon_rejects_zero_durable_mutation_queue
         PROPERTIES WILL_FAIL TRUE
     )
-    add_test(NAME glyphastore_cli_daemon_rejects_unknown_config_key
-        COMMAND glyphastored --config "${CMAKE_SOURCE_DIR}/tests/fixtures/daemon-unknown-key.conf"
+    add_test(NAME glifistore_cli_daemon_rejects_unknown_config_key
+        COMMAND glifistored --config "${CMAKE_SOURCE_DIR}/tests/fixtures/daemon-unknown-key.conf"
     )
-    set_tests_properties(glyphastore_cli_daemon_rejects_unknown_config_key
+    set_tests_properties(glifistore_cli_daemon_rejects_unknown_config_key
         PROPERTIES WILL_FAIL TRUE
     )
-    add_test(NAME glyphastore_cli_daemon_dump_config
-        COMMAND glyphastored --dump-config --port 0
+    add_test(NAME glifistore_cli_daemon_dump_config
+        COMMAND glifistored --dump-config --port 0
     )
-    set_tests_properties(glyphastore_cli_daemon_dump_config PROPERTIES
-        PASS_REGULAR_EXPRESSION "GlyphaStore/config.*port=0"
+    set_tests_properties(glifistore_cli_daemon_dump_config PROPERTIES
+        PASS_REGULAR_EXPRESSION "GlifiStore/config.*port=0"
     )
     set_tests_properties(
-        glyphastore_cli_daemon_help
-        glyphastore_cli_daemon_version
-        glyphastore_cli_daemon_rejects_missing_data_directory
-        glyphastore_cli_daemon_rejects_durable_options_in_volatile_mode
-        glyphastore_cli_daemon_rejects_resource_flags_in_volatile_mode
-        glyphastore_cli_daemon_rejects_zero_group_max_records
-        glyphastore_cli_daemon_rejects_zero_durable_mutation_queue
-        glyphastore_cli_daemon_rejects_unknown_config_key
-        glyphastore_cli_daemon_dump_config
-        glyphastore_cli_inspect_help
-        glyphastore_cli_rebuild_help
-        glyphastore_cli_rejects_invalid_workers
+        glifistore_cli_daemon_help
+        glifistore_cli_daemon_version
+        glifistore_cli_daemon_rejects_missing_data_directory
+        glifistore_cli_daemon_rejects_durable_options_in_volatile_mode
+        glifistore_cli_daemon_rejects_resource_flags_in_volatile_mode
+        glifistore_cli_daemon_rejects_zero_group_max_records
+        glifistore_cli_daemon_rejects_zero_durable_mutation_queue
+        glifistore_cli_daemon_rejects_unknown_config_key
+        glifistore_cli_daemon_dump_config
+        glifistore_cli_inspect_help
+        glifistore_cli_rebuild_help
+        glifistore_cli_rejects_invalid_workers
         PROPERTIES TIMEOUT 10
     )
 endif()
 
 if(BUILD_TESTING)
-    set(glyphastore_check_dependencies
-        glyphastore_c_abi_tests
-        glyphastore_c_abi_durable_tests
-        glyphastore_tests
-        glyphastore_crash_persistence
-        glyphastore_crash_daemon
-        glyphastore_crash_backup
-        glyphastore_crash_backup_wire
-        glyphastore_crash_backup_daemon
-        glyphastored
-        glyphastore_inspect_segment
-        glyphastore_verify_store
-        glyphastore_backup_store
-        glyphastore_migrate_store
-        glyphastore_repair_store
-        glyphastore_rebuild_index
+    set(glifistore_check_dependencies
+        glifistore_c_abi_tests
+        glifistore_c_abi_durable_tests
+        glifistore_tests
+        glifistore_crash_persistence
+        glifistore_crash_daemon
+        glifistore_crash_backup
+        glifistore_crash_backup_wire
+        glifistore_crash_backup_daemon
+        glifistored
+        glifistore_inspect_segment
+        glifistore_verify_store
+        glifistore_backup_store
+        glifistore_migrate_store
+        glifistore_repair_store
+        glifistore_rebuild_index
     )
-    if(TARGET glyphastore_benchmarks)
-        list(APPEND glyphastore_check_dependencies
-            glyphastore_benchmarks
-            glyphastore_server_benchmarks
+    if(TARGET glifistore_benchmarks)
+        list(APPEND glifistore_check_dependencies
+            glifistore_benchmarks
+            glifistore_server_benchmarks
         )
     endif()
     add_custom_target(check
         COMMAND "${CMAKE_CTEST_COMMAND}" -C "$<CONFIG>" --output-on-failure
-        DEPENDS ${glyphastore_check_dependencies}
+        DEPENDS ${glifistore_check_dependencies}
         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
         USES_TERMINAL
-        COMMENT "Running GlyphaStore tests with CTest"
+        COMMENT "Running GlifiStore tests with CTest"
     )
     set_target_properties(check PROPERTIES FOLDER "Quality")
-    glyphastore_xcode_scheme(check)
+    glifistore_xcode_scheme(check)
 endif()

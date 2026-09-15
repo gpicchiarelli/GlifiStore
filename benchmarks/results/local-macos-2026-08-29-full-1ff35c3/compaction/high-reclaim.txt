@@ -1,4 +1,4 @@
-# benchmark=glyphastore_durable_compaction
+# benchmark=glifistore_durable_compaction
 # git_sha=1ff35c3
 # storage_mode=durable-periodic;seed_flush_before_measurement=true
 # compaction_scope=public Store::compact;one Worker;maintenance disabled

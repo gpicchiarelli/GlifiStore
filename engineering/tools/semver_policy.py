@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SemVer authority and package-version normalization for GlyphaStore backends.
+"""SemVer authority and package-version normalization for GlifiStore backends.
 
 VERSION is the single source of truth for the product version. This module parses
 it, orders releases by SemVer 2.0.0 precedence, classifies the change kind, and

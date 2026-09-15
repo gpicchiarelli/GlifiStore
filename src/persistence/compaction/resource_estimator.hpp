@@ -1,13 +1,13 @@
 #pragma once
 
-#include "glyphastore/core/error.hpp"
-#include "glyphastore/persistence/manifest.hpp"
-#include "glyphastore/store/config.hpp"
+#include "glifistore/core/error.hpp"
+#include "glifistore/persistence/manifest.hpp"
+#include "glifistore/store/config.hpp"
 
 #include <cstddef>
 #include <cstdint>
 
-namespace glyphastore {
+namespace glifistore {
 
 struct CompactionResourceEstimate final {
     std::uint64_t temporary_bytes{};
@@ -27,4 +27,4 @@ struct CompactionResourceEstimate final {
 [[nodiscard]] auto validate_compaction_write_amplification(std::size_t source_count, std::size_t output_count,
                                                            const DurableResourceLimits& limits) -> Status;
 
-} // namespace glyphastore
+} // namespace glifistore

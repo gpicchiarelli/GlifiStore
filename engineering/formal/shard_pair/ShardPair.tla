@@ -1,5 +1,5 @@
 ---- MODULE ShardPair ----
-\* Reduced TLA+ model of one GlyphaStore paired shard (ADR 0031/0032).
+\* Reduced TLA+ model of one GlifiStore paired shard (ADR 0031/0032).
 \* Requirement: GS-CONCUR-TLA-001.
 
 EXTENDS Naturals, Sequences, TLC

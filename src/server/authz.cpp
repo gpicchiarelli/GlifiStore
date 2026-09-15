@@ -1,11 +1,11 @@
-#include "glyphastore/server/authz.hpp"
+#include "glifistore/server/authz.hpp"
 
 #include <cctype>
 #include <fstream>
 #include <sstream>
 #include <string>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 [[nodiscard]] auto trim(std::string_view text) noexcept -> std::string_view {
@@ -301,4 +301,4 @@ auto authorize_request(const AuthzPolicy& policy, const Capability granted, cons
     return key_matches_prefix(key_prefix, key);
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

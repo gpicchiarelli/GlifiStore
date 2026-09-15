@@ -1,7 +1,7 @@
 #include "benchmark_metadata.hpp"
-#include "glyphastore/core/error.hpp"
-#include "glyphastore/store/config.hpp"
-#include "glyphastore/store/store.hpp"
+#include "glifistore/core/error.hpp"
+#include "glifistore/store/config.hpp"
+#include "glifistore/store/store.hpp"
 #include "parse.hpp"
 
 #include <algorithm>
@@ -66,10 +66,10 @@ struct Sample {
     bool compacted{};
     SegmentFootprint before;
     SegmentFootprint after;
-    glyphastore::CompactionResult compaction;
+    glifistore::CompactionResult compaction;
 };
 
-class BenchmarkClock final : public glyphastore::StoreClock {
+class BenchmarkClock final : public glifistore::StoreClock {
   public:
     [[nodiscard]] auto now_ns() const noexcept -> std::uint64_t override {
         return now_ns_.load(std::memory_order_relaxed);
@@ -87,7 +87,7 @@ class TemporaryDirectory final {
   public:
     TemporaryDirectory() {
         auto pattern =
-            (std::filesystem::temp_directory_path() / "glyphastore-compaction-bench-XXXXXX").string();
+            (std::filesystem::temp_directory_path() / "glifistore-compaction-bench-XXXXXX").string();
         std::vector<char> writable(pattern.begin(), pattern.end());
         writable.push_back('\0');
         const auto* created = ::mkdtemp(writable.data());
@@ -120,7 +120,7 @@ class TemporaryDirectory final {
         throw std::runtime_error("missing value for " + std::string{flag});
     }
     const std::string_view text{value};
-    const auto parsed = glyphastore::bench::parse_decimal_size(text);
+    const auto parsed = glifistore::bench::parse_decimal_size(text);
     if (!parsed) {
         throw std::runtime_error("invalid value for " + std::string{flag} + ": " + std::string{text});
     }
@@ -140,7 +140,7 @@ class TemporaryDirectory final {
         } else if (argument == "--scenario" && index + 1 < argc) {
             options.scenario = argv[++index];
         } else if (argument == "--help" || argument == "-h") {
-            std::cout << "usage: glyphastore_compaction_benchmark [--warmup N] [--repeats N]"
+            std::cout << "usage: glifistore_compaction_benchmark [--warmup N] [--repeats N]"
                          " [--value-bytes N]"
                          " [--scenario high-reclaim|medium-reclaim|low-reclaim|"
                          "copy-heavy|ttl-50|no-gain]\n";
@@ -167,7 +167,7 @@ class TemporaryDirectory final {
     SegmentFootprint footprint;
     for (const auto& entry : std::filesystem::directory_iterator(directory)) {
         const auto name = entry.path().filename().string();
-        if (!name.starts_with("segment-") || !name.ends_with(".glypha")) {
+        if (!name.starts_with("segment-") || !name.ends_with(".glifi")) {
             continue;
         }
         struct stat status{};
@@ -183,23 +183,23 @@ class TemporaryDirectory final {
 
 [[nodiscard]] auto store_config(const std::filesystem::path& directory,
                                 const std::shared_ptr<BenchmarkClock>& clock,
-                                const glyphastore::DurableOpenMode open_mode) -> glyphastore::StoreConfig {
-    glyphastore::StoreConfig config{
+                                const glifistore::DurableOpenMode open_mode) -> glifistore::StoreConfig {
+    glifistore::StoreConfig config{
         .worker_config = {.explicit_count = 1},
-        .storage_mode = glyphastore::StorageMode::durable_periodic,
+        .storage_mode = glifistore::StorageMode::durable_periodic,
         .data_directory = directory,
         .durable_open_mode = open_mode,
         .durable_periodic =
             {
                 .sync_interval_ms = 60'000,
                 .batch =
-                    glyphastore::DurableGroupConfig{
+                    glifistore::DurableGroupConfig{
                         .max_records = 4096,
                         .max_bytes = 32U * 1024U * 1024U,
                         .max_wait_ms = 60'000,
                     },
             },
-        .maintenance = {.mode = glyphastore::MaintenanceMode::disabled},
+        .maintenance = {.mode = glifistore::MaintenanceMode::disabled},
         .clock = clock,
     };
     return config;
@@ -207,28 +207,28 @@ class TemporaryDirectory final {
 
 [[nodiscard]] auto open_store(const std::filesystem::path& directory,
                               const std::shared_ptr<BenchmarkClock>& clock,
-                              const glyphastore::DurableOpenMode open_mode)
-    -> std::unique_ptr<glyphastore::Store> {
-    auto opened = glyphastore::Store::open(store_config(directory, clock, open_mode));
+                              const glifistore::DurableOpenMode open_mode)
+    -> std::unique_ptr<glifistore::Store> {
+    auto opened = glifistore::Store::open(store_config(directory, clock, open_mode));
     if (!opened) {
         throw std::runtime_error("failed to open benchmark Store: " + opened.error().message);
     }
     return std::move(*opened);
 }
 
-void require_status(const glyphastore::Status& status, const std::string_view operation) {
+void require_status(const glifistore::Status& status, const std::string_view operation) {
     if (!status) {
         throw std::runtime_error(std::string{operation} + " failed: " + status.error().message);
     }
 }
 
-void verify_model(glyphastore::Store& store, const Scenario& scenario,
+void verify_model(glifistore::Store& store, const Scenario& scenario,
                   const std::vector<std::uint64_t>& expected_markers) {
     require_status(store.verify_index(), "verify_index");
     for (std::size_t key_index = 0; key_index < scenario.live_keys; ++key_index) {
         const auto found = store.get(benchmark_key(key_index));
         if (scenario.expire_even_keys && key_index % 2U == 0) {
-            if (found || found.error().code != glyphastore::ErrorCode::not_found) {
+            if (found || found.error().code != glifistore::ErrorCode::not_found) {
                 throw std::runtime_error("expired benchmark key remained visible");
             }
             continue;
@@ -248,7 +248,7 @@ void verify_model(glyphastore::Store& store, const Scenario& scenario,
                               const std::size_t value_bytes) -> Sample {
     TemporaryDirectory directory;
     auto clock = std::make_shared<BenchmarkClock>();
-    auto store = open_store(directory.path(), clock, glyphastore::DurableOpenMode::create_new);
+    auto store = open_store(directory.path(), clock, glifistore::DurableOpenMode::create_new);
 
     std::vector<std::byte> value(value_bytes);
     for (std::size_t index = 0; index < value.size(); ++index) {
@@ -286,7 +286,7 @@ void verify_model(glyphastore::Store& store, const Scenario& scenario,
 
     const auto after = segment_footprint(directory.path());
     const auto reopen_start = Clock::now();
-    auto reopened = open_store(directory.path(), clock, glyphastore::DurableOpenMode::open_existing);
+    auto reopened = open_store(directory.path(), clock, glifistore::DurableOpenMode::open_existing);
     const auto reopen_seconds = seconds_since(reopen_start);
     const auto verify_start = Clock::now();
     verify_model(*reopened, scenario, expected_markers);
@@ -364,8 +364,8 @@ int main(int argc, char** argv) {
             Scenario{.name = "no-gain", .operations = 1024, .live_keys = 1024, .expect_compacted = false},
         };
 
-        std::cout << "# benchmark=glyphastore_durable_compaction\n";
-        glyphastore::bench::print_common_metadata(std::cout, options.warmups, options.repeats);
+        std::cout << "# benchmark=glifistore_durable_compaction\n";
+        glifistore::bench::print_common_metadata(std::cout, options.warmups, options.repeats);
         std::cout << "# storage_mode=durable-periodic;seed_flush_before_measurement=true\n";
         std::cout << "# compaction_scope=public Store::compact;one Worker;maintenance disabled\n";
         std::cout << std::fixed << std::setprecision(6);

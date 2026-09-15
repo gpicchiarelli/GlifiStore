@@ -6,12 +6,12 @@
 
 namespace allocation_fault_test {
 void run_all_tests() {
-    const glyphastore::DurableRuntimeOptions synchronous{};
-    const glyphastore::DurableRuntimeOptions strict_group{
-        .commit_sync = glyphastore::SegmentCommitSync::immediate,
+    const glifistore::DurableRuntimeOptions synchronous{};
+    const glifistore::DurableRuntimeOptions strict_group{
+        .commit_sync = glifistore::SegmentCommitSync::immediate,
         .sync_interval_ms = 60'000,
         .batch =
-            glyphastore::DurableGroupConfig{.max_records = 1, .max_bytes = 65'536, .max_wait_ms = 60'000},
+            glifistore::DurableGroupConfig{.max_records = 1, .max_bytes = 65'536, .max_wait_ms = 60'000},
         .strict_ack = true,
     };
 

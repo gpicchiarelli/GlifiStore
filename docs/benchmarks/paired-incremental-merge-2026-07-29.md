@@ -1,4 +1,4 @@
-# GlyphaStore — incremental delta→base merge (2026-07-29)
+# GlifiStore — incremental delta→base merge (2026-07-29)
 
 ## Esito
 

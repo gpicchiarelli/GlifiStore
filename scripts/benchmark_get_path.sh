@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Comparative durable GET path microbenchmarks for hot-cache / prepare_get work.
-# Usage: ./scripts/benchmark_get_path.sh [label] [extra glyphastore_benchmarks args...]
+# Usage: ./scripts/benchmark_get_path.sh [label] [extra glifistore_benchmarks args...]
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -13,9 +13,9 @@ cmake="${CMAKE:-cmake}"
 if [[ -x "${root}/.tools/venv/bin/cmake" ]]; then
   cmake="${root}/.tools/venv/bin/cmake"
 fi
-"${cmake}" --build --preset macos-release --target glyphastore_benchmarks
+"${cmake}" --build --preset macos-release --target glifistore_benchmarks
 
-bench="${root}/build/macos-release/glyphastore_benchmarks"
+bench="${root}/build/macos-release/glifistore_benchmarks"
 # Higher defaults: 500-ops medians were too noisy to judge ~µs hot GETs.
 common=(--warmup 2 --repeats 5)
 

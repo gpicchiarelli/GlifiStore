@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate or independently verify GlyphaStore wire-protocol v2 fixtures."""
+"""Generate or independently verify GlifiStore wire-protocol v2 fixtures."""
 
 from __future__ import annotations
 
@@ -85,14 +85,14 @@ def request_corpus() -> bytes:
         request(7, 7),
         request(8, 8),
         request(9, 9),
-        request(10, 10, key=b"/tmp/glyphastore-backup"),
+        request(10, 10, key=b"/tmp/glifistore-backup"),
     )
     return b"".join(frames)
 
 
 def response_corpus() -> bytes:
     return b"".join(
-        response(status, 100 + status, value=b"GlyphaStore/2" if status == 0 else b"",
+        response(status, 100 + status, value=b"GlifiStore/2" if status == 0 else b"",
                  owner_worker=2 if status == 6 else NO_WORKER)
         for status in range(9)
     )

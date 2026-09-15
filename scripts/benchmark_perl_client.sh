@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Perl SDK client benchmark suite (sequential + concurrent + mixed-owner batch) against glyphastored.
+# Perl SDK client benchmark suite (sequential + concurrent + mixed-owner batch) against glifistored.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 stamp="$(date -u +%Y%m%d-%H%M%S)"
 sdk_version="$(tr -d '[:space:]' <"$root/VERSION")"
 outdir="${1:-$root/benchmark-results-perl-${sdk_version}-${stamp}}"
-daemon="${GLYPHASTORED:-}"
+daemon="${GLIFISTORED:-}"
 perl="${PERL:-perl}"
 host="127.0.0.1"
 ops="${OPS:-100000}"
@@ -23,14 +23,14 @@ prefer_bins=(
 )
 if [[ -z "$daemon" ]]; then
   for dir in "${prefer_bins[@]}"; do
-    if [[ -x "$dir/glyphastored" ]]; then
-      daemon="$dir/glyphastored"
+    if [[ -x "$dir/glifistored" ]]; then
+      daemon="$dir/glifistored"
       break
     fi
   done
 fi
 if [[ -z "$daemon" || ! -x "$daemon" ]]; then
-  echo "missing glyphastored; build a release/debug preset first" >&2
+  echo "missing glifistored; build a release/debug preset first" >&2
   exit 1
 fi
 
@@ -41,8 +41,8 @@ export PERL5LIB="$root/sdk/perl/lib${PERL5LIB:+:$PERL5LIB}"
   echo "captured_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "git_sha=$(git -C "$root" rev-parse HEAD)"
   echo "perl=$($perl -V:version -V:archname | tr '\n' ' ')"
-  echo "perl_sdk_version=$($perl -MGlyphaStore -e 'print \$GlyphaStore::VERSION')"
-  echo "glyphastored=$daemon"
+  echo "perl_sdk_version=$($perl -MGlifiStore -e 'print \$GlifiStore::VERSION')"
+  echo "glifistored=$daemon"
   echo "ops=$ops warmup=$warmup repeats=$repeats"
   echo "workload=ordered PUT/GET pipeline read-after-write, value_size=64"
   echo "storage_mode=volatile"
@@ -64,7 +64,7 @@ start_server() {
   local port=""
   for _ in $(seq 1 50); do
     if ! kill -0 "$pid" 2>/dev/null; then
-      echo "glyphastored exited early; see $log_file" >&2
+      echo "glifistored exited early; see $log_file" >&2
       return 1
     fi
     port="$(lsof -nP -iTCP -sTCP:LISTEN -a -p "$pid" 2>/dev/null | awk 'NR==2 {split($9,a,":"); print a[length(a)]}')"
@@ -74,7 +74,7 @@ start_server() {
     fi
     sleep 0.1
   done
-  echo "could not discover glyphastored listen port" >&2
+  echo "could not discover glifistored listen port" >&2
   return 1
 }
 
@@ -194,12 +194,12 @@ seq = {(r["workers"], r["pipeline_pairs"]): r for r in rows if "sequential" in r
 conc = {(r["workers"], r["pipeline_pairs"]): r for r in rows if "concurrent" in r["execution"]}
 
 lines = [
-    f"# GlyphaStore Perl client benchmarks — version `{sdk_version}`",
+    f"# GlifiStore Perl client benchmarks — version `{sdk_version}`",
     "",
     f"Parsed `{len(rows)}` result files from `{outdir.name}`.",
     "",
     "Workload: validated ordered `PUT`/`GET` pipeline read-after-write, value size 64 bytes,",
-    "volatile `glyphastored`, same-host loopback. Median ops/s is the comparison statistic.",
+    "volatile `glifistored`, same-host loopback. Median ops/s is the comparison statistic.",
     "",
     "| Execution | Workers | Pipeline pairs | Median ops/s | Min ops/s | Max ops/s | Median s |",
     "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
@@ -242,7 +242,7 @@ lines.extend([
 ])
 (outdir / "summary.md").write_text("\n".join(lines), encoding="utf-8")
 (outdir / "README.md").write_text(
-    f"""# GlyphaStore Perl SDK benchmarks — {sdk_version}
+    f"""# GlifiStore Perl SDK benchmarks — {sdk_version}
 
 Sequential, concurrent (`execute_worker_pipelines`), and mixed-owner (`execute_batch`) matrix for
 the pure-Perl client.
@@ -253,7 +253,7 @@ the pure-Perl client.
 ./scripts/benchmark_perl_client.sh
 ```
 
-Optional: `OPS`, `WARMUP`, `REPEATS`, `WORKER_HASH_SEED`, `GLYPHASTORED`, `PERL`.
+Optional: `OPS`, `WARMUP`, `REPEATS`, `WORKER_HASH_SEED`, `GLIFISTORED`, `PERL`.
 """,
     encoding="utf-8",
 )

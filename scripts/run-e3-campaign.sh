@@ -332,7 +332,7 @@ if [[ "$skip_e0" == "yes" || "$skip_e1" == "yes" || "$skip_e2" == "yes" || "$ski
 fi
 
 {
-  printf 'schema=glyphastore-durability-e3-campaign-v2\n'
+  printf 'schema=glifistore-durability-e3-campaign-v2\n'
   printf 'generated_utc=%s\n' "$utc_now"
   printf 'orchestrator=scripts/run-e3-campaign.sh\n'
   printf 'pin_label=%s\n' "$pin_label"
@@ -359,7 +359,7 @@ fi
 } >"$provenance"
 
 {
-  printf '# GlyphaStore E3 campaign pin declaration\n\n'
+  printf '# GlifiStore E3 campaign pin declaration\n\n'
   printf 'Fill only stable redacted labels. Do not store serial numbers, MACs, or credentials.\n\n'
   printf -- '- pin_label: `%s`\n' "$pin_label"
   printf -- '- hardware_class: `%s`\n' "$hardware_class"
@@ -391,13 +391,13 @@ if [[ "$skip_e0" == "yes" ]]; then
   printf 'e0\tskipped\toperator requested --skip-e0\n' >>"$stage_results"
 else
   mkdir -p "$e0_dir"
-  printf 'Running E0 (glyphastore_tests)...\n'
-  if run_logged "$e0_dir/ctest.log" ctest --test-dir "$build_dir" -R '^glyphastore_tests$' --output-on-failure; then
+  printf 'Running E0 (glifistore_tests)...\n'
+  if run_logged "$e0_dir/ctest.log" ctest --test-dir "$build_dir" -R '^glifistore_tests$' --output-on-failure; then
     printf 'passed\n' >"$e0_dir/result.txt"
-    printf 'e0\tpassed\tglyphastore_tests\n' >>"$stage_results"
+    printf 'e0\tpassed\tglifistore_tests\n' >>"$stage_results"
   else
     printf 'failed\n' >"$e0_dir/result.txt"
-    printf 'e0\tfailed\tglyphastore_tests\n' >>"$stage_results"
+    printf 'e0\tfailed\tglifistore_tests\n' >>"$stage_results"
     campaign_failed=1
   fi
 fi
@@ -414,13 +414,13 @@ elif [[ "$campaign_failed" -ne 0 ]]; then
   printf 'e1\tskipped\tprior stage failed\n' >>"$stage_results"
 else
   mkdir -p "$e1_dir"
-  printf 'Running E1 (glyphastore_allocation_fault_tests)...\n'
-  if run_logged "$e1_dir/ctest.log" ctest --test-dir "$build_dir" -R '^glyphastore_allocation_fault_tests$' --output-on-failure; then
+  printf 'Running E1 (glifistore_allocation_fault_tests)...\n'
+  if run_logged "$e1_dir/ctest.log" ctest --test-dir "$build_dir" -R '^glifistore_allocation_fault_tests$' --output-on-failure; then
     printf 'passed\n' >"$e1_dir/result.txt"
-    printf 'e1\tpassed\tglyphastore_allocation_fault_tests\n' >>"$stage_results"
+    printf 'e1\tpassed\tglifistore_allocation_fault_tests\n' >>"$stage_results"
   else
     printf 'failed\n' >"$e1_dir/result.txt"
-    printf 'e1\tfailed\tglyphastore_allocation_fault_tests\n' >>"$stage_results"
+    printf 'e1\tfailed\tglifistore_allocation_fault_tests\n' >>"$stage_results"
     campaign_failed=1
   fi
 fi
@@ -534,7 +534,7 @@ fi
 } >>"$provenance"
 
 {
-  printf '# GlyphaStore E3 campaign artifact\n\n'
+  printf '# GlifiStore E3 campaign artifact\n\n'
   printf -- '- Generated (UTC): `%s`\n' "$utc_now"
   printf -- '- Source commit: `%s`\n' "$source_commit"
   printf -- '- Source worktree dirty: `%s`\n' "$source_dirty"

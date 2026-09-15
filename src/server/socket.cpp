@@ -1,4 +1,4 @@
-#include "glyphastore/server/socket.hpp"
+#include "glifistore/server/socket.hpp"
 
 #include "system_error.hpp"
 
@@ -14,7 +14,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-namespace glyphastore::server {
+namespace glifistore::server {
 namespace {
 
 [[nodiscard]] auto configure_stream_socket(const int descriptor, const bool tcp) -> Status {
@@ -260,4 +260,4 @@ auto UnixListener::accept() const -> Result<std::optional<SocketHandle>> {
     return std::optional<SocketHandle>{std::move(client)};
 }
 
-} // namespace glyphastore::server
+} // namespace glifistore::server

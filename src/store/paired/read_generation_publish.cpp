@@ -1,4 +1,4 @@
-#include "glyphastore/store/paired/read_generation.hpp"
+#include "glifistore/store/paired/read_generation.hpp"
 #include "store/paired/read_generation_impl.hpp"
 
 #include <algorithm>
@@ -7,7 +7,7 @@
 #include <optional>
 #include <utility>
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 auto PairReadGeneration::empty(const WorkerRoutingState routing)
     -> Result<std::shared_ptr<const PairReadGeneration>> try {
@@ -252,4 +252,4 @@ auto PairReadGeneration::publish_incremental_construct(
     return fail(ErrorCode::internal_error, "incremental read publication failed");
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired

@@ -3,11 +3,11 @@
 #include <cstddef>
 #include <ostream>
 
-namespace glyphastore::bench {
+namespace glifistore::bench {
 
 inline void print_common_metadata(std::ostream& out, const std::size_t warmup, const std::size_t repeats) {
-#ifdef GLYPHASTORE_GIT_SHA
-    out << "# git_sha=" << GLYPHASTORE_GIT_SHA << '\n';
+#ifdef GLIFISTORE_GIT_SHA
+    out << "# git_sha=" << GLIFISTORE_GIT_SHA << '\n';
 #else
     out << "# git_sha=unknown\n";
 #endif
@@ -35,4 +35,4 @@ inline void print_common_metadata(std::ostream& out, const std::size_t warmup, c
     out << "# note=use plugged-in power; thermal throttling affects spread\n";
 }
 
-} // namespace glyphastore::bench
+} // namespace glifistore::bench

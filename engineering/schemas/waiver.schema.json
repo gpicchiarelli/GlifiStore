@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://glyphastore.local/schemas/waiver.schema.json",
-  "title": "GlyphaStore waiver",
+  "$id": "https://glifistore.local/schemas/waiver.schema.json",
+  "title": "GlifiStore waiver",
   "type": "object",
   "additionalProperties": false,
   "required": [

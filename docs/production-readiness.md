@@ -6,14 +6,14 @@
 # Production readiness
 
 > **Derived view.** Machine-readable authority lives under
-> [`engineering/gates/`](../engineering/gates/). GlyphaStore remains an
+> [`engineering/gates/`](../engineering/gates/). GlifiStore remains an
 > **architectural prototype**. A release level advances only when every
 > mandatory gate below has automated evidence. A design document or
 > implementation alone does not close a gate.
 
 ## Daemon runtime boundary (0.1.0)
 
-`glyphastored` runs only the paired Reader–Writer model
+`glifistored` runs only the paired Reader–Writer model
 ([ADR paired shards](adr/paired-reader-writer-shards.md),
 [server model](architecture/server-model.md)): one ShardPair (Reader + serial
 Writer + SPSC lanes) per owner id. There is no dual-select daemon runtime.
@@ -73,7 +73,7 @@ The volatile engine under `src/experimental/` is lab-only.
 - [x] **GATE-BACKUP-RESTORE** — Backup restore verification and version migration
   State: `PROVATA_IN_CI` · Release target: `beta`
   Requirements: `GS-OPS-BACKUP-001`, `GS-OPS-MIGRATE-001`
-  Residual risk: Released-tag artifact consumption remains open; zero-fence hot backup out of scope; E3/E4 open; glyphastored mid-BACKUP kill covered by glyphastore_crash_backup_daemon
+  Residual risk: Released-tag artifact consumption remains open; zero-fence hot backup out of scope; E3/E4 open; glifistored mid-BACKUP kill covered by glifistore_crash_backup_daemon
   Offline tools and online fenced backup with ENOSPC and concurrent fence proofs in CI; normative snapshot boundary published. Not E3/E4 certified.
 
 - [x] **GATE-DURABLE-ACK** — Acknowledgement semantics for durable mutations
@@ -123,7 +123,7 @@ The volatile engine under `src/experimental/` is lab-only.
 - [x] **GATE-PERFORMANCE** — Performance tests track latency throughput memory regressions
   State: `PROVATA_IN_CI` · Release target: `beta`
   Requirements: `GS-PERF-REGRESSION-001`, `GS-PERF-BUDGET-001`
-  Residual risk: Absolute hardware budgets wait for glyphastore-linux-perf pass-candidate
+  Residual risk: Absolute hardware budgets wait for glifistore-linux-perf pass-candidate
   Environment-compatible hosted median signals + budget catalog landed; hard regression and absolute claims remain hardware-gated.
 
 - [x] **GATE-SOAK** — Long-running stress and soak coverage
@@ -188,7 +188,7 @@ The volatile engine under `src/experimental/` is lab-only.
   Residual risk: Native BSD package bytes, registered service accounts, a prior tagged Store, a complete attested prior ABI/wire release, and retained tagged evidence are still missing
   Exact candidate admission and a closed same-run evidence import remove the candidate-seal/evidence cycle; SDK, persistence, bidirectional C-ABI, bidirectional wire, the complete Linux security matrix, native FreeBSD and OpenBSD package lifecycles and independent reproducibility evidence have same-run producers; both BSD producers generate non-circular distinfo from the sealed source and verify account-registration markers; persistence rejects self/current fixtures; ABI/wire require an attested complete prior release and retained compiled consumers; rebuilt comparison bytes cannot enter promotion; publish cannot rebuild or clobber; and policy deliberately prevents release until the remaining proofs exist.
 
-- [x] **GATE-CMAKE-INSTALL** — CMake installs versioned package metadata and GlyphaStore::core
+- [x] **GATE-CMAKE-INSTALL** — CMake installs versioned package metadata and GlifiStore::core
   State: `PROVATA_IN_CI` · Release target: `alpha`
   Requirements: `GS-CORE-API-001`, `GS-CORE-BUILD-001`
   Residual risk: None beyond prototype claim ceiling; WAV-001 size debt closed
@@ -203,13 +203,13 @@ The volatile engine under `src/experimental/` is lab-only.
 - [ ] **GATE-PACKAGE-ADMISSION** — Package upgrade baselines and package artifacts are admitted by exact sealed bytes
   State: `IMPLEMENTATA` · Release target: `rc`
   Requirements: `GS-RELEASE-UPGRADE-001`, `GS-RELEASE-ARTIFACT-001`
-  Residual risk: Admission is wired fail-closed for tool execution and retains blockers; Linux nightly 34666166603 retained package-installed cross-SDK PASS for deb and rpm, but admitted stays false until package-upgrade is exercised against a sealed SemVer N-1 predecessor on required backends; Linux, FreeBSD/OpenBSD, and MacPorts/Homebrew implement install→seed→upgrade→verify when GLYPHASTORE_N1_PACKAGE_DIR supplies those bytes (never rebuilt from HEAD), but no prior annotated release exists yet so the check stays NOT_APPLICABLE_INITIAL_BASELINE; no annotated release has retained a positive admission yet
+  Residual risk: Admission is wired fail-closed for tool execution and retains blockers; Linux nightly 34666166603 retained package-installed cross-SDK PASS for deb and rpm, but admitted stays false until package-upgrade is exercised against a sealed SemVer N-1 predecessor on required backends; Linux, FreeBSD/OpenBSD, and MacPorts/Homebrew implement install→seed→upgrade→verify when GLIFISTORE_N1_PACKAGE_DIR supplies those bytes (never rebuilt from HEAD), but no prior annotated release exists yet so the check stays NOT_APPLICABLE_INITIAL_BASELINE; no annotated release has retained a positive admission yet
   The baseline resolver orders annotated published releases by SemVer precedence, keeps only complete sealed ABI-compatible candidates, and separates NOT_APPLICABLE_INITIAL_BASELINE, BLOCKED and NOT_RUN; admission binds the artifact manifest to the sealed source digest and every evidence subject to the exact bytes, reporting blockers instead of promoting anything. package-ci.yml and release.yml invoke run_package_admission.py and retain the report. Cross-SDK package-installed PASS is retained for deb/rpm nightly; positive admission remains open until a sealed N-1 package-upgrade PASS exists on required backends. Linux, FreeBSD/OpenBSD, and MacPorts/Homebrew implement that walk when sealed predecessor packages (or macOS source archives) are supplied; a retained PASS still requires published N-1 bytes.
 
 - [ ] **GATE-PACKAGE-LIFECYCLE** — Package backends declare and prove their lifecycle through honest evidence
   State: `IMPLEMENTATA` · Release target: `rc`
   Requirements: `GS-RELEASE-PACKAGE-001`, `GS-RELEASE-ARTIFACT-001`
-  Residual risk: Retained nightly Package CI run 34662210614 (tip 58167e8) proved deb and rpm LIFECYCLE_VERIFIED with service-lifecycle PASS under systemd PID 1; overall result remains NOT_RUN without a sealed candidate, and required_for_release stays false. No retained MacPorts/Homebrew native lifecycle; both declare init integrations (unprivileged launchd startupitem.user/group; brew services) exercised when native runs, otherwise OPEN_GATE; every upstream acceptance stays OPEN_GATE; BSD external consumer is implemented but unretained on a tagged release; Linux, FreeBSD/OpenBSD, and MacPorts/Homebrew implement install→seed→upgrade→verify when GLYPHASTORE_N1_PACKAGE_DIR supplies sealed N-1 packages (or macOS source archives), but no prior annotated release exists yet so package-upgrade stays NOT_APPLICABLE_INITIAL_BASELINE; deb, rpm, macports and homebrew remain required_for_release false
+  Residual risk: Retained nightly Package CI run 34662210614 (tip 58167e8) proved deb and rpm LIFECYCLE_VERIFIED with service-lifecycle PASS under systemd PID 1; overall result remains NOT_RUN without a sealed candidate, and required_for_release stays false. No retained MacPorts/Homebrew native lifecycle; both declare init integrations (unprivileged launchd startupitem.user/group; brew services) exercised when native runs, otherwise OPEN_GATE; every upstream acceptance stays OPEN_GATE; BSD external consumer is implemented but unretained on a tagged release; Linux, FreeBSD/OpenBSD, and MacPorts/Homebrew implement install→seed→upgrade→verify when GLIFISTORE_N1_PACKAGE_DIR supplies sealed N-1 packages (or macOS source archives), but no prior annotated release exists yet so package-upgrade stays NOT_APPLICABLE_INITIAL_BASELINE; deb, rpm, macports and homebrew remain required_for_release false
   One matrix owns backends, targets, profiles and the check vocabulary; scripts/package-ci.sh and its backend modules own every status; evidence is schema-bound to commit, version and artifact digest and may report NOT_RUN, BLOCKED or OPEN_GATE but never a result better than its checks; docs/distribution/package-status.md is generated from the matrix so no hand table can diverge. Retained nightly deb/rpm evidence reaches LIFECYCLE_VERIFIED; package-upgrade against sealed N-1 bytes, sealed-candidate admission, MacPorts/Homebrew native retention and every upstream acceptance remain open. required_for_release stays false.
 
 - [ ] **GATE-RELEASE-MATRIX** — Release CI covers supported compilers OS arch optimized builds

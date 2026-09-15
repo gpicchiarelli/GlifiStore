@@ -1,13 +1,13 @@
 # Runbook: backup and restore
 
 Status: descriptive
-Applies to: durable data directories (`manifest.glypha` + catalog Segments)
+Applies to: durable data directories (`manifest.glifi` + catalog Segments)
 Owner: persistence maintainers
 Last reviewed: 2026-07-31
 
 Architecture contract: [backup-restore](../architecture/backup-restore.md). Normative boundary:
 [backup-restore v1](../spec/backup-restore-v1.md). CLI reference:
-[cli.md § glyphastore_backup_store](../cli.md#glyphastore_backup_store).
+[cli.md § glifistore_backup_store](../cli.md#glifistore_backup_store).
 
 ## Purpose
 
@@ -18,20 +18,20 @@ Two paths:
 
 | Path | When | Mechanism |
 |---|---|---|
-| Offline CLI | Stopped Store / stopped `glyphastored` | Exclusive data-dir lock via `glyphastore_backup_store` |
-| Online API | Open durable `Store` / live `glyphastored` | `Store::backup_to` or wire `BACKUP` (opcode 10) |
+| Offline CLI | Stopped Store / stopped `glifistored` | Exclusive data-dir lock via `glifistore_backup_store` |
+| Online API | Open durable `Store` / live `glifistored` | `Store::backup_to` or wire `BACKUP` (opcode 10) |
 
 ## Hard requirements (fail closed)
 
 - **Offline CLI:** stop all writers before backup or restore. The tool takes an exclusive Store lock
-  and fails if `glyphastored` or another `Store` holds the directory.
+  and fails if `glifistored` or another `Store` holds the directory.
 - **Online API:** Store stays open and keeps the lock; mutations are **briefly fenced** (not a fully
   concurrent hot copy). Prefer offline CLI for cold release backups.
 - **Destination must be empty** (`create_new`). Non-empty destinations fail with `sequence_conflict`
   or `invalid_argument`.
 - **No in-place restore** over the production directory; always copy into a new path, verify, then
   swap at the orchestration layer (rename/mount/service pointer), not by overwriting open files.
-- Copies include **only** recovery-safe catalog Segments and `manifest.glypha` (last). Crash
+- Copies include **only** recovery-safe catalog Segments and `manifest.glifi` (last). Crash
   temporaries, compaction intents, and bootstrap intents are **not** copied.
 
 ## Backup procedure
@@ -41,15 +41,15 @@ Two paths:
 #### 1. Quiesce writers
 
 ```bash
-systemctl stop glyphastored
+systemctl stop glifistored
 # confirm no process holds the data dir
 ```
 
 #### 2. Optional: structural verify (recommended)
 
 ```bash
-glyphastore_verify_store -- /var/lib/glyphastore
-glyphastore_verify_store --json -- /var/lib/glyphastore
+glifistore_verify_store -- /var/lib/glifistore
+glifistore_verify_store --json -- /var/lib/glifistore
 ```
 
 Exit `1` means do **not** proceed to backup until corruption runbook is followed
@@ -58,20 +58,20 @@ Exit `1` means do **not** proceed to backup until corruption runbook is followed
 #### 3. Run backup into a new empty directory
 
 ```bash
-install -d -m 700 /backup/glyphastore-2026-07-23
-glyphastore_backup_store -- /var/lib/glyphastore /backup/glyphastore-2026-07-23
+install -d -m 700 /backup/glifistore-2026-07-23
+glifistore_backup_store -- /var/lib/glifistore /backup/glifistore-2026-07-23
 ```
 
 JSON audit trail:
 
 ```bash
-glyphastore_backup_store --json -- /var/lib/glyphastore /backup/glyphastore-2026-07-23
+glifistore_backup_store --json -- /var/lib/glifistore /backup/glifistore-2026-07-23
 ```
 
 Faster header-only pass (skips committed Record CRC scan):
 
 ```bash
-glyphastore_backup_store --no-scan -- /var/lib/glyphastore /backup/glyphastore-2026-07-23
+glifistore_backup_store --no-scan -- /var/lib/glifistore /backup/glifistore-2026-07-23
 ```
 
 Prefer full scan for release backups; `--no-scan` is for repeated operator checks when header/commit
@@ -87,11 +87,11 @@ validation is sufficient.
 ### Online (embedded Store / live daemon)
 
 Use `Store::backup_to(destination)` against an open durable Store, wire opcode `BACKUP` (10) against
-a live `glyphastored` (key = UTF-8 destination path; requires `admin` under `--authz-map`), or a
+a live `glifistored` (key = UTF-8 destination path; requires `admin` under `--authz-map`), or a
 typed client `backup(destination)` (C++ and official SDKs). Expect a short admission fence
 (in-flight ops drain; new ops return `unavailable` during flush + structural source check + catalog
 Segment/Manifest copy). Writers resume before destination verify (optional CRC). External
-`glyphastore_backup_store` against the same path still fails with `io_error` while the Store holds
+`glifistore_backup_store` against the same path still fails with `io_error` while the Store holds
 the lock. Online backup remains fenced, not zero-impact hot I/O.
 
 ## Restore procedure
@@ -99,23 +99,23 @@ the lock. Online backup remains fenced, not zero-impact hot I/O.
 ### 1. Prepare a new empty data directory
 
 ```bash
-install -d -m 700 /var/lib/glyphastore-restored
+install -d -m 700 /var/lib/glifistore-restored
 ```
 
 ### 2. Copy from backup (same tool, reversed paths)
 
 ```bash
-glyphastore_backup_store -- /backup/glyphastore-2026-07-23 /var/lib/glyphastore-restored
+glifistore_backup_store -- /backup/glifistore-2026-07-23 /var/lib/glifistore-restored
 ```
 
 ### 3. Open via recovery
 
-Point `glyphastored` or embedded `Store::open(..., open_existing)` at the restored directory.
+Point `glifistored` or embedded `Store::open(..., open_existing)` at the restored directory.
 Recovery rebuilds Indexes from the Manifest and committed Records; no separate index rebuild tool is
 required.
 
 ```bash
-glyphastored --profile production --data-dir /var/lib/glyphastore-restored --bind 127.0.0.1 --port 7379
+glifistored --profile production --data-dir /var/lib/glifistore-restored --bind 127.0.0.1 --port 7379
 ```
 
 Confirm `READY` before serving traffic.
@@ -136,7 +136,7 @@ update), start the daemon, re-verify `READY`.
 
 ## What NOT to do
 
-- Do **not** run `glyphastore_backup_store` against a live data directory “for convenience”.
+- Do **not** run `glifistore_backup_store` against a live data directory “for convenience”.
 - Do **not** treat online fenced backup as zero-impact under load; schedule it or use offline CLI.
   Zero-fence in-process backup is deferred ([ADR 0034](../adr/0034-zero-fence-hot-backup-deferred.md));
   volume snapshots remain an external operator option.

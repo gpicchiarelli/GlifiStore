@@ -1,8 +1,8 @@
-#include "glyphastore/store/paired/fail_closed_state.hpp"
+#include "glifistore/store/paired/fail_closed_state.hpp"
 
 #include "store/store_internal.hpp"
 
-namespace glyphastore::store::paired {
+namespace glifistore::store::paired {
 
 void FailClosedState::arm(const std::span<const FailClosedLaneWake> lanes,
                           const FailClosedScope scope) noexcept {
@@ -20,4 +20,4 @@ void FailClosedState::arm(const std::span<const FailClosedLaneWake> lanes,
     }
 }
 
-} // namespace glyphastore::store::paired
+} // namespace glifistore::store::paired
