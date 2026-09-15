@@ -1,0 +1,47 @@
+# Configuration and data retention policy
+
+Intent shared by every packaging backend, and — for the Debian and RPM backends —
+the behaviour their `config-preservation` and `package-remove` checks exercise.
+Those checks only run where a package can actually be installed and removed: inside
+the digest-pinned container or on a disposable root Linux host. Everywhere else
+they report `BLOCKED`, no gate references them, and the policy below is intent
+rather than proof. The BSD and macOS backends have not executed it at all.
+
+## Categories
+
+| Category | Example | Install | Upgrade | Remove | Purge |
+| --- | --- | --- | --- | --- | --- |
+| Program files | `bin/glyphastored`, `lib/libglyphastore.so.*` | installed | replaced | removed | removed |
+| Configuration | `glyphastored.conf` | installed from the sample; an existing file is never overwritten | operator edits preserved | preserved | removed, and the now-empty `/etc/glyphastore` with it |
+| Durable data | Store directory (`/var/lib/glyphastore` on Linux, `/var/db/glyphastore` on FreeBSD) | created, owned by the service account | untouched | preserved | never removed by a package action |
+| Logs and runtime state | pid files, sockets | created at runtime | untouched | removed if empty | removed if empty |
+
+## Rules
+
+1. A package action must never destroy durable Store data. Data removal is an
+   explicit operator action, not a side effect of `remove` or `purge`.
+2. Configuration modified by the operator survives reinstall and upgrade. Backends
+   express this with their native mechanism (`@sample` on the BSD ports,
+   `conffiles` on Debian, `%config(noreplace)` on RPM).
+3. The service account owns the data directory; packages must not widen its
+   permissions. The account itself is never deleted, because files elsewhere on the
+   system may still be owned by it.
+4. Removing a package must not leave a running daemon. The package stops the
+   service; it does not ask the operator to.
+
+## Per-backend resolution
+
+`apt purge` removes the configuration and the now-empty `/etc/glyphastore`, and
+leaves `/var/lib/glyphastore` and the service account alone. `dpkg` marks
+`glyphastored.conf` as a conffile, so an operator edit produces a prompt rather
+than a silent overwrite; the lifecycle's reinstall states the policy explicitly
+with `--force-confdef --force-confold`, meaning the operator's version wins.
+
+RPM has no purge action, so removal is the terminal state for the configuration:
+`%config(noreplace)` leaves an edited file in place, or renames it to `.rpmsave`.
+Either way the edit survives, and the durable directory is `%dir`-owned but never
+deleted.
+
+Stopping the service on removal goes through the unit's `TimeoutStopSec=90s`, which
+outwaits the daemon's shutdown drain. Neither backend shortens it, so removal does
+not truncate a durable shutdown.

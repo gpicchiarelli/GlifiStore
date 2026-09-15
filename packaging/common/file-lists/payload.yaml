@@ -1,0 +1,176 @@
+# Shared installed-file inventory for every GlyphaStore packaging backend.
+#
+# Authority for what a package must deliver, grouped into the components that the
+# Debian and RPM backends map onto binary packages. Verifier:
+# engineering/tools/verify_package_payload.py, which resolves the @TOKEN@
+# placeholders from the backend layout and refuses an unknown token.
+#
+# This file is not a substitute for the native payload databases: the BSD reference
+# ports keep pkg-plist / PLIST as their own authority and are not checked against
+# this inventory yet (Wave D).
+#
+# entry kinds:
+#   file            - a regular file must exist
+#   executable      - a regular file with at least one execute bit
+#   shared_library  - a regular file; ELF/Mach-O content is proven by package-inspect
+#   directory       - a directory must exist
+#   glob            - at least one path must match (compression and CMake config
+#                     suffixes are decided by the distribution, not by us)
+version: 1
+
+tokens:
+  - bindir
+  - libdir
+  - includedir
+  - datadir
+  - mandir
+  - sysconfdir
+  - unitdir
+  - statedir
+  - abi_major
+  - abi_version
+
+components:
+  - id: runtime
+    description: daemon and operator tools
+    entries:
+      - path: "@bindir@/glyphastored"
+        kind: executable
+      - path: "@bindir@/glyphastore_backup_store"
+        kind: executable
+      - path: "@bindir@/glyphastore_demo"
+        kind: executable
+      - path: "@bindir@/glyphastore_inspect_segment"
+        kind: executable
+      - path: "@bindir@/glyphastore_migrate_store"
+        kind: executable
+      - path: "@bindir@/glyphastore_rebuild_index"
+        kind: executable
+      - path: "@bindir@/glyphastore_repair_store"
+        kind: executable
+      - path: "@bindir@/glyphastore_verify_store"
+        kind: executable
+      - path: "@datadir@/GlyphaStore/VERSION"
+        kind: file
+      - path: "@datadir@/GlyphaStore/ABI_VERSION"
+        kind: file
+      - path: "@datadir@/GlyphaStore/LICENSE"
+        kind: file
+      - path: "@datadir@/GlyphaStore/NOTICE"
+        kind: file
+      - path: "@datadir@/GlyphaStore/THIRD_PARTY_NOTICES.md"
+        kind: file
+      - path: "@datadir@/GlyphaStore/examples/glyphastored.conf.sample"
+        kind: file
+
+  - id: library
+    description: C ABI shared library, versioned by ABI_VERSION
+    entries:
+      - path: "@libdir@/libglyphastore.so.@abi_major@"
+        kind: shared_library
+      - path: "@libdir@/libglyphastore.so.@abi_version@"
+        kind: shared_library
+
+  - id: development
+    description: headers, static libraries, pkg-config and CMake package files
+    entries:
+      - path: "@libdir@/libglyphastore.so"
+        kind: file
+      - path: "@libdir@/libglyphastore_client.a"
+        kind: file
+      - path: "@libdir@/libglyphastore_core.a"
+        kind: file
+      - path: "@libdir@/libglyphastore_tls_layer.a"
+        kind: file
+      - path: "@libdir@/libglyphastore_wire.a"
+        kind: file
+      - path: "@libdir@/pkgconfig/glyphastore-abi.pc"
+        kind: file
+      - path: "@libdir@/cmake/GlyphaStore/GlyphaStoreConfig.cmake"
+        kind: file
+      - path: "@libdir@/cmake/GlyphaStore/GlyphaStoreConfigVersion.cmake"
+        kind: file
+      - path: "@libdir@/cmake/GlyphaStore/GlyphaStoreTargets.cmake"
+        kind: file
+      - path: "@libdir@/cmake/GlyphaStore/FindGlyphaStoreTls.cmake"
+        kind: file
+      - path: "@libdir@/cmake/GlyphaStore/GlyphaStoreTargets-*.cmake"
+        kind: glob
+      - path: "@includedir@/glyphastore/abi/glyphastore.h"
+        kind: file
+      - path: "@includedir@/glyphastore/client/client.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/core/error.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/core/types.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/core/worker_routing.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/persistence/compaction_intent.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/persistence/filesystem.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/persistence/filesystem_hooks.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/persistence/manifest.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/persistence/namespace_audit.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/persistence/resource_limits.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/persistence/store_backup.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/persistence/store_verify.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/segment/segment_header.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/server/protocol.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/store/config.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/store/maintenance_types.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/store/store.hpp"
+        kind: file
+      - path: "@includedir@/glyphastore/store/value.hpp"
+        kind: file
+
+  - id: documentation
+    description: mdoc manuals; the distribution decides whether to compress them
+    entries:
+      - path: "@mandir@/man8/glyphastored.8*"
+        kind: glob
+      - path: "@mandir@/man7/glyphastore.7*"
+        kind: glob
+      - path: "@mandir@/man1/glyphastore_backup_store.1*"
+        kind: glob
+      - path: "@mandir@/man1/glyphastore_demo.1*"
+        kind: glob
+      - path: "@mandir@/man1/glyphastore_inspect_segment.1*"
+        kind: glob
+      - path: "@mandir@/man1/glyphastore_migrate_store.1*"
+        kind: glob
+      - path: "@mandir@/man1/glyphastore_rebuild_index.1*"
+        kind: glob
+      - path: "@mandir@/man1/glyphastore_repair_store.1*"
+        kind: glob
+      - path: "@mandir@/man1/glyphastore_verify_store.1*"
+        kind: glob
+
+  - id: configuration
+    description: operator-owned configuration; preserved by upgrade and remove
+    entries:
+      - path: "@sysconfdir@/glyphastore/glyphastored.conf"
+        kind: file
+
+  - id: service
+    description: systemd unit installed by the Linux backends
+    entries:
+      - path: "@unitdir@/glyphastored.service"
+        kind: file
+
+  - id: data
+    description: durable Store directory; never removed by a package action
+    entries:
+      - path: "@statedir@"
+        kind: directory

@@ -1,0 +1,110 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+# Rendered by engineering/tools/render_macos_packaging.py from
+# packaging/macports/Portfile.in. VERSION is the single source of truth and the
+# release context supplies the distfile identity, so version, master sites and
+# checksums are never written here by hand.
+{{PROVENANCE}}
+PortSystem              1.0
+PortGroup               cmake 1.1
+
+name                    glyphastore
+version                 {{VERSION}}
+revision                {{REVISION}}
+categories              databases
+license                 BSD
+maintainers             {gmail.com:gpicchiarelli @gpicchiarelli}
+
+description             Paired reader/writer key-value storage prototype
+
+long_description        GlyphaStore is an architectural prototype of a paired \
+                        reader/writer key-value store: partition ownership, \
+                        immutable read generations, bounded lanes and \
+                        fail-closed recovery. It is engineering and research \
+                        material, not production storage software.
+
+homepage                https://github.com/gpicchiarelli/GlyphaStore
+
+master_sites            {{MASTER_SITES}}
+distname                {{DISTNAME}}
+use_xz                  yes
+
+checksums               {{CHECKSUMS}}
+
+depends_lib             port:openssl3
+
+compiler.cxx_standard   2023
+
+configure.args-append   -DGLYPHASTORE_ENABLE_TLS=ON \
+                        -DGLYPHASTORE_BUILD_BENCHMARKS=OFF \
+                        -DGLYPHASTORE_BUILD_FUZZERS=OFF \
+                        -DGLYPHASTORE_FAULT_INJECTION=OFF \
+                        -DGLYPHASTORE_NATIVE_CPU=OFF \
+                        -DGLYPHASTORE_WARNINGS_AS_ERRORS=ON \
+                        -DOPENSSL_ROOT_DIR=${prefix}
+
+# A MacPorts build must resolve every dependency inside its own prefix. Picking
+# up a Homebrew or /usr/local library is a packaging defect, so those search
+# paths are refused at configure time instead of being noticed after install.
+# The braces keep each ';'-separated CMake list inside one Tcl word.
+configure.args-append   {-DCMAKE_IGNORE_PATH=/opt/homebrew;/opt/homebrew/bin;/opt/homebrew/lib;/usr/local;/usr/local/bin;/usr/local/lib} \
+                        {-DCMAKE_IGNORE_PREFIX_PATH=/opt/homebrew;/usr/local}
+
+test.run                yes
+test.target             test
+
+# Dedicated unprivileged service account; the daemon never runs as root.
+add_users               glyphastore group=glyphastore \
+                        realname=GlyphaStore\ service\ account
+
+# Unprivileged launchd job (MacPorts 2.7+ startupitem.user/group). The daemon is
+# Type=simple / stays in the foreground, which matches startupitem.executable.
+startupitem.create      yes
+startupitem.executable  ${prefix}/bin/glyphastored --config ${prefix}/etc/glyphastore/glyphastored.conf
+startupitem.user        glyphastore
+startupitem.group       glyphastore
+startupitem.netchange   no
+
+set glyphastore_confdir ${prefix}/etc/glyphastore
+set glyphastore_datadir ${prefix}/var/db/glyphastore
+
+destroot.keepdirs       ${destroot}${glyphastore_datadir}
+
+post-destroot {
+    xinstall -d -m 0755 ${destroot}${glyphastore_confdir}
+    xinstall -m 0644 ${filespath}/glyphastored.conf.sample \
+        ${destroot}${glyphastore_confdir}/glyphastored.conf.sample
+    reinplace "s|@GLYPHASTORE_DATA_DIR@|${glyphastore_datadir}|g" \
+        ${destroot}${glyphastore_confdir}/glyphastored.conf.sample
+    xinstall -d -m 0750 ${destroot}${glyphastore_datadir}
+}
+
+post-activate {
+    if {![file isdirectory ${glyphastore_datadir}]} {
+        xinstall -d -m 0750 ${glyphastore_datadir}
+    }
+    file attributes ${glyphastore_datadir} \
+        -owner glyphastore -group glyphastore -permissions 0750
+    if {![file exists ${glyphastore_confdir}/glyphastored.conf]} {
+        xinstall -m 0644 ${glyphastore_confdir}/glyphastored.conf.sample \
+            ${glyphastore_confdir}/glyphastored.conf
+    }
+}
+
+notes "
+GlyphaStore is an architectural prototype. Review every limit in
+${glyphastore_confdir}/glyphastored.conf before exposing the daemon beyond
+loopback.
+
+The port installs an unprivileged launchd startup item (user/group
+glyphastore). After install, start it with:
+
+    sudo port load glyphastore
+
+Durable data lives in ${glyphastore_datadir} and is never removed by
+`port uninstall`.
+"
+
+livecheck.type          regex
+livecheck.url           https://github.com/gpicchiarelli/GlyphaStore/releases
+livecheck.regex         {GlyphaStore-(\d+(?:\.\d+)+)\.tar\.xz}
