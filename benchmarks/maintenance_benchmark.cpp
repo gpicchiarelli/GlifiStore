@@ -111,13 +111,12 @@ struct CompactionStartGate {
         const auto space = std::filesystem::space(gate.store, error);
         if (error) {
             return glifistore::fail(glifistore::ErrorCode::io_error,
-                                     "maintenance benchmark space probe failed");
+                                    "maintenance benchmark space probe failed");
         }
         return static_cast<std::uint64_t>(space.available);
     }
 
-    static auto before(void* context, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* context, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& gate = *static_cast<CompactionStartGate*>(context);
         if (operation == glifistore::FilesystemOperation::write_compaction_intent &&
             gate.compaction_intent_started != nullptr && gate.rotation_entered != nullptr &&
@@ -589,8 +588,7 @@ void verify_reopened(glifistore::Store& store, const std::vector<std::string>& k
     }
 }
 
-[[nodiscard]] auto settle_background_maintenance(glifistore::Store& store,
-                                                 const std::uint64_t minimum_useful,
+[[nodiscard]] auto settle_background_maintenance(glifistore::Store& store, const std::uint64_t minimum_useful,
                                                  const std::uint64_t worker_count)
     -> glifistore::MaintenanceSnapshot {
     const auto deadline = Clock::now() + std::chrono::seconds{5};
@@ -667,8 +665,8 @@ void verify_reopened(glifistore::Store& store, const std::vector<std::string>& k
         .store = directory.store(),
         .opener_thread = std::this_thread::get_id(),
     };
-    auto store = open_store(options, mode, directory.store(), glifistore::DurableOpenMode::open_existing,
-                            &start_gate);
+    auto store =
+        open_store(options, mode, directory.store(), glifistore::DurableOpenMode::open_existing, &start_gate);
 
     std::vector<ThreadStats> thread_stats(options.threads);
     for (auto& thread : thread_stats) {
@@ -910,8 +908,8 @@ void verify_reopened(glifistore::Store& store, const std::vector<std::string>& k
         .store = directory.store(),
         .opener_thread = std::this_thread::get_id(),
     };
-    auto store = open_store(options, mode, directory.store(), glifistore::DurableOpenMode::open_existing,
-                            &start_gate);
+    auto store =
+        open_store(options, mode, directory.store(), glifistore::DurableOpenMode::open_existing, &start_gate);
 
     CooperativeStats cooperative_stats;
     std::thread cooperative_worker;

@@ -146,7 +146,7 @@ GLIFI_TEST("backup_durable_store copies a verified Store and restores committed 
     GLIFI_REQUIRE(backed->source_verification.scanned_records > 0);
     GLIFI_REQUIRE(backed->destination_verification.scanned_records > 0);
     GLIFI_REQUIRE(backed->source_verification.segments.size() ==
-                   backed->destination_verification.segments.size());
+                  backed->destination_verification.segments.size());
 
     const auto restored_copy = glifistore::restore_durable_store(backup, restored);
     GLIFI_REQUIRE(restored_copy.has_value());
@@ -213,7 +213,7 @@ GLIFI_TEST("backup_durable_store refuses a non-empty destination") {
     const auto refused = glifistore::backup_durable_store(source, destination);
     GLIFI_REQUIRE(!refused.has_value());
     GLIFI_REQUIRE(refused.error().code == glifistore::ErrorCode::sequence_conflict ||
-                   refused.error().code == glifistore::ErrorCode::invalid_argument);
+                  refused.error().code == glifistore::ErrorCode::invalid_argument);
 }
 
 GLIFI_TEST("Store::backup_to copies while the Store remains open under writer fence") {
@@ -406,10 +406,10 @@ GLIFI_TEST("Server::backup_to copies a live durable daemon catalog") {
 
     auto opened =
         glifistore::server::Server::create({.port = 0, .maximum_connections = 4},
-                                            {.worker_config = {.explicit_count = 1},
-                                             .storage_mode = glifistore::StorageMode::durable_sync,
-                                             .data_directory = source,
-                                             .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                           {.worker_config = {.explicit_count = 1},
+                                            .storage_mode = glifistore::StorageMode::durable_sync,
+                                            .data_directory = source,
+                                            .durable_open_mode = glifistore::DurableOpenMode::create_new});
     GLIFI_REQUIRE(opened.has_value());
     auto& server = **opened;
     GLIFI_REQUIRE(server.start().has_value());
@@ -506,7 +506,7 @@ GLIFI_TEST("Server READY fails while online backup fences admissions") {
     GLIFI_REQUIRE(!server.admissions_open());
     GLIFI_REQUIRE(!server.ready());
     GLIFI_REQUIRE(glifistore::server::classify_ready_loss(server) ==
-                   glifistore::server::ReadyLossReason::admission_fenced);
+                  glifistore::server::ReadyLossReason::admission_fenced);
 
     auto probe = glifistore::client::Client::connect({.port = server.port()});
     GLIFI_REQUIRE(probe.has_value());
@@ -518,7 +518,7 @@ GLIFI_TEST("Server READY fails while online backup fences admissions") {
     GLIFI_REQUIRE(fenced_put.error.has_value());
     GLIFI_REQUIRE(fenced_put.error->code == glifistore::ErrorCode::resource_exhausted);
     GLIFI_REQUIRE(fenced_put.error->mutation_outcome == "rejected" ||
-                   fenced_put.error->mutation_outcome.empty());
+                  fenced_put.error->mutation_outcome.empty());
     GLIFI_REQUIRE(fenced_put.error->category != "indeterminate");
     if (!fenced_put.error->retryability.empty()) {
         GLIFI_REQUIRE(fenced_put.error->retryability != "reconcile_first");
@@ -538,7 +538,7 @@ GLIFI_TEST("Server READY fails while online backup fences admissions") {
     GLIFI_REQUIRE(server.admissions_open());
     GLIFI_REQUIRE(server.ready());
     GLIFI_REQUIRE(glifistore::server::classify_ready_loss(server) ==
-                   glifistore::server::ReadyLossReason::none);
+                  glifistore::server::ReadyLossReason::none);
 
     // After the fence lifts, the seeded key is readable again.
     auto after = glifistore::client::Client::connect({.port = server.port()});
@@ -559,10 +559,10 @@ GLIFI_TEST("Client::backup copies a live durable daemon catalog") {
 
     auto opened =
         glifistore::server::Server::create({.port = 0, .maximum_connections = 4},
-                                            {.worker_config = {.explicit_count = 1},
-                                             .storage_mode = glifistore::StorageMode::durable_sync,
-                                             .data_directory = source,
-                                             .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                           {.worker_config = {.explicit_count = 1},
+                                            .storage_mode = glifistore::StorageMode::durable_sync,
+                                            .data_directory = source,
+                                            .durable_open_mode = glifistore::DurableOpenMode::create_new});
     GLIFI_REQUIRE(opened.has_value());
     auto& server = **opened;
     GLIFI_REQUIRE(server.start().has_value());
@@ -620,7 +620,7 @@ GLIFI_TEST("backup_durable_store copies multi-Worker catalogs with parallel Segm
     GLIFI_REQUIRE(backed->segment_copy_workers <= backed->source_verification.segments.size());
     GLIFI_REQUIRE(backed->files_copied == backed->source_verification.segments.size() + 1);
     GLIFI_REQUIRE(backed->destination_verification.segments.size() ==
-                   backed->source_verification.segments.size());
+                  backed->source_verification.segments.size());
 
     const auto restored_copy = glifistore::restore_durable_store(backup, restored);
     GLIFI_REQUIRE(restored_copy.has_value());
@@ -746,7 +746,7 @@ GLIFI_TEST("future Manifest version fails closed on verify restore and open (HAZ
     const auto verified = glifistore::verify_durable_store_path(future);
     GLIFI_REQUIRE(!verified.has_value());
     GLIFI_REQUIRE(verified.error().code == glifistore::ErrorCode::invalid_record ||
-                   verified.error().code == glifistore::ErrorCode::corrupted_data);
+                  verified.error().code == glifistore::ErrorCode::corrupted_data);
 
     const auto restore_refused = glifistore::restore_durable_store(future, restored);
     GLIFI_REQUIRE(!restore_refused.has_value());
@@ -882,7 +882,7 @@ GLIFI_TEST("online backup storage_exhausted matrix leaves incomplete dest and he
             if (!state.fired && operation == state.target) {
                 state.fired = true;
                 return glifistore::fail(glifistore::ErrorCode::storage_exhausted,
-                                         "injected online backup storage_exhausted");
+                                        "injected online backup storage_exhausted");
             }
             return {};
         }

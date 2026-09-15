@@ -34,36 +34,36 @@ GLIFI_TEST("classify_maintenance_pressure detects segment and free-space waterma
         .available_free_bytes = glifistore::kSegmentSizeBytes + 10'000ULL,
     };
     GLIFI_REQUIRE(glifistore::classify_maintenance_pressure(ok, config) ==
-                   glifistore::MaintenancePressureLevel::normal);
+                  glifistore::MaintenancePressureLevel::normal);
 
     glifistore::MaintenanceObservation segments = ok;
     segments.segment_count = 80;
     GLIFI_REQUIRE(glifistore::classify_maintenance_pressure(segments, config) ==
-                   glifistore::MaintenancePressureLevel::pressure);
+                  glifistore::MaintenancePressureLevel::pressure);
 
     glifistore::MaintenanceObservation free_space = ok;
     // Pressure watermark without emergency: above reserved+Segment, at/under reserved+margin.
     free_space.available_free_bytes = free_space.reserved_free_bytes + glifistore::kSegmentSizeBytes;
     GLIFI_REQUIRE(glifistore::classify_maintenance_pressure(free_space, config) ==
-                   glifistore::MaintenancePressureLevel::pressure);
+                  glifistore::MaintenancePressureLevel::pressure);
 
     glifistore::MaintenanceObservation emergency_segments = ok;
     emergency_segments.segment_count = 100;
     GLIFI_REQUIRE(glifistore::classify_maintenance_pressure(emergency_segments, config) ==
-                   glifistore::MaintenancePressureLevel::emergency);
+                  glifistore::MaintenancePressureLevel::emergency);
 
     glifistore::MaintenanceObservation emergency_free = ok;
     emergency_free.available_free_bytes =
         emergency_free.reserved_free_bytes + glifistore::kSegmentSizeBytes - 1ULL;
     GLIFI_REQUIRE(glifistore::classify_maintenance_pressure(emergency_free, config) ==
-                   glifistore::MaintenancePressureLevel::emergency);
+                  glifistore::MaintenancePressureLevel::emergency);
 
     glifistore::MaintenanceObservation rotate_headroom = ok;
     rotate_headroom.rotate_additional_bytes = glifistore::kSegmentSizeBytes + 4'096ULL;
     rotate_headroom.available_free_bytes =
         rotate_headroom.reserved_free_bytes + glifistore::kSegmentSizeBytes;
     GLIFI_REQUIRE(glifistore::classify_maintenance_pressure(rotate_headroom, config) ==
-                   glifistore::MaintenancePressureLevel::emergency);
+                  glifistore::MaintenancePressureLevel::emergency);
 }
 
 GLIFI_TEST("pressure policy continues compacting despite no-gain budget") {
@@ -94,17 +94,17 @@ GLIFI_TEST("pressure policy continues compacting despite no-gain budget") {
 
     // Inject durable pressure (not emergency) with sealed history so budget would suspend under
     // normal, but pressure must still attempt compact.
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 90,
-            .sealed_segment_count = 2,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 100,
-            .available_free_bytes = 100ULL + glifistore::kSegmentSizeBytes,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 90,
+                .sealed_segment_count = 2,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 100,
+                .available_free_bytes = 100ULL + glifistore::kSegmentSizeBytes,
+            };
+        });
     const auto attempts_before = (**store).maintenance_snapshot().compact_attempts;
     controller->request_evaluate();
     {
@@ -115,9 +115,9 @@ GLIFI_TEST("pressure policy continues compacting despite no-gain budget") {
                 GLIFI_REQUIRE(snap.pressure == glifistore::MaintenancePressureLevel::pressure);
                 GLIFI_REQUIRE(!snap.mutations_rejected);
                 GLIFI_REQUIRE(snap.last_activation_reason ==
-                                   glifistore::MaintenanceActivationReason::segment_pressure ||
-                               snap.last_activation_reason ==
-                                   glifistore::MaintenanceActivationReason::free_space_pressure);
+                                  glifistore::MaintenanceActivationReason::segment_pressure ||
+                              snap.last_activation_reason ==
+                                  glifistore::MaintenanceActivationReason::free_space_pressure);
                 GLIFI_REQUIRE(snap.last_eval_duration_ns > 0);
                 GLIFI_REQUIRE((**store).close().has_value());
                 return;
@@ -214,22 +214,22 @@ GLIFI_TEST("no-gain memo expires at the bounded maximum evaluation interval") {
 
     glifistore::MaintenanceController controller{config};
     auto compact_calls = std::make_shared<std::atomic<std::uint64_t>>(0);
-    controller.bind_observe([](glifistore::MaintenanceObserveRequest)
-                                -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 10,
-            .sealed_segment_count = 2,
-            .compaction_candidate_worker = 0,
-            .candidate_sealed_record_bytes = 2'000,
-            .candidate_live_record_bytes = 1'000,
-            .candidate_dead_record_bytes = 1'000,
-            .candidate_dead_byte_ratio_bp = 5'000,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 1'024ULL + glifistore::kSegmentSizeBytes + 4'096ULL,
-        };
-    });
+    controller.bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 10,
+                .sealed_segment_count = 2,
+                .compaction_candidate_worker = 0,
+                .candidate_sealed_record_bytes = 2'000,
+                .candidate_live_record_bytes = 1'000,
+                .candidate_dead_record_bytes = 1'000,
+                .candidate_dead_byte_ratio_bp = 5'000,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 1'024ULL + glifistore::kSegmentSizeBytes + 4'096ULL,
+            };
+        });
     controller.bind_compact(
         [compact_calls](std::optional<std::size_t>,
                         std::uint64_t) -> glifistore::Result<glifistore::CompactionResult> {
@@ -272,17 +272,17 @@ GLIFI_TEST("pressure observes no_candidate when durable sealed set is empty") {
     GLIFI_REQUIRE(store.has_value());
     auto* controller = glifistore::detail::StoreAccess::maintenance_controller(**store);
     GLIFI_REQUIRE(controller != nullptr);
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 90,
-            .sealed_segment_count = 0,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 100,
-            .available_free_bytes = 100ULL + glifistore::kSegmentSizeBytes,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 90,
+                .sealed_segment_count = 0,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 100,
+                .available_free_bytes = 100ULL + glifistore::kSegmentSizeBytes,
+            };
+        });
     controller->request_evaluate();
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
     while (std::chrono::steady_clock::now() < deadline) {
@@ -291,8 +291,8 @@ GLIFI_TEST("pressure observes no_candidate when durable sealed set is empty") {
             GLIFI_REQUIRE(snap.pressure == glifistore::MaintenancePressureLevel::pressure);
             GLIFI_REQUIRE(!snap.mutations_rejected);
             GLIFI_REQUIRE(snap.compact_attempts == 0 ||
-                           snap.last_activation_reason ==
-                               glifistore::MaintenanceActivationReason::no_candidate);
+                          snap.last_activation_reason ==
+                              glifistore::MaintenanceActivationReason::no_candidate);
             GLIFI_REQUIRE((**store).close().has_value());
             return;
         }
@@ -333,17 +333,17 @@ GLIFI_TEST("join after stop leaves mutations_rejected cleared") {
     GLIFI_REQUIRE(store.has_value());
     auto* controller = glifistore::detail::StoreAccess::maintenance_controller(**store);
     GLIFI_REQUIRE(controller != nullptr);
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 100,
-            .sealed_segment_count = 1,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 2'048,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 100,
+                .sealed_segment_count = 1,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 2'048,
+            };
+        });
 
     for (int i = 0; i < 20; ++i) {
         controller->request_evaluate();
@@ -367,17 +367,17 @@ GLIFI_TEST("maintenance snapshot records expired_records_dropped from compact") 
     GLIFI_REQUIRE(controller != nullptr);
     const auto initial = wait_for_initial_idle(**store);
 
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 10,
-            .sealed_segment_count = 2,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 1'024ULL + glifistore::kSegmentSizeBytes + 4'096ULL,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 10,
+                .sealed_segment_count = 2,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 1'024ULL + glifistore::kSegmentSizeBytes + 4'096ULL,
+            };
+        });
     controller->bind_compact(
         [](std::optional<std::size_t>, std::uint64_t) -> glifistore::Result<glifistore::CompactionResult> {
             return glifistore::CompactionResult{
@@ -419,17 +419,17 @@ GLIFI_TEST("maintenance snapshot records no-gain planning scan counters") {
     GLIFI_REQUIRE(controller != nullptr);
     const auto initial = wait_for_initial_idle(**store);
 
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 10,
-            .sealed_segment_count = 2,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 1'024ULL + glifistore::kSegmentSizeBytes + 4'096ULL,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 10,
+                .sealed_segment_count = 2,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 1'024ULL + glifistore::kSegmentSizeBytes + 4'096ULL,
+            };
+        });
     controller->bind_compact(
         [](std::optional<std::size_t>, std::uint64_t) -> glifistore::Result<glifistore::CompactionResult> {
             return glifistore::CompactionResult{
@@ -451,11 +451,11 @@ GLIFI_TEST("maintenance snapshot records no-gain planning scan counters") {
             GLIFI_REQUIRE(snap.last_no_gain_source_bytes_verified == 22'016);
             GLIFI_REQUIRE(snap.last_no_gain_expired_records_dropped == 3);
             GLIFI_REQUIRE(snap.total_no_gain_source_records_verified ==
-                           initial.total_no_gain_source_records_verified + 11);
+                          initial.total_no_gain_source_records_verified + 11);
             GLIFI_REQUIRE(snap.total_no_gain_source_bytes_verified ==
-                           initial.total_no_gain_source_bytes_verified + 22'016);
+                          initial.total_no_gain_source_bytes_verified + 22'016);
             GLIFI_REQUIRE(snap.total_no_gain_expired_records_dropped ==
-                           initial.total_no_gain_expired_records_dropped + 3);
+                          initial.total_no_gain_expired_records_dropped + 3);
             GLIFI_REQUIRE((**store).close().has_value());
             return;
         }
@@ -700,22 +700,22 @@ GLIFI_TEST("max_copy_bytes_per_sec budget refreshes after the one-second window"
 
     glifistore::MaintenanceController controller{config};
     auto compact_calls = std::make_shared<std::atomic<std::uint64_t>>(0);
-    controller.bind_observe([](glifistore::MaintenanceObserveRequest)
-                                -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 10,
-            .sealed_segment_count = 2,
-            .compaction_candidate_worker = 0,
-            .candidate_sealed_record_bytes = 2'000,
-            .candidate_live_record_bytes = 1'000,
-            .candidate_dead_record_bytes = 1'000,
-            .candidate_dead_byte_ratio_bp = 5'000,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 1'024ULL + glifistore::kSegmentSizeBytes + 4'096ULL,
-        };
-    });
+    controller.bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 10,
+                .sealed_segment_count = 2,
+                .compaction_candidate_worker = 0,
+                .candidate_sealed_record_bytes = 2'000,
+                .candidate_live_record_bytes = 1'000,
+                .candidate_dead_record_bytes = 1'000,
+                .candidate_dead_byte_ratio_bp = 5'000,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 1'024ULL + glifistore::kSegmentSizeBytes + 4'096ULL,
+            };
+        });
     controller.bind_compact(
         [compact_calls](const std::optional<std::size_t>,
                         const std::uint64_t) -> glifistore::Result<glifistore::CompactionResult> {

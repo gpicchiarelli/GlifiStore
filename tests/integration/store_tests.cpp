@@ -135,7 +135,7 @@ namespace {
 GLIFI_TEST("key routing is deterministic and stable across worker counts") {
     GLIFI_REQUIRE(glifistore::route_worker("alpha", 4) == glifistore::route_worker("alpha", 4));
     GLIFI_REQUIRE(glifistore::route_worker("alpha", 4) != glifistore::route_worker("beta", 4) ||
-                   glifistore::hash_key("alpha") % 4 == glifistore::hash_key("beta") % 4);
+                  glifistore::hash_key("alpha") % 4 == glifistore::hash_key("beta") % 4);
 }
 
 GLIFI_TEST("store put get round trip preserves value") {
@@ -225,8 +225,7 @@ GLIFI_TEST("store get hides expired keys") {
     GLIFI_REQUIRE(!hidden.has_value());
     GLIFI_REQUIRE(hidden.error().code == glifistore::ErrorCode::not_found);
     const auto route = glifistore::route_worker("expired", store.worker_count());
-    GLIFI_REQUIRE(
-        !glifistore::detail::StoreAccess::worker(store, route).index().find("expired").has_value());
+    GLIFI_REQUIRE(!glifistore::detail::StoreAccess::worker(store, route).index().find("expired").has_value());
     GLIFI_REQUIRE(store.verify_index().has_value());
 }
 
@@ -481,22 +480,21 @@ GLIFI_TEST("durable Store recovery and reads share the injected clock") {
     const auto clock = std::make_shared<ManualStoreClock>(99);
     {
         auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                                .storage_mode = glifistore::StorageMode::durable_sync,
-                                                .data_directory = path,
-                                                .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                                .clock = clock});
+                                               .storage_mode = glifistore::StorageMode::durable_sync,
+                                               .data_directory = path,
+                                               .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                               .clock = clock});
         GLIFI_REQUIRE(opened.has_value());
         GLIFI_REQUIRE((*opened)->put("expires", bytes("v"), 100).has_value());
         GLIFI_REQUIRE((*opened)->get("expires").has_value());
     }
 
     clock->set(100);
-    auto reopened =
-        glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                  .storage_mode = glifistore::StorageMode::durable_sync,
-                                  .data_directory = path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing,
-                                  .clock = clock});
+    auto reopened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
+                                             .storage_mode = glifistore::StorageMode::durable_sync,
+                                             .data_directory = path,
+                                             .durable_open_mode = glifistore::DurableOpenMode::open_existing,
+                                             .clock = clock});
     GLIFI_REQUIRE(reopened.has_value());
     const auto expired = (*reopened)->get("expires");
     GLIFI_REQUIRE(!expired.has_value());
@@ -511,13 +509,13 @@ GLIFI_TEST("durable get lazily reclaims expired Index entries on hot and cold pa
     limits.max_live_keys = 1;
 
     {
-        auto opened = glifistore::Store::open(
-            legacy_cfg({.worker_config = {.explicit_count = 1},
-                        .storage_mode = glifistore::StorageMode::durable_sync,
-                        .data_directory = path,
-                        .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                        .durable_limits = limits,
-                        .clock = clock}));
+        auto opened =
+            glifistore::Store::open(legacy_cfg({.worker_config = {.explicit_count = 1},
+                                                .storage_mode = glifistore::StorageMode::durable_sync,
+                                                .data_directory = path,
+                                                .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                                .durable_limits = limits,
+                                                .clock = clock}));
         GLIFI_REQUIRE(opened.has_value());
         auto& store = **opened;
         GLIFI_REQUIRE(store.put("expired-hot", bytes("v"), 100).has_value());
@@ -572,11 +570,10 @@ GLIFI_TEST("public durable Store creates commits reopens and enforces persisted 
     StoreTemporaryDirectory temporary;
     const auto path = temporary.store_path();
     {
-        auto opened =
-            glifistore::Store::open({.worker_config = {.explicit_count = 2},
-                                      .storage_mode = glifistore::StorageMode::durable_sync,
-                                      .data_directory = path,
-                                      .durable_open_mode = glifistore::DurableOpenMode::create_new});
+        auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 2},
+                                               .storage_mode = glifistore::StorageMode::durable_sync,
+                                               .data_directory = path,
+                                               .durable_open_mode = glifistore::DurableOpenMode::create_new});
         GLIFI_REQUIRE(opened.has_value());
         GLIFI_REQUIRE((*opened)->worker_count() == 2);
         GLIFI_REQUIRE((*opened)->put("stable", bytes("first")).has_value());
@@ -584,7 +581,7 @@ GLIFI_TEST("public durable Store creates commits reopens and enforces persisted 
         const auto server_key = glifistore::HashedKey::compute("server-owned");
         const auto owner = glifistore::route_worker(server_key.hash, (*opened)->worker_count());
         GLIFI_REQUIRE(glifistore::detail::StoreAccess::put(**opened, owner, server_key, bytes("bridge"), 0)
-                           .has_value());
+                          .has_value());
         const auto bridged = glifistore::detail::StoreAccess::get_owned(**opened, owner, server_key, 0);
         GLIFI_REQUIRE(bridged.has_value());
         GLIFI_REQUIRE(value_string(*bridged) == "bridge");
@@ -592,17 +589,17 @@ GLIFI_TEST("public durable Store creates commits reopens and enforces persisted 
 
         const auto locked =
             glifistore::Store::open({.storage_mode = glifistore::StorageMode::durable_sync,
-                                      .data_directory = path,
-                                      .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                     .data_directory = path,
+                                     .durable_open_mode = glifistore::DurableOpenMode::open_existing});
         GLIFI_REQUIRE(!locked.has_value());
     }
 
     {
         auto reopened =
             glifistore::Store::open({.worker_config = {.explicit_count = 2},
-                                      .storage_mode = glifistore::StorageMode::durable_sync,
-                                      .data_directory = path,
-                                      .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                     .storage_mode = glifistore::StorageMode::durable_sync,
+                                     .data_directory = path,
+                                     .durable_open_mode = glifistore::DurableOpenMode::open_existing});
         GLIFI_REQUIRE(reopened.has_value());
         GLIFI_REQUIRE(value_string(*(*reopened)->get("stable")) == "first");
         GLIFI_REQUIRE((*reopened)->put("stable", bytes("second")).has_value());
@@ -615,16 +612,16 @@ GLIFI_TEST("public durable Store creates commits reopens and enforces persisted 
 
     const auto mismatch =
         glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                  .storage_mode = glifistore::StorageMode::durable_sync,
-                                  .data_directory = path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                 .storage_mode = glifistore::StorageMode::durable_sync,
+                                 .data_directory = path,
+                                 .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     GLIFI_REQUIRE(!mismatch.has_value());
     GLIFI_REQUIRE(mismatch.error().code == glifistore::ErrorCode::invalid_argument);
 
     const auto duplicate =
         glifistore::Store::open({.storage_mode = glifistore::StorageMode::durable_sync,
-                                  .data_directory = path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                 .data_directory = path,
+                                 .durable_open_mode = glifistore::DurableOpenMode::create_new});
     GLIFI_REQUIRE(!duplicate.has_value());
     GLIFI_REQUIRE(duplicate.error().code == glifistore::ErrorCode::sequence_conflict);
 }
@@ -635,13 +632,13 @@ GLIFI_TEST("public durable Store completes an interrupted bootstrap intent") {
     const auto store_id = bootstrap_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const glifistore::Manifest intent{
         .store_id = store_id,
@@ -670,9 +667,9 @@ GLIFI_TEST("public durable Store completes an interrupted bootstrap intent") {
 
     auto completed =
         glifistore::Store::open({.worker_config = {.explicit_count = 2},
-                                  .storage_mode = glifistore::StorageMode::durable_sync,
-                                  .data_directory = path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                 .storage_mode = glifistore::StorageMode::durable_sync,
+                                 .data_directory = path,
+                                 .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     GLIFI_REQUIRE(completed.has_value());
     GLIFI_REQUIRE((*completed)->worker_count() == 2);
     GLIFI_REQUIRE((*completed)->put("after-bootstrap", bytes("value")).has_value());
@@ -693,8 +690,8 @@ GLIFI_TEST("durable open-or-create initializes only a pristine directory") {
         GLIFI_REQUIRE(stale_descriptor >= 0);
         GLIFI_REQUIRE(::close(stale_descriptor) == 0);
         auto initialized = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                                     .storage_mode = glifistore::StorageMode::durable_sync,
-                                                     .data_directory = path});
+                                                    .storage_mode = glifistore::StorageMode::durable_sync,
+                                                    .data_directory = path});
         GLIFI_REQUIRE(initialized.has_value());
         GLIFI_REQUIRE(!std::filesystem::exists(stale_temporary));
         GLIFI_REQUIRE((*initialized)->put("created", bytes("yes")).has_value());
@@ -709,10 +706,9 @@ GLIFI_TEST("durable open-or-create initializes only a pristine directory") {
         const auto descriptor = ::open(foreign.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
         GLIFI_REQUIRE(descriptor >= 0);
         GLIFI_REQUIRE(::close(descriptor) == 0);
-        const auto rejected =
-            glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                      .storage_mode = glifistore::StorageMode::durable_sync,
-                                      .data_directory = path});
+        const auto rejected = glifistore::Store::open({.worker_config = {.explicit_count = 1},
+                                                       .storage_mode = glifistore::StorageMode::durable_sync,
+                                                       .data_directory = path});
         GLIFI_REQUIRE(!rejected.has_value());
         GLIFI_REQUIRE(rejected.error().code == glifistore::ErrorCode::invalid_argument);
         GLIFI_REQUIRE(!std::filesystem::exists(path / glifistore::kBootstrapIntentFilename));
@@ -725,8 +721,8 @@ GLIFI_TEST("store rejects invalid public worker configuration") {
     GLIFI_REQUIRE(!zero_workers.has_value());
     GLIFI_REQUIRE(zero_workers.error().code == glifistore::ErrorCode::invalid_argument);
 
-    const auto too_many_workers = glifistore::Store::open(
-        {.worker_config = {.explicit_count = glifistore::kMaximumWorkerCount + 1U}});
+    const auto too_many_workers =
+        glifistore::Store::open({.worker_config = {.explicit_count = glifistore::kMaximumWorkerCount + 1U}});
     GLIFI_REQUIRE(!too_many_workers.has_value());
     GLIFI_REQUIRE(too_many_workers.error().code == glifistore::ErrorCode::invalid_argument);
 }
@@ -734,8 +730,8 @@ GLIFI_TEST("store rejects invalid public worker configuration") {
 GLIFI_TEST("durable_periodic rejects zero sync interval") {
     StoreTemporaryDirectory temporary;
     const auto opened = glifistore::Store::open({.storage_mode = glifistore::StorageMode::durable_periodic,
-                                                  .data_directory = temporary.store_path(),
-                                                  .durable_periodic = {.sync_interval_ms = 0}});
+                                                 .data_directory = temporary.store_path(),
+                                                 .durable_periodic = {.sync_interval_ms = 0}});
     GLIFI_REQUIRE(!opened.has_value());
     GLIFI_REQUIRE(opened.error().code == glifistore::ErrorCode::invalid_argument);
 }
@@ -744,9 +740,9 @@ GLIFI_TEST("durable_periodic read after write is visible before flush") {
     StoreTemporaryDirectory temporary;
     const auto path = temporary.store_path();
     auto opened = glifistore::Store::open({.storage_mode = glifistore::StorageMode::durable_periodic,
-                                            .data_directory = path,
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                            .durable_periodic = {.sync_interval_ms = 60'000}});
+                                           .data_directory = path,
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                           .durable_periodic = {.sync_interval_ms = 60'000}});
     GLIFI_REQUIRE(opened.has_value());
     GLIFI_REQUIRE((*opened)->put("visible", bytes("now")).has_value());
     const auto value = (*opened)->get("visible");
@@ -759,17 +755,17 @@ GLIFI_TEST("durable_periodic flush makes writes restart durable") {
     const auto path = temporary.store_path();
     {
         auto opened = glifistore::Store::open({.storage_mode = glifistore::StorageMode::durable_periodic,
-                                                .data_directory = path,
-                                                .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                                .durable_periodic = {.sync_interval_ms = 60'000}});
+                                               .data_directory = path,
+                                               .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                               .durable_periodic = {.sync_interval_ms = 60'000}});
         GLIFI_REQUIRE(opened.has_value());
         GLIFI_REQUIRE((*opened)->put("flushed", bytes("value")).has_value());
         GLIFI_REQUIRE((*opened)->flush().has_value());
     }
     auto reopened =
         glifistore::Store::open({.storage_mode = glifistore::StorageMode::durable_periodic,
-                                  .data_directory = path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                 .data_directory = path,
+                                 .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     GLIFI_REQUIRE(reopened.has_value());
     const auto value = (*reopened)->get("flushed");
     GLIFI_REQUIRE(value.has_value());
@@ -781,16 +777,16 @@ GLIFI_TEST("durable_periodic shutdown flush makes background writes restart dura
     const auto path = temporary.store_path();
     {
         auto opened = glifistore::Store::open({.storage_mode = glifistore::StorageMode::durable_periodic,
-                                                .data_directory = path,
-                                                .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                                .durable_periodic = {.sync_interval_ms = 60'000}});
+                                               .data_directory = path,
+                                               .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                               .durable_periodic = {.sync_interval_ms = 60'000}});
         GLIFI_REQUIRE(opened.has_value());
         GLIFI_REQUIRE((*opened)->put("shutdown", bytes("value")).has_value());
     }
     auto reopened =
         glifistore::Store::open({.storage_mode = glifistore::StorageMode::durable_periodic,
-                                  .data_directory = path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                 .data_directory = path,
+                                 .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     GLIFI_REQUIRE(reopened.has_value());
     const auto value = (*reopened)->get("shutdown");
     GLIFI_REQUIRE(value.has_value());
@@ -851,19 +847,19 @@ GLIFI_TEST("durable periodic close flushes and releases the directory lock befor
     StoreTemporaryDirectory temporary;
     const auto path = temporary.store_path();
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .storage_mode = glifistore::StorageMode::durable_periodic,
-                                            .data_directory = path,
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                            .durable_periodic = {.sync_interval_ms = 60'000}});
+                                           .storage_mode = glifistore::StorageMode::durable_periodic,
+                                           .data_directory = path,
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                           .durable_periodic = {.sync_interval_ms = 60'000}});
     GLIFI_REQUIRE(opened.has_value());
     GLIFI_REQUIRE((*opened)->put("explicit-close", bytes("value")).has_value());
     GLIFI_REQUIRE((*opened)->close().has_value());
 
     auto reopened =
         glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                  .storage_mode = glifistore::StorageMode::durable_sync,
-                                  .data_directory = path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                 .storage_mode = glifistore::StorageMode::durable_sync,
+                                 .data_directory = path,
+                                 .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     GLIFI_REQUIRE(reopened.has_value());
     const auto value = (*reopened)->get("explicit-close");
     GLIFI_REQUIRE(value.has_value());
@@ -919,10 +915,10 @@ GLIFI_TEST("concurrent Store flush and close calls complete without deadlock") {
     StoreTemporaryDirectory temporary;
     const auto path = temporary.store_path();
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .storage_mode = glifistore::StorageMode::durable_periodic,
-                                            .data_directory = path,
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                            .durable_periodic = {.sync_interval_ms = 60'000}});
+                                           .storage_mode = glifistore::StorageMode::durable_periodic,
+                                           .data_directory = path,
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                           .durable_periodic = {.sync_interval_ms = 60'000}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     GLIFI_REQUIRE(store.put("flush-close-race", bytes("value")).has_value());
@@ -960,9 +956,9 @@ GLIFI_TEST("concurrent Store flush and close calls complete without deadlock") {
 
     auto reopened =
         glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                  .storage_mode = glifistore::StorageMode::durable_sync,
-                                  .data_directory = path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                 .storage_mode = glifistore::StorageMode::durable_sync,
+                                 .data_directory = path,
+                                 .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     GLIFI_REQUIRE(reopened.has_value());
     GLIFI_REQUIRE((*reopened)->get("flush-close-race").has_value());
 }
@@ -970,8 +966,8 @@ GLIFI_TEST("concurrent Store flush and close calls complete without deadlock") {
 GLIFI_TEST("durable_group rejects invalid batch configuration") {
     StoreTemporaryDirectory temporary;
     const auto opened = glifistore::Store::open({.storage_mode = glifistore::StorageMode::durable_group,
-                                                  .data_directory = temporary.store_path(),
-                                                  .durable_group = {.max_records = 0}});
+                                                 .data_directory = temporary.store_path(),
+                                                 .durable_group = {.max_records = 0}});
     GLIFI_REQUIRE(!opened.has_value());
     GLIFI_REQUIRE(opened.error().code == glifistore::ErrorCode::invalid_argument);
 
@@ -1033,8 +1029,8 @@ GLIFI_TEST("durable_group concurrent puts batch and survive reopen") {
             .generation = active.generation,
             .owner_worker = active.owner_worker,
         };
-        const auto segment = glifistore::DurableSegmentFile::open(
-            *directory, identity, glifistore::SegmentFileOpenMode::read_only);
+        const auto segment = glifistore::DurableSegmentFile::open(*directory, identity,
+                                                                  glifistore::SegmentFileOpenMode::read_only);
         GLIFI_REQUIRE(segment.has_value());
         GLIFI_REQUIRE(segment->selected_commit().commit.commit_generation == 2);
         GLIFI_REQUIRE(segment->selected_commit().commit.record_count == kBatchSize);
@@ -1105,9 +1101,9 @@ GLIFI_TEST("durable_group preserves explicitly ordered same-key put and erase") 
     }
     auto reopened =
         glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                  .storage_mode = glifistore::StorageMode::durable_group,
-                                  .data_directory = path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                 .storage_mode = glifistore::StorageMode::durable_group,
+                                 .data_directory = path,
+                                 .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     GLIFI_REQUIRE(reopened.has_value());
     const auto missing = (*reopened)->get("same-key");
     GLIFI_REQUIRE(!missing.has_value());
@@ -1129,9 +1125,9 @@ GLIFI_TEST("durable_group single put flushes within max_wait_ms") {
     }
     auto reopened =
         glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                  .storage_mode = glifistore::StorageMode::durable_group,
-                                  .data_directory = path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                 .storage_mode = glifistore::StorageMode::durable_group,
+                                 .data_directory = path,
+                                 .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     GLIFI_REQUIRE(reopened.has_value());
     const auto value = (*reopened)->get("solo");
     GLIFI_REQUIRE(value.has_value());
@@ -1208,17 +1204,17 @@ GLIFI_TEST("close during blocked background compact drains then joins") {
     const auto store_id = bootstrap_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const glifistore::Manifest manifest{
         .store_id = store_id,
@@ -1289,7 +1285,7 @@ GLIFI_TEST("close during blocked background compact drains then joins") {
             std::this_thread::sleep_for(std::chrono::milliseconds{5});
         }
         GLIFI_REQUIRE((*thresholded)->maintenance_snapshot().last_skip_reason ==
-                       glifistore::MaintenanceSkipReason::reclaim_threshold);
+                      glifistore::MaintenanceSkipReason::reclaim_threshold);
         GLIFI_REQUIRE((*thresholded)->close().has_value());
     }
 

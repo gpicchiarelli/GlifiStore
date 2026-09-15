@@ -61,8 +61,8 @@ struct DurableContext {
                                         const glifistore::DurableOpenMode open_mode)
     -> glifistore::StoreConfig {
     glifistore::StoreConfig store_config{.worker_config = {.explicit_count = config.workers},
-                                          .data_directory = data_dir,
-                                          .durable_open_mode = open_mode};
+                                         .data_directory = data_dir,
+                                         .durable_open_mode = open_mode};
     if (config.durable_group) {
         store_config.storage_mode = glifistore::StorageMode::durable_group;
     } else if (config.durable_periodic) {
@@ -74,8 +74,7 @@ struct DurableContext {
 }
 
 [[nodiscard]] auto open_durable_store(const Config& config, const std::filesystem::path& data_dir,
-                                      const glifistore::DurableOpenMode open_mode)
-    -> std::unique_ptr<Store> {
+                                      const glifistore::DurableOpenMode open_mode) -> std::unique_ptr<Store> {
     auto opened = Store::open(durable_store_config(config, data_dir, open_mode));
     return opened ? std::move(*opened) : nullptr;
 }

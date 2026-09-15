@@ -35,20 +35,20 @@
 using namespace glifistore::test::server_reactor_support;
 
 GLIFI_TEST("server rejects unsupported worker counts and undersized protocol buffers") {
+    GLIFI_REQUIRE(
+        !glifistore::server::Server::create({.port = 0, .worker_count = glifistore::kMaximumWorkerCount + 1U})
+             .has_value());
     GLIFI_REQUIRE(!glifistore::server::Server::create(
-                        {.port = 0, .worker_count = glifistore::kMaximumWorkerCount + 1U})
-                        .has_value());
+                       {.port = 0, .maximum_input_bytes = glifistore::server::kRequestHeaderBytes - 1U})
+                       .has_value());
     GLIFI_REQUIRE(!glifistore::server::Server::create(
-                        {.port = 0, .maximum_input_bytes = glifistore::server::kRequestHeaderBytes - 1U})
-                        .has_value());
+                       {.port = 0, .maximum_output_bytes = glifistore::server::kResponseHeaderBytes - 1U})
+                       .has_value());
     GLIFI_REQUIRE(!glifistore::server::Server::create(
-                        {.port = 0, .maximum_output_bytes = glifistore::server::kResponseHeaderBytes - 1U})
-                        .has_value());
-    GLIFI_REQUIRE(!glifistore::server::Server::create(
-                        {.port = 0,
-                         .accepted_socket_send_buffer_bytes =
-                             static_cast<std::size_t>(std::numeric_limits<int>::max()) + 1U})
-                        .has_value());
+                       {.port = 0,
+                        .accepted_socket_send_buffer_bytes =
+                            static_cast<std::size_t>(std::numeric_limits<int>::max()) + 1U})
+                       .has_value());
     GLIFI_REQUIRE(
         !glifistore::server::Server::create({.port = 0, .disk_read_queue_capacity = 0}).has_value());
     GLIFI_REQUIRE(
@@ -56,14 +56,14 @@ GLIFI_TEST("server rejects unsupported worker counts and undersized protocol buf
     GLIFI_REQUIRE(
         !glifistore::server::Server::create({.port = 0, .durable_mutation_queue_bytes = 0}).has_value());
     GLIFI_REQUIRE(!glifistore::server::Server::create(
-                        {.port = 0, .disk_read_thread_count = glifistore::kMaximumWorkerCount + 1U})
-                        .has_value());
+                       {.port = 0, .disk_read_thread_count = glifistore::kMaximumWorkerCount + 1U})
+                       .has_value());
     GLIFI_REQUIRE(
         !glifistore::server::Server::create({.port = 0, .worker_count = 2, .disk_read_thread_count = 1})
              .has_value());
     GLIFI_REQUIRE(!glifistore::server::Server::create({.port = 0, .worker_count = 2},
-                                                        {.worker_config = {.explicit_count = 1}})
-                        .has_value());
+                                                      {.worker_config = {.explicit_count = 1}})
+                       .has_value());
 }
 
 GLIFI_TEST("server StoreConfig persists acknowledged wire writes across restart") {
@@ -99,11 +99,11 @@ GLIFI_TEST("server StoreConfig persists acknowledged wire writes across restart"
         GLIFI_REQUIRE(server.join().has_value());
     }
 
-    auto reopened = glifistore::server::Server::create(
-        {.port = 0, .maximum_connections = 4},
-        {.storage_mode = glifistore::StorageMode::durable_sync,
-         .data_directory = path,
-         .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+    auto reopened =
+        glifistore::server::Server::create({.port = 0, .maximum_connections = 4},
+                                           {.storage_mode = glifistore::StorageMode::durable_sync,
+                                            .data_directory = path,
+                                            .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     GLIFI_REQUIRE(reopened.has_value());
     auto& server = **reopened;
     GLIFI_REQUIRE(server.start().has_value());
@@ -132,9 +132,9 @@ GLIFI_TEST("wire BACKUP before INIT returns NOT_BOUND and creates no destination
     ServerTemporaryDirectory temporary;
     auto opened =
         glifistore::server::Server::create({.port = 0, .maximum_connections = 4},
-                                            {.storage_mode = glifistore::StorageMode::durable_sync,
-                                             .data_directory = temporary.store_path(),
-                                             .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                           {.storage_mode = glifistore::StorageMode::durable_sync,
+                                            .data_directory = temporary.store_path(),
+                                            .durable_open_mode = glifistore::DurableOpenMode::create_new});
     GLIFI_REQUIRE(opened.has_value());
     auto& server = **opened;
     GLIFI_REQUIRE(server.start().has_value());
@@ -166,9 +166,9 @@ GLIFI_TEST("wire BACKUP copies a live durable Server catalog into an empty desti
     ServerTemporaryDirectory temporary;
     auto opened =
         glifistore::server::Server::create({.port = 0, .maximum_connections = 4},
-                                            {.storage_mode = glifistore::StorageMode::durable_sync,
-                                             .data_directory = temporary.store_path(),
-                                             .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                           {.storage_mode = glifistore::StorageMode::durable_sync,
+                                            .data_directory = temporary.store_path(),
+                                            .durable_open_mode = glifistore::DurableOpenMode::create_new});
     GLIFI_REQUIRE(opened.has_value());
     auto& server = **opened;
     GLIFI_REQUIRE(server.start().has_value());
@@ -242,8 +242,7 @@ GLIFI_TEST("wire BACKUP refuses before fence when OK report cannot fit output bu
     ServerTemporaryDirectory temporary;
     const auto backup_dir = temporary.store_path().parent_path() / "fit-refuse-backup";
     const auto backup_path = backup_dir.string();
-    const auto estimated =
-        glifistore::server::reactor_detail::backup_ok_report_max_bytes(backup_path.size());
+    const auto estimated = glifistore::server::reactor_detail::backup_ok_report_max_bytes(backup_path.size());
     GLIFI_REQUIRE(estimated > 64);
     const auto max_output = glifistore::server::kResponseHeaderBytes + 64;
     auto opened = glifistore::server::Server::create(
@@ -287,9 +286,9 @@ GLIFI_TEST("wire BACKUP keeps OK after report formatting fails post-commit") {
     ServerTemporaryDirectory temporary;
     auto opened =
         glifistore::server::Server::create({.port = 0, .maximum_connections = 4},
-                                            {.storage_mode = glifistore::StorageMode::durable_sync,
-                                             .data_directory = temporary.store_path(),
-                                             .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                           {.storage_mode = glifistore::StorageMode::durable_sync,
+                                            .data_directory = temporary.store_path(),
+                                            .durable_open_mode = glifistore::DurableOpenMode::create_new});
     GLIFI_REQUIRE(opened.has_value());
     auto& server = **opened;
     GLIFI_REQUIRE(server.start().has_value());
@@ -477,7 +476,7 @@ GLIFI_TEST("blocked durable mutation leaves its Reactor responsive with bounded 
     GLIFI_REQUIRE(mutation_stats[0].maximum_payload_slots_in_use == 2);
     GLIFI_REQUIRE(mutation_stats[0].payload_arena_capacity_bytes == 16U * 1024U * 1024U);
     GLIFI_REQUIRE(mutation_stats[0].payload_arena_storage_bytes >
-                   mutation_stats[0].payload_arena_capacity_bytes);
+                  mutation_stats[0].payload_arena_capacity_bytes);
     GLIFI_REQUIRE(mutation_stats[0].payload_arena_bytes_in_use == 0);
     GLIFI_REQUIRE(mutation_stats[0].maximum_payload_arena_bytes_in_use >= 34);
     GLIFI_REQUIRE(mutation_stats[0].payload_admission_bytes_in_use == 0);
@@ -701,7 +700,7 @@ GLIFI_TEST("pending output stops mutation completion pipeline resume until socke
     GLIFI_REQUIRE(socket >= 0);
     int receive_buffer_bytes = 4 * 1024;
     GLIFI_REQUIRE(::setsockopt(socket, SOL_SOCKET, SO_RCVBUF, &receive_buffer_bytes,
-                                sizeof(receive_buffer_bytes)) == 0);
+                               sizeof(receive_buffer_bytes)) == 0);
     GLIFI_REQUIRE(initialize_and_bind(socket, 0, 1));
 
     const auto put_a = glifistore::server::encode_request({
@@ -966,7 +965,7 @@ GLIFI_TEST("volatile pair sticky fails READY with pair_fail_closed reason") {
     GLIFI_REQUIRE(server.store_operational());
     GLIFI_REQUIRE(server.pair_writers_healthy());
     GLIFI_REQUIRE(glifistore::server::classify_ready_loss(server) ==
-                   glifistore::server::ReadyLossReason::none);
+                  glifistore::server::ReadyLossReason::none);
 
     const auto socket = connect_to(server.port());
     GLIFI_REQUIRE(socket >= 0);
@@ -989,7 +988,7 @@ GLIFI_TEST("volatile pair sticky fails READY with pair_fail_closed reason") {
     GLIFI_REQUIRE(put_response.has_value());
     GLIFI_REQUIRE(put_response->frame.request_id == 91);
     GLIFI_REQUIRE(put_response->frame.status == glifistore::server::ResponseStatus::ok ||
-                   put_response->frame.status == glifistore::server::ResponseStatus::internal_error);
+                  put_response->frame.status == glifistore::server::ResponseStatus::internal_error);
     GLIFI_REQUIRE(put_response->frame.status != glifistore::server::ResponseStatus::overloaded);
 
     GLIFI_REQUIRE(server.live());
@@ -997,7 +996,7 @@ GLIFI_TEST("volatile pair sticky fails READY with pair_fail_closed reason") {
     GLIFI_REQUIRE(!server.pair_writers_healthy());
     GLIFI_REQUIRE(!server.ready());
     GLIFI_REQUIRE(glifistore::server::classify_ready_loss(server) ==
-                   glifistore::server::ReadyLossReason::pair_fail_closed);
+                  glifistore::server::ReadyLossReason::pair_fail_closed);
 
     const auto health = probe_lifecycle(socket, glifistore::server::RequestOpcode::health, 92);
     GLIFI_REQUIRE(health.has_value());

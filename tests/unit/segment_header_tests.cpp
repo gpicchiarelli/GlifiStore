@@ -54,13 +54,13 @@ GLIFI_TEST("segment header v1 matches its golden little-endian fixture") {
     GLIFI_REQUIRE(glifistore::encode_segment_header(encoded, header).has_value());
 
     const auto fixture = glifistore::test::read_hex_fixture(std::filesystem::path{GLIFISTORE_SOURCE_DIR} /
-                                                             "tests/fixtures/segment_header_v1.hex");
+                                                            "tests/fixtures/segment_header_v1.hex");
     GLIFI_REQUIRE(fixture.size() ==
-                   glifistore::kSegmentCommitSlotsOffset +
-                       glifistore::kSegmentCommitSlotCount * glifistore::kSegmentCommitSlotBytes);
+                  glifistore::kSegmentCommitSlotsOffset +
+                      glifistore::kSegmentCommitSlotCount * glifistore::kSegmentCommitSlotBytes);
     GLIFI_REQUIRE(std::equal(fixture.begin(), fixture.end(), encoded.begin()));
     GLIFI_REQUIRE(std::all_of(encoded.begin() + static_cast<std::ptrdiff_t>(fixture.size()), encoded.end(),
-                               [](std::byte value) { return value == std::byte{0}; }));
+                              [](std::byte value) { return value == std::byte{0}; }));
 
     const auto decoded = glifistore::decode_segment_header(encoded);
     GLIFI_REQUIRE(decoded.has_value());
@@ -97,8 +97,7 @@ GLIFI_TEST("segment header recovers through the older slot when the newer slot i
     };
     std::array<std::byte, glifistore::kSegmentHeaderReservedBytes> encoded{};
     GLIFI_REQUIRE(glifistore::encode_segment_header(encoded, header).has_value());
-    encoded[glifistore::kSegmentCommitSlotsOffset + glifistore::kSegmentCommitSlotBytes + 24] ^=
-        std::byte{1};
+    encoded[glifistore::kSegmentCommitSlotsOffset + glifistore::kSegmentCommitSlotBytes + 24] ^= std::byte{1};
 
     const auto decoded = glifistore::decode_segment_header(encoded);
     GLIFI_REQUIRE(decoded.has_value());

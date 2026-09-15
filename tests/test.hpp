@@ -38,9 +38,9 @@ inline void require(bool condition, const char* expression, const char* file, in
 
 #define GLIFI_TEST_JOIN_IMPL(a, b) a##b
 #define GLIFI_TEST_JOIN(a, b) GLIFI_TEST_JOIN_IMPL(a, b)
-#define GLIFI_TEST(name)                                                                                    \
-    static void GLIFI_TEST_JOIN(test_function_, __LINE__)();                                                \
-    static ::glifistore::test::Register GLIFI_TEST_JOIN(test_registration_, __LINE__){                     \
-        name, &GLIFI_TEST_JOIN(test_function_, __LINE__)};                                                  \
+#define GLIFI_TEST(name)                                                                                     \
+    static void GLIFI_TEST_JOIN(test_function_, __LINE__)();                                                 \
+    static ::glifistore::test::Register GLIFI_TEST_JOIN(test_registration_, __LINE__){                       \
+        name, &GLIFI_TEST_JOIN(test_function_, __LINE__)};                                                   \
     static void GLIFI_TEST_JOIN(test_function_, __LINE__)()
 #define GLIFI_REQUIRE(expression) ::glifistore::test::require((expression), #expression, __FILE__, __LINE__)

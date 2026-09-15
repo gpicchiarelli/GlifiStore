@@ -80,8 +80,8 @@ GLIFI_TEST("durable compaction exact layout accounts for Record boundary fragmen
 
 GLIFI_TEST("durable compaction replaces a complete Worker sealed set in one manifest") {
     const auto current = compaction_manifest();
-    const auto plan = glifistore::plan_durable_worker_compaction(current, glifistore::WorkerId{0}, 1,
-                                                                  compaction_limits());
+    const auto plan =
+        glifistore::plan_durable_worker_compaction(current, glifistore::WorkerId{0}, 1, compaction_limits());
     GLIFI_REQUIRE(plan.has_value());
     GLIFI_REQUIRE(plan->sources.size() == 3);
     GLIFI_REQUIRE(plan->replacements.size() == 1);
@@ -101,8 +101,8 @@ GLIFI_TEST("durable compaction replaces a complete Worker sealed set in one mani
 
 GLIFI_TEST("empty durable compaction can retire an entirely obsolete sealed history") {
     const auto current = compaction_manifest();
-    const auto plan = glifistore::plan_durable_worker_compaction(current, glifistore::WorkerId{0}, 0,
-                                                                  compaction_limits());
+    const auto plan =
+        glifistore::plan_durable_worker_compaction(current, glifistore::WorkerId{0}, 0, compaction_limits());
     GLIFI_REQUIRE(plan.has_value());
     GLIFI_REQUIRE(plan->replacements.empty());
     GLIFI_REQUIRE(plan->next_manifest.segments.size() == 3);

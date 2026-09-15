@@ -150,11 +150,11 @@ class CurrentServer final {
     explicit CurrentServer(const std::size_t clients) {
         auto created =
             glifistore::server::Server::create({.port = 0,
-                                                 .maximum_connections = clients + 2U,
-                                                 .worker_count = 1,
-                                                 .maximum_input_bytes = std::size_t{4} * 1024U * 1024U,
-                                                 .maximum_output_bytes = std::size_t{4} * 1024U * 1024U},
-                                                {.worker_config = {.explicit_count = 1}});
+                                                .maximum_connections = clients + 2U,
+                                                .worker_count = 1,
+                                                .maximum_input_bytes = std::size_t{4} * 1024U * 1024U,
+                                                .maximum_output_bytes = std::size_t{4} * 1024U * 1024U},
+                                               {.worker_config = {.explicit_count = 1}});
         if (!created || !(*created)->start()) {
             throw std::runtime_error{"cannot start current TCP baseline"};
         }
@@ -226,10 +226,10 @@ class PairedServer final {
 [[nodiscard]] auto connect(const std::uint16_t port) -> glifistore::client::Client {
     auto client =
         glifistore::client::Client::connect({.host = "127.0.0.1",
-                                              .port = port,
-                                              .request_timeout_ms = 30'000,
-                                              .maximum_pipeline_requests = 256,
-                                              .maximum_pipeline_bytes = std::size_t{4} * 1024U * 1024U});
+                                             .port = port,
+                                             .request_timeout_ms = 30'000,
+                                             .maximum_pipeline_requests = 256,
+                                             .maximum_pipeline_bytes = std::size_t{4} * 1024U * 1024U});
     if (!client) {
         throw std::runtime_error{client.error().message};
     }

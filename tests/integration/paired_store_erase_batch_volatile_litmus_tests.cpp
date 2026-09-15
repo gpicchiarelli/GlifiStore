@@ -82,7 +82,7 @@ GLIFI_TEST("paired Store erase_batch preserves same-key FIFO within one batch") 
 
 GLIFI_TEST("legacy_mutex Store erase_batch removes keys and preserves same-key FIFO") {
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 2},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
 

@@ -84,7 +84,7 @@ GLIFI_TEST("authz disabled policy allows all opcodes") {
     glifistore::server::AuthzPolicy policy;
     GLIFI_REQUIRE(!policy.enabled());
     GLIFI_REQUIRE(glifistore::server::authorize_opcode(policy, glifistore::server::Capability::none,
-                                                         glifistore::server::RequestOpcode::put));
+                                                       glifistore::server::RequestOpcode::put));
 }
 
 GLIFI_TEST("authz map parses optional key prefix and rejects empty prefix") {
@@ -138,13 +138,13 @@ GLIFI_TEST("authz key prefix denies cross-tenant GET PUT ERASE and allows in-pre
     GLIFI_REQUIRE(
         !authorize_request(*policy, grant_a.capabilities, grant_a.key_prefix, RequestOpcode::stats, bare));
     GLIFI_REQUIRE(authorize_request(*policy, grant_a.capabilities, grant_a.key_prefix, RequestOpcode::health,
-                                     std::span<const std::byte>{}));
+                                    std::span<const std::byte>{}));
 
     glifistore::server::AuthzPolicy admin_policy;
     admin_policy.bind("tenant-a", Capability::admin, "tenant-a/");
     const auto admin_grant = admin_policy.grant_for("tenant-a");
     GLIFI_REQUIRE(authorize_request(admin_policy, admin_grant.capabilities, admin_grant.key_prefix,
-                                     RequestOpcode::stats, bare));
+                                    RequestOpcode::stats, bare));
 
     // Exact-prefix boundary: prefix alone is allowed; shorter key denied.
     const auto exact = key_bytes("tenant-a/");

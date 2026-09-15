@@ -53,8 +53,7 @@ struct FailAfterDestinationCommits {
     std::size_t commits_seen{};
     std::size_t fail_after{};
 
-    static auto before(void* context, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* context, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& state = *static_cast<FailAfterDestinationCommits*>(context);
         if (operation == glifistore::FilesystemOperation::sync_commit_slot &&
             state.commits_seen >= state.fail_after) {
@@ -133,7 +132,7 @@ GLIFI_TEST("migrate_durable_store reshards live keys from 1 to 4 Workers") {
     GLIFI_REQUIRE(value_string(*gamma) == "three");
     GLIFI_REQUIRE(gamma->expire_at_ns == 9'000'000'000'000'000'000ULL);
     GLIFI_REQUIRE(glifistore::route_worker("alpha", 4) ==
-                   glifistore::route_worker(glifistore::hash_key("alpha"), 4));
+                  glifistore::route_worker(glifistore::hash_key("alpha"), 4));
     GLIFI_REQUIRE((*reopened)->close().has_value());
 
     auto wrong_count = glifistore::Store::open({
@@ -250,7 +249,7 @@ GLIFI_TEST("migrate_durable_store refuses a locked source and occupied destinati
     const auto refused = glifistore::migrate_durable_store(source, destination, 2);
     GLIFI_REQUIRE(!refused.has_value());
     GLIFI_REQUIRE(refused.error().code == glifistore::ErrorCode::sequence_conflict ||
-                   refused.error().code == glifistore::ErrorCode::invalid_argument);
+                  refused.error().code == glifistore::ErrorCode::invalid_argument);
 }
 
 GLIFI_TEST("migrate_durable_store downscales from 4 to 1 Workers") {

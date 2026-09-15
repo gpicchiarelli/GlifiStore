@@ -117,8 +117,7 @@ struct WriteBoundaryObserver {
         return false;
     }
 
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& observer = *static_cast<WriteBoundaryObserver*>(opaque);
         if (observer.force_rotation && operation == glifistore::FilesystemOperation::write_record &&
             !observer.forced_full.exchange(true, std::memory_order_acq_rel)) {
@@ -180,7 +179,7 @@ inline void initialize_compaction_store(const std::filesystem::path& path) {
         .owner_worker = first_entry.owner_worker,
     };
     auto first = glifistore::DurableSegmentFile::open(*directory, first_identity,
-                                                       glifistore::SegmentFileOpenMode::read_write);
+                                                      glifistore::SegmentFileOpenMode::read_write);
     require(first.has_value(), "failed to open first allocation compaction Segment");
     append_compaction_record(*first, 1, "first", "first-value");
     require(first->seal().committed(), "failed to seal first allocation compaction Segment");

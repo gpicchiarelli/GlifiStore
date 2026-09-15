@@ -117,8 +117,8 @@ GLIFI_TEST("paired Store put_batch publishes once per shard and keeps RAW") {
     for (std::size_t index = 0; index < items.size(); ++index) {
         const auto got = store.get(keys[index]);
         GLIFI_REQUIRE(got.has_value());
-        GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()),
-                                        got->bytes.size()) == values[index]);
+        GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
+                      values[index]);
     }
     GLIFI_REQUIRE(store.close().has_value());
 }
@@ -141,7 +141,7 @@ GLIFI_TEST("paired Store put_batch preserves same-key FIFO within one batch") {
     const auto got = store.get(key);
     GLIFI_REQUIRE(got.has_value());
     GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
-                   second);
+                  second);
     GLIFI_REQUIRE(store.close().has_value());
 }
 
@@ -184,11 +184,11 @@ GLIFI_TEST("paired embedded merge pays bounded debt before exhausting a tiny pos
 
 GLIFI_TEST("paired dedicated Writer merge pays bounded debt before exhausting a tiny post delta") {
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .paired = {.async_lane_capacity = 8,
-                                                       .async_lane_payload_bytes = 64U * 1024U,
-                                                       .merge_delta_entries = 2,
-                                                       .merge_maximum_post_entries = 2,
-                                                       .merge_quantum_slots = 1}});
+                                           .paired = {.async_lane_capacity = 8,
+                                                      .async_lane_payload_bytes = 64U * 1024U,
+                                                      .merge_delta_entries = 2,
+                                                      .merge_maximum_post_entries = 2,
+                                                      .merge_quantum_slots = 1}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     GLIFI_REQUIRE(store.put("writer-merge-cut-a", bytes("a")).has_value());
@@ -220,10 +220,10 @@ GLIFI_TEST("paired dedicated Writer merge pays bounded debt before exhausting a 
 
 GLIFI_TEST("ADR 0036 production slot V7 embedded merge publishes post-cut under slot pressure") {
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .paired = {.merge_delta_entries = 2,
-                                                       .merge_maximum_post_entries = 2,
-                                                       .merge_quantum_slots = 1,
-                                                       .generation_slot_pool = true}});
+                                           .paired = {.merge_delta_entries = 2,
+                                                      .merge_maximum_post_entries = 2,
+                                                      .merge_quantum_slots = 1,
+                                                      .generation_slot_pool = true}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(store);
@@ -269,13 +269,13 @@ GLIFI_TEST("ADR 0036 production slot V7 embedded merge publishes post-cut under 
 
 GLIFI_TEST("ADR 0036 production slot V7 dedicated Writer merge publishes post-cut under slot pressure") {
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .paired = {.async_lane_capacity = 8,
-                                                       .async_lane_payload_bytes = 64U * 1024U,
-                                                       .merge_delta_entries = 2,
-                                                       .merge_maximum_post_entries = 2,
-                                                       .merge_quantum_slots = 1,
-                                                       .reader_epoch_lease = true,
-                                                       .generation_slot_pool = true}});
+                                           .paired = {.async_lane_capacity = 8,
+                                                      .async_lane_payload_bytes = 64U * 1024U,
+                                                      .merge_delta_entries = 2,
+                                                      .merge_maximum_post_entries = 2,
+                                                      .merge_quantum_slots = 1,
+                                                      .reader_epoch_lease = true,
+                                                      .generation_slot_pool = true}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(store);
@@ -328,14 +328,14 @@ GLIFI_TEST("paired durable Writer fail-closes when mutate throws after durable I
     const auto store_path = root / "store";
 
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::paired,
-                                            .paired = {.async_lane_capacity = 8,
-                                                       .async_lane_payload_bytes = 1U * 1024U * 1024U,
-                                                       .reader_epoch_lease = true},
-                                            .storage_mode = glifistore::StorageMode::durable_sync,
-                                            .data_directory = store_path,
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                            .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+                                           .concurrency = glifistore::StoreConcurrencyMode::paired,
+                                           .paired = {.async_lane_capacity = 8,
+                                                      .async_lane_payload_bytes = 1U * 1024U * 1024U,
+                                                      .reader_epoch_lease = true},
+                                           .storage_mode = glifistore::StorageMode::durable_sync,
+                                           .data_directory = store_path,
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                           .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
 
@@ -369,7 +369,7 @@ GLIFI_TEST("paired durable Writer fail-closes when mutate throws after durable I
     const auto seed_after = store.get("seed");
     GLIFI_REQUIRE(seed_after.has_value());
     GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(seed_after->bytes.data()),
-                                    seed_after->bytes.size()) == "ok");
+                                   seed_after->bytes.size()) == "ok");
     GLIFI_REQUIRE(store.get(key_a).has_value());
     GLIFI_REQUIRE(!store.get(key_b).has_value());
 
@@ -438,8 +438,8 @@ GLIFI_TEST("paired durable sync Writer does not success-ACK abandoned unflushed 
     GLIFI_REQUIRE(!statuses[0].has_value());
     GLIFI_REQUIRE(!statuses[1].has_value());
     GLIFI_REQUIRE(statuses[0].error().code == glifistore::ErrorCode::unavailable ||
-                   statuses[0].error().code == glifistore::ErrorCode::resource_exhausted ||
-                   statuses[0].error().code == glifistore::ErrorCode::internal_error);
+                  statuses[0].error().code == glifistore::ErrorCode::resource_exhausted ||
+                  statuses[0].error().code == glifistore::ErrorCode::internal_error);
     GLIFI_REQUIRE(thrower.writes.load(std::memory_order_relaxed) >= 2U);
 
     auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(store);
@@ -532,8 +532,8 @@ GLIFI_TEST("paired durable sync Writer keeps flushed siblings through orphan com
 
     const auto got_a = store.get(key_a);
     GLIFI_REQUIRE(got_a.has_value());
-    GLIFI_REQUIRE(
-        std::string_view(reinterpret_cast<const char*>(got_a->bytes.data()), got_a->bytes.size()) == large_a);
+    GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got_a->bytes.data()), got_a->bytes.size()) ==
+                  large_a);
     GLIFI_REQUIRE(!store.get(key_b).has_value());
 
     const auto late = store.put("orphan-late", bytes("no"));
@@ -616,7 +616,7 @@ GLIFI_TEST(
     const auto got = store.get(key);
     GLIFI_REQUIRE(got.has_value());
     GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
-                   "alpha");
+                  "alpha");
 
     thrower.armed.store(false, std::memory_order_release);
     const auto late = store.put("sib-late", bytes("yes"));
@@ -695,7 +695,7 @@ GLIFI_TEST("paired durable sync Writer does not success-ACK unprocessed batch it
     const auto got = store.get(key);
     GLIFI_REQUIRE(got.has_value());
     GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
-                   "alpha");
+                  "alpha");
 
     static_cast<void>(store.close());
     std::error_code ignored;
@@ -796,15 +796,15 @@ GLIFI_TEST("durable before-hook throw before write_record is known not committed
     };
 
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::paired,
-                                            .paired = {.async_lane_capacity = 8,
-                                                       .async_lane_payload_bytes = 1U * 1024U * 1024U,
-                                                       .reader_epoch_lease = true},
-                                            .storage_mode = glifistore::StorageMode::durable_sync,
-                                            .data_directory = store_path,
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                            .maintenance = {.mode = glifistore::MaintenanceMode::disabled},
-                                            .filesystem_hooks = {.before = &ThrowOnWriteRecord::before}});
+                                           .concurrency = glifistore::StoreConcurrencyMode::paired,
+                                           .paired = {.async_lane_capacity = 8,
+                                                      .async_lane_payload_bytes = 1U * 1024U * 1024U,
+                                                      .reader_epoch_lease = true},
+                                           .storage_mode = glifistore::StorageMode::durable_sync,
+                                           .data_directory = store_path,
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                           .maintenance = {.mode = glifistore::MaintenanceMode::disabled},
+                                           .filesystem_hooks = {.before = &ThrowOnWriteRecord::before}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
 
@@ -870,7 +870,7 @@ GLIFI_TEST("paired durable_group pre-mutate batch alloc stays known not committe
     const auto got = store.get("pre-a");
     GLIFI_REQUIRE(got.has_value());
     GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
-                   "ok");
+                  "ok");
 
     static_cast<void>(store.close());
     std::error_code ignored;
@@ -881,8 +881,7 @@ GLIFI_TEST("paired durable_group post-mutate catch keeps Store-entered siblings 
     // mutate_durable_batch commits the sub-batch then Site::post_mutate throws before
     // classification finishes. Those Store-entered items must not become
     // resource_exhausted (wire OVERLOADED) while drain still makes them GET-visible.
-    auto pattern =
-        (std::filesystem::temp_directory_path() / "glifistore-paired-post-mutate-XXXXXX").string();
+    auto pattern = (std::filesystem::temp_directory_path() / "glifistore-paired-post-mutate-XXXXXX").string();
     std::vector<char> writable(pattern.begin(), pattern.end());
     writable.push_back('\0');
     GLIFI_REQUIRE(::mkdtemp(writable.data()) != nullptr);
@@ -991,7 +990,7 @@ GLIFI_TEST("paired durable sync catch drain does not success-ACK put-hit on pre-
     const auto got = store.get(key);
     GLIFI_REQUIRE(got.has_value());
     GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
-                   "old");
+                  "old");
 
     static_cast<void>(store.close());
     std::error_code ignored2;
@@ -1003,11 +1002,11 @@ GLIFI_TEST("paired volatile pre-append rotation failure is known not committed")
     // Pre-append invalid_reference (rotation/catalog) must rewrite to
     // resource_exhausted → wire OVERLOADED — not INTERNAL_ERROR / reconcile.
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::paired,
-                                            .paired = {.async_lane_capacity = 8,
-                                                       .async_lane_payload_bytes = 1U * 1024U * 1024U,
-                                                       .reader_epoch_lease = true},
-                                            .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+                                           .concurrency = glifistore::StoreConcurrencyMode::paired,
+                                           .paired = {.async_lane_capacity = 8,
+                                                      .async_lane_payload_bytes = 1U * 1024U * 1024U,
+                                                      .reader_epoch_lease = true},
+                                           .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(store);
@@ -1029,7 +1028,7 @@ GLIFI_TEST("paired volatile pre-append rotation failure is known not committed")
     const auto got = store.get("pre-append");
     GLIFI_REQUIRE(got.has_value());
     GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
-                   "yes");
+                  "yes");
     static_cast<void>(store.close());
 }
 
@@ -1092,7 +1091,7 @@ GLIFI_TEST("paired durable pre-write rotation failure is known not committed") {
     const auto got = store.get("rot-pre");
     GLIFI_REQUIRE(got.has_value());
     GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
-                   "yes");
+                  "yes");
 
     static_cast<void>(store.close());
     std::error_code ignored;
@@ -1248,14 +1247,14 @@ GLIFI_TEST("paired durable pre-append segment open failure is known not committe
     const auto store_path = root / "store";
 
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::paired,
-                                            .paired = {.async_lane_capacity = 8,
-                                                       .async_lane_payload_bytes = 1U * 1024U * 1024U,
-                                                       .reader_epoch_lease = true},
-                                            .storage_mode = glifistore::StorageMode::durable_sync,
-                                            .data_directory = store_path,
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                            .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+                                           .concurrency = glifistore::StoreConcurrencyMode::paired,
+                                           .paired = {.async_lane_capacity = 8,
+                                                      .async_lane_payload_bytes = 1U * 1024U * 1024U,
+                                                      .reader_epoch_lease = true},
+                                           .storage_mode = glifistore::StorageMode::durable_sync,
+                                           .data_directory = store_path,
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                           .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(store);
@@ -1267,7 +1266,7 @@ GLIFI_TEST("paired durable pre-append segment open failure is known not committe
     glifistore::fault::reset();
     GLIFI_REQUIRE(!put.has_value());
     GLIFI_REQUIRE(put.error().code == glifistore::ErrorCode::descriptor_exhausted ||
-                   put.error().code == glifistore::ErrorCode::resource_exhausted);
+                  put.error().code == glifistore::ErrorCode::resource_exhausted);
     GLIFI_REQUIRE(put.error().code != glifistore::ErrorCode::unavailable);
     GLIFI_REQUIRE(!store.get("seg-open").has_value());
     GLIFI_REQUIRE(runtime->healthy());
@@ -1277,7 +1276,7 @@ GLIFI_TEST("paired durable pre-append segment open failure is known not committe
     const auto got = store.get("seg-open");
     GLIFI_REQUIRE(got.has_value());
     GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
-                   "yes");
+                  "yes");
 
     static_cast<void>(store.close());
     std::error_code ignored;
@@ -1288,11 +1287,11 @@ GLIFI_TEST("paired volatile post-append index failure stays indeterminate") {
     // After append, Index publication failure must stay unavailable (sticky) —
     // rewrite_known_not_committed must not demote it to OVERLOADED.
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::paired,
-                                            .paired = {.async_lane_capacity = 8,
-                                                       .async_lane_payload_bytes = 1U * 1024U * 1024U,
-                                                       .reader_epoch_lease = true},
-                                            .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+                                           .concurrency = glifistore::StoreConcurrencyMode::paired,
+                                           .paired = {.async_lane_capacity = 8,
+                                                      .async_lane_payload_bytes = 1U * 1024U * 1024U,
+                                                      .reader_epoch_lease = true},
+                                           .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(store);
@@ -1319,11 +1318,11 @@ GLIFI_TEST("paired volatile exclusive compact gates Index publish") {
     // the gate sees sequence_conflict (rewritten to resource_exhausted on the
     // paired wire) — never a torn Index vs unlocked publish.
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::paired,
-                                            .paired = {.async_lane_capacity = 8,
-                                                       .async_lane_payload_bytes = 1U * 1024U * 1024U,
-                                                       .reader_epoch_lease = true},
-                                            .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+                                           .concurrency = glifistore::StoreConcurrencyMode::paired,
+                                           .paired = {.async_lane_capacity = 8,
+                                                      .async_lane_payload_bytes = 1U * 1024U * 1024U,
+                                                      .reader_epoch_lease = true},
+                                           .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     GLIFI_REQUIRE(store.put("seed", bytes("ok")).has_value());
@@ -1405,13 +1404,13 @@ GLIFI_TEST("paired shutdown reclamation torture leaves every bounded resource te
         const bool dedicated_writer = (seed & 2U) != 0U;
         auto opened =
             glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                      .paired = {.async_lane_capacity = dedicated_writer ? 8U : 0U,
-                                                 .async_lane_payload_bytes = dedicated_writer ? 65'536U : 0U,
-                                                 .merge_delta_entries = 2U,
-                                                 .merge_maximum_post_entries = 4U,
-                                                 .merge_quantum_slots = 1U,
-                                                 .reader_epoch_lease = false,
-                                                 .generation_slot_pool = slot_pool}});
+                                     .paired = {.async_lane_capacity = dedicated_writer ? 8U : 0U,
+                                                .async_lane_payload_bytes = dedicated_writer ? 65'536U : 0U,
+                                                .merge_delta_entries = 2U,
+                                                .merge_maximum_post_entries = 4U,
+                                                .merge_quantum_slots = 1U,
+                                                .reader_epoch_lease = false,
+                                                .generation_slot_pool = slot_pool}});
         require_seed(opened.has_value(), seed, "open");
         auto& store = **opened;
         auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(store);
@@ -1475,6 +1474,6 @@ GLIFI_TEST("ADR 0036 production slot V10 put_batch preserves same-key FIFO withi
     const auto got = store.get("adr0036-fifo");
     GLIFI_REQUIRE(got.has_value());
     GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
-                   "three");
+                  "three");
     static_cast<void>(store.close());
 }

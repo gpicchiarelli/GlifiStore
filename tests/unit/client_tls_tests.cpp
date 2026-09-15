@@ -102,8 +102,7 @@ GLIFI_TEST("client connect over TLS can ping") {
     const auto echoed = client->ping({reinterpret_cast<const std::byte*>(payload.data()), payload.size()});
     GLIFI_REQUIRE(echoed.has_value());
     GLIFI_REQUIRE(echoed->size() == payload.size());
-    GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(echoed->data()), echoed->size()) ==
-                   payload);
+    GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(echoed->data()), echoed->size()) == payload);
     client->close();
     (*server)->request_stop();
 }

@@ -104,11 +104,11 @@ GLIFI_TEST("paired experimental Reactor preserves ordered owner-bound TCP pipeli
         glifistore::client::PipelineRequest{
             .opcode = glifistore::client::PipelineOpcode::put, .key = bytes(key), .value = bytes(first)},
         glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
-                                             .key = bytes(key)},
+                                            .key = bytes(key)},
         glifistore::client::PipelineRequest{
             .opcode = glifistore::client::PipelineOpcode::put, .key = bytes(key), .value = bytes(second)},
         glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
-                                             .key = bytes(key)},
+                                            .key = bytes(key)},
     };
     auto responses = client.execute_pipeline(requests);
     GLIFI_REQUIRE(responses.has_value());

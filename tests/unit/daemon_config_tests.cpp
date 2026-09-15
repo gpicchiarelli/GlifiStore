@@ -54,7 +54,7 @@ template <std::size_t Size>
         arguments[index] = const_cast<char*>(input[index]);
     }
     return glifistore::server::parse_daemon_options(static_cast<int>(arguments.size()), arguments.data(),
-                                                     std::move(getenv_fn));
+                                                    std::move(getenv_fn));
 }
 
 } // namespace
@@ -63,9 +63,9 @@ GLIFI_TEST("daemon config environment names mirror long options") {
     GLIFI_REQUIRE(glifistore::server::environment_name_for_option("port") == "GLIFISTORE_PORT");
     GLIFI_REQUIRE(glifistore::server::environment_name_for_option("data-dir") == "GLIFISTORE_DATA_DIR");
     GLIFI_REQUIRE(glifistore::server::environment_name_for_option("max-store-bytes") ==
-                   "GLIFISTORE_MAX_STORE_BYTES");
+                  "GLIFISTORE_MAX_STORE_BYTES");
     GLIFI_REQUIRE(glifistore::server::environment_name_for_option("maintenance-max-copy-bytes-per-cycle") ==
-                   "GLIFISTORE_MAINTENANCE_MAX_COPY_BYTES_PER_CYCLE");
+                  "GLIFISTORE_MAINTENANCE_MAX_COPY_BYTES_PER_CYCLE");
 }
 
 GLIFI_TEST("daemon config CLI keeps workers distinct from maximum connections") {
@@ -147,7 +147,7 @@ GLIFI_TEST("daemon config deployment profile precedence is profile then file the
     const auto config_arg = config.string();
     const std::array arguments{
         "glifistored", "--config", config_arg.c_str(), "--profile", "production",
-        "--port",       "3003",     "--storage-mode",   "volatile",
+        "--port",      "3003",     "--storage-mode",   "volatile",
     };
     const auto parsed = parse(arguments, getenv_fn);
     GLIFI_REQUIRE(parsed.has_value());
@@ -186,7 +186,7 @@ GLIFI_TEST("daemon config production profile paces maintenance and explicit CLI 
 
     const std::array override_arguments{
         "glifistored", "--profile",      "production",
-        "--data-dir",   data_arg.c_str(), "--maintenance-max-copy-bytes-per-sec",
+        "--data-dir",  data_arg.c_str(), "--maintenance-max-copy-bytes-per-sec",
         "268435456",
     };
     const auto overridden = parse(override_arguments);
@@ -252,7 +252,7 @@ GLIFI_TEST("daemon config resolves finite normal maintenance copy budget") {
     const auto parsed = parse(arguments, getenv_fn);
     GLIFI_REQUIRE(parsed.has_value());
     GLIFI_REQUIRE(parsed->store.maintenance.max_copy_bytes_per_cycle ==
-                   glifistore::kDefaultMaintenanceMaxCopyBytesPerCycle);
+                  glifistore::kDefaultMaintenanceMaxCopyBytesPerCycle);
     const auto dump = glifistore::server::format_daemon_config_dump(*parsed);
     GLIFI_REQUIRE(dump.find("maintenance-max-copy-bytes-per-cycle=134217728\n") != std::string::npos);
 
@@ -360,7 +360,7 @@ GLIFI_TEST("daemon dump-config prints resolved effective settings") {
         return found->second;
     };
     const auto config_arg = config.string();
-    const std::array arguments{"glifistored",  "--config", config_arg.c_str(),
+    const std::array arguments{"glifistored",   "--config", config_arg.c_str(),
                                "--dump-config", "--port",   "3333"};
     const auto parsed = parse(arguments, getenv_fn);
     GLIFI_REQUIRE(parsed.has_value());
@@ -413,10 +413,10 @@ GLIFI_TEST("daemon dump-config cannot be set from a config file") {
 
 GLIFI_TEST("daemon config maintenance rate budgets and secure-profile fail closed") {
     const std::array rate_args{"glifistored", "--maintenance-max-copy-bytes-per-sec",
-                               "1048576",      "--maintenance-max-cpu-ms-per-window",
-                               "25",           "--maintenance-suspend-on-p99-latency-ms",
-                               "40",           "--maintenance-suspend-on-p99-min-samples",
-                               "64",           "--maintenance-max-latency-deferral-ms",
+                               "1048576",     "--maintenance-max-cpu-ms-per-window",
+                               "25",          "--maintenance-suspend-on-p99-latency-ms",
+                               "40",          "--maintenance-suspend-on-p99-min-samples",
+                               "64",          "--maintenance-max-latency-deferral-ms",
                                "5000"};
     const auto rate = parse(rate_args);
     GLIFI_REQUIRE(rate.has_value());
@@ -446,25 +446,19 @@ GLIFI_TEST("daemon config maintenance rate budgets and secure-profile fail close
     write_file(map_path, "reader.example read\n");
     const auto map_arg = map_path.string();
     const std::array dual{"glifistored", "--secure-profile", "--tls-cert",      "missing.crt",
-                          "--tls-key",    "missing.key",      "--tls-client-ca", "missing-ca.crt",
-                          "--authz-map",  map_arg.c_str(),    "--tls-port",      "7380"};
+                          "--tls-key",   "missing.key",      "--tls-client-ca", "missing-ca.crt",
+                          "--authz-map", map_arg.c_str(),    "--tls-port",      "7380"};
     const auto dual_result = parse(dual);
     GLIFI_REQUIRE(!dual_result.has_value());
 }
 
 GLIFI_TEST("daemon config Phase 5 abuse limits parse and dump") {
-    const std::array arguments{"glifistored",
-                               "--max-accepts-per-sec",
-                               "10",
-                               "--idle-timeout-ms",
-                               "1000",
-                               "--request-timeout-ms",
-                               "2000",
-                               "--connection-max-requests-per-sec",
-                               "3",
-                               "--principal-max-requests-per-sec",
-                               "4",
-                               "--principal-max-bytes-per-sec",
+    const std::array arguments{"glifistored", "--max-accepts-per-sec",
+                               "10",          "--idle-timeout-ms",
+                               "1000",        "--request-timeout-ms",
+                               "2000",        "--connection-max-requests-per-sec",
+                               "3",           "--principal-max-requests-per-sec",
+                               "4",           "--principal-max-bytes-per-sec",
                                "1MiB"};
     const auto parsed = parse(arguments);
     GLIFI_REQUIRE(parsed.has_value());
@@ -489,13 +483,13 @@ GLIFI_TEST("daemon config secure-profile refuses explicit Phase 5 zero") {
     write_file(map_path, "reader.example read\n");
     const auto map_arg = map_path.string();
     const std::array arguments{"glifistored", "--secure-profile", "--tls-cert",        "missing.crt",
-                               "--tls-key",    "missing.key",      "--tls-client-ca",   "missing-ca.crt",
-                               "--authz-map",  map_arg.c_str(),    "--idle-timeout-ms", "0"};
+                               "--tls-key",   "missing.key",      "--tls-client-ca",   "missing-ca.crt",
+                               "--authz-map", map_arg.c_str(),    "--idle-timeout-ms", "0"};
     const auto parsed = parse(arguments);
     GLIFI_REQUIRE(!parsed.has_value());
     GLIFI_REQUIRE(parsed.error().message.find("Phase 5") != std::string::npos ||
-                   parsed.error().message.find("abuse") != std::string::npos ||
-                   parsed.error().message.find("secure-profile") != std::string::npos);
+                  parsed.error().message.find("abuse") != std::string::npos ||
+                  parsed.error().message.find("secure-profile") != std::string::npos);
 }
 
 GLIFI_TEST("daemon config authz-map enables default-deny policy") {
@@ -584,8 +578,8 @@ GLIFI_TEST("daemon config secure-profile requires peercred with unix-socket") {
     const auto map_arg = map_path.string();
     const auto sock = (temporary.path() / "gs.sock").string();
     const std::array without_peercred{"glifistored", "--secure-profile", "--tls-cert",      "missing.crt",
-                                      "--tls-key",    "missing.key",      "--tls-client-ca", "missing-ca.crt",
-                                      "--authz-map",  map_arg.c_str(),    "--unix-socket",   sock.c_str()};
+                                      "--tls-key",   "missing.key",      "--tls-client-ca", "missing-ca.crt",
+                                      "--authz-map", map_arg.c_str(),    "--unix-socket",   sock.c_str()};
     const auto denied = parse(without_peercred);
     GLIFI_REQUIRE(!denied.has_value());
     GLIFI_REQUIRE(denied.error().message.find("--unix-peercred") != std::string::npos);
@@ -601,7 +595,7 @@ GLIFI_TEST("daemon config CRL and OCSP fail-closed flags") {
     write_file(crl, "not-a-crl\n");
     const auto crl_arg = crl.string();
     const std::array crl_without_mtls{"glifistored", "--tls-crl", crl_arg.c_str(), "--tls-cert",
-                                      "missing.crt",  "--tls-key", "missing.key"};
+                                      "missing.crt", "--tls-key", "missing.key"};
     const auto no_ca = parse(crl_without_mtls);
     GLIFI_REQUIRE(!no_ca.has_value());
 

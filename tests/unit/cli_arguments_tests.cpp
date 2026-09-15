@@ -12,7 +12,7 @@ enum OptionId : std::size_t { help, port, verbose };
 constexpr std::array kOptions{
     glifistore::cli::OptionSpec{help, "help", 'h', glifistore::cli::OptionArity::none, {}, "Show help"},
     glifistore::cli::OptionSpec{port, "port", 'p', glifistore::cli::OptionArity::required, "PORT",
-                                 "Listen port"},
+                                "Listen port"},
     glifistore::cli::OptionSpec{
         verbose, "verbose", 'v', glifistore::cli::OptionArity::none, {}, "Enable verbose output"},
 };
@@ -77,7 +77,7 @@ GLIFI_TEST("cli numeric parser enforces complete input and bounds") {
     GLIFI_REQUIRE(!glifistore::cli::parse_size("7379x", "--port", 0, 65535).has_value());
     GLIFI_REQUIRE(!glifistore::cli::parse_size("65536", "--port", 0, 65535).has_value());
     GLIFI_REQUIRE(!glifistore::cli::parse_size("0", "--workers", 1, std::numeric_limits<std::size_t>::max())
-                        .has_value());
+                       .has_value());
 }
 
 GLIFI_TEST("cli byte-size parser supports decimal and binary suffixes") {
@@ -89,8 +89,8 @@ GLIFI_TEST("cli byte-size parser supports decimal and binary suffixes") {
     GLIFI_REQUIRE(*decimal == 4'000'000U);
     GLIFI_REQUIRE(!glifistore::cli::parse_byte_size("4XB", "--max-input-bytes", 1, 1U << 30U).has_value());
     GLIFI_REQUIRE(!glifistore::cli::parse_byte_size("999999999999GiB", "--max-input-bytes", 1,
-                                                      std::numeric_limits<std::size_t>::max())
-                        .has_value());
+                                                    std::numeric_limits<std::size_t>::max())
+                       .has_value());
 }
 
 GLIFI_TEST("cli executable name strips unix and windows directories") {

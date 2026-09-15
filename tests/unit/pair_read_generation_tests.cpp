@@ -47,7 +47,7 @@ GLIFI_TEST("paired read generation overlays delta on base with tombstones and TT
     const glifistore::server::ReadMutation first_mutation{
         .key = hashed, .record = first, .segment = segment, .opcode = glifistore::Opcode::put};
     generation = glifistore::server::PairReadGeneration::publish(std::move(*generation),
-                                                                  std::span{&first_mutation, 1}, 1);
+                                                                 std::span{&first_mutation, 1}, 1);
     GLIFI_REQUIRE(generation.has_value());
     GLIFI_REQUIRE((*generation)->base_entries() == 1);
     GLIFI_REQUIRE((*generation)->delta_entries() == 0);
@@ -59,7 +59,7 @@ GLIFI_TEST("paired read generation overlays delta on base with tombstones and TT
     const glifistore::server::ReadMutation erase_mutation{
         .key = hashed, .record = erased, .segment = segment, .opcode = glifistore::Opcode::erase};
     generation = glifistore::server::PairReadGeneration::publish(std::move(*generation),
-                                                                  std::span{&erase_mutation, 1}, 8);
+                                                                 std::span{&erase_mutation, 1}, 8);
     GLIFI_REQUIRE(generation.has_value());
     GLIFI_REQUIRE(!(*generation)->get(hashed, 1).has_value());
 
@@ -67,7 +67,7 @@ GLIFI_TEST("paired read generation overlays delta on base with tombstones and TT
     const glifistore::server::ReadMutation expiring_mutation{
         .key = hashed, .record = expiring, .segment = segment, .opcode = glifistore::Opcode::put};
     generation = glifistore::server::PairReadGeneration::publish(std::move(*generation),
-                                                                  std::span{&expiring_mutation, 1}, 8);
+                                                                 std::span{&expiring_mutation, 1}, 8);
     GLIFI_REQUIRE(generation.has_value());
     GLIFI_REQUIRE((*generation)->get(hashed, 9).has_value());
     GLIFI_REQUIRE(!(*generation)->get(hashed, 10).has_value());
@@ -77,7 +77,7 @@ GLIFI_TEST("paired read generation overlays delta on base with tombstones and TT
 GLIFI_TEST("paired read generation owns the exact Segment generation pin") {
     const glifistore::WorkerRoutingState routing{};
     auto segment = std::make_shared<glifistore::Segment>(glifistore::SegmentId{9}, glifistore::WorkerId{},
-                                                          glifistore::GenerationId{4});
+                                                         glifistore::GenerationId{4});
     std::weak_ptr<glifistore::Segment> lifetime = segment;
     auto generation = glifistore::server::PairReadGeneration::empty(routing);
     GLIFI_REQUIRE(generation.has_value());
@@ -118,7 +118,7 @@ GLIFI_TEST("paired Delta arena retains immutable overwrite versions in fixed rec
             .opcode = glifistore::Opcode::put,
         };
         generation = glifistore::server::PairReadGeneration::publish_incremental(std::move(*generation),
-                                                                                  std::span{&mutation, 1});
+                                                                                 std::span{&mutation, 1});
         GLIFI_REQUIRE(generation.has_value());
         if (sequence == 1) {
             first_generation = *generation;
@@ -136,7 +136,7 @@ GLIFI_TEST("paired Delta arena retains immutable overwrite versions in fixed rec
 
     const std::string external_key(17, 'x');
     const glifistore::HashedKey external_hashed{external_key,
-                                                 glifistore::hash_key_routing(external_key, routing)};
+                                                glifistore::hash_key_routing(external_key, routing)};
     const glifistore::server::ReadMutation external_mutation{
         .key = external_hashed,
         .record = append(*segment, routing, external_key, "external", 66, glifistore::Opcode::put),
@@ -155,8 +155,8 @@ GLIFI_TEST("paired Delta arena retains immutable overwrite versions in fixed rec
     const auto external_memory = (*generation)->memory_stats();
     GLIFI_REQUIRE(external_memory.delta_lookup_storage_bytes >= overwrite_memory.delta_lookup_storage_bytes);
     GLIFI_REQUIRE(external_memory.delta_allocated_lower_bound_bytes ==
-                   external_memory.delta_lookup_storage_bytes + external_memory.delta_arena_record_bytes +
-                       external_memory.delta_arena_key_storage_bytes);
+                  external_memory.delta_lookup_storage_bytes + external_memory.delta_arena_record_bytes +
+                      external_memory.delta_arena_key_storage_bytes);
     const auto latest = (*generation)->get(hashed, 0);
     const auto external = (*generation)->get(external_hashed, 0);
     GLIFI_REQUIRE(latest.has_value());
@@ -206,13 +206,13 @@ GLIFI_TEST("paired compact base preserves inline boundary and multi-block keys")
     GLIFI_REQUIRE(memory.base_key_storage_bytes >= memory.base_key_bytes);
     GLIFI_REQUIRE(memory.base_pin_storage_bytes >= sizeof(glifistore::SegmentPtr));
     GLIFI_REQUIRE(memory.base_allocated_lower_bound_bytes >=
-                   memory.base_record_storage_bytes + memory.base_lookup_storage_bytes +
-                       memory.base_key_storage_bytes + memory.base_pin_storage_bytes);
+                  memory.base_record_storage_bytes + memory.base_lookup_storage_bytes +
+                      memory.base_key_storage_bytes + memory.base_pin_storage_bytes);
     GLIFI_REQUIRE(memory.delta_entries == 0);
     GLIFI_REQUIRE(memory.delta_lookup_storage_bytes > 0);
-    GLIFI_REQUIRE(memory.current_allocated_lower_bound_bytes ==
-                   memory.generation_shell_bytes + memory.base_allocated_lower_bound_bytes +
-                       memory.delta_allocated_lower_bound_bytes);
+    GLIFI_REQUIRE(memory.current_allocated_lower_bound_bytes == memory.generation_shell_bytes +
+                                                                    memory.base_allocated_lower_bound_bytes +
+                                                                    memory.delta_allocated_lower_bound_bytes);
     for (const auto& key : keys) {
         const glifistore::HashedKey hashed{key, glifistore::hash_key_routing(key, routing)};
         const auto found = (*generation)->get(hashed, 0);
@@ -231,21 +231,21 @@ GLIFI_TEST("paired incremental merge preserves cut and post-cut visibility with 
     };
 
     std::array<glifistore::server::ReadMutation, 3> base_mutations{
-        glifistore::server::ReadMutation{
-            .key = hashed("a"),
-            .record = append(*segment, routing, "a", "a1", 1, glifistore::Opcode::put),
-            .segment = segment,
-            .opcode = glifistore::Opcode::put},
-        glifistore::server::ReadMutation{
-            .key = hashed("b"),
-            .record = append(*segment, routing, "b", "b1", 2, glifistore::Opcode::put),
-            .segment = segment,
-            .opcode = glifistore::Opcode::put},
-        glifistore::server::ReadMutation{
-            .key = hashed("c"),
-            .record = append(*segment, routing, "c", "c1", 3, glifistore::Opcode::put),
-            .segment = segment,
-            .opcode = glifistore::Opcode::put},
+        glifistore::server::ReadMutation{.key = hashed("a"),
+                                         .record =
+                                             append(*segment, routing, "a", "a1", 1, glifistore::Opcode::put),
+                                         .segment = segment,
+                                         .opcode = glifistore::Opcode::put},
+        glifistore::server::ReadMutation{.key = hashed("b"),
+                                         .record =
+                                             append(*segment, routing, "b", "b1", 2, glifistore::Opcode::put),
+                                         .segment = segment,
+                                         .opcode = glifistore::Opcode::put},
+        glifistore::server::ReadMutation{.key = hashed("c"),
+                                         .record =
+                                             append(*segment, routing, "c", "c1", 3, glifistore::Opcode::put),
+                                         .segment = segment,
+                                         .opcode = glifistore::Opcode::put},
     };
     generation = glifistore::server::PairReadGeneration::publish(std::move(*generation), base_mutations, 3);
     GLIFI_REQUIRE(generation.has_value());
@@ -253,21 +253,21 @@ GLIFI_TEST("paired incremental merge preserves cut and post-cut visibility with 
     GLIFI_REQUIRE((*generation)->delta_entries() == 0);
 
     std::array<glifistore::server::ReadMutation, 3> cut_mutations{
-        glifistore::server::ReadMutation{
-            .key = hashed("a"),
-            .record = append(*segment, routing, "a", "a2", 4, glifistore::Opcode::put),
-            .segment = segment,
-            .opcode = glifistore::Opcode::put},
-        glifistore::server::ReadMutation{
-            .key = hashed("b"),
-            .record = append(*segment, routing, "b", {}, 5, glifistore::Opcode::erase),
-            .segment = segment,
-            .opcode = glifistore::Opcode::erase},
-        glifistore::server::ReadMutation{
-            .key = hashed("d"),
-            .record = append(*segment, routing, "d", "d1", 6, glifistore::Opcode::put),
-            .segment = segment,
-            .opcode = glifistore::Opcode::put},
+        glifistore::server::ReadMutation{.key = hashed("a"),
+                                         .record =
+                                             append(*segment, routing, "a", "a2", 4, glifistore::Opcode::put),
+                                         .segment = segment,
+                                         .opcode = glifistore::Opcode::put},
+        glifistore::server::ReadMutation{.key = hashed("b"),
+                                         .record =
+                                             append(*segment, routing, "b", {}, 5, glifistore::Opcode::erase),
+                                         .segment = segment,
+                                         .opcode = glifistore::Opcode::erase},
+        glifistore::server::ReadMutation{.key = hashed("d"),
+                                         .record =
+                                             append(*segment, routing, "d", "d1", 6, glifistore::Opcode::put),
+                                         .segment = segment,
+                                         .opcode = glifistore::Opcode::put},
     };
     generation =
         glifistore::server::PairReadGeneration::publish_incremental(std::move(*generation), cut_mutations);
@@ -284,24 +284,24 @@ GLIFI_TEST("paired incremental merge preserves cut and post-cut visibility with 
     GLIFI_REQUIRE(text(*(*generation)->get(hashed("d"), 0)) == "d1");
 
     std::array<glifistore::server::ReadMutation, 3> post_mutations{
-        glifistore::server::ReadMutation{
-            .key = hashed("a"),
-            .record = append(*segment, routing, "a", "a3", 7, glifistore::Opcode::put),
-            .segment = segment,
-            .opcode = glifistore::Opcode::put},
-        glifistore::server::ReadMutation{
-            .key = hashed("d"),
-            .record = append(*segment, routing, "d", {}, 8, glifistore::Opcode::erase),
-            .segment = segment,
-            .opcode = glifistore::Opcode::erase},
-        glifistore::server::ReadMutation{
-            .key = hashed("e"),
-            .record = append(*segment, routing, "e", "e1", 9, glifistore::Opcode::put),
-            .segment = segment,
-            .opcode = glifistore::Opcode::put},
+        glifistore::server::ReadMutation{.key = hashed("a"),
+                                         .record =
+                                             append(*segment, routing, "a", "a3", 7, glifistore::Opcode::put),
+                                         .segment = segment,
+                                         .opcode = glifistore::Opcode::put},
+        glifistore::server::ReadMutation{.key = hashed("d"),
+                                         .record =
+                                             append(*segment, routing, "d", {}, 8, glifistore::Opcode::erase),
+                                         .segment = segment,
+                                         .opcode = glifistore::Opcode::erase},
+        glifistore::server::ReadMutation{.key = hashed("e"),
+                                         .record =
+                                             append(*segment, routing, "e", "e1", 9, glifistore::Opcode::put),
+                                         .segment = segment,
+                                         .opcode = glifistore::Opcode::put},
     };
     generation = glifistore::server::PairReadGeneration::publish_incremental(std::move(*generation),
-                                                                              post_mutations, merge->get());
+                                                                             post_mutations, merge->get());
     GLIFI_REQUIRE(generation.has_value());
     GLIFI_REQUIRE(glifistore::server::PairReadGeneration::merge_post_entries(**merge) == 3);
 
@@ -341,15 +341,15 @@ GLIFI_TEST("paired incremental merge applies bounded post-cut backpressure befor
     };
     auto cut = mutation("cut", 1);
     generation = glifistore::server::PairReadGeneration::publish_incremental(std::move(*generation),
-                                                                              std::span{&cut, 1});
+                                                                             std::span{&cut, 1});
     GLIFI_REQUIRE(generation.has_value());
     auto merge = glifistore::server::PairReadGeneration::start_incremental_merge(*generation, 2);
     GLIFI_REQUIRE(merge.has_value());
     std::array post{mutation("post-a", 2), mutation("post-b", 3)};
-    GLIFI_REQUIRE(glifistore::server::PairReadGeneration::can_publish_incremental(
-        **generation, merge->get(), post.size()));
+    GLIFI_REQUIRE(glifistore::server::PairReadGeneration::can_publish_incremental(**generation, merge->get(),
+                                                                                  post.size()));
     generation = glifistore::server::PairReadGeneration::publish_incremental(std::move(*generation), post,
-                                                                              merge->get());
+                                                                             merge->get());
     GLIFI_REQUIRE(generation.has_value());
     GLIFI_REQUIRE(
         !glifistore::server::PairReadGeneration::can_publish_incremental(**generation, merge->get(), 1));
@@ -371,7 +371,7 @@ GLIFI_TEST("paired incremental merge budget amortizes debt across remaining post
     };
     auto cut = mutation("budget-cut", 1);
     generation = glifistore::server::PairReadGeneration::publish_incremental(std::move(*generation),
-                                                                              std::span{&cut, 1});
+                                                                             std::span{&cut, 1});
     GLIFI_REQUIRE(generation.has_value());
     auto merge = glifistore::server::PairReadGeneration::start_incremental_merge(*generation, 2);
     GLIFI_REQUIRE(merge.has_value());
@@ -393,7 +393,7 @@ GLIFI_TEST("paired incremental merge budget amortizes debt across remaining post
     GLIFI_REQUIRE(glifistore::server::PairReadGeneration::merge_post_capacity_remaining(**merge) == 1U);
     const auto remaining_work = glifistore::server::PairReadGeneration::merge_remaining_slots(**merge);
     GLIFI_REQUIRE(glifistore::server::PairReadGeneration::merge_advance_budget(**merge, 1U, 1U) ==
-                   remaining_work);
+                  remaining_work);
 }
 
 GLIFI_TEST("paired incremental merge rejects publication from another generation lineage") {
@@ -409,7 +409,7 @@ GLIFI_TEST("paired incremental merge rejects publication from another generation
         .opcode = glifistore::Opcode::put,
     };
     cut = glifistore::server::PairReadGeneration::publish_incremental(std::move(*cut),
-                                                                       std::span{&cut_mutation, 1});
+                                                                      std::span{&cut_mutation, 1});
     GLIFI_REQUIRE(cut.has_value());
     auto merge = glifistore::server::PairReadGeneration::start_incremental_merge(*cut, 8);
     GLIFI_REQUIRE(merge.has_value());

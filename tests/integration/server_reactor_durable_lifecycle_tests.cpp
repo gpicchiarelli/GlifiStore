@@ -501,32 +501,31 @@ GLIFI_TEST("server HEALTH and READY succeed while operational") {
     GLIFI_REQUIRE(stats_text.find("maintenance_state=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("useful_compactions=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_last_compaction_pacing_delay_ns=0\n") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_total_compaction_pacing_delay_ns=0\n") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_last_compaction_pacing_sleep_count=0\n") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_last_compaction_pacing_burst_bytes=0\n") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_skips=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_consecutive_no_gain=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_last_skip_reason=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_last_activation_reason=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_last_no_gain_source_records_verified=") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_total_no_gain_source_bytes_verified=") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_no_gain_scans_suppressed=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_no_gain_retry_after_ns=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("durable_rotation_attempts=0\n") != std::string_view::npos);
-    GLIFI_REQUIRE(stats_text.find("durable_rotation_last_publication_wait_ns=0\n") !=
-                   std::string_view::npos);
+    GLIFI_REQUIRE(stats_text.find("durable_rotation_last_publication_wait_ns=0\n") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("durable_rotation_last_seal_ns=0\n") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("durable_rotation_last_create_ns=0\n") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("durable_rotation_last_manifest_publication_ns=0\n") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("durable_rotation_last_final_record_commit_ns=0\n") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("durable_rotation_maximum_total_ns=0\n") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_candidate_dead_byte_ratio_bp=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("maintenance_foreground_latency_samples=") != std::string_view::npos);
@@ -538,22 +537,22 @@ GLIFI_TEST("server HEALTH and READY succeed while operational") {
     GLIFI_REQUIRE(stats_text.find("lane[0].total_writer_batch_wait_ns=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("lane[0].maximum_writer_batch_wait_ns=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("lane[0].writer_batch_durability_deadline_closes=") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("lane[0].writer_batch_queue_deadline_closes=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("lane[0].sync_drain_turns=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("lane[0].sync_turn_splits=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("lane[0].sync_async_fairness_turns=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("lane[0].read_generation_base_record_storage_bytes=") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("read_generation_spare_mapping_bytes=") != std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("lane[0].read_generation_base_record_mapped_storage_bytes=") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("lane[0].read_generation_base_lookup_storage_bytes=") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("lane[0].read_generation_delta_lookup_storage_bytes=") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     GLIFI_REQUIRE(stats_text.find("lane[0].read_generation_current_allocated_lower_bound_bytes=") !=
-                   std::string_view::npos);
+                  std::string_view::npos);
     static_cast<void>(::close(socket));
 
     server.request_stop();
@@ -610,16 +609,16 @@ GLIFI_TEST("server READY fails under maintenance emergency") {
     }
     auto opened =
         glifistore::server::Server::create({.port = 0, .maximum_connections = 2},
-                                            {.worker_config = {.explicit_count = 1},
-                                             .storage_mode = glifistore::StorageMode::durable_sync,
-                                             .data_directory = temporary.store_path(),
-                                             .durable_open_mode = glifistore::DurableOpenMode::open_existing,
-                                             .durable_limits = limits,
-                                             .maintenance = {
-                                                 .mode = glifistore::MaintenanceMode::background,
-                                                 .min_eval_interval_ms = 60'000,
-                                                 .max_eval_interval_ms = 60'000,
-                                             }});
+                                           {.worker_config = {.explicit_count = 1},
+                                            .storage_mode = glifistore::StorageMode::durable_sync,
+                                            .data_directory = temporary.store_path(),
+                                            .durable_open_mode = glifistore::DurableOpenMode::open_existing,
+                                            .durable_limits = limits,
+                                            .maintenance = {
+                                                .mode = glifistore::MaintenanceMode::background,
+                                                .min_eval_interval_ms = 60'000,
+                                                .max_eval_interval_ms = 60'000,
+                                            }});
     GLIFI_REQUIRE(opened.has_value());
     auto& server = **opened;
     GLIFI_REQUIRE(server.start().has_value());
@@ -669,16 +668,16 @@ GLIFI_TEST("server rejects durable PUT and ERASE under maintenance emergency on 
     }
     auto opened =
         glifistore::server::Server::create({.port = 0, .maximum_connections = 2},
-                                            {.worker_config = {.explicit_count = 1},
-                                             .storage_mode = glifistore::StorageMode::durable_sync,
-                                             .data_directory = temporary.store_path(),
-                                             .durable_open_mode = glifistore::DurableOpenMode::open_existing,
-                                             .durable_limits = limits,
-                                             .maintenance = {
-                                                 .mode = glifistore::MaintenanceMode::background,
-                                                 .min_eval_interval_ms = 60'000,
-                                                 .max_eval_interval_ms = 60'000,
-                                             }});
+                                           {.worker_config = {.explicit_count = 1},
+                                            .storage_mode = glifistore::StorageMode::durable_sync,
+                                            .data_directory = temporary.store_path(),
+                                            .durable_open_mode = glifistore::DurableOpenMode::open_existing,
+                                            .durable_limits = limits,
+                                            .maintenance = {
+                                                .mode = glifistore::MaintenanceMode::background,
+                                                .min_eval_interval_ms = 60'000,
+                                                .max_eval_interval_ms = 60'000,
+                                            }});
     GLIFI_REQUIRE(opened.has_value());
     auto& server = **opened;
     GLIFI_REQUIRE(server.start().has_value());
@@ -731,10 +730,10 @@ GLIFI_TEST("durable wire ERASE persists through reopen") {
     ServerTemporaryDirectory temporary;
     auto opened =
         glifistore::server::Server::create({.port = 0, .maximum_connections = 2},
-                                            {.worker_config = {.explicit_count = 1},
-                                             .storage_mode = glifistore::StorageMode::durable_sync,
-                                             .data_directory = temporary.store_path(),
-                                             .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                           {.worker_config = {.explicit_count = 1},
+                                            .storage_mode = glifistore::StorageMode::durable_sync,
+                                            .data_directory = temporary.store_path(),
+                                            .durable_open_mode = glifistore::DurableOpenMode::create_new});
     GLIFI_REQUIRE(opened.has_value());
     auto& server = **opened;
     GLIFI_REQUIRE(server.start().has_value());
@@ -770,12 +769,12 @@ GLIFI_TEST("durable wire ERASE persists through reopen") {
     server.request_stop();
     GLIFI_REQUIRE(server.join().has_value());
 
-    auto reopened = glifistore::server::Server::create(
-        {.port = 0, .maximum_connections = 2},
-        {.worker_config = {.explicit_count = 1},
-         .storage_mode = glifistore::StorageMode::durable_sync,
-         .data_directory = temporary.store_path(),
-         .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+    auto reopened =
+        glifistore::server::Server::create({.port = 0, .maximum_connections = 2},
+                                           {.worker_config = {.explicit_count = 1},
+                                            .storage_mode = glifistore::StorageMode::durable_sync,
+                                            .data_directory = temporary.store_path(),
+                                            .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     GLIFI_REQUIRE(reopened.has_value());
     GLIFI_REQUIRE((*reopened)->start().has_value());
     const auto probe_socket = connect_to((*reopened)->port());

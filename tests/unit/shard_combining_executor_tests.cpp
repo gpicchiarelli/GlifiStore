@@ -87,7 +87,7 @@ GLIFI_TEST("embedded volatile combining omits dedicated Writer threads") {
     const auto got = (**opened).get("k");
     GLIFI_REQUIRE(got.has_value());
     GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
-                   "v");
+                  "v");
 }
 
 GLIFI_TEST("embedded volatile combining preserves same-key FIFO under contention") {
@@ -140,8 +140,8 @@ GLIFI_TEST("embedded durable_sync combining omits dedicated Writer and keeps RAW
     GLIFI_REQUIRE((**opened).put("alpha", bytes("one")).has_value());
     const auto first = (**opened).get("alpha");
     GLIFI_REQUIRE(first.has_value());
-    GLIFI_REQUIRE(
-        std::string_view(reinterpret_cast<const char*>(first->bytes.data()), first->bytes.size()) == "one");
+    GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(first->bytes.data()), first->bytes.size()) ==
+                  "one");
     GLIFI_REQUIRE((**opened).close().has_value());
     std::error_code ec;
     std::filesystem::remove_all(store_path, ec);
@@ -236,8 +236,8 @@ GLIFI_TEST("embedded durable_sync put_batch coalesces until RAW without early AC
     for (std::size_t index = 0; index < items.size(); ++index) {
         const auto got = store.get(keys[index]);
         GLIFI_REQUIRE(got.has_value());
-        GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()),
-                                        got->bytes.size()) == values[index]);
+        GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(got->bytes.data()), got->bytes.size()) ==
+                      values[index]);
     }
     const auto epoch_after = runtime->stats()[0].writer_epoch;
     GLIFI_REQUIRE(epoch_after > epoch_before);

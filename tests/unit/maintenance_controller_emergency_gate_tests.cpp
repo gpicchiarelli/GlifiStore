@@ -39,17 +39,17 @@ GLIFI_TEST("emergency rejects put and erase with storage_exhausted") {
 
     auto* controller = glifistore::detail::StoreAccess::maintenance_controller(**store);
     GLIFI_REQUIRE(controller != nullptr);
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 100,
-            .sealed_segment_count = 2,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 2'048,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 100,
+                .sealed_segment_count = 2,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 2'048,
+            };
+        });
     controller->request_evaluate();
 
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
@@ -64,8 +64,7 @@ GLIFI_TEST("emergency rejects put and erase with storage_exhausted") {
     const auto snap = (**store).maintenance_snapshot();
     GLIFI_REQUIRE(snap.pressure == glifistore::MaintenancePressureLevel::emergency);
     GLIFI_REQUIRE(snap.mutations_rejected);
-    GLIFI_REQUIRE(snap.last_activation_reason ==
-                   glifistore::MaintenanceActivationReason::emergency_capacity);
+    GLIFI_REQUIRE(snap.last_activation_reason == glifistore::MaintenanceActivationReason::emergency_capacity);
 
     const auto put = (**store).put("blocked", std::as_bytes(std::span{"x", 1}));
     GLIFI_REQUIRE(!put.has_value());
@@ -81,20 +80,20 @@ GLIFI_TEST("emergency rejects put and erase with storage_exhausted") {
     GLIFI_REQUIRE(got.has_value());
     const auto compacted = (**store).compact();
     GLIFI_REQUIRE(compacted.has_value() ||
-                   compacted.error().code == glifistore::ErrorCode::sequence_conflict);
+                  compacted.error().code == glifistore::ErrorCode::sequence_conflict);
 
     // Recovery: observation clears emergency → mutations resume.
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 10,
-            .sealed_segment_count = 1,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 1'024ULL + glifistore::kSegmentSizeBytes + 4'096ULL,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 10,
+                .sealed_segment_count = 1,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 1'024ULL + glifistore::kSegmentSizeBytes + 4'096ULL,
+            };
+        });
     controller->request_evaluate();
     const auto recover_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
     while (std::chrono::steady_clock::now() < recover_deadline) {
@@ -125,17 +124,17 @@ GLIFI_TEST("caller_holds_guard still rejects maintenance emergency") {
     GLIFI_REQUIRE(store.has_value());
     auto* controller = glifistore::detail::StoreAccess::maintenance_controller(**store);
     GLIFI_REQUIRE(controller != nullptr);
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 100,
-            .sealed_segment_count = 2,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 2'048,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 100,
+                .sealed_segment_count = 2,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 2'048,
+            };
+        });
     controller->request_evaluate();
 
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
@@ -170,8 +169,7 @@ GLIFI_TEST("mutate_durable_batch rejects under maintenance emergency") {
     // Batch-entry gate: armed emergency must reject every sibling before append.
     // legacy_mutex: white-box StoreAccess mutate must be Index-visible via Store::get
     // (paired GET reads a generation snapshot, not the Writer Index directly).
-    auto pattern =
-        (std::filesystem::temp_directory_path() / "glifistore-durable-batch-gate-XXXXXX").string();
+    auto pattern = (std::filesystem::temp_directory_path() / "glifistore-durable-batch-gate-XXXXXX").string();
     std::vector<char> writable(pattern.begin(), pattern.end());
     writable.push_back('\0');
     GLIFI_REQUIRE(::mkdtemp(writable.data()) != nullptr);
@@ -284,13 +282,12 @@ GLIFI_TEST("mutate_durable_batch mid-batch TOCTOU rejects later siblings") {
     GLIFI_REQUIRE(!store.get(key_b).has_value());
     GLIFI_REQUIRE(store.close().has_value());
 
-    auto reopened =
-        glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                  .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
-                                  .storage_mode = glifistore::StorageMode::durable_group,
-                                  .data_directory = store_path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing,
-                                  .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+    auto reopened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
+                                             .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
+                                             .storage_mode = glifistore::StorageMode::durable_group,
+                                             .data_directory = store_path,
+                                             .durable_open_mode = glifistore::DurableOpenMode::open_existing,
+                                             .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     GLIFI_REQUIRE(reopened.has_value());
     GLIFI_REQUIRE((*reopened)->get(key_a).has_value());
     GLIFI_REQUIRE(!(*reopened)->get(key_b).has_value());
@@ -310,11 +307,11 @@ GLIFI_TEST("put_batch rejects under maintenance emergency") {
     const auto store_path = root / "store";
 
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
-                                            .storage_mode = glifistore::StorageMode::durable_sync,
-                                            .data_directory = store_path,
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                            .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
+                                           .storage_mode = glifistore::StorageMode::durable_sync,
+                                           .data_directory = store_path,
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                           .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     auto* controller = glifistore::detail::StoreAccess::maintenance_controller(store);
@@ -351,11 +348,11 @@ GLIFI_TEST("put_batch mid-batch TOCTOU rejects later siblings") {
     const auto store_path = root / "store";
 
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
-                                            .storage_mode = glifistore::StorageMode::durable_sync,
-                                            .data_directory = store_path,
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                            .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
+                                           .storage_mode = glifistore::StorageMode::durable_sync,
+                                           .data_directory = store_path,
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                           .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     GLIFI_REQUIRE(!store.maintenance_snapshot().mutations_rejected);
@@ -381,13 +378,12 @@ GLIFI_TEST("put_batch mid-batch TOCTOU rejects later siblings") {
     GLIFI_REQUIRE(!store.get("toctou-b").has_value());
     GLIFI_REQUIRE(store.close().has_value());
 
-    auto reopened =
-        glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                  .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
-                                  .storage_mode = glifistore::StorageMode::durable_sync,
-                                  .data_directory = store_path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing,
-                                  .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+    auto reopened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
+                                             .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
+                                             .storage_mode = glifistore::StorageMode::durable_sync,
+                                             .data_directory = store_path,
+                                             .durable_open_mode = glifistore::DurableOpenMode::open_existing,
+                                             .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     GLIFI_REQUIRE(reopened.has_value());
     GLIFI_REQUIRE((*reopened)->get("toctou-a").has_value());
     GLIFI_REQUIRE(!(*reopened)->get("toctou-b").has_value());
@@ -407,11 +403,11 @@ GLIFI_TEST("erase_batch rejects under maintenance emergency") {
     const auto store_path = root / "store";
 
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
-                                            .storage_mode = glifistore::StorageMode::durable_sync,
-                                            .data_directory = store_path,
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                            .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
+                                           .storage_mode = glifistore::StorageMode::durable_sync,
+                                           .data_directory = store_path,
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                           .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     const auto value = std::as_bytes(std::span{"x", 1});
@@ -443,8 +439,7 @@ GLIFI_TEST("erase_batch rejects under maintenance emergency") {
 #if defined(GLIFISTORE_FAULT_INJECTION)
 GLIFI_TEST("erase_batch mid-batch TOCTOU rejects later siblings") {
     // Non-paired erase_batch reuses Site::put_batch_gate: arm after item 0; item 1+ reject.
-    auto pattern =
-        (std::filesystem::temp_directory_path() / "glifistore-erase-batch-toctou-XXXXXX").string();
+    auto pattern = (std::filesystem::temp_directory_path() / "glifistore-erase-batch-toctou-XXXXXX").string();
     std::vector<char> writable(pattern.begin(), pattern.end());
     writable.push_back('\0');
     GLIFI_REQUIRE(::mkdtemp(writable.data()) != nullptr);
@@ -452,11 +447,11 @@ GLIFI_TEST("erase_batch mid-batch TOCTOU rejects later siblings") {
     const auto store_path = root / "store";
 
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
-                                            .storage_mode = glifistore::StorageMode::durable_sync,
-                                            .data_directory = store_path,
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                            .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
+                                           .storage_mode = glifistore::StorageMode::durable_sync,
+                                           .data_directory = store_path,
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                           .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     const auto value = std::as_bytes(std::span{"y", 1});
@@ -484,13 +479,12 @@ GLIFI_TEST("erase_batch mid-batch TOCTOU rejects later siblings") {
     GLIFI_REQUIRE(store.get("toctou-b").has_value());
     GLIFI_REQUIRE(store.close().has_value());
 
-    auto reopened =
-        glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                  .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
-                                  .storage_mode = glifistore::StorageMode::durable_sync,
-                                  .data_directory = store_path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing,
-                                  .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+    auto reopened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
+                                             .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
+                                             .storage_mode = glifistore::StorageMode::durable_sync,
+                                             .data_directory = store_path,
+                                             .durable_open_mode = glifistore::DurableOpenMode::open_existing,
+                                             .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     GLIFI_REQUIRE(reopened.has_value());
     GLIFI_REQUIRE(!(*reopened)->get("toctou-a").has_value());
     GLIFI_REQUIRE((*reopened)->get("toctou-b").has_value());
@@ -516,17 +510,17 @@ GLIFI_TEST("emergency rejects mutations even when auto-compact is disabled") {
     controller->set_auto_compact_enabled(false);
     const auto baseline_cycles = initial.evaluation_cycles;
     const auto baseline_attempts = initial.compact_attempts;
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 4,
-            .sealed_segment_count = 0,
-            .max_segment_count = 8,
-            .reserved_free_bytes = 100,
-            .available_free_bytes = 50,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 4,
+                .sealed_segment_count = 0,
+                .max_segment_count = 8,
+                .reserved_free_bytes = 100,
+                .available_free_bytes = 50,
+            };
+        });
     controller->request_evaluate();
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{5};
     while (std::chrono::steady_clock::now() < deadline) {
@@ -558,17 +552,17 @@ GLIFI_TEST("emergency gate survives compact fault") {
     auto* controller = glifistore::detail::StoreAccess::maintenance_controller(**store);
     GLIFI_REQUIRE(controller != nullptr);
 
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 100,
-            .sealed_segment_count = 2,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 2'048,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 100,
+                .sealed_segment_count = 2,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 2'048,
+            };
+        });
     controller->bind_compact(
         [](std::optional<std::size_t>, std::uint64_t) -> glifistore::Result<glifistore::CompactionResult> {
             return glifistore::fail(glifistore::ErrorCode::io_error, "injected compact fault");
@@ -601,8 +595,7 @@ GLIFI_TEST("emergency gate survives compact fault") {
             const auto recover_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
             while (std::chrono::steady_clock::now() < recover_deadline) {
                 if (!(**store).maintenance_snapshot().mutations_rejected) {
-                    GLIFI_REQUIRE(
-                        (**store).put("after-fault", std::as_bytes(std::span{"y", 1})).has_value());
+                    GLIFI_REQUIRE((**store).put("after-fault", std::as_bytes(std::span{"y", 1})).has_value());
                     GLIFI_REQUIRE((**store).close().has_value());
                     return;
                 }
@@ -626,17 +619,17 @@ GLIFI_TEST("close under emergency clears mutations_rejected and stops thread") {
     GLIFI_REQUIRE(store.has_value());
     auto* controller = glifistore::detail::StoreAccess::maintenance_controller(**store);
     GLIFI_REQUIRE(controller != nullptr);
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 100,
-            .sealed_segment_count = 1,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 2'048,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 100,
+                .sealed_segment_count = 1,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 2'048,
+            };
+        });
     controller->request_evaluate();
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
     while (std::chrono::steady_clock::now() < deadline) {
@@ -664,17 +657,17 @@ GLIFI_TEST("flush succeeds while emergency rejects put") {
     GLIFI_REQUIRE(store.has_value());
     auto* controller = glifistore::detail::StoreAccess::maintenance_controller(**store);
     GLIFI_REQUIRE(controller != nullptr);
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 100,
-            .sealed_segment_count = 0,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 2'048,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 100,
+                .sealed_segment_count = 0,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 2'048,
+            };
+        });
     controller->request_evaluate();
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
     while (std::chrono::steady_clock::now() < deadline) {
@@ -705,17 +698,17 @@ GLIFI_TEST("emergency compact fault keeps reclaim attempts while gate is armed")
     static_cast<void>(wait_for_initial_idle(**store));
 
     auto compact_calls = std::make_shared<std::atomic<std::uint64_t>>(0);
-    controller->bind_observe([](glifistore::MaintenanceObserveRequest)
-                                 -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 100,
-            .sealed_segment_count = 2,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 2'048,
-        };
-    });
+    controller->bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 100,
+                .sealed_segment_count = 2,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 2'048,
+            };
+        });
     controller->bind_compact(
         [compact_calls](std::optional<std::size_t>,
                         std::uint64_t) -> glifistore::Result<glifistore::CompactionResult> {

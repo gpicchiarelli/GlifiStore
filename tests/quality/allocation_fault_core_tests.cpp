@@ -170,8 +170,7 @@ void run_exhaustive_read_failures() {
 struct ThrowingSyncHook {
     std::atomic_bool fired{};
 
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& hook = *static_cast<ThrowingSyncHook*>(opaque);
         if (operation == glifistore::FilesystemOperation::sync_record &&
             !hook.fired.exchange(true, std::memory_order_acq_rel)) {
@@ -186,8 +185,7 @@ void run_background_allocation_failure_waiters() {
     initialize_store(temporary.path(), false);
     ThrowingSyncHook hook;
     auto directory = glifistore::DataDirectory::open_and_lock(
-        temporary.path(),
-        glifistore::FilesystemHooks{.context = &hook, .before = &ThrowingSyncHook::before});
+        temporary.path(), glifistore::FilesystemHooks{.context = &hook, .before = &ThrowingSyncHook::before});
     require(directory.has_value(), "failed to lock background allocation test Store");
     auto runtime = glifistore::DurableRuntimeCatalog::open_locked(
         std::move(*directory), 0,
@@ -261,8 +259,7 @@ void run_exhaustive_compaction_allocation_failures() {
         require(result.outcome == glifistore::DurableCompactionOutcome::not_compacted ||
                     result.outcome == glifistore::DurableCompactionOutcome::recovery_required,
                 "injected compaction allocation failure returned an invalid outcome");
-        require(runtime->healthy() ==
-                    (result.outcome == glifistore::DurableCompactionOutcome::not_compacted),
+        require(runtime->healthy() == (result.outcome == glifistore::DurableCompactionOutcome::not_compacted),
                 "compaction allocation failure health disagrees with recovery requirement");
         runtime.reset();
         require_recovered_compaction_state(temporary.path());
@@ -394,9 +391,9 @@ void run_index_tombstone_rebuild_allocation_failures() {
             auto key = std::string(64, 't');
             key.replace(key.size() - std::to_string(value).size(), std::to_string(value).size(),
                         std::to_string(value));
-            const glifistore::RecordRef ref{
-                glifistore::SegmentId{1}, glifistore::RecordOffset{4096}, glifistore::RecordSize{64},
-                glifistore::SequenceNumber{value + 1}, glifistore::GenerationId{1}};
+            const glifistore::RecordRef ref{glifistore::SegmentId{1}, glifistore::RecordOffset{4096},
+                                            glifistore::RecordSize{64}, glifistore::SequenceNumber{value + 1},
+                                            glifistore::GenerationId{1}};
             require(index.insert_or_assign(key, ref).has_value(), "failed to seed tombstone rebuild");
             keys.push_back(std::move(key));
         }

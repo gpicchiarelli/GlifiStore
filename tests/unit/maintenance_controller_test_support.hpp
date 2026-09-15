@@ -9,8 +9,7 @@
 
 namespace maintenance_controller_test_support {
 
-[[nodiscard]] inline auto wait_for_initial_idle(glifistore::Store& store)
-    -> glifistore::MaintenanceSnapshot {
+[[nodiscard]] inline auto wait_for_initial_idle(glifistore::Store& store) -> glifistore::MaintenanceSnapshot {
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{5};
     glifistore::MaintenanceSnapshot snapshot{};
     while (std::chrono::steady_clock::now() < deadline) {

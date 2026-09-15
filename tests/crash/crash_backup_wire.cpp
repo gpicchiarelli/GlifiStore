@@ -175,12 +175,12 @@ void run_worker(const Options& options) {
     }
 
     // Restart an in-process Server on the same data dir and read via wire GET.
-    auto restarted = glifistore::server::Server::create(
-        {.port = 0, .maximum_connections = 4},
-        {.worker_config = {.explicit_count = 1},
-         .storage_mode = glifistore::StorageMode::durable_sync,
-         .data_directory = options.data_dir,
-         .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+    auto restarted =
+        glifistore::server::Server::create({.port = 0, .maximum_connections = 4},
+                                           {.worker_config = {.explicit_count = 1},
+                                            .storage_mode = glifistore::StorageMode::durable_sync,
+                                            .data_directory = options.data_dir,
+                                            .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     if (!restarted) {
         std::cerr << "server restart failed: " << restarted.error().message << '\n';
         return false;

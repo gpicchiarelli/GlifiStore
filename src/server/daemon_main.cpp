@@ -32,15 +32,15 @@ extern "C" void request_stop(const int signal) {
     if (sigemptyset(&action.sa_mask) != 0 || ::sigaction(signal, &action, nullptr) != 0) {
         const auto error_number = errno;
         return glifistore::fail(glifistore::ErrorCode::io_error,
-                                 std::string{"cannot install "} + name + " handler: " +
-                                     std::error_code{error_number, std::system_category()}.message());
+                                std::string{"cannot install "} + name + " handler: " +
+                                    std::error_code{error_number, std::system_category()}.message());
     }
     return {};
 }
 
 void print_help(const std::string_view program) {
-    glifistore::cli::write_help(std::cout, program, "GlifiStore native binary key-value server.",
-                                 "[OPTIONS]", glifistore::server::daemon_option_specs());
+    glifistore::cli::write_help(std::cout, program, "GlifiStore native binary key-value server.", "[OPTIONS]",
+                                glifistore::server::daemon_option_specs());
 }
 
 void emit_human_listen(const std::string_view program, const glifistore::server::DaemonOptions& arguments,

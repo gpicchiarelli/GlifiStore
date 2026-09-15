@@ -62,7 +62,7 @@ GLIFI_TEST("manifest v1 matches its golden little-endian fixture") {
     const auto encoded = glifistore::encode_manifest(manifest);
     GLIFI_REQUIRE(encoded.has_value());
     const auto fixture = glifistore::test::read_hex_fixture(std::filesystem::path{GLIFISTORE_SOURCE_DIR} /
-                                                             "tests/fixtures/manifest_v1.hex");
+                                                            "tests/fixtures/manifest_v1.hex");
     GLIFI_REQUIRE(*encoded == fixture);
 
     const auto decoded = glifistore::decode_manifest(*encoded);

@@ -147,9 +147,9 @@ GLIFI_TEST("paired Writer preserves same-key order across strict durable group b
     GLIFI_REQUIRE(socket >= 0);
     GLIFI_REQUIRE(initialize_and_bind(socket, 0, 1));
     const auto put = glifistore::server::encode_request({.opcode = glifistore::server::RequestOpcode::put,
-                                                          .request_id = 92,
-                                                          .key = bytes("same-key-group"),
-                                                          .value = bytes("value")});
+                                                         .request_id = 92,
+                                                         .key = bytes("same-key-group"),
+                                                         .value = bytes("value")});
     const auto erase = glifistore::server::encode_request({
         .opcode = glifistore::server::RequestOpcode::erase,
         .request_id = 93,
@@ -175,9 +175,9 @@ GLIFI_TEST("paired Writer preserves same-key order across strict durable group b
     GLIFI_REQUIRE(server.join().has_value());
     auto recovered =
         glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                  .storage_mode = glifistore::StorageMode::durable_sync,
-                                  .data_directory = path,
-                                  .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                 .storage_mode = glifistore::StorageMode::durable_sync,
+                                 .data_directory = path,
+                                 .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     GLIFI_REQUIRE(recovered.has_value());
     const auto missing = (*recovered)->get("same-key-group");
     GLIFI_REQUIRE(!missing.has_value());
@@ -189,9 +189,9 @@ GLIFI_TEST("blocked durable cold GET leaves its Reactor responsive and applies b
     const auto path = temporary.store_path();
     {
         auto seed = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                              .storage_mode = glifistore::StorageMode::durable_sync,
-                                              .data_directory = path,
-                                              .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                             .storage_mode = glifistore::StorageMode::durable_sync,
+                                             .data_directory = path,
+                                             .durable_open_mode = glifistore::DurableOpenMode::create_new});
         GLIFI_REQUIRE(seed.has_value());
         GLIFI_REQUIRE((*seed)->put("cold-a", bytes("value-a")).has_value());
         GLIFI_REQUIRE((*seed)->put("cold-b", bytes("value-b")).has_value());
@@ -342,23 +342,23 @@ GLIFI_TEST("durable cold GET keeps one bounded scatter lease across partial sock
     }
     {
         auto seed = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                              .storage_mode = glifistore::StorageMode::durable_sync,
-                                              .data_directory = path,
-                                              .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                             .storage_mode = glifistore::StorageMode::durable_sync,
+                                             .data_directory = path,
+                                             .durable_open_mode = glifistore::DurableOpenMode::create_new});
         GLIFI_REQUIRE(seed.has_value());
         GLIFI_REQUIRE((*seed)->put("scatter-large", expected).has_value());
         GLIFI_REQUIRE((*seed)->close().has_value());
     }
 
-    auto opened = glifistore::server::Server::create(
-        {.port = 0,
-         .maximum_connections = 1,
-         .maximum_output_bytes = 1024U * 1024U,
-         .accepted_socket_send_buffer_bytes = 4U * 1024U,
-         .disk_read_queue_capacity = 1},
-        {.storage_mode = glifistore::StorageMode::durable_sync,
-         .data_directory = path,
-         .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+    auto opened =
+        glifistore::server::Server::create({.port = 0,
+                                            .maximum_connections = 1,
+                                            .maximum_output_bytes = 1024U * 1024U,
+                                            .accepted_socket_send_buffer_bytes = 4U * 1024U,
+                                            .disk_read_queue_capacity = 1},
+                                           {.storage_mode = glifistore::StorageMode::durable_sync,
+                                            .data_directory = path,
+                                            .durable_open_mode = glifistore::DurableOpenMode::open_existing});
     GLIFI_REQUIRE(opened.has_value());
     auto& server = **opened;
     GLIFI_REQUIRE(server.start().has_value());
@@ -415,7 +415,7 @@ GLIFI_TEST("BIND_WORKER handoff saturation returns overloaded then closes") {
     auto disk_reads = glifistore::server::DiskReadExecutor::create(**store, 2, 8);
     GLIFI_REQUIRE(disk_reads.has_value());
     auto pair_writers = glifistore::server::PairWriterPool::create(**store, 2, 8, kTestMutationArenaBytes,
-                                                                    std::chrono::milliseconds{0});
+                                                                   std::chrono::milliseconds{0});
     GLIFI_REQUIRE(pair_writers.has_value());
     GLIFI_REQUIRE((*pair_writers)->start().has_value());
 
@@ -429,10 +429,10 @@ GLIFI_TEST("BIND_WORKER handoff saturation returns overloaded then closes") {
     auto listener = glifistore::server::TcpListener::bind(config.bind_address, 0);
     GLIFI_REQUIRE(listener.has_value());
     auto reactor0 = glifistore::server::Reactor::create(config, 0, std::move(*listener), {}, {}, **store,
-                                                         mesh, **disk_reads, **pair_writers);
+                                                        mesh, **disk_reads, **pair_writers);
     GLIFI_REQUIRE(reactor0.has_value());
     auto reactor1 = glifistore::server::Reactor::create(config, 1, {}, {}, {}, **store, mesh, **disk_reads,
-                                                         **pair_writers);
+                                                        **pair_writers);
     GLIFI_REQUIRE(reactor1.has_value());
 
     for (int i = 0; i < 2; ++i) {
@@ -513,7 +513,7 @@ GLIFI_TEST("shutdown force-close rejects pending BIND handoff with OVERLOADED") 
     auto disk_reads = glifistore::server::DiskReadExecutor::create(**store, 2, 8);
     GLIFI_REQUIRE(disk_reads.has_value());
     auto pair_writers = glifistore::server::PairWriterPool::create(**store, 2, 8, kTestMutationArenaBytes,
-                                                                    std::chrono::milliseconds{0});
+                                                                   std::chrono::milliseconds{0});
     GLIFI_REQUIRE(pair_writers.has_value());
     GLIFI_REQUIRE((*pair_writers)->start().has_value());
 
@@ -525,7 +525,7 @@ GLIFI_TEST("shutdown force-close rejects pending BIND handoff with OVERLOADED") 
         .disk_read_thread_count = 2,
     };
     auto reactor1 = glifistore::server::Reactor::create(config, 1, {}, {}, {}, **store, mesh, **disk_reads,
-                                                         **pair_writers);
+                                                        **pair_writers);
     GLIFI_REQUIRE(reactor1.has_value());
 
     int fds[2]{-1, -1};
@@ -573,7 +573,7 @@ GLIFI_TEST("BIND_WORKER destination slot exhaustion returns overloaded then clos
     auto disk_reads = glifistore::server::DiskReadExecutor::create(**store, 2, 8);
     GLIFI_REQUIRE(disk_reads.has_value());
     auto pair_writers = glifistore::server::PairWriterPool::create(**store, 2, 8, kTestMutationArenaBytes,
-                                                                    std::chrono::milliseconds{0});
+                                                                   std::chrono::milliseconds{0});
     GLIFI_REQUIRE(pair_writers.has_value());
     GLIFI_REQUIRE((*pair_writers)->start().has_value());
 
@@ -590,10 +590,10 @@ GLIFI_TEST("BIND_WORKER destination slot exhaustion returns overloaded then clos
     auto listener = glifistore::server::TcpListener::bind(config0.bind_address, 0);
     GLIFI_REQUIRE(listener.has_value());
     auto reactor0 = glifistore::server::Reactor::create(config0, 0, std::move(*listener), {}, {}, **store,
-                                                         mesh, **disk_reads, **pair_writers);
+                                                        mesh, **disk_reads, **pair_writers);
     GLIFI_REQUIRE(reactor0.has_value());
     auto reactor1 = glifistore::server::Reactor::create(config1, 1, {}, {}, {}, **store, mesh, **disk_reads,
-                                                         **pair_writers);
+                                                        **pair_writers);
     GLIFI_REQUIRE(reactor1.has_value());
 
     int filler_fds[2]{-1, -1};
@@ -679,7 +679,7 @@ GLIFI_TEST("BIND_WORKER poller remove failure returns overloaded without dual re
     auto disk_reads = glifistore::server::DiskReadExecutor::create(**store, 2, 8);
     GLIFI_REQUIRE(disk_reads.has_value());
     auto pair_writers = glifistore::server::PairWriterPool::create(**store, 2, 8, kTestMutationArenaBytes,
-                                                                    std::chrono::milliseconds{0});
+                                                                   std::chrono::milliseconds{0});
     GLIFI_REQUIRE(pair_writers.has_value());
     GLIFI_REQUIRE((*pair_writers)->start().has_value());
 
@@ -693,10 +693,10 @@ GLIFI_TEST("BIND_WORKER poller remove failure returns overloaded without dual re
     auto listener = glifistore::server::TcpListener::bind(config.bind_address, 0);
     GLIFI_REQUIRE(listener.has_value());
     auto reactor0 = glifistore::server::Reactor::create(config, 0, std::move(*listener), {}, {}, **store,
-                                                         mesh, **disk_reads, **pair_writers);
+                                                        mesh, **disk_reads, **pair_writers);
     GLIFI_REQUIRE(reactor0.has_value());
     auto reactor1 = glifistore::server::Reactor::create(config, 1, {}, {}, {}, **store, mesh, **disk_reads,
-                                                         **pair_writers);
+                                                        **pair_writers);
     GLIFI_REQUIRE(reactor1.has_value());
 
     std::atomic<bool> stop{false};
@@ -795,7 +795,7 @@ GLIFI_TEST("sticky post-commit Writer failure is INTERNAL_ERROR on the wire") {
     GLIFI_REQUIRE(put_response.has_value());
     GLIFI_REQUIRE(put_response->frame.request_id == 77);
     GLIFI_REQUIRE(put_response->frame.status == glifistore::server::ResponseStatus::ok ||
-                   put_response->frame.status == glifistore::server::ResponseStatus::internal_error);
+                  put_response->frame.status == glifistore::server::ResponseStatus::internal_error);
     GLIFI_REQUIRE(put_response->frame.status != glifistore::server::ResponseStatus::overloaded);
     GLIFI_REQUIRE(!server.healthy());
     GLIFI_REQUIRE(server.live());
@@ -803,7 +803,7 @@ GLIFI_TEST("sticky post-commit Writer failure is INTERNAL_ERROR on the wire") {
     GLIFI_REQUIRE(!server.store_operational());
     GLIFI_REQUIRE(!server.pair_writers_healthy());
     GLIFI_REQUIRE(glifistore::server::classify_ready_loss(server) ==
-                   glifistore::server::ReadyLossReason::store_not_operational);
+                  glifistore::server::ReadyLossReason::store_not_operational);
 
     const auto health = probe_lifecycle(socket, glifistore::server::RequestOpcode::health, 79);
     GLIFI_REQUIRE(health.has_value());
@@ -867,7 +867,7 @@ GLIFI_TEST("pre-Store sibling after sticky capture is wire OVERLOADED not INTERN
     GLIFI_REQUIRE(response2->frame.request_id == 102);
     // First: ACK-after-drain success (or sticky INTERNAL_ERROR if drain fails).
     GLIFI_REQUIRE(response1->frame.status == glifistore::server::ResponseStatus::ok ||
-                   response1->frame.status == glifistore::server::ResponseStatus::internal_error);
+                  response1->frame.status == glifistore::server::ResponseStatus::internal_error);
     GLIFI_REQUIRE(response1->frame.status != glifistore::server::ResponseStatus::overloaded);
     // Second: never Store-entered after sticky → OVERLOADED, not INTERNAL_ERROR.
     GLIFI_REQUIRE(response2->frame.status == glifistore::server::ResponseStatus::overloaded);

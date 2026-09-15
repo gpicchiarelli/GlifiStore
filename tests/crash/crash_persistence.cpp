@@ -195,8 +195,8 @@ void print_usage(const char* program) {
     if (periodic_storage(options)) {
         return {.commit_sync = glifistore::SegmentCommitSync::deferred,
                 .sync_interval_ms = 50,
-                .batch = glifistore::DurableGroupConfig{
-                    .max_records = 32, .max_bytes = 65536, .max_wait_ms = 50}};
+                .batch =
+                    glifistore::DurableGroupConfig{.max_records = 32, .max_bytes = 65536, .max_wait_ms = 50}};
     }
     return {};
 }
@@ -220,7 +220,7 @@ void print_usage(const char* program) {
                             ? kCompactionHistoryNowNs
                             : std::uint64_t{0};
     auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory), now_ns,
-                                                                   durable_runtime_options(options));
+                                                                  durable_runtime_options(options));
     if (!runtime) {
         return nullptr;
     }
@@ -333,10 +333,10 @@ struct CompactionHistory {
 void seed_put_store(const std::filesystem::path& data_dir) {
     std::filesystem::create_directories(data_dir.parent_path());
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
-                                            .storage_mode = glifistore::StorageMode::durable_sync,
-                                            .data_directory = data_dir,
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex,
+                                           .storage_mode = glifistore::StorageMode::durable_sync,
+                                           .data_directory = data_dir,
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new});
     if (!opened) {
         throw std::runtime_error(std::string{"failed to seed durable store: "} + opened.error().message);
     }
@@ -365,9 +365,9 @@ void seed_rotate_store(const std::filesystem::path& data_dir) {
         }
         auto created =
             glifistore::DurableSegmentFile::create(*directory, {.store_id = store_id,
-                                                                 .segment_id = active.segment_id,
-                                                                 .generation = active.generation,
-                                                                 .owner_worker = active.owner_worker});
+                                                                .segment_id = active.segment_id,
+                                                                .generation = active.generation,
+                                                                .owner_worker = active.owner_worker});
         if (!created.durable() || !created.file) {
             throw std::runtime_error("failed to create rotate seed segment");
         }
@@ -402,29 +402,29 @@ void seed_compaction_store(const std::filesystem::path& data_dir) {
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
-    auto directory = glifistore::DataDirectory::open_and_lock(
-        data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
+    auto directory =
+        glifistore::DataDirectory::open_and_lock(data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
     if (!directory) {
         throw std::runtime_error("failed to open data directory for compaction seed");
     }
     const auto create = [&](const glifistore::ManifestSegmentEntry& entry) {
         auto created =
             glifistore::DurableSegmentFile::create(*directory, {.store_id = store_id,
-                                                                 .segment_id = entry.segment_id,
-                                                                 .generation = entry.generation,
-                                                                 .owner_worker = entry.owner_worker});
+                                                                .segment_id = entry.segment_id,
+                                                                .generation = entry.generation,
+                                                                .owner_worker = entry.owner_worker});
         if (!created.durable() || !created.file) {
             throw std::runtime_error("failed to create compaction seed Segment");
         }
@@ -580,17 +580,17 @@ void seed_multi_output_compaction_build(const std::filesystem::path& data_dir) {
     std::filesystem::create_directories(data_dir.parent_path());
     const auto [old, next] = multi_output_compaction_manifests();
     static_cast<void>(next);
-    auto directory = glifistore::DataDirectory::open_and_lock(
-        data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
+    auto directory =
+        glifistore::DataDirectory::open_and_lock(data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
     if (!directory) {
         throw std::runtime_error("failed to open multi-output build seed directory");
     }
     const auto create = [&](const glifistore::ManifestSegmentEntry& entry) {
         auto created =
             glifistore::DurableSegmentFile::create(*directory, {.store_id = old.store_id,
-                                                                 .segment_id = entry.segment_id,
-                                                                 .generation = entry.generation,
-                                                                 .owner_worker = entry.owner_worker});
+                                                                .segment_id = entry.segment_id,
+                                                                .generation = entry.generation,
+                                                                .owner_worker = entry.owner_worker});
         if (!created.durable() || !created.file) {
             throw std::runtime_error("failed to create multi-output build seed Segment");
         }
@@ -620,17 +620,17 @@ void seed_multi_output_random_compaction(const std::filesystem::path& data_dir, 
     std::filesystem::create_directories(data_dir.parent_path());
     const auto [old, next] = multi_output_compaction_manifests();
     static_cast<void>(next);
-    auto directory = glifistore::DataDirectory::open_and_lock(
-        data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
+    auto directory =
+        glifistore::DataDirectory::open_and_lock(data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
     if (!directory) {
         throw std::runtime_error("failed to open randomized multi-output seed directory");
     }
     const auto create = [&](const glifistore::ManifestSegmentEntry& entry) {
         auto created =
             glifistore::DurableSegmentFile::create(*directory, {.store_id = old.store_id,
-                                                                 .segment_id = entry.segment_id,
-                                                                 .generation = entry.generation,
-                                                                 .owner_worker = entry.owner_worker});
+                                                                .segment_id = entry.segment_id,
+                                                                .generation = entry.generation,
+                                                                .owner_worker = entry.owner_worker});
         if (!created.durable() || !created.file) {
             throw std::runtime_error("failed to create randomized multi-output seed Segment");
         }
@@ -654,7 +654,7 @@ void seed_multi_output_random_compaction(const std::filesystem::path& data_dir, 
             }
             append_record(segment, sequence++, key,
                           operation.opcode == glifistore::Opcode::put ? std::string_view{value}
-                                                                       : std::string_view{},
+                                                                      : std::string_view{},
                           operation.opcode, operation.expire_at_ns, false);
         }
         if (!segment.seal().committed()) {
@@ -670,17 +670,17 @@ void seed_multi_output_random_compaction(const std::filesystem::path& data_dir, 
 void seed_multi_output_compaction_recovery(const std::filesystem::path& data_dir, const bool publish_next) {
     std::filesystem::create_directories(data_dir.parent_path());
     const auto [old, next] = multi_output_compaction_manifests();
-    auto directory = glifistore::DataDirectory::open_and_lock(
-        data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
+    auto directory =
+        glifistore::DataDirectory::open_and_lock(data_dir, glifistore::DataDirectoryOpenMode::open_or_create);
     if (!directory || !directory->publish_manifest(old).durable()) {
         throw std::runtime_error("failed to publish multi-output compaction seed manifest");
     }
     const auto create = [&](const glifistore::ManifestSegmentEntry& entry) {
         auto created =
             glifistore::DurableSegmentFile::create(*directory, {.store_id = old.store_id,
-                                                                 .segment_id = entry.segment_id,
-                                                                 .generation = entry.generation,
-                                                                 .owner_worker = entry.owner_worker});
+                                                                .segment_id = entry.segment_id,
+                                                                .generation = entry.generation,
+                                                                .owner_worker = entry.owner_worker});
         if (!created.durable() || !created.file) {
             throw std::runtime_error("failed to create multi-output compaction seed Segment");
         }
@@ -726,7 +726,7 @@ void run_worker(const Options& options) {
             throw std::runtime_error("bootstrap worker failed to prepare store");
         }
         auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory), 0,
-                                                                       durable_runtime_options(options));
+                                                                      durable_runtime_options(options));
         if (!runtime) {
             throw std::runtime_error("bootstrap worker failed to open runtime");
         }
@@ -752,9 +752,8 @@ void run_worker(const Options& options) {
         if (!runtime) {
             throw std::runtime_error("rotate worker failed to open runtime");
         }
-        const std::string rotate_value(glifistore::kMaxNormalRecordSize -
-                                           glifistore::kEncodedRecordHeaderSize - kRotateKey.size(),
-                                       'r');
+        const std::string rotate_value(
+            glifistore::kMaxNormalRecordSize - glifistore::kEncodedRecordHeaderSize - kRotateKey.size(), 'r');
         if (!runtime->put(bytes(kRotateKey), bytes(rotate_value)).committed()) {
             throw std::runtime_error("rotate worker failed to commit rotation put");
         }
@@ -947,9 +946,8 @@ enum class RecoveryExpectation { absent, optional, present };
             std::cerr << "verify: rotate seed key not preserved\n";
             return false;
         }
-        const std::string rotate_value(glifistore::kMaxNormalRecordSize -
-                                           glifistore::kEncodedRecordHeaderSize - kRotateKey.size(),
-                                       'r');
+        const std::string rotate_value(
+            glifistore::kMaxNormalRecordSize - glifistore::kEncodedRecordHeaderSize - kRotateKey.size(), 'r');
         const auto rotated = (*opened)->get(kRotateKey);
         auto expectation = RecoveryExpectation::absent;
         if (options.boundary == "write_commit_slot#2") {

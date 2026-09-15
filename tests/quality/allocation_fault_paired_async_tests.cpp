@@ -36,7 +36,7 @@ void run_paired_async_durable_sync_ack_after_publish_catch() {
     auto wakeup = glifistore::server::Wakeup::create();
     require(wakeup.has_value(), "Wakeup::create failed");
     auto executor = glifistore::server::PairWriterPool::create(store, 1, 8, 1U * 1024U * 1024U,
-                                                                std::chrono::milliseconds{0});
+                                                               std::chrono::milliseconds{0});
     require(executor.has_value(), "PairWriterPool::create failed");
     require((*executor)->start().has_value(), "PairWriterPool::start failed");
 
@@ -123,7 +123,7 @@ void run_paired_async_durable_sync_erase_ack_after_publish_catch() {
     auto wakeup = glifistore::server::Wakeup::create();
     require(wakeup.has_value(), "Wakeup::create failed");
     auto executor = glifistore::server::PairWriterPool::create(store, 1, 8, 1U * 1024U * 1024U,
-                                                                std::chrono::milliseconds{0});
+                                                               std::chrono::milliseconds{0});
     require(executor.has_value(), "PairWriterPool::create failed");
     require((*executor)->start().has_value(), "PairWriterPool::start failed");
 
@@ -197,7 +197,7 @@ void run_paired_async_volatile_erase_ack_after_publish_catch() {
     auto wakeup = glifistore::server::Wakeup::create();
     require(wakeup.has_value(), "Wakeup::create failed");
     auto executor = glifistore::server::PairWriterPool::create(store, 1, 8, 1U * 1024U * 1024U,
-                                                                std::chrono::milliseconds{0});
+                                                               std::chrono::milliseconds{0});
     require(executor.has_value(), "PairWriterPool::create failed");
     require((*executor)->start().has_value(), "PairWriterPool::start failed");
 
@@ -279,7 +279,7 @@ void run_paired_async_durable_group_ack_after_index_account() {
     auto wakeup = glifistore::server::Wakeup::create();
     require(wakeup.has_value(), "Wakeup::create failed");
     auto executor = glifistore::server::PairWriterPool::create(store, 1, 8, 1U * 1024U * 1024U,
-                                                                std::chrono::milliseconds{0});
+                                                               std::chrono::milliseconds{0});
     require(executor.has_value(), "PairWriterPool::create failed");
     require((*executor)->start().has_value(), "PairWriterPool::start failed");
 
@@ -367,7 +367,7 @@ void run_paired_async_durable_group_erase_ack_after_index_account() {
     auto wakeup = glifistore::server::Wakeup::create();
     require(wakeup.has_value(), "Wakeup::create failed");
     auto executor = glifistore::server::PairWriterPool::create(store, 1, 8, 1U * 1024U * 1024U,
-                                                                std::chrono::milliseconds{0});
+                                                               std::chrono::milliseconds{0});
     require(executor.has_value(), "PairWriterPool::create failed");
     require((*executor)->start().has_value(), "PairWriterPool::start failed");
 

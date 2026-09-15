@@ -86,14 +86,13 @@ class BlockingRecordRead final {
         force_record_full_ = true;
     }
 
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& state = *static_cast<BlockingRecordRead*>(opaque);
         const std::lock_guard lock{state.mutex_};
         if (operation == glifistore::FilesystemOperation::write_record && state.force_record_full_) {
             state.force_record_full_ = false;
             return glifistore::fail(glifistore::ErrorCode::segment_full,
-                                     "injected full Segment during blocked compaction");
+                                    "injected full Segment during blocked compaction");
         }
         return {};
     }
@@ -153,15 +152,14 @@ class BlockingFilesystemOperation final {
         condition_.notify_all();
     }
 
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& state = *static_cast<BlockingFilesystemOperation*>(opaque);
         {
             const std::lock_guard lock{state.mutex_};
             if (operation == glifistore::FilesystemOperation::write_record && state.force_record_full_) {
                 state.force_record_full_ = false;
                 return glifistore::fail(glifistore::ErrorCode::segment_full,
-                                         "injected full Segment while manifest publisher is blocked");
+                                        "injected full Segment while manifest publisher is blocked");
             }
         }
         if (operation != state.target_) {
@@ -211,8 +209,7 @@ class BlockingRotationSeal final {
         condition_.notify_all();
     }
 
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& state = *static_cast<BlockingRotationSeal*>(opaque);
         std::unique_lock lock{state.mutex_};
         if (!state.armed_) {
@@ -221,7 +218,7 @@ class BlockingRotationSeal final {
         if (operation == glifistore::FilesystemOperation::write_record && state.force_record_full_) {
             state.force_record_full_ = false;
             return glifistore::fail(glifistore::ErrorCode::segment_full,
-                                     "injected full Segment before blocked rotation seal");
+                                    "injected full Segment before blocked rotation seal");
         }
         if (operation != glifistore::FilesystemOperation::sync_commit_slot || state.claimed_) {
             return {};
@@ -271,14 +268,13 @@ struct NthFilesystemFailure {
     std::size_t occurrences{};
     std::optional<glifistore::FilesystemOperation> fired_operation{};
 
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& state = *static_cast<NthFilesystemFailure*>(opaque);
         ++state.occurrences;
         if (!state.fired_operation && state.occurrences == state.target_occurrence) {
             state.fired_operation = operation;
             return glifistore::fail(glifistore::ErrorCode::io_error,
-                                     "injected Nth durable runtime filesystem failure");
+                                    "injected Nth durable runtime filesystem failure");
         }
         return {};
     }
@@ -289,8 +285,7 @@ struct SyncThreadObserver {
     std::thread::id sync_thread;
     std::vector<std::thread::id> sync_threads;
 
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         if (operation == glifistore::FilesystemOperation::sync_record) {
             auto& observer = *static_cast<SyncThreadObserver*>(opaque);
             const std::lock_guard lock{observer.mutex};
@@ -307,8 +302,7 @@ struct BatchBoundaryObserver {
     std::size_t maximum_writes_before_sync{};
     std::size_t sync_count{};
 
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& observer = *static_cast<BatchBoundaryObserver*>(opaque);
         const std::lock_guard lock{observer.mutex};
         if (operation == glifistore::FilesystemOperation::write_record) {
@@ -328,8 +322,7 @@ struct RecordWriteObserver {
     std::condition_variable written;
     bool record_written{};
 
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         if (operation == glifistore::FilesystemOperation::write_record) {
             auto& observer = *static_cast<RecordWriteObserver*>(opaque);
             {
@@ -346,13 +339,12 @@ struct RotationBudgetObserver {
     bool force_segment_full{true};
     std::uint64_t available_bytes{};
 
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& observer = *static_cast<RotationBudgetObserver*>(opaque);
         if (operation == glifistore::FilesystemOperation::write_record && observer.force_segment_full) {
             observer.force_segment_full = false;
             return glifistore::fail(glifistore::ErrorCode::segment_full,
-                                     "injected full Segment before rotation");
+                                    "injected full Segment before rotation");
         }
         return {};
     }

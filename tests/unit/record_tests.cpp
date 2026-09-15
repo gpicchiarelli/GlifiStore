@@ -37,7 +37,7 @@ GLIFI_TEST("record v1 matches its golden binary-key fixture") {
     });
     GLIFI_REQUIRE(encoded.has_value());
     const auto fixture = glifistore::test::read_hex_fixture(std::filesystem::path{GLIFISTORE_SOURCE_DIR} /
-                                                             "tests/fixtures/record_v1.hex");
+                                                            "tests/fixtures/record_v1.hex");
     GLIFI_REQUIRE(*encoded == fixture);
 
     const auto decoded = glifistore::decode_record(fixture);
@@ -181,12 +181,12 @@ GLIFI_TEST("record encode zeroes alignment padding in destination buffers") {
 
     std::vector<std::byte> buffer(*size, std::byte{0xA5});
     GLIFI_REQUIRE(glifistore::encode_record(buffer,
-                                              {
-                                                  .sequence = glifistore::SequenceNumber{1},
-                                                  .key = as_bytes("k"),
-                                                  .value = as_bytes("v"),
-                                              })
-                       .has_value());
+                                            {
+                                                .sequence = glifistore::SequenceNumber{1},
+                                                .key = as_bytes("k"),
+                                                .value = as_bytes("v"),
+                                            })
+                      .has_value());
 
     const auto payload_end = glifistore::kEncodedRecordHeaderSize + 1U + 1U;
     for (std::size_t index = payload_end; index < *size; ++index) {

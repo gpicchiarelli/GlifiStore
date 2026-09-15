@@ -74,7 +74,7 @@ GLIFI_TEST("paired volatile publication makes acknowledged PUT visible without G
     GLIFI_REQUIRE(!(*pair)->get("alpha").has_value());
 
     GLIFI_REQUIRE((*pair)->try_submit_put(1, "alpha", bytes("one")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     const auto completion = wait_completion(**pair);
     GLIFI_REQUIRE(!completion.error.has_value());
     (*pair)->adopt_publication();
@@ -94,7 +94,7 @@ GLIFI_TEST("paired volatile publication makes acknowledged PUT visible without G
     GLIFI_REQUIRE(after.completion_pops == before.completion_pops);
 
     GLIFI_REQUIRE((*pair)->try_submit_erase(2, "alpha") ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
     (*pair)->adopt_publication();
     GLIFI_REQUIRE(!(*pair)->get("alpha").has_value());
@@ -106,10 +106,10 @@ GLIFI_TEST("paired volatile admission reserves bounded completion capacity") {
     for (std::uint64_t request = 0;
          request < glifistore::experimental::VolatileShardPairPrototype::kQueueCapacity; ++request) {
         GLIFI_REQUIRE((*pair)->try_submit_put(request, "key", bytes("value")) ==
-                       glifistore::experimental::PrototypeSubmitStatus::submitted);
+                      glifistore::experimental::PrototypeSubmitStatus::submitted);
     }
     GLIFI_REQUIRE((*pair)->try_submit_put(999, "overflow", bytes("value")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::queue_full);
+                  glifistore::experimental::PrototypeSubmitStatus::queue_full);
 
     std::unordered_set<std::uint64_t> completed;
     while (completed.size() < glifistore::experimental::VolatileShardPairPrototype::kQueueCapacity) {
@@ -119,7 +119,7 @@ GLIFI_TEST("paired volatile admission reserves bounded completion capacity") {
     }
     GLIFI_REQUIRE(completed.size() == glifistore::experimental::VolatileShardPairPrototype::kQueueCapacity);
     GLIFI_REQUIRE((*pair)->try_submit_put(1'000, "reused", bytes("slot")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
     const auto stats = (*pair)->stats();
     GLIFI_REQUIRE(stats.queue_full == 1);
@@ -136,7 +136,7 @@ GLIFI_TEST("paired volatile merge keeps two-level visibility and TTL semantics")
         const auto key = std::string{"key-"} + std::to_string(index);
         const auto value = std::string{"value-"} + std::to_string(index);
         GLIFI_REQUIRE((*pair)->try_submit_put(index, key, bytes(value), index == 7 ? 100 : 0) ==
-                       glifistore::experimental::PrototypeSubmitStatus::submitted);
+                      glifistore::experimental::PrototypeSubmitStatus::submitted);
         GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
     }
     (*pair)->adopt_publication();
@@ -160,7 +160,7 @@ GLIFI_TEST("paired delta capacity covers one full batch beyond a small merge thr
     for (std::uint64_t index = 0; index < 64; ++index) {
         const auto key = std::string{"batch-key-"} + std::to_string(index);
         GLIFI_REQUIRE((*pair)->try_submit_put(index, key, bytes("batch-value")) ==
-                       glifistore::experimental::PrototypeSubmitStatus::submitted);
+                      glifistore::experimental::PrototypeSubmitStatus::submitted);
     }
     for (std::uint64_t index = 0; index < 64; ++index) {
         GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
@@ -180,7 +180,7 @@ GLIFI_TEST("paired QSBR retires generations only across Reader turn boundaries")
     for (std::uint64_t index = 0; index < 512; ++index) {
         const auto value = std::string{"value-"} + std::to_string(index);
         GLIFI_REQUIRE((*pair)->try_submit_put(index, "stable-key", bytes(value)) ==
-                       glifistore::experimental::PrototypeSubmitStatus::submitted);
+                      glifistore::experimental::PrototypeSubmitStatus::submitted);
         GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
         (*pair)->adopt_publication();
         (*pair)->adopt_publication();
@@ -208,7 +208,7 @@ GLIFI_TEST("paired large delta copies only touched persistent directory blocks")
     for (std::uint64_t index = 0; index < 64; ++index) {
         const auto value = std::string{"hierarchical-"} + std::to_string(index);
         GLIFI_REQUIRE((*pair)->try_submit_put(index, "same-directory-page", bytes(value)) ==
-                       glifistore::experimental::PrototypeSubmitStatus::submitted);
+                      glifistore::experimental::PrototypeSubmitStatus::submitted);
         GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
         (*pair)->adopt_publication();
         (*pair)->adopt_publication();
@@ -240,7 +240,7 @@ GLIFI_TEST("paired Writer batch policy validates bounds and supports zero-wait b
     GLIFI_REQUIRE(pair.has_value());
     for (std::uint64_t index = 0; index < 4; ++index) {
         GLIFI_REQUIRE((*pair)->try_submit_put(index, "batch-policy", bytes("value")) ==
-                       glifistore::experimental::PrototypeSubmitStatus::submitted);
+                      glifistore::experimental::PrototypeSubmitStatus::submitted);
     }
     for (std::uint64_t index = 0; index < 4; ++index) {
         GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
@@ -257,11 +257,11 @@ GLIFI_TEST("ADR 0036 V1 prototype: adopt publishes one immutable generation atom
     auto pair = glifistore::experimental::VolatileShardPairPrototype::create(
         128, 32,
         glifistore::experimental::PrototypeWriterBatchConfig{.max_records = 1,
-                                                              .max_wait = std::chrono::microseconds{0}});
+                                                             .max_wait = std::chrono::microseconds{0}});
     GLIFI_REQUIRE(pair.has_value());
 
     GLIFI_REQUIRE((*pair)->try_submit_put(1, "atomic-key", bytes("first")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
     (*pair)->adopt_publication();
     const auto epoch_first = (*pair)->stats().reader_epoch;
@@ -273,7 +273,7 @@ GLIFI_TEST("ADR 0036 V1 prototype: adopt publishes one immutable generation atom
     GLIFI_REQUIRE(visible_first == first->sequence);
 
     GLIFI_REQUIRE((*pair)->try_submit_put(2, "atomic-key", bytes("second")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
     // Writer has advanced; Reader still observes the previously adopted generation.
     GLIFI_REQUIRE((*pair)->stats().writer_epoch > epoch_first);
@@ -301,14 +301,14 @@ GLIFI_TEST("ADR 0036 V1 prototype: slot reincarnation token prevents descriptor 
     auto pair = glifistore::experimental::VolatileShardPairPrototype::create(
         128, 32,
         glifistore::experimental::PrototypeWriterBatchConfig{.max_records = 1,
-                                                              .max_wait = std::chrono::microseconds{0}});
+                                                             .max_wait = std::chrono::microseconds{0}});
     GLIFI_REQUIRE(pair.has_value());
 
     constexpr std::uint64_t kPublications = 128;
     for (std::uint64_t index = 1; index <= kPublications; ++index) {
         const auto value = std::string{"incarnation-"} + std::to_string(index);
         GLIFI_REQUIRE((*pair)->try_submit_put(index, "aba-key", bytes(value)) ==
-                       glifistore::experimental::PrototypeSubmitStatus::submitted);
+                      glifistore::experimental::PrototypeSubmitStatus::submitted);
         const auto completion = wait_completion(**pair);
         GLIFI_REQUIRE(!completion.error.has_value());
         (*pair)->adopt_publication();
@@ -325,7 +325,7 @@ GLIFI_TEST("ADR 0036 V1 prototype: slot reincarnation token prevents descriptor 
     GLIFI_REQUIRE(stats.publications == kPublications);
     GLIFI_REQUIRE(stats.generation_slot_reuses > 0);
     GLIFI_REQUIRE(stats.generation_high_watermark <=
-                   glifistore::experimental::VolatileShardPairPrototype::kQueueCapacity + 2U);
+                  glifistore::experimental::VolatileShardPairPrototype::kQueueCapacity + 2U);
 }
 
 GLIFI_TEST("ADR 0036 V3 prototype: pinned generation bytes survive publish and retire races") {
@@ -334,10 +334,10 @@ GLIFI_TEST("ADR 0036 V3 prototype: pinned generation bytes survive publish and r
     auto pair = glifistore::experimental::VolatileShardPairPrototype::create(
         128, 32,
         glifistore::experimental::PrototypeWriterBatchConfig{.max_records = 1,
-                                                              .max_wait = std::chrono::microseconds{0}});
+                                                             .max_wait = std::chrono::microseconds{0}});
     GLIFI_REQUIRE(pair.has_value());
     GLIFI_REQUIRE((*pair)->try_submit_put(1, "pin-race", bytes("pinned-value")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
     (*pair)->adopt_publication();
     auto pin = (*pair)->pin_read_generation();
@@ -350,7 +350,7 @@ GLIFI_TEST("ADR 0036 V3 prototype: pinned generation bytes survive publish and r
     for (std::uint64_t index = 0; index < 64; ++index) {
         const auto value = std::string{"storm-"} + std::to_string(index);
         GLIFI_REQUIRE((*pair)->try_submit_put(index + 2U, "pin-race", bytes(value)) ==
-                       glifistore::experimental::PrototypeSubmitStatus::submitted);
+                      glifistore::experimental::PrototypeSubmitStatus::submitted);
         GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
         (*pair)->adopt_publication();
         (*pair)->adopt_publication();
@@ -380,7 +380,7 @@ GLIFI_TEST("ADR 0036 V9 prototype: slot-pool starvation increments publication b
     auto pair = glifistore::experimental::VolatileShardPairPrototype::create(
         64, 32,
         glifistore::experimental::PrototypeWriterBatchConfig{.max_records = 1,
-                                                              .max_wait = std::chrono::microseconds{0}});
+                                                             .max_wait = std::chrono::microseconds{0}});
     GLIFI_REQUIRE(pair.has_value());
 
     std::uint64_t submitted = 0;
@@ -431,11 +431,11 @@ GLIFI_TEST("ADR 0036 V9 prototype: slot-pool starvation increments publication b
     GLIFI_REQUIRE((*pair)->stats().mutation_queue_depth == 0);
     GLIFI_REQUIRE((*pair)->stats().generation_live >= 1);
     GLIFI_REQUIRE((*pair)->stats().generation_high_watermark <=
-                   glifistore::experimental::VolatileShardPairPrototype::kQueueCapacity + 2U);
+                  glifistore::experimental::VolatileShardPairPrototype::kQueueCapacity + 2U);
 
     // Recovery after reclaim: a new publish must succeed (pool not wedged).
     GLIFI_REQUIRE((*pair)->try_submit_put(submitted + 1U, "pool-recovery", bytes("ok")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     const auto recovered = wait_completion(**pair);
     GLIFI_REQUIRE(!recovered.error.has_value());
     (*pair)->adopt_publication();
@@ -452,11 +452,11 @@ GLIFI_TEST("ADR 0036 V6 prototype: rejected publication never makes mutations vi
     auto pair = glifistore::experimental::VolatileShardPairPrototype::create(
         64, 32,
         glifistore::experimental::PrototypeWriterBatchConfig{.max_records = 1,
-                                                              .max_wait = std::chrono::microseconds{0}});
+                                                             .max_wait = std::chrono::microseconds{0}});
     GLIFI_REQUIRE(pair.has_value());
 
     GLIFI_REQUIRE((*pair)->try_submit_put(1, "v6-seed", bytes("seed")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
     (*pair)->adopt_publication();
 
@@ -537,7 +537,7 @@ GLIFI_TEST("ADR 0036 V6 prototype: rejected publication never makes mutations vi
     GLIFI_REQUIRE((*pair)->stats().mutation_queue_depth == 0);
 
     GLIFI_REQUIRE((*pair)->try_submit_put(request_id, "v6-alive", bytes("ok")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     const auto alive = wait_completion(**pair);
     GLIFI_REQUIRE(!alive.error.has_value());
     (*pair)->adopt_publication();
@@ -555,11 +555,11 @@ GLIFI_TEST("ADR 0036 V2 prototype: reclaim never frees a pinned or pre-quiescent
     auto pair = glifistore::experimental::VolatileShardPairPrototype::create(
         128, 32,
         glifistore::experimental::PrototypeWriterBatchConfig{.max_records = 1,
-                                                              .max_wait = std::chrono::microseconds{0}});
+                                                             .max_wait = std::chrono::microseconds{0}});
     GLIFI_REQUIRE(pair.has_value());
 
     GLIFI_REQUIRE((*pair)->try_submit_put(1, "v2-key", bytes("keep-alive")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
     (*pair)->adopt_publication();
     auto pin = (*pair)->pin_read_generation();
@@ -570,7 +570,7 @@ GLIFI_TEST("ADR 0036 V2 prototype: reclaim never frees a pinned or pre-quiescent
     const auto retires_before = (*pair)->stats().generation_retire_count;
     // Publish a successor without advancing Reader turns: previous is retired but not free.
     GLIFI_REQUIRE((*pair)->try_submit_put(2, "v2-key", bytes("next")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
     GLIFI_REQUIRE((*pair)->stats().generation_retire_count == retires_before);
     GLIFI_REQUIRE(text(pinned) == "keep-alive");
@@ -579,7 +579,7 @@ GLIFI_TEST("ADR 0036 V2 prototype: reclaim never frees a pinned or pre-quiescent
     (*pair)->adopt_publication();
     (*pair)->adopt_publication();
     GLIFI_REQUIRE((*pair)->try_submit_put(3, "v2-key", bytes("force-reclaim")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
     const auto blocks_after_turns = (*pair)->stats().generation_retire_pin_blocks;
     GLIFI_REQUIRE(blocks_after_turns > 0);
@@ -589,7 +589,7 @@ GLIFI_TEST("ADR 0036 V2 prototype: reclaim never frees a pinned or pre-quiescent
     // Further publishes with full turn advance still cannot reclaim the pinned slot.
     for (std::uint64_t index = 0; index < 8; ++index) {
         GLIFI_REQUIRE((*pair)->try_submit_put(index + 4U, "v2-key", bytes("storm")) ==
-                       glifistore::experimental::PrototypeSubmitStatus::submitted);
+                      glifistore::experimental::PrototypeSubmitStatus::submitted);
         GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
         (*pair)->adopt_publication();
         (*pair)->adopt_publication();
@@ -622,7 +622,7 @@ GLIFI_TEST("ADR 0036 V7 prototype: delta merge under pin slot pressure keeps com
     auto pair = glifistore::experimental::VolatileShardPairPrototype::create(
         64, 8,
         glifistore::experimental::PrototypeWriterBatchConfig{.max_records = 1,
-                                                              .max_wait = std::chrono::microseconds{0}});
+                                                             .max_wait = std::chrono::microseconds{0}});
     GLIFI_REQUIRE(pair.has_value());
 
     constexpr std::uint64_t kWarmKeys = 24;
@@ -630,7 +630,7 @@ GLIFI_TEST("ADR 0036 V7 prototype: delta merge under pin slot pressure keeps com
         const auto key = std::string{"merge-"} + std::to_string(index);
         const auto value = std::string{"warm-"} + std::to_string(index);
         GLIFI_REQUIRE((*pair)->try_submit_put(index, key, bytes(value)) ==
-                       glifistore::experimental::PrototypeSubmitStatus::submitted);
+                      glifistore::experimental::PrototypeSubmitStatus::submitted);
         GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
         (*pair)->adopt_publication();
         (*pair)->adopt_publication();
@@ -649,7 +649,7 @@ GLIFI_TEST("ADR 0036 V7 prototype: delta merge under pin slot pressure keeps com
         const auto key = std::string{"merge-"} + std::to_string(kWarmKeys + index);
         const auto value = std::string{"press-"} + std::to_string(index);
         GLIFI_REQUIRE((*pair)->try_submit_put(kWarmKeys + index, key, bytes(value)) ==
-                       glifistore::experimental::PrototypeSubmitStatus::submitted);
+                      glifistore::experimental::PrototypeSubmitStatus::submitted);
         const auto completion = wait_completion(**pair);
         if (completion.error.has_value()) {
             GLIFI_REQUIRE(*completion.error == glifistore::ErrorCode::resource_exhausted);
@@ -697,7 +697,7 @@ GLIFI_TEST("ADR 0036 V13 prototype: pin adopt merge reclaim stress") {
     auto pair = glifistore::experimental::VolatileShardPairPrototype::create(
         128, 16,
         glifistore::experimental::PrototypeWriterBatchConfig{.max_records = 1,
-                                                              .max_wait = std::chrono::microseconds{0}});
+                                                             .max_wait = std::chrono::microseconds{0}});
     GLIFI_REQUIRE(pair.has_value());
 
     constexpr std::uint64_t kRounds = 128;
@@ -765,7 +765,7 @@ GLIFI_TEST("ADR 0036 V13 prototype: pin adopt merge reclaim stress") {
     GLIFI_REQUIRE((*pair)->stats().generation_retire_count > 0);
     GLIFI_REQUIRE((*pair)->stats().generation_live >= 1);
     GLIFI_REQUIRE((*pair)->stats().generation_high_watermark <=
-                   glifistore::experimental::VolatileShardPairPrototype::kQueueCapacity + 2U);
+                  glifistore::experimental::VolatileShardPairPrototype::kQueueCapacity + 2U);
     (*pair)->stop_and_drain();
 }
 
@@ -774,14 +774,14 @@ GLIFI_TEST("paired slow-output pin delays generation retirement across Reader tu
     auto pair = glifistore::experimental::VolatileShardPairPrototype::create(128, 32);
     GLIFI_REQUIRE(pair.has_value());
     GLIFI_REQUIRE((*pair)->try_submit_put(1, "pinned", bytes("old")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
     (*pair)->adopt_publication();
     auto pin = (*pair)->pin_read_generation();
     GLIFI_REQUIRE(static_cast<bool>(pin));
     for (std::uint64_t index = 0; index < 16; ++index) {
         GLIFI_REQUIRE((*pair)->try_submit_put(index + 2U, "pinned", bytes("new")) ==
-                       glifistore::experimental::PrototypeSubmitStatus::submitted);
+                      glifistore::experimental::PrototypeSubmitStatus::submitted);
         GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
         (*pair)->adopt_publication();
         (*pair)->adopt_publication();
@@ -799,11 +799,11 @@ GLIFI_TEST("paired volatile shutdown drains submission and closes admission") {
     auto pair = glifistore::experimental::VolatileShardPairPrototype::create(64, 16);
     GLIFI_REQUIRE(pair.has_value());
     GLIFI_REQUIRE((*pair)->try_submit_put(1, "shutdown", bytes("visible")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::submitted);
+                  glifistore::experimental::PrototypeSubmitStatus::submitted);
     (*pair)->stop_and_drain();
     GLIFI_REQUIRE(!wait_completion(**pair).error.has_value());
     GLIFI_REQUIRE((*pair)->get("shutdown").has_value());
     GLIFI_REQUIRE((*pair)->stats().reader_epoch == (*pair)->stats().writer_epoch);
     GLIFI_REQUIRE((*pair)->try_submit_put(2, "late", bytes("no")) ==
-                   glifistore::experimental::PrototypeSubmitStatus::stopped);
+                  glifistore::experimental::PrototypeSubmitStatus::stopped);
 }

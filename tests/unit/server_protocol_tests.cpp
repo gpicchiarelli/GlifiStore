@@ -76,13 +76,12 @@ GLIFI_TEST("server protocol encodes requests into caller-owned storage") {
 }
 
 GLIFI_TEST("server protocol rejects noncanonical flags and reserved fields") {
-    GLIFI_REQUIRE(
-        !glifistore::server::encode_request({
-                                                 .opcode = glifistore::server::RequestOpcode::ping,
-                                                 .flags = 1,
-                                                 .request_id = 1,
-                                             })
-             .has_value());
+    GLIFI_REQUIRE(!glifistore::server::encode_request({
+                                                          .opcode = glifistore::server::RequestOpcode::ping,
+                                                          .flags = 1,
+                                                          .request_id = 1,
+                                                      })
+                       .has_value());
 
     auto request = glifistore::server::encode_request({
         .opcode = glifistore::server::RequestOpcode::ping,
@@ -144,11 +143,11 @@ GLIFI_TEST("server protocol response round trips") {
 
 GLIFI_TEST("server protocol scatter header matches contiguous response encoding") {
     const glifistore::server::ResponseView response{.status = glifistore::server::ResponseStatus::ok,
-                                                     .request_id = 91,
-                                                     .owner_worker = 0,
-                                                     .worker_count = 1,
-                                                     .routing_epoch = 3,
-                                                     .value = bytes("scatter-value")};
+                                                    .request_id = 91,
+                                                    .owner_worker = 0,
+                                                    .worker_count = 1,
+                                                    .routing_epoch = 3,
+                                                    .value = bytes("scatter-value")};
     std::array<std::byte, glifistore::server::kResponseHeaderBytes> header{};
     const auto declared = glifistore::server::encode_response_header(header, response);
     GLIFI_REQUIRE(declared.has_value());
@@ -163,38 +162,37 @@ GLIFI_TEST("server protocol scatter header matches contiguous response encoding"
 
 GLIFI_TEST("server protocol rejects noncanonical opcode-specific fields") {
     GLIFI_REQUIRE(!glifistore::server::encode_request({
-                                                            .opcode = glifistore::server::RequestOpcode::get,
-                                                            .request_id = 1,
-                                                            .key = bytes("k"),
-                                                            .value = bytes("x"),
-                                                        })
-                        .has_value());
+                                                          .opcode = glifistore::server::RequestOpcode::get,
+                                                          .request_id = 1,
+                                                          .key = bytes("k"),
+                                                          .value = bytes("x"),
+                                                      })
+                       .has_value());
     GLIFI_REQUIRE(!glifistore::server::encode_request({
-                                                            .opcode = glifistore::server::RequestOpcode::put,
-                                                            .request_id = 1,
-                                                            .target_worker = 1,
-                                                            .key = bytes("k"),
-                                                            .value = bytes("v"),
-                                                        })
-                        .has_value());
+                                                          .opcode = glifistore::server::RequestOpcode::put,
+                                                          .request_id = 1,
+                                                          .target_worker = 1,
+                                                          .key = bytes("k"),
+                                                          .value = bytes("v"),
+                                                      })
+                       .has_value());
+    GLIFI_REQUIRE(!glifistore::server::encode_request({
+                                                          .opcode = glifistore::server::RequestOpcode::health,
+                                                          .request_id = 1,
+                                                          .key = bytes("k"),
+                                                      })
+                       .has_value());
     GLIFI_REQUIRE(
         !glifistore::server::encode_request({
-                                                 .opcode = glifistore::server::RequestOpcode::health,
-                                                 .request_id = 1,
-                                                 .key = bytes("k"),
-                                             })
-             .has_value());
-    GLIFI_REQUIRE(
-        !glifistore::server::encode_request({
-                                                 .opcode = glifistore::server::RequestOpcode::bind_worker,
-                                                 .request_id = 1,
-                                             })
+                                                .opcode = glifistore::server::RequestOpcode::bind_worker,
+                                                .request_id = 1,
+                                            })
              .has_value());
     GLIFI_REQUIRE(!glifistore::server::encode_request({
-                                                            .opcode = glifistore::server::RequestOpcode::get,
-                                                            .request_id = 1,
-                                                        })
-                        .has_value());
+                                                          .opcode = glifistore::server::RequestOpcode::get,
+                                                          .request_id = 1,
+                                                      })
+                       .has_value());
 
     auto ping = glifistore::server::encode_request({
         .opcode = glifistore::server::RequestOpcode::ping,
@@ -212,7 +210,7 @@ GLIFI_TEST("server protocol rejects noncanonical opcode-specific fields") {
 
 GLIFI_TEST("wire protocol v2 matches independent canonical request fixtures") {
     const auto corpus = glifistore::test::read_hex_fixture(std::filesystem::path{GLIFISTORE_SOURCE_DIR} /
-                                                            "tests/fixtures/wire_requests_v2.hex");
+                                                           "tests/fixtures/wire_requests_v2.hex");
     std::size_t offset{};
     std::uint8_t expected_opcode{1};
     while (offset < corpus.size()) {
@@ -233,7 +231,7 @@ GLIFI_TEST("wire protocol v2 matches independent canonical request fixtures") {
 
 GLIFI_TEST("wire protocol v2 matches independent canonical response fixtures") {
     const auto corpus = glifistore::test::read_hex_fixture(std::filesystem::path{GLIFISTORE_SOURCE_DIR} /
-                                                            "tests/fixtures/wire_responses_v2.hex");
+                                                           "tests/fixtures/wire_responses_v2.hex");
     std::size_t offset{};
     std::uint16_t expected_status{};
     while (offset < corpus.size()) {

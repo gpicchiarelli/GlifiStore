@@ -138,10 +138,10 @@ class ImmutableReadIndex final {
 
     [[nodiscard]] auto storage_bytes() const noexcept -> std::uint64_t {
         auto result = storage_payload_bytes(control_.capacity(), sizeof(std::uint8_t));
-        result = glifistore::saturating_add(
-            result, storage_payload_bytes(hashes_.capacity(), sizeof(std::uint64_t)));
+        result = glifistore::saturating_add(result,
+                                            storage_payload_bytes(hashes_.capacity(), sizeof(std::uint64_t)));
         return glifistore::saturating_add(result,
-                                           storage_payload_bytes(records_.capacity(), sizeof(RecordHandle)));
+                                          storage_payload_bytes(records_.capacity(), sizeof(RecordHandle)));
     }
 
   private:

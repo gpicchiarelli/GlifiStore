@@ -17,16 +17,16 @@ GLIFI_TEST("durable flush coordinator executes an exact requested deadline") {
     bool fired{};
     clock::time_point fired_at{};
     glifistore::DurableFlushCoordinator coordinator{60'000, 60'000, false, true,
-                                                     [&](const bool force_all) -> glifistore::Status {
-                                                         GLIFI_REQUIRE(!force_all);
-                                                         {
-                                                             const std::lock_guard lock{mutex};
-                                                             fired = true;
-                                                             fired_at = clock::now();
-                                                         }
-                                                         completed.notify_all();
-                                                         return {};
-                                                     }};
+                                                    [&](const bool force_all) -> glifistore::Status {
+                                                        GLIFI_REQUIRE(!force_all);
+                                                        {
+                                                            const std::lock_guard lock{mutex};
+                                                            fired = true;
+                                                            fired_at = clock::now();
+                                                        }
+                                                        completed.notify_all();
+                                                        return {};
+                                                    }};
 
     const auto started = clock::now();
     coordinator.request_flush_at(started + std::chrono::milliseconds{25});
@@ -75,10 +75,10 @@ GLIFI_TEST("durable flush coordinator translates callback exceptions and stops")
 GLIFI_TEST("durable flush coordinator rejects exhausted flush generations without invoking callback") {
     std::atomic calls{0};
     glifistore::DurableFlushCoordinator coordinator{60'000, 60'000, false, true,
-                                                     [&](const bool) -> glifistore::Status {
-                                                         calls.fetch_add(1, std::memory_order_relaxed);
-                                                         return {};
-                                                     }};
+                                                    [&](const bool) -> glifistore::Status {
+                                                        calls.fetch_add(1, std::memory_order_relaxed);
+                                                        return {};
+                                                    }};
     glifistore::detail::DurableFlushCoordinatorAccess::set_flush_all_generation(
         coordinator, std::numeric_limits<std::uint64_t>::max());
 
@@ -97,14 +97,14 @@ GLIFI_TEST("concurrent coordinator stop releases a blocking flush without deadlo
     bool flush_completed{};
     glifistore::Status flush_result;
     glifistore::DurableFlushCoordinator coordinator{60'000, 60'000, false, true,
-                                                     [&](const bool force_all) -> glifistore::Status {
-                                                         GLIFI_REQUIRE(force_all);
-                                                         std::unique_lock lock{mutex};
-                                                         callback_entered = true;
-                                                         changed.notify_all();
-                                                         changed.wait(lock, [&] { return release_callback; });
-                                                         return {};
-                                                     }};
+                                                    [&](const bool force_all) -> glifistore::Status {
+                                                        GLIFI_REQUIRE(force_all);
+                                                        std::unique_lock lock{mutex};
+                                                        callback_entered = true;
+                                                        changed.notify_all();
+                                                        changed.wait(lock, [&] { return release_callback; });
+                                                        return {};
+                                                    }};
 
     std::thread flusher{[&] {
         auto result = coordinator.flush_all_blocking();

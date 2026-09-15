@@ -68,9 +68,9 @@ GLIFI_TEST("durable cold GET pipeline remains contiguous to preserve read overla
     std::vector<std::byte> second_value(kValueBytes, std::byte{0x72});
     {
         auto seed = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                              .storage_mode = glifistore::StorageMode::durable_sync,
-                                              .data_directory = path,
-                                              .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                             .storage_mode = glifistore::StorageMode::durable_sync,
+                                             .data_directory = path,
+                                             .durable_open_mode = glifistore::DurableOpenMode::create_new});
         GLIFI_REQUIRE(seed.has_value());
         GLIFI_REQUIRE((*seed)->put("scatter-pipeline-a", first_value).has_value());
         GLIFI_REQUIRE((*seed)->put("scatter-pipeline-b", second_value).has_value());
@@ -312,9 +312,9 @@ GLIFI_TEST("late cold-read completion cannot target a reused connection slot") {
     const auto path = temporary.store_path();
     {
         auto seed = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                              .storage_mode = glifistore::StorageMode::durable_sync,
-                                              .data_directory = path,
-                                              .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                             .storage_mode = glifistore::StorageMode::durable_sync,
+                                             .data_directory = path,
+                                             .durable_open_mode = glifistore::DurableOpenMode::create_new});
         GLIFI_REQUIRE(seed.has_value());
         GLIFI_REQUIRE((*seed)->put("stale-read", bytes("old-value")).has_value());
         GLIFI_REQUIRE((*seed)->close().has_value());
@@ -346,7 +346,7 @@ GLIFI_TEST("late cold-read completion cannot target a reused connection slot") {
     GLIFI_REQUIRE(blocker.wait_until_blocked());
     linger reset_on_close{.l_onoff = 1, .l_linger = 0};
     GLIFI_REQUIRE(::setsockopt(old_socket, SOL_SOCKET, SO_LINGER, &reset_on_close, sizeof(reset_on_close)) ==
-                   0);
+                  0);
     static_cast<void>(::close(old_socket));
 
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
@@ -397,9 +397,9 @@ GLIFI_TEST("server shutdown drains an in-flight pinned cold read before Store cl
     const auto path = temporary.store_path();
     {
         auto seed = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                              .storage_mode = glifistore::StorageMode::durable_sync,
-                                              .data_directory = path,
-                                              .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                             .storage_mode = glifistore::StorageMode::durable_sync,
+                                             .data_directory = path,
+                                             .durable_open_mode = glifistore::DurableOpenMode::create_new});
         GLIFI_REQUIRE(seed.has_value());
         GLIFI_REQUIRE((*seed)->put("shutdown-read", bytes("value")).has_value());
         GLIFI_REQUIRE((*seed)->close().has_value());

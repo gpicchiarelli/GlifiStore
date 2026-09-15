@@ -104,7 +104,7 @@ class ProtocolTest < Minitest::Test
     extended = GlifiStore::Protocol.encode_init_identity(
       GlifiStore::Protocol::WorkerRouting.new(algorithm: GlifiStore::Protocol::ROUTING_ALG_SIPHASH24_V1, seed: 0xABCDEF0123456789)
     )
-    assert_equal 26, extended.bytesize
+    assert_equal GlifiStore::Protocol::INIT_IDENTITY_EXTENDED_BYTES, extended.bytesize
     decoded = GlifiStore::Protocol.decode_init_identity(extended)
     assert_equal true, decoded.keyed?
     assert_equal 0xABCDEF0123456789, decoded.seed

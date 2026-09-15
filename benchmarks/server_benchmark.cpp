@@ -323,9 +323,9 @@ store_config(const Options& options, const BenchmarkDataDirectory& directory,
     config.durable_periodic = {.sync_interval_ms = options.periodic_sync_ms,
                                .batch =
                                    glifistore::DurableGroupConfig{.max_records = options.group_max_records,
-                                                                   .max_bytes = options.group_max_bytes,
-                                                                   .max_wait_ms = options.group_max_wait_ms,
-                                                                   .min_records = 1}};
+                                                                  .max_bytes = options.group_max_bytes,
+                                                                  .max_wait_ms = options.group_max_wait_ms,
+                                                                  .min_records = 1}};
     config.maintenance.suspend_on_p99_latency_ms = options.maintenance_suspend_on_p99_latency_ms;
     config.maintenance.suspend_on_p99_min_samples = options.maintenance_suspend_on_p99_min_samples;
     config.maintenance.max_latency_deferral_ms = options.maintenance_max_latency_deferral_ms;
@@ -754,7 +754,7 @@ class BufferedResponseReader final {
                 if (size < glifistore::server::kResponseHeaderBytes ||
                     size > glifistore::server::kMaxFrameBytes) {
                     return glifistore::fail(glifistore::ErrorCode::invalid_record,
-                                             "benchmark response size is invalid");
+                                            "benchmark response size is invalid");
                 }
                 if (available >= size) {
                     auto decoded = glifistore::server::decode_response(pending.first(size));
@@ -966,9 +966,9 @@ class BufferedResponseReader final {
         for (std::size_t operation = client; operation < options.config.operations;
              operation += options.config.threads) {
             auto put = glifistore::server::encode_request({.opcode = glifistore::server::RequestOpcode::put,
-                                                            .request_id = operation * 2U,
-                                                            .key = bytes(material.keys[operation]),
-                                                            .value = material.values[operation]});
+                                                           .request_id = operation * 2U,
+                                                           .key = bytes(material.keys[operation]),
+                                                           .value = material.values[operation]});
             if (!put) {
                 return false;
             }
@@ -1258,12 +1258,12 @@ class BufferedResponseReader final {
                     }
                     result.hits += batch.size();
                     for (const auto& request : batch) {
-                        result.ingress_bytes += glifistore::server::kRequestHeaderBytes +
-                                                request.key.size() + request.value.size();
+                        result.ingress_bytes += glifistore::server::kRequestHeaderBytes + request.key.size() +
+                                                request.value.size();
                         result.egress_bytes +=
                             glifistore::server::kResponseHeaderBytes +
                             (request.opcode == glifistore::client::PipelineOpcode::get ? request.value.size()
-                                                                                        : 0U);
+                                                                                       : 0U);
                     }
                     for (std::size_t index = 1; index < batch.size(); index += 2U) {
                         result.egress_bytes += batch[index - 1U].value.size();

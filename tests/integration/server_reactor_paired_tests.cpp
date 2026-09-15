@@ -78,7 +78,7 @@ GLIFI_TEST("dedicated paired Writer gives admitted async work a turn within one 
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     auto executor = glifistore::server::PairWriterPool::create(store, 1, 8, kTestMutationArenaBytes,
-                                                                std::chrono::milliseconds{0}, {});
+                                                               std::chrono::milliseconds{0}, {});
     GLIFI_REQUIRE(executor.has_value());
     GLIFI_REQUIRE((*executor)->start().has_value());
     glifistore::server::BoundedSpscQueue<glifistore::server::MutationCompletion> completions{8};
@@ -166,26 +166,25 @@ GLIFI_TEST("paired Writer completes incremental read merge in bounded quanta") {
     auto wakeup = glifistore::server::Wakeup::create();
     GLIFI_REQUIRE(wakeup.has_value());
     auto executor = glifistore::server::PairWriterPool::create(store, 1, 8, kTestMutationArenaBytes,
-                                                                std::chrono::milliseconds{0}, merge_config);
+                                                               std::chrono::milliseconds{0}, merge_config);
     GLIFI_REQUIRE(executor.has_value());
     GLIFI_REQUIRE((*executor)->start().has_value());
 
     std::array<std::string, 4> keys{"merge-a", "merge-b", "merge-c", "merge-d"};
     for (std::size_t index = 0; index < keys.size(); ++index) {
-        GLIFI_REQUIRE(
-            (*executor)
-                ->try_submit({
-                    .connection = {.slot = static_cast<std::uint32_t>(index + 1U), .generation = 1},
-                    .request_id = 800U + index,
-                    .worker_index = 0,
-                    .kind = glifistore::server::MutationKind::put,
-                    .key = bytes(keys[index]),
-                    .key_hash = glifistore::hash_key(keys[index]),
-                    .value = bytes("value"),
-                    .completions = &completions,
-                    .wakeup = &*wakeup,
-                })
-                .has_value());
+        GLIFI_REQUIRE((*executor)
+                          ->try_submit({
+                              .connection = {.slot = static_cast<std::uint32_t>(index + 1U), .generation = 1},
+                              .request_id = 800U + index,
+                              .worker_index = 0,
+                              .kind = glifistore::server::MutationKind::put,
+                              .key = bytes(keys[index]),
+                              .key_hash = glifistore::hash_key(keys[index]),
+                              .value = bytes("value"),
+                              .completions = &completions,
+                              .wakeup = &*wakeup,
+                          })
+                          .has_value());
     }
 
     std::size_t completed{};
@@ -236,7 +235,7 @@ GLIFI_TEST("paired Writer completes incremental read merge in bounded quanta") {
     GLIFI_REQUIRE(stats.read_generation_memory.base_record_storage_bytes == keys.size() * 64U);
     GLIFI_REQUIRE(stats.read_generation_memory.base_record_mapped_storage_bytes == 0);
     GLIFI_REQUIRE(stats.read_generation_memory.base_lookup_storage_bytes ==
-                   stats.read_generation_memory.base_capacity * 5U);
+                  stats.read_generation_memory.base_capacity * 5U);
     GLIFI_REQUIRE(stats.read_generation_memory.current_allocated_lower_bound_bytes > 0);
 
     const auto* generation = (*executor)->adopt_read_generation(0);
@@ -253,20 +252,19 @@ GLIFI_TEST("paired Writer completes incremental read merge in bounded quanta") {
     // the logical Delta contains only one entry. This bounds overwrite churn
     // in the append-only record arena.
     for (std::size_t index = 0; index < 4; ++index) {
-        GLIFI_REQUIRE(
-            (*executor)
-                ->try_submit({
-                    .connection = {.slot = static_cast<std::uint32_t>(index + 9U), .generation = 1},
-                    .request_id = 900U + index,
-                    .worker_index = 0,
-                    .kind = glifistore::server::MutationKind::put,
-                    .key = bytes(keys[0]),
-                    .key_hash = glifistore::hash_key(keys[0]),
-                    .value = bytes("new-value"),
-                    .completions = &completions,
-                    .wakeup = &*wakeup,
-                })
-                .has_value());
+        GLIFI_REQUIRE((*executor)
+                          ->try_submit({
+                              .connection = {.slot = static_cast<std::uint32_t>(index + 9U), .generation = 1},
+                              .request_id = 900U + index,
+                              .worker_index = 0,
+                              .kind = glifistore::server::MutationKind::put,
+                              .key = bytes(keys[0]),
+                              .key_hash = glifistore::hash_key(keys[0]),
+                              .value = bytes("new-value"),
+                              .completions = &completions,
+                              .wakeup = &*wakeup,
+                          })
+                          .has_value());
     }
     completed = 0;
     const auto overwrite_completion_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
@@ -318,17 +316,17 @@ GLIFI_TEST("paired Writer validates merge bounds and aligns payload credits with
     auto& store = **opened;
 
     GLIFI_REQUIRE(!glifistore::server::PairWriterPool::create(
-                        store, 1, 8, kTestMutationArenaBytes, std::chrono::milliseconds{0},
-                        {.delta_entries = 0, .maximum_post_entries = 1, .quantum_slots = 1})
-                        .has_value());
+                       store, 1, 8, kTestMutationArenaBytes, std::chrono::milliseconds{0},
+                       {.delta_entries = 0, .maximum_post_entries = 1, .quantum_slots = 1})
+                       .has_value());
     GLIFI_REQUIRE(!glifistore::server::PairWriterPool::create(
-                        store, 1, 8, kTestMutationArenaBytes, std::chrono::milliseconds{0},
-                        {.delta_entries = 1, .maximum_post_entries = 1, .quantum_slots = 0})
-                        .has_value());
+                       store, 1, 8, kTestMutationArenaBytes, std::chrono::milliseconds{0},
+                       {.delta_entries = 1, .maximum_post_entries = 1, .quantum_slots = 0})
+                       .has_value());
     GLIFI_REQUIRE(!glifistore::server::PairWriterPool::create(
-                        store, 1, 8, kTestMutationArenaBytes, std::chrono::milliseconds{0},
-                        {.delta_entries = 1, .maximum_post_entries = 0, .quantum_slots = 1})
-                        .has_value());
+                       store, 1, 8, kTestMutationArenaBytes, std::chrono::milliseconds{0},
+                       {.delta_entries = 1, .maximum_post_entries = 0, .quantum_slots = 1})
+                       .has_value());
     GLIFI_REQUIRE(
         !glifistore::server::PairWriterPool::create(
              store, 1, 8, kTestMutationArenaBytes, std::chrono::milliseconds{0},
@@ -338,7 +336,7 @@ GLIFI_TEST("paired Writer validates merge bounds and aligns payload credits with
              .has_value());
 
     auto rounded = glifistore::server::PairWriterPool::create(store, 1, 3, kTestMutationArenaBytes,
-                                                               std::chrono::milliseconds{0});
+                                                              std::chrono::milliseconds{0});
     GLIFI_REQUIRE(rounded.has_value());
     const auto rounded_stats = (*rounded)->stats();
     GLIFI_REQUIRE(rounded_stats.size() == 1);
@@ -364,20 +362,19 @@ GLIFI_TEST("paired async Writer rejects retire pressure through completion befor
     const auto* pinned_generation = (*executor)->adopt_read_generation(0);
     GLIFI_REQUIRE(pinned_generation != nullptr);
     const auto pinned_epoch = pinned_generation->epoch();
-    const auto submit_and_wait =
-        [&](const std::uint64_t request_id, const std::string_view key,
-            const std::string_view value) -> glifistore::server::MutationCompletion {
+    const auto submit_and_wait = [&](const std::uint64_t request_id, const std::string_view key,
+                                     const std::string_view value) -> glifistore::server::MutationCompletion {
         GLIFI_REQUIRE((*executor)
-                           ->try_submit({.connection = {.slot = 1, .generation = 1},
-                                         .request_id = request_id,
-                                         .worker_index = 0,
-                                         .kind = glifistore::server::MutationKind::put,
-                                         .key = bytes(key),
-                                         .key_hash = glifistore::hash_key(key),
-                                         .value = bytes(value),
-                                         .completions = &completions,
-                                         .wakeup = &*wakeup})
-                           .has_value());
+                          ->try_submit({.connection = {.slot = 1, .generation = 1},
+                                        .request_id = request_id,
+                                        .worker_index = 0,
+                                        .kind = glifistore::server::MutationKind::put,
+                                        .key = bytes(key),
+                                        .key_hash = glifistore::hash_key(key),
+                                        .value = bytes(value),
+                                        .completions = &completions,
+                                        .wakeup = &*wakeup})
+                          .has_value());
         const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
         std::optional<glifistore::server::MutationCompletion> completion;
         while (!completion && std::chrono::steady_clock::now() < deadline) {
@@ -463,23 +460,23 @@ GLIFI_TEST("paired Writer feeds one bounded maintenance latency window") {
     auto wakeup = glifistore::server::Wakeup::create();
     GLIFI_REQUIRE(wakeup.has_value());
     auto executor = glifistore::server::PairWriterPool::create(store, 1, 2, kTestMutationArenaBytes,
-                                                                std::chrono::milliseconds{0});
+                                                               std::chrono::milliseconds{0});
     GLIFI_REQUIRE(executor.has_value());
     GLIFI_REQUIRE((*executor)->start().has_value());
     const std::string key{"latency-feedback"};
     GLIFI_REQUIRE((*executor)
-                       ->try_submit({
-                           .connection = {.slot = 1, .generation = 1},
-                           .request_id = 601,
-                           .worker_index = 0,
-                           .kind = glifistore::server::MutationKind::put,
-                           .key = bytes(key),
-                           .key_hash = glifistore::hash_key(key),
-                           .value = bytes("value"),
-                           .completions = &completions,
-                           .wakeup = &*wakeup,
-                       })
-                       .has_value());
+                      ->try_submit({
+                          .connection = {.slot = 1, .generation = 1},
+                          .request_id = 601,
+                          .worker_index = 0,
+                          .kind = glifistore::server::MutationKind::put,
+                          .key = bytes(key),
+                          .key_hash = glifistore::hash_key(key),
+                          .value = bytes("value"),
+                          .completions = &completions,
+                          .wakeup = &*wakeup,
+                      })
+                      .has_value());
     const auto completion_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
     std::optional<glifistore::server::MutationCompletion> completion;
     while (!completion && std::chrono::steady_clock::now() < completion_deadline) {
@@ -534,7 +531,7 @@ GLIFI_TEST("paired Writer preserves same-shard FIFO while compaction publication
     auto wakeup = glifistore::server::Wakeup::create();
     GLIFI_REQUIRE(wakeup.has_value());
     auto executor = glifistore::server::PairWriterPool::create(store, 1, 8, kTestMutationArenaBytes,
-                                                                std::chrono::milliseconds{0});
+                                                               std::chrono::milliseconds{0});
     GLIFI_REQUIRE(executor.has_value());
     GLIFI_REQUIRE((*executor)->start().has_value());
 
@@ -630,7 +627,7 @@ GLIFI_TEST("paired Reader refreshes compacted durable pins and retires the old g
     GLIFI_REQUIRE(store.put("active-key", bytes("active")).has_value());
 
     auto executor = glifistore::server::PairWriterPool::create(store, 1, 8, kTestMutationArenaBytes,
-                                                                std::chrono::milliseconds{0});
+                                                               std::chrono::milliseconds{0});
     GLIFI_REQUIRE(executor.has_value());
     GLIFI_REQUIRE((*executor)->start().has_value());
     const auto* initial_generation = (*executor)->adopt_read_generation(0);
@@ -662,7 +659,7 @@ GLIFI_TEST("paired Reader refreshes compacted durable pins and retires the old g
     GLIFI_REQUIRE(compacted->has_value());
     GLIFI_REQUIRE((*compacted)->compacted);
     GLIFI_REQUIRE(glifistore::detail::StoreAccess::durable_read_catalog_revision(store, 0) >
-                   initial_revision);
+                  initial_revision);
 
     const auto refresh_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
     while ((*executor)->stats()[0].read_refresh_successes == 0 &&
@@ -789,7 +786,7 @@ GLIFI_TEST("ADR 0036 V8 candidate preserves durable cold pin across compacted sl
     replacement_parent.reset();
     initial_snapshot->records.clear();
     GLIFI_REQUIRE((*pool)->try_publish(std::move(*refreshed_result)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
 
     const auto* refreshed = (*pool)->adopt(initial_epoch);
     GLIFI_REQUIRE(refreshed != nullptr);
@@ -856,7 +853,7 @@ GLIFI_TEST("ADR 0036 V8 candidate publishes a Writer-owned rotation as one slot 
     replacement_parent.reset();
     initial_snapshot->records.clear();
     GLIFI_REQUIRE((*pool)->try_publish(std::move(*rotated_result)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
 
     const auto* rotated = (*pool)->adopt(initial_epoch);
     GLIFI_REQUIRE(rotated != nullptr);
@@ -883,13 +880,13 @@ GLIFI_TEST("ADR 0036 V5 candidate shutdown retires a real durable generation aft
 
     ServerTemporaryDirectory temporary;
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::paired,
-                                            .paired = {.async_lane_capacity = 4,
-                                                       .async_lane_payload_bytes = kTestMutationArenaBytes,
-                                                       .reader_epoch_lease = true},
-                                            .storage_mode = glifistore::StorageMode::durable_sync,
-                                            .data_directory = temporary.store_path(),
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                           .concurrency = glifistore::StoreConcurrencyMode::paired,
+                                           .paired = {.async_lane_capacity = 4,
+                                                      .async_lane_payload_bytes = kTestMutationArenaBytes,
+                                                      .reader_epoch_lease = true},
+                                           .storage_mode = glifistore::StorageMode::durable_sync,
+                                           .data_directory = temporary.store_path(),
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     GLIFI_REQUIRE(store.put("slot-v5-initial", bytes("initial")).has_value());
@@ -916,7 +913,7 @@ GLIFI_TEST("ADR 0036 V5 candidate shutdown retires a real durable generation aft
     replacement_parent.reset();
     initial_snapshot->records.clear();
     GLIFI_REQUIRE((*pool)->try_publish(std::move(*final_result)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     GLIFI_REQUIRE((*pool)->adopt(borrowed_epoch) != nullptr);
 
     (*pool)->stop_admission();
@@ -938,13 +935,13 @@ GLIFI_TEST("ADR 0036 V6 candidate fail-closes a committed mutation then snapshot
 
     ServerTemporaryDirectory temporary;
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::paired,
-                                            .paired = {.async_lane_capacity = 4,
-                                                       .async_lane_payload_bytes = kTestMutationArenaBytes,
-                                                       .reader_epoch_lease = true},
-                                            .storage_mode = glifistore::StorageMode::durable_sync,
-                                            .data_directory = temporary.store_path(),
-                                            .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                           .concurrency = glifistore::StoreConcurrencyMode::paired,
+                                           .paired = {.async_lane_capacity = 4,
+                                                      .async_lane_payload_bytes = kTestMutationArenaBytes,
+                                                      .reader_epoch_lease = true},
+                                           .storage_mode = glifistore::StorageMode::durable_sync,
+                                           .data_directory = temporary.store_path(),
+                                           .durable_open_mode = glifistore::DurableOpenMode::create_new});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     GLIFI_REQUIRE(store.put("slot-v6-seed", bytes("seed")).has_value());
@@ -972,7 +969,7 @@ GLIFI_TEST("ADR 0036 V6 candidate fail-closes a committed mutation then snapshot
         reservation->mark_store_linearized();
         // Deterministically model generation construction/publication failure.
         GLIFI_REQUIRE((*pool)->commit(*reservation, {}) ==
-                       glifistore::experimental::GenerationSlotPublishStatus::invalid_generation);
+                      glifistore::experimental::GenerationSlotPublishStatus::invalid_generation);
     }
     GLIFI_REQUIRE(!glifistore::detail::StoreAccess::operational(store));
     GLIFI_REQUIRE((*pool)->stats().unpublished_linearizations == 1);
@@ -987,16 +984,16 @@ GLIFI_TEST("ADR 0036 V6 candidate fail-closes a committed mutation then snapshot
     replacement_parent.reset();
     initial_snapshot->records.clear();
     GLIFI_REQUIRE((*pool)->try_publish(std::move(*drained_generation)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     const auto* adopted = (*pool)->adopt();
     GLIFI_REQUIRE(adopted != nullptr);
     GLIFI_REQUIRE(
         adopted->prepare_durable({.key = "slot-v6-seed", .hash = glifistore::hash_key("slot-v6-seed")})
             .has_value());
-    GLIFI_REQUIRE(adopted
-                       ->prepare_durable(
-                           {.key = "slot-v6-committed", .hash = glifistore::hash_key("slot-v6-committed")})
-                       .has_value());
+    GLIFI_REQUIRE(
+        adopted
+            ->prepare_durable({.key = "slot-v6-committed", .hash = glifistore::hash_key("slot-v6-committed")})
+            .has_value());
     GLIFI_REQUIRE(adopted->base_entries() == 2);
     GLIFI_REQUIRE((*pool)->stats().publications == 1);
 
@@ -1024,7 +1021,7 @@ GLIFI_TEST("paired Reader refreshes durable pins after a Writer-owned rotation")
     auto wakeup = glifistore::server::Wakeup::create();
     GLIFI_REQUIRE(wakeup.has_value());
     auto executor = glifistore::server::PairWriterPool::create(store, 1, 4, kTestMutationArenaBytes,
-                                                                std::chrono::milliseconds{0});
+                                                               std::chrono::milliseconds{0});
     GLIFI_REQUIRE(executor.has_value());
     GLIFI_REQUIRE((*executor)->start().has_value());
     const auto* initial_generation = (*executor)->adopt_read_generation(0);
@@ -1035,18 +1032,18 @@ GLIFI_TEST("paired Reader refreshes durable pins after a Writer-owned rotation")
     blocker.force_next_record_write_full();
     const std::string key{"rotation-published"};
     GLIFI_REQUIRE((*executor)
-                       ->try_submit({
-                           .connection = {.slot = 1, .generation = 1},
-                           .request_id = 701,
-                           .worker_index = 0,
-                           .kind = glifistore::server::MutationKind::put,
-                           .key = bytes(key),
-                           .key_hash = glifistore::hash_key(key),
-                           .value = bytes("rotated"),
-                           .completions = &completions,
-                           .wakeup = &*wakeup,
-                       })
-                       .has_value());
+                      ->try_submit({
+                          .connection = {.slot = 1, .generation = 1},
+                          .request_id = 701,
+                          .worker_index = 0,
+                          .kind = glifistore::server::MutationKind::put,
+                          .key = bytes(key),
+                          .key_hash = glifistore::hash_key(key),
+                          .value = bytes("rotated"),
+                          .completions = &completions,
+                          .wakeup = &*wakeup,
+                      })
+                      .has_value());
     const auto completion_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
     std::optional<glifistore::server::MutationCompletion> completion;
     while (!completion && std::chrono::steady_clock::now() < completion_deadline) {
@@ -1059,7 +1056,7 @@ GLIFI_TEST("paired Reader refreshes durable pins after a Writer-owned rotation")
     GLIFI_REQUIRE((*executor)->release_payload(0, completion->payload_slot));
     GLIFI_REQUIRE(!completion->error.has_value());
     GLIFI_REQUIRE(glifistore::detail::StoreAccess::durable_read_catalog_revision(store, 0) >
-                   initial_revision);
+                  initial_revision);
 
     const auto refresh_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
     while ((*executor)->stats()[0].read_refresh_successes == 0 &&
@@ -1124,13 +1121,12 @@ GLIFI_TEST("durable read catalog refresh is isolated to the compacted shard pair
     GLIFI_REQUIRE(store.put(other_key, bytes("other")).has_value());
 
     auto executor = glifistore::server::PairWriterPool::create(store, 2, 8, kTestMutationArenaBytes,
-                                                                std::chrono::milliseconds{0});
+                                                               std::chrono::milliseconds{0});
     GLIFI_REQUIRE(executor.has_value());
     GLIFI_REQUIRE((*executor)->start().has_value());
     const auto worker_zero_revision =
         glifistore::detail::StoreAccess::durable_read_catalog_revision(store, 0);
-    const auto worker_one_revision =
-        glifistore::detail::StoreAccess::durable_read_catalog_revision(store, 1);
+    const auto worker_one_revision = glifistore::detail::StoreAccess::durable_read_catalog_revision(store, 1);
 
     std::optional<glifistore::Result<glifistore::CompactionResult>> compacted;
     std::thread compactor{[&] { compacted = store.compact(); }};
@@ -1142,9 +1138,9 @@ GLIFI_TEST("durable read catalog refresh is isolated to the compacted shard pair
     GLIFI_REQUIRE((*compacted)->compacted);
     GLIFI_REQUIRE((*compacted)->worker_index == 0);
     GLIFI_REQUIRE(glifistore::detail::StoreAccess::durable_read_catalog_revision(store, 0) >
-                   worker_zero_revision);
+                  worker_zero_revision);
     GLIFI_REQUIRE(glifistore::detail::StoreAccess::durable_read_catalog_revision(store, 1) ==
-                   worker_one_revision);
+                  worker_one_revision);
 
     const auto refresh_deadline = std::chrono::steady_clock::now() + std::chrono::seconds{2};
     std::vector<glifistore::server::PairWriterStats> stats;

@@ -28,8 +28,8 @@ auto mixed_hash(const std::uint64_t value) -> std::uint64_t {
 GLIFI_TEST("index inserts replaces finds erases and iterates") {
     glifistore::Index index;
     const glifistore::RecordRef first{glifistore::SegmentId{1}, glifistore::RecordOffset{10},
-                                       glifistore::RecordSize{20}, glifistore::SequenceNumber{1},
-                                       glifistore::GenerationId{1}};
+                                      glifistore::RecordSize{20}, glifistore::SequenceNumber{1},
+                                      glifistore::GenerationId{1}};
     const auto inserted = index.insert_or_assign("key", first);
     GLIFI_REQUIRE(inserted.has_value());
     GLIFI_REQUIRE(inserted->inserted);
@@ -50,8 +50,8 @@ GLIFI_TEST("index preserves keys larger than 16-bit lengths") {
     glifistore::Index index;
     const std::string key(70'000, 'x');
     const glifistore::RecordRef ref{glifistore::SegmentId{1}, glifistore::RecordOffset{10},
-                                     glifistore::RecordSize{20}, glifistore::SequenceNumber{1},
-                                     glifistore::GenerationId{1}};
+                                    glifistore::RecordSize{20}, glifistore::SequenceNumber{1},
+                                    glifistore::GenerationId{1}};
     const auto inserted = index.insert_or_assign(key, ref);
     GLIFI_REQUIRE(inserted.has_value());
     GLIFI_REQUIRE(inserted->inserted);
@@ -64,14 +64,14 @@ GLIFI_TEST("index grows and rejects impossible reserve sizes") {
     for (std::uint64_t value = 0; value < 1'000; ++value) {
         const auto key = std::to_string(value);
         const glifistore::RecordRef ref{glifistore::SegmentId{1}, glifistore::RecordOffset{10},
-                                         glifistore::RecordSize{20}, glifistore::SequenceNumber{value},
-                                         glifistore::GenerationId{1}};
+                                        glifistore::RecordSize{20}, glifistore::SequenceNumber{value},
+                                        glifistore::GenerationId{1}};
         GLIFI_REQUIRE(index.insert_or_assign(key, ref).has_value());
     }
     GLIFI_REQUIRE(index.stats().size == 1'000);
     GLIFI_REQUIRE(index.stats().slot_bytes == 64);
     GLIFI_REQUIRE(index.stats().table_allocated_bytes ==
-                   index.stats().bucket_count * (index.stats().slot_bytes + sizeof(std::uint8_t)));
+                  index.stats().bucket_count * (index.stats().slot_bytes + sizeof(std::uint8_t)));
     GLIFI_REQUIRE(!index.reserve(std::numeric_limits<std::size_t>::max()).has_value());
     GLIFI_REQUIRE(!index.prepare_batch_insert(std::numeric_limits<std::size_t>::max(), 0).has_value());
 }
@@ -82,8 +82,8 @@ GLIFI_TEST("index resolves complete-hash collisions by full key bytes") {
     const glifistore::HashedKey first{"collision-a", forced_hash};
     const glifistore::HashedKey second{"collision-b", forced_hash};
     const glifistore::RecordRef first_ref{glifistore::SegmentId{1}, glifistore::RecordOffset{10},
-                                           glifistore::RecordSize{20}, glifistore::SequenceNumber{11},
-                                           glifistore::GenerationId{1}};
+                                          glifistore::RecordSize{20}, glifistore::SequenceNumber{11},
+                                          glifistore::GenerationId{1}};
     auto second_ref = first_ref;
     second_ref.sequence = glifistore::SequenceNumber{12};
     GLIFI_REQUIRE(index.insert_or_assign(first, first_ref).has_value());
@@ -98,8 +98,8 @@ GLIFI_TEST("index preflights long-key publication before a durable commit") {
     const glifistore::HashedKey hashed{key, glifistore::hash_key(key)};
     GLIFI_REQUIRE(index.prepare_insert(hashed).has_value());
     const glifistore::RecordRef ref{glifistore::SegmentId{3}, glifistore::RecordOffset{4096},
-                                     glifistore::RecordSize{80'056}, glifistore::SequenceNumber{7},
-                                     glifistore::GenerationId{1}};
+                                    glifistore::RecordSize{80'056}, glifistore::SequenceNumber{7},
+                                    glifistore::GenerationId{1}};
     const auto inserted = index.insert_or_assign(hashed, ref);
     GLIFI_REQUIRE(inserted.has_value());
     GLIFI_REQUIRE(inserted->inserted);
@@ -172,8 +172,8 @@ GLIFI_TEST("index bounds full collision probing across table wraparound") {
     }
     for (std::uint64_t value = 0; value < 16; ++value) {
         const auto key = std::string{"wrap-"} + std::to_string(value);
-        GLIFI_REQUIRE(index.insert_or_assign(glifistore::HashedKey{key, forced_hash}, test_ref(value + 1))
-                           .has_value());
+        GLIFI_REQUIRE(
+            index.insert_or_assign(glifistore::HashedKey{key, forced_hash}, test_ref(value + 1)).has_value());
     }
     for (std::uint64_t value = 0; value < 16; ++value) {
         const auto key = std::string{"wrap-"} + std::to_string(value);
@@ -231,7 +231,7 @@ GLIFI_TEST("index keeps inline and heap keys stable through prolonged churn") {
             const auto key = value % 2U == 0 ? std::string{"inline-"} + suffix
                                              : std::string(96, static_cast<char>('a' + round % 26U)) + suffix;
             GLIFI_REQUIRE(index.erase_no_compact(glifistore::HashedKey::compute(key)).previous ==
-                           test_ref(value + 1));
+                          test_ref(value + 1));
         }
 
         const auto survivor_suffix = std::to_string((round + 1U) * entries_per_round - 1U);
@@ -240,7 +240,7 @@ GLIFI_TEST("index keeps inline and heap keys stable through prolonged churn") {
         GLIFI_REQUIRE(!index.find("absent-after-heavy-churn").has_value());
         GLIFI_REQUIRE(index.stats().size + index.stats().deleted_count <= index.stats().bucket_count);
         GLIFI_REQUIRE(index.erase_no_compact(glifistore::HashedKey::compute(survivor)).previous ==
-                       test_ref(entries_per_round));
+                      test_ref(entries_per_round));
     }
 
     GLIFI_REQUIRE(index.stats().size == 0);

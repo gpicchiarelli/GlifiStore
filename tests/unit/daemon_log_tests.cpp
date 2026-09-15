@@ -45,8 +45,7 @@ GLIFI_TEST("daemon log format parsing accepts human and json") {
 
 GLIFI_TEST("daemon log json emits bounded lifecycle events") {
     CapturedStderr capture;
-    const glifistore::server::DaemonLog log{glifistore::server::DaemonLogFormat::json, "glifistored",
-                                             false};
+    const glifistore::server::DaemonLog log{glifistore::server::DaemonLogFormat::json, "glifistored", false};
     log.emit_start();
     log.emit_listen("127.0.0.1", 7379, 0, 2, "volatile");
     log.emit_ready(true);
@@ -77,8 +76,7 @@ GLIFI_TEST("daemon log json emits bounded lifecycle events") {
 
 GLIFI_TEST("daemon log quiet suppresses start listen and stopped json events") {
     CapturedStderr capture;
-    const glifistore::server::DaemonLog log{glifistore::server::DaemonLogFormat::json, "glifistored",
-                                             true};
+    const glifistore::server::DaemonLog log{glifistore::server::DaemonLogFormat::json, "glifistored", true};
     log.emit_start();
     log.emit_listen("127.0.0.1", 7379, 0, 1, "volatile");
     log.emit_ready(false, glifistore::server::ReadyLossReason::maintenance_emergency);
@@ -93,16 +91,14 @@ GLIFI_TEST("daemon log quiet suppresses start listen and stopped json events") {
 
 GLIFI_TEST("daemon log human format emits no structured lines") {
     CapturedStderr capture;
-    const glifistore::server::DaemonLog log{glifistore::server::DaemonLogFormat::human, "glifistored",
-                                             false};
+    const glifistore::server::DaemonLog log{glifistore::server::DaemonLogFormat::human, "glifistored", false};
     log.emit_listen("127.0.0.1", 7379, 0, 1, "volatile");
     GLIFI_REQUIRE(capture.text().empty());
 }
 
 GLIFI_TEST("daemon log json escapes control characters and truncates long fields") {
     CapturedStderr capture;
-    const glifistore::server::DaemonLog log{glifistore::server::DaemonLogFormat::json, "glifistored",
-                                             false};
+    const glifistore::server::DaemonLog log{glifistore::server::DaemonLogFormat::json, "glifistored", false};
     std::string message(300U, 'x');
     message[10] = '\n';
     log.emit_executor_failure("io_error", message);
@@ -114,12 +110,11 @@ GLIFI_TEST("daemon log json escapes control characters and truncates long fields
 
 GLIFI_TEST("daemon ready loss classification names are stable") {
     GLIFI_REQUIRE(glifistore::server::ready_loss_reason_name(
-                       glifistore::server::ReadyLossReason::maintenance_emergency) ==
-                   "maintenance_emergency");
+                      glifistore::server::ReadyLossReason::maintenance_emergency) == "maintenance_emergency");
     GLIFI_REQUIRE(glifistore::server::ready_loss_reason_name(
-                       glifistore::server::ReadyLossReason::maintenance_fault) == "maintenance_fault");
+                      glifistore::server::ReadyLossReason::maintenance_fault) == "maintenance_fault");
     GLIFI_REQUIRE(glifistore::server::ready_loss_reason_name(
-                       glifistore::server::ReadyLossReason::admission_fenced) == "admission_fenced");
+                      glifistore::server::ReadyLossReason::admission_fenced) == "admission_fenced");
     GLIFI_REQUIRE(glifistore::server::ready_loss_reason_name(
-                       glifistore::server::ReadyLossReason::pair_fail_closed) == "pair_fail_closed");
+                      glifistore::server::ReadyLossReason::pair_fail_closed) == "pair_fail_closed");
 }

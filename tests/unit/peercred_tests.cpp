@@ -76,8 +76,8 @@ GLIFI_TEST("unix listener accept yields peer credentials for local connector") {
     GLIFI_REQUIRE(credentials->uid == static_cast<std::uint32_t>(::geteuid()));
     GLIFI_REQUIRE(credentials->gid == static_cast<std::uint32_t>(::getegid()));
     const auto principal = glifistore::server::peercred_principal(*credentials);
-    GLIFI_REQUIRE(principal == std::string{glifistore::server::peercred_principal_prefix()} +
-                                    std::to_string(::geteuid()));
+    GLIFI_REQUIRE(principal ==
+                  std::string{glifistore::server::peercred_principal_prefix()} + std::to_string(::geteuid()));
 #if defined(__linux__)
     GLIFI_REQUIRE(credentials->pid == static_cast<std::uint32_t>(::getpid()));
 #endif

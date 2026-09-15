@@ -28,17 +28,17 @@ GLIFI_TEST("blocked durable compaction build permits same-Worker reads and mutat
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     {
         auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());
@@ -142,21 +142,21 @@ GLIFI_TEST("blocked pre-intent compaction copy lets an unrelated rotation commit
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{4},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const auto compacted_key = key_for_worker(0, 2, "compact-");
     const auto second_compacted_key = key_for_worker(0, 2, "compact-second-");
@@ -178,7 +178,7 @@ GLIFI_TEST("blocked pre-intent compaction copy lets an unrelated rotation commit
     BlockingFilesystemOperation blocked_copy{glifistore::FilesystemOperation::write_record};
     auto directory = glifistore::DataDirectory::open_and_lock(
         temporary.path(), glifistore::FilesystemHooks{.context = &blocked_copy,
-                                                       .before = &BlockingFilesystemOperation::before});
+                                                      .before = &BlockingFilesystemOperation::before});
     GLIFI_REQUIRE(directory.has_value());
     auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
     GLIFI_REQUIRE(runtime.has_value());
@@ -244,15 +244,15 @@ GLIFI_TEST("blocked pre-intent compaction copy lets an unrelated rotation commit
     GLIFI_REQUIRE(rotation_stats.last_manifest_publication_duration_ns > 0);
     GLIFI_REQUIRE(rotation_stats.last_execution_duration_ns > 0);
     GLIFI_REQUIRE(rotation_stats.last_execution_duration_ns >=
-                   rotation_stats.last_seal_duration_ns + rotation_stats.last_create_duration_ns +
-                       rotation_stats.last_manifest_publication_duration_ns);
+                  rotation_stats.last_seal_duration_ns + rotation_stats.last_create_duration_ns +
+                      rotation_stats.last_manifest_publication_duration_ns);
     GLIFI_REQUIRE(rotation_stats.last_total_duration_ns >= rotation_stats.last_publication_wait_duration_ns);
     GLIFI_REQUIRE(rotation_stats.last_total_duration_ns >= rotation_stats.last_execution_duration_ns);
     GLIFI_REQUIRE(rotation_stats.total_duration_ns == rotation_stats.last_total_duration_ns);
     GLIFI_REQUIRE(rotation_stats.maximum_total_duration_ns == rotation_stats.last_total_duration_ns);
     GLIFI_REQUIRE(rotation_stats.last_final_record_commit_duration_ns > 0);
     GLIFI_REQUIRE(rotation_stats.total_final_record_commit_duration_ns ==
-                   rotation_stats.last_final_record_commit_duration_ns);
+                  rotation_stats.last_final_record_commit_duration_ns);
     GLIFI_REQUIRE((*runtime)->healthy());
     GLIFI_REQUIRE((*runtime)->manifest().segments.size() == 5);
     GLIFI_REQUIRE((*runtime)->namespace_audit().clean());
@@ -275,21 +275,21 @@ GLIFI_TEST("rotation waiting on compaction intent does not block its Worker queu
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{4},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const auto first_key = key_for_worker(1, 2, "waiting-rotation-");
     const auto queued_key = key_for_worker(1, 2, "queue-progress-");
@@ -380,21 +380,21 @@ GLIFI_TEST("compaction manifest sync holds no Worker or catalog mutex") {
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{4},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const auto stable_key = key_for_worker(0, 2, "stable-");
     const auto second_key = key_for_worker(0, 2, "second-");
@@ -417,7 +417,7 @@ GLIFI_TEST("compaction manifest sync holds no Worker or catalog mutex") {
     BlockingFilesystemOperation blocked_sync{glifistore::FilesystemOperation::sync_manifest};
     auto directory = glifistore::DataDirectory::open_and_lock(
         temporary.path(), glifistore::FilesystemHooks{.context = &blocked_sync,
-                                                       .before = &BlockingFilesystemOperation::before});
+                                                      .before = &BlockingFilesystemOperation::before});
     GLIFI_REQUIRE(directory.has_value());
     auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
     GLIFI_REQUIRE(runtime.has_value());
@@ -482,17 +482,17 @@ GLIFI_TEST("close during a blocked compaction build rolls back the old authority
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     {
         auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());
@@ -575,17 +575,17 @@ GLIFI_TEST("online compaction filesystem fault matrix reopens one clean authorit
         const auto store_id = recovery_store_id();
         const std::vector entries{
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::sealed},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::sealed},
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::sealed},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::sealed},
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::active},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::active},
         };
         {
             auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());
@@ -613,9 +613,9 @@ GLIFI_TEST("online compaction filesystem fault matrix reopens one clean authorit
         GLIFI_REQUIRE(result.error.has_value());
         GLIFI_REQUIRE(result.error->code == glifistore::ErrorCode::io_error);
         GLIFI_REQUIRE(result.outcome == glifistore::DurableCompactionOutcome::not_compacted ||
-                       result.outcome == glifistore::DurableCompactionOutcome::recovery_required);
+                      result.outcome == glifistore::DurableCompactionOutcome::recovery_required);
         GLIFI_REQUIRE((*runtime)->healthy() ==
-                       (result.outcome == glifistore::DurableCompactionOutcome::not_compacted));
+                      (result.outcome == glifistore::DurableCompactionOutcome::not_compacted));
         runtime->reset();
 
         auto reopened = glifistore::DurableRuntimeCatalog::open_existing(temporary.path());
@@ -661,17 +661,17 @@ GLIFI_TEST("online compaction storage_exhausted fault matrix reopens one clean a
         const auto store_id = recovery_store_id();
         const std::vector entries{
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::sealed},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::sealed},
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::sealed},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::sealed},
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::active},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::active},
         };
         {
             auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());
@@ -701,9 +701,9 @@ GLIFI_TEST("online compaction storage_exhausted fault matrix reopens one clean a
         GLIFI_REQUIRE(result.error.has_value());
         GLIFI_REQUIRE(result.error->code == glifistore::ErrorCode::storage_exhausted);
         GLIFI_REQUIRE(result.outcome == glifistore::DurableCompactionOutcome::not_compacted ||
-                       result.outcome == glifistore::DurableCompactionOutcome::recovery_required);
+                      result.outcome == glifistore::DurableCompactionOutcome::recovery_required);
         GLIFI_REQUIRE((*runtime)->healthy() ==
-                       (result.outcome == glifistore::DurableCompactionOutcome::not_compacted));
+                      (result.outcome == glifistore::DurableCompactionOutcome::not_compacted));
         runtime->reset();
 
         auto reopened = glifistore::DurableRuntimeCatalog::open_existing(temporary.path());
@@ -724,17 +724,17 @@ GLIFI_TEST("paced compaction write_record fault leaves Mold without intent") {
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     {
         auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());

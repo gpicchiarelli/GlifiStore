@@ -37,8 +37,8 @@ GLIFI_TEST("paired Store read-after-write and close drain") {
     GLIFI_REQUIRE(store.put("alpha", bytes("one")).has_value());
     const auto first = store.get("alpha");
     GLIFI_REQUIRE(first.has_value());
-    GLIFI_REQUIRE(
-        std::string_view(reinterpret_cast<const char*>(first->bytes.data()), first->bytes.size()) == "one");
+    GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(first->bytes.data()), first->bytes.size()) ==
+                  "one");
     GLIFI_REQUIRE(store.put("alpha", bytes("two")).has_value());
     const auto second = store.get("alpha");
     GLIFI_REQUIRE(second.has_value());
@@ -101,7 +101,7 @@ GLIFI_TEST("paired Store concurrent GET and PUT on one key stay linearized") {
     const auto final_value = store.get("shared");
     GLIFI_REQUIRE(final_value.has_value());
     GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(final_value->bytes.data()),
-                                    final_value->bytes.size()) == "200");
+                                   final_value->bytes.size()) == "200");
     GLIFI_REQUIRE(store.close().has_value());
 }
 
@@ -151,7 +151,7 @@ GLIFI_TEST("paired durable group threshold requires final commit-slot synchroniz
             if (operation == glifistore::FilesystemOperation::sync_commit_slot && !self.fired) {
                 self.fired = true;
                 return glifistore::fail(glifistore::ErrorCode::io_error,
-                                         "injected strict group commit-slot sync failure");
+                                        "injected strict group commit-slot sync failure");
             }
             return {};
         }
@@ -261,13 +261,13 @@ GLIFI_TEST("paired generation admission rejects embedded sync before Store at re
     using glifistore::store::paired::ShardPairRuntime;
 
     GLIFI_REQUIRE(decide_generation_admission(ShardPairRuntime::kMaximumRetiredReadGenerations - 1U,
-                                               ShardPairRuntime::kMaximumRetiredReadGenerations,
-                                               true) == GenerationAdmissionDecision::admitted);
+                                              ShardPairRuntime::kMaximumRetiredReadGenerations,
+                                              true) == GenerationAdmissionDecision::admitted);
     GLIFI_REQUIRE(decide_generation_admission(ShardPairRuntime::kMaximumRetiredReadGenerations,
-                                               ShardPairRuntime::kMaximumRetiredReadGenerations, true) ==
-                   GenerationAdmissionDecision::reader_quiescence_required);
+                                              ShardPairRuntime::kMaximumRetiredReadGenerations, true) ==
+                  GenerationAdmissionDecision::reader_quiescence_required);
     GLIFI_REQUIRE(decide_generation_admission(0U, ShardPairRuntime::kMaximumRetiredReadGenerations, false) ==
-                   GenerationAdmissionDecision::incremental_merge_required);
+                  GenerationAdmissionDecision::incremental_merge_required);
 
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1}});
     GLIFI_REQUIRE(opened.has_value());
@@ -284,14 +284,14 @@ GLIFI_TEST("paired generation admission rejects embedded sync before Store at re
             GLIFI_REQUIRE(store.put("retire-pressure", bytes(value)).has_value());
         }
         GLIFI_REQUIRE(runtime->stats()[0].retired_generation_count ==
-                       ShardPairRuntime::kMaximumRetiredReadGenerations);
+                      ShardPairRuntime::kMaximumRetiredReadGenerations);
 
         const auto blocked = store.put("must-not-enter-store", bytes("blocked"));
         GLIFI_REQUIRE(!blocked.has_value());
         GLIFI_REQUIRE(blocked.error().code == glifistore::ErrorCode::resource_exhausted);
         GLIFI_REQUIRE(blocked.error().message == "mutation rejected until paired Reader reaches quiescence");
         GLIFI_REQUIRE(runtime->stats()[0].retired_generation_count ==
-                       ShardPairRuntime::kMaximumRetiredReadGenerations);
+                      ShardPairRuntime::kMaximumRetiredReadGenerations);
         GLIFI_REQUIRE(runtime->stats()[0].generation_admission_backpressure_total == 1U);
         const auto absent = store.get("must-not-enter-store");
         GLIFI_REQUIRE(!absent.has_value());
@@ -301,7 +301,7 @@ GLIFI_TEST("paired generation admission rejects embedded sync before Store at re
     GLIFI_REQUIRE(store.put("must-not-enter-store", bytes("after-quiescence")).has_value());
     GLIFI_REQUIRE(store.get("must-not-enter-store").has_value());
     GLIFI_REQUIRE(runtime->stats()[0].retired_generation_count <
-                   ShardPairRuntime::kMaximumRetiredReadGenerations);
+                  ShardPairRuntime::kMaximumRetiredReadGenerations);
     GLIFI_REQUIRE(store.close().has_value());
 }
 
@@ -328,7 +328,7 @@ GLIFI_TEST("paired generation admission rejects dedicated Writer sync before Sto
         GLIFI_REQUIRE(!blocked.has_value());
         GLIFI_REQUIRE(blocked.error().code == glifistore::ErrorCode::resource_exhausted);
         GLIFI_REQUIRE(runtime->stats()[0].retired_generation_count ==
-                       ShardPairRuntime::kMaximumRetiredReadGenerations);
+                      ShardPairRuntime::kMaximumRetiredReadGenerations);
         GLIFI_REQUIRE(runtime->stats()[0].generation_admission_backpressure_total == 1U);
         GLIFI_REQUIRE(!store.get("dedicated-must-not-enter").has_value());
     }
@@ -363,11 +363,11 @@ GLIFI_TEST("paired generation admission performs no durable write at retire boun
 
     auto opened =
         glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                  .storage_mode = glifistore::StorageMode::durable_sync,
-                                  .data_directory = root / "store",
-                                  .durable_open_mode = glifistore::DurableOpenMode::create_new,
-                                  .maintenance = {.mode = glifistore::MaintenanceMode::disabled},
-                                  .filesystem_hooks = {.context = &writes, .before = &WriteCounter::before}});
+                                 .storage_mode = glifistore::StorageMode::durable_sync,
+                                 .data_directory = root / "store",
+                                 .durable_open_mode = glifistore::DurableOpenMode::create_new,
+                                 .maintenance = {.mode = glifistore::MaintenanceMode::disabled},
+                                 .filesystem_hooks = {.context = &writes, .before = &WriteCounter::before}});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     auto* runtime = glifistore::detail::StoreAccess::shard_pair_runtime(store);

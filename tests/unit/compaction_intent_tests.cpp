@@ -77,7 +77,7 @@ GLIFI_TEST("compaction intent v1 matches its independent golden fixture") {
     GLIFI_REQUIRE(encoded->size() == glifistore::kCompactionIntentHeaderBytes + *old_size + *next_size);
 
     const auto fixture = glifistore::test::read_hex_fixture(std::filesystem::path{GLIFISTORE_SOURCE_DIR} /
-                                                             "tests/fixtures/compaction_intent_v1.hex");
+                                                            "tests/fixtures/compaction_intent_v1.hex");
     GLIFI_REQUIRE(*encoded == fixture);
 
     const auto decoded = glifistore::decode_compaction_intent(fixture);

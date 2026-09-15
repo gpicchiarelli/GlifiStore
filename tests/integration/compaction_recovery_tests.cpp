@@ -45,8 +45,7 @@ struct OneShotRecoveryFailure {
     std::size_t matching_calls{};
     bool fired{};
 
-    static auto before(void* context, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* context, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& failure = *static_cast<OneShotRecoveryFailure*>(context);
         if (operation != failure.target) {
             return {};

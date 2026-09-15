@@ -11,7 +11,7 @@ GLIFI_TEST("bounded byte rate limiter derives a ten millisecond capped burst") {
     GLIFI_REQUIRE(BoundedByteRateLimiter::recommended_burst_bytes(100) == 1);
     GLIFI_REQUIRE(BoundedByteRateLimiter::recommended_burst_bytes(64U * 1024U * 1024U) == 671'089U);
     GLIFI_REQUIRE(BoundedByteRateLimiter::recommended_burst_bytes(
-                       std::numeric_limits<std::uint64_t>::max()) == 1U * 1024U * 1024U);
+                      std::numeric_limits<std::uint64_t>::max()) == 1U * 1024U * 1024U);
 }
 
 GLIFI_TEST("bounded byte rate limiter spaces requests after one immediate burst") {

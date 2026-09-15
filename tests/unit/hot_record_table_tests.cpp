@@ -166,9 +166,9 @@ GLIFI_TEST("hot record replacement at occupancy boundary does not grow") {
     }
     GLIFI_REQUIRE(table.capacity() == 64);
     GLIFI_REQUIRE(table
-                       .insert_or_assign("boundary-0", glifistore::hash_key("boundary-0"),
-                                         make_entry(100, "replacement"))
-                       .has_value());
+                      .insert_or_assign("boundary-0", glifistore::hash_key("boundary-0"),
+                                        make_entry(100, "replacement"))
+                      .has_value());
     GLIFI_REQUIRE(table.capacity() == 64);
 
     GLIFI_REQUIRE(

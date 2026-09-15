@@ -141,7 +141,7 @@ GLIFI_TEST("verify_durable_store --no-scan skips committed Record corruption") {
     const auto scanned = glifistore::verify_durable_store_path(temporary.path(), true);
     GLIFI_REQUIRE(!scanned.has_value());
     GLIFI_REQUIRE(scanned.error().code == glifistore::ErrorCode::invalid_record ||
-                   scanned.error().code == glifistore::ErrorCode::checksum_mismatch);
+                  scanned.error().code == glifistore::ErrorCode::checksum_mismatch);
 }
 
 GLIFI_TEST("verify_durable_store fails on unlisted Segment files") {
@@ -156,16 +156,16 @@ GLIFI_TEST("verify_durable_store fails on unlisted Segment files") {
         GLIFI_REQUIRE(created.durable());
         auto extra =
             glifistore::DurableSegmentFile::create(*directory, {.store_id = manifest.store_id,
-                                                                 .segment_id = glifistore::SegmentId{9},
-                                                                 .generation = glifistore::GenerationId{1},
-                                                                 .owner_worker = glifistore::WorkerId{0}});
+                                                                .segment_id = glifistore::SegmentId{9},
+                                                                .generation = glifistore::GenerationId{1},
+                                                                .owner_worker = glifistore::WorkerId{0}});
         GLIFI_REQUIRE(extra.durable());
     }
 
     const auto report = glifistore::verify_durable_store_path(temporary.path());
     GLIFI_REQUIRE(!report.has_value());
     GLIFI_REQUIRE(report.error().code == glifistore::ErrorCode::corrupted_data ||
-                   report.error().code == glifistore::ErrorCode::invalid_argument);
+                  report.error().code == glifistore::ErrorCode::invalid_argument);
 }
 
 GLIFI_TEST("verify_durable_store reports sealed-active Segments as active_requires_rotation") {

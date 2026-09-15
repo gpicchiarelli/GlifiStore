@@ -40,7 +40,7 @@ GLIFI_TEST("error taxonomy maps wire status to category and retryability") {
         // Read-path mapping leaves mutation_outcome empty; fixture outcome is via helper.
         GLIFI_REQUIRE(error.mutation_outcome.empty());
         GLIFI_REQUIRE(glifistore::client::portable_mutation_outcome(expected.wire_status) ==
-                       expected.mutation_outcome);
+                      expected.mutation_outcome);
 
         const bool indeterminate = expected.mutation_outcome == "indeterminate";
         const auto mutation_retry = glifistore::client::portable_retryability(

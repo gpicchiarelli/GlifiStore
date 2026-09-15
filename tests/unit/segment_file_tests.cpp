@@ -81,8 +81,7 @@ struct PacedRecordIo final {
     std::vector<std::size_t> physical_write_sizes{};
     std::size_t grants{};
 
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& state = *static_cast<PacedRecordIo*>(opaque);
         if (operation == glifistore::FilesystemOperation::write_record) {
             state.inside_record_write = true;
@@ -113,8 +112,7 @@ struct PacedRecordIo final {
     }
 };
 
-auto fail_segment_operation(void* context, glifistore::FilesystemOperation operation)
-    -> glifistore::Status {
+auto fail_segment_operation(void* context, glifistore::FilesystemOperation operation) -> glifistore::Status {
     auto& failure = *static_cast<SegmentInjectedFailure*>(context);
     if (failure.enabled && failure.operation == operation) {
         return glifistore::fail(glifistore::ErrorCode::io_error, "injected Segment failure");
@@ -326,7 +324,7 @@ GLIFI_TEST("Segment append synchronizes data before alternating commit slots and
     GLIFI_REQUIRE(reopened->selected_commit().commit.state == glifistore::PersistedSegmentState::sealed);
 
     auto read_only = glifistore::DurableSegmentFile::open(*directory, identity,
-                                                           glifistore::SegmentFileOpenMode::read_only);
+                                                          glifistore::SegmentFileOpenMode::read_only);
     GLIFI_REQUIRE(read_only.has_value());
     const auto rejected_append = read_only->append(*second);
     GLIFI_REQUIRE(rejected_append.outcome == glifistore::SegmentCommitOutcome::not_committed);
@@ -342,7 +340,7 @@ GLIFI_TEST("generation-pinned runtime read accepts a Record committed after hand
     auto created = glifistore::DurableSegmentFile::create(*directory, identity);
     GLIFI_REQUIRE(created.durable());
     auto reader = glifistore::DurableSegmentFile::open(*directory, identity,
-                                                        glifistore::SegmentFileOpenMode::read_only);
+                                                       glifistore::SegmentFileOpenMode::read_only);
     GLIFI_REQUIRE(reader.has_value());
 
     const auto record = encoded_record(7, "active-key", "active-value");
@@ -411,7 +409,7 @@ GLIFI_TEST("Segment creation fault matrix distinguishes pre and post rename fail
         GLIFI_REQUIRE(directory->healthy());
         GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() / glifistore::segment_filename(identity)));
         GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() /
-                                                ('.' + glifistore::segment_filename(identity) + ".tmp")));
+                                               ('.' + glifistore::segment_filename(identity) + ".tmp")));
     }
 
     SegmentTemporaryDirectory temporary;
@@ -508,7 +506,7 @@ GLIFI_TEST("committed Record corruption is detected by recovery scan") {
     const auto scan = created.file->scan_committed();
     GLIFI_REQUIRE(!scan.has_value());
     GLIFI_REQUIRE(scan.error().code == glifistore::ErrorCode::invalid_record ||
-                   scan.error().code == glifistore::ErrorCode::checksum_mismatch);
+                  scan.error().code == glifistore::ErrorCode::checksum_mismatch);
 }
 
 GLIFI_TEST("Segment handles fail closed when their data directory lifetime ends") {
@@ -681,7 +679,7 @@ GLIFI_TEST("inspect_durable_segment fails closed on committed Record corruption"
     const auto report = glifistore::inspect_durable_segment(path);
     GLIFI_REQUIRE(!report.has_value());
     GLIFI_REQUIRE(report.error().code == glifistore::ErrorCode::invalid_record ||
-                   report.error().code == glifistore::ErrorCode::checksum_mismatch);
+                  report.error().code == glifistore::ErrorCode::checksum_mismatch);
 
     const auto header_only = glifistore::inspect_durable_segment(path, false);
     GLIFI_REQUIRE(header_only.has_value());

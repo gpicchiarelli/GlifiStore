@@ -54,8 +54,8 @@ GLIFI_TEST("index heap key arena survives erase churn and rehash") {
     for (std::uint64_t value = 0; value < initial; ++value) {
         const auto key = heap_key(value);
         const glifistore::RecordRef ref{glifistore::SegmentId{1}, glifistore::RecordOffset{10},
-                                         glifistore::RecordSize{20}, glifistore::SequenceNumber{value},
-                                         glifistore::GenerationId{1}};
+                                        glifistore::RecordSize{20}, glifistore::SequenceNumber{value},
+                                        glifistore::GenerationId{1}};
         GLIFI_REQUIRE(index.insert_or_assign(key, ref).has_value());
     }
     GLIFI_REQUIRE(index.stats().arena_live_bytes >= initial * 32U);
@@ -65,8 +65,8 @@ GLIFI_TEST("index heap key arena survives erase churn and rehash") {
     for (std::uint64_t value = initial; value < initial + (initial / 2); ++value) {
         const auto key = heap_key(value);
         const glifistore::RecordRef ref{glifistore::SegmentId{1}, glifistore::RecordOffset{10},
-                                         glifistore::RecordSize{20}, glifistore::SequenceNumber{value},
-                                         glifistore::GenerationId{1}};
+                                        glifistore::RecordSize{20}, glifistore::SequenceNumber{value},
+                                        glifistore::GenerationId{1}};
         GLIFI_REQUIRE(index.insert_or_assign(key, ref).has_value());
     }
     for (std::uint64_t value = initial / 2; value < initial + (initial / 2); ++value) {
@@ -81,8 +81,8 @@ GLIFI_TEST("index heap arena reclaims memory after insert erase churn") {
     glifistore::Index index;
     const std::string key(256, 'k');
     const glifistore::RecordRef ref{glifistore::SegmentId{1}, glifistore::RecordOffset{10},
-                                     glifistore::RecordSize{20}, glifistore::SequenceNumber{1},
-                                     glifistore::GenerationId{1}};
+                                    glifistore::RecordSize{20}, glifistore::SequenceNumber{1},
+                                    glifistore::GenerationId{1}};
     for (std::uint64_t cycle = 0; cycle < 10'000; ++cycle) {
         GLIFI_REQUIRE(index.insert_or_assign(key, ref).has_value());
         GLIFI_REQUIRE(index.erase(key).previous.has_value());
@@ -99,8 +99,8 @@ GLIFI_TEST("index heap arena waits for geometric fragmentation before reclaim") 
     for (std::uint64_t value = 0; value < count; ++value) {
         const auto key = fixed_heap_key(value);
         const glifistore::RecordRef ref{glifistore::SegmentId{1}, glifistore::RecordOffset{10},
-                                         glifistore::RecordSize{20}, glifistore::SequenceNumber{value},
-                                         glifistore::GenerationId{1}};
+                                        glifistore::RecordSize{20}, glifistore::SequenceNumber{value},
+                                        glifistore::GenerationId{1}};
         GLIFI_REQUIRE(index.insert_or_assign(key, ref).has_value());
     }
 
@@ -109,14 +109,14 @@ GLIFI_TEST("index heap arena waits for geometric fragmentation before reclaim") 
     }
     const auto before_geometric_trigger = index.stats();
     GLIFI_REQUIRE(before_geometric_trigger.arena_allocated_bytes >
-                   before_geometric_trigger.arena_live_bytes + 65'536U);
+                  before_geometric_trigger.arena_live_bytes + 65'536U);
 
     for (std::uint64_t value = first_erase_count; value < (count / 2U) + 1U; ++value) {
         GLIFI_REQUIRE(index.erase(fixed_heap_key(value)).previous.has_value());
     }
     const auto after_geometric_trigger = index.stats();
     GLIFI_REQUIRE(after_geometric_trigger.arena_allocated_bytes <=
-                   after_geometric_trigger.arena_live_bytes + 256U);
+                  after_geometric_trigger.arena_live_bytes + 256U);
     for (std::uint64_t value = (count / 2U) + 1U; value < count; ++value) {
         GLIFI_REQUIRE(index.find(fixed_heap_key(value)).has_value());
     }
@@ -127,8 +127,8 @@ GLIFI_TEST("index swiss table probe path matches under mixed inline and heap key
     for (std::uint64_t value = 0; value < 4'096; ++value) {
         const auto key = (value % 3 == 0) ? heap_key(value) : ("inline-" + std::to_string(value));
         const glifistore::RecordRef ref{glifistore::SegmentId{1}, glifistore::RecordOffset{10},
-                                         glifistore::RecordSize{20}, glifistore::SequenceNumber{value},
-                                         glifistore::GenerationId{1}};
+                                        glifistore::RecordSize{20}, glifistore::SequenceNumber{value},
+                                        glifistore::GenerationId{1}};
         GLIFI_REQUIRE(index.insert_or_assign(key, ref).has_value());
     }
     std::size_t expected = 4'096;
@@ -145,15 +145,15 @@ GLIFI_TEST("hashed key path preserves single hash lookup") {
     glifistore::Index index;
     const auto hashed = glifistore::HashedKey::compute("hashed-route");
     const glifistore::RecordRef ref{glifistore::SegmentId{9}, glifistore::RecordOffset{10},
-                                     glifistore::RecordSize{20}, glifistore::SequenceNumber{1},
-                                     glifistore::GenerationId{1}};
+                                    glifistore::RecordSize{20}, glifistore::SequenceNumber{1},
+                                    glifistore::GenerationId{1}};
     GLIFI_REQUIRE(index.insert_or_assign(hashed, ref).has_value());
     GLIFI_REQUIRE(index.find(hashed) == ref);
 }
 
 GLIFI_TEST("store get verifies checksum after mutable segment corruption") {
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     GLIFI_REQUIRE(store.put("integrity", bytes("payload")).has_value());
@@ -172,7 +172,7 @@ GLIFI_TEST("store get verifies checksum after mutable segment corruption") {
 
 GLIFI_TEST("worker local segment catalog resolves records across rotation") {
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     const std::string value(900U * 1024U, 'v');
@@ -191,7 +191,7 @@ GLIFI_TEST("worker local segment catalog resolves records across rotation") {
 
 GLIFI_TEST("volatile overwrite churn releases fully dead segment storage") {
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     const std::string value(900U * 1024U, 'r');
@@ -218,7 +218,7 @@ GLIFI_TEST("volatile overwrite churn releases fully dead segment storage") {
 
 GLIFI_TEST("volatile vacuum consolidates sparse sealed segments and preserves visibility") {
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     const std::string churn_value(900U * 1024U, 'c');
@@ -260,7 +260,7 @@ GLIFI_TEST("volatile vacuum consolidates sparse sealed segments and preserves vi
         const auto visible = store.get(stable_key);
         GLIFI_REQUIRE(visible.has_value());
         GLIFI_REQUIRE(std::string(reinterpret_cast<const char*>(visible->bytes.data()),
-                                   visible->bytes.size()) == stable_value);
+                                  visible->bytes.size()) == stable_value);
     }
     const auto churn = store.get("vacuum-churn");
     GLIFI_REQUIRE(churn.has_value());

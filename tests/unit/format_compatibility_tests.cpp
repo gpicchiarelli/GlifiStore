@@ -63,8 +63,7 @@ GLIFI_TEST("format fixtures decode independently without encoder round-trip") {
     GLIFI_REQUIRE(decoded_manifest->manifest_generation == 0x0102030405060708ULL);
     GLIFI_REQUIRE(decoded_manifest->segments.size() == 3);
 
-    const auto intent_bytes =
-        glifistore::test::read_hex_fixture(fixture_root() / "compaction_intent_v1.hex");
+    const auto intent_bytes = glifistore::test::read_hex_fixture(fixture_root() / "compaction_intent_v1.hex");
     const auto decoded_intent = glifistore::decode_compaction_intent(intent_bytes);
     GLIFI_REQUIRE(decoded_intent.has_value());
     GLIFI_REQUIRE(decoded_intent->worker_id == glifistore::WorkerId{0});
@@ -77,8 +76,8 @@ GLIFI_TEST("format fixtures decode independently without encoder round-trip") {
 
     const auto header_bytes = glifistore::test::read_hex_fixture(fixture_root() / "segment_header_v1.hex");
     GLIFI_REQUIRE(header_bytes.size() ==
-                   glifistore::kSegmentCommitSlotsOffset +
-                       glifistore::kSegmentCommitSlotCount * glifistore::kSegmentCommitSlotBytes);
+                  glifistore::kSegmentCommitSlotsOffset +
+                      glifistore::kSegmentCommitSlotCount * glifistore::kSegmentCommitSlotBytes);
     std::array<std::byte, glifistore::kSegmentHeaderReservedBytes> encoded{};
     GLIFI_REQUIRE(header_bytes.size() <= encoded.size());
     std::copy(header_bytes.begin(), header_bytes.end(), encoded.begin());
@@ -96,8 +95,8 @@ GLIFI_TEST("format fixtures decode independently without encoder round-trip") {
     const auto segment_header_region =
         glifistore::test::read_hex_fixture(fixture_root() / "segment_v1_header.hex");
     GLIFI_REQUIRE(segment_header_region.size() ==
-                   glifistore::kSegmentCommitSlotsOffset +
-                       glifistore::kSegmentCommitSlotCount * glifistore::kSegmentCommitSlotBytes);
+                  glifistore::kSegmentCommitSlotsOffset +
+                      glifistore::kSegmentCommitSlotCount * glifistore::kSegmentCommitSlotBytes);
     std::array<std::byte, glifistore::kSegmentHeaderReservedBytes> segment_container{};
     std::copy(segment_header_region.begin(), segment_header_region.end(), segment_container.begin());
     const auto decoded_segment_container = glifistore::decode_segment_header(segment_container);
@@ -109,11 +108,10 @@ GLIFI_TEST("durable store artifact survives simulated upgrade reopen") {
     constexpr std::string_view kKey{"compat-key"};
     constexpr std::string_view kValue{"compat-value-v1"};
     {
-        auto writer =
-            glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                      .storage_mode = glifistore::StorageMode::durable_sync,
-                                      .data_directory = temporary.store_path(),
-                                      .durable_open_mode = glifistore::DurableOpenMode::create_new});
+        auto writer = glifistore::Store::open({.worker_config = {.explicit_count = 1},
+                                               .storage_mode = glifistore::StorageMode::durable_sync,
+                                               .data_directory = temporary.store_path(),
+                                               .durable_open_mode = glifistore::DurableOpenMode::create_new});
         GLIFI_REQUIRE(writer.has_value());
         GLIFI_REQUIRE((*writer)->put(kKey, bytes(kValue)).has_value());
         GLIFI_REQUIRE((*writer)->verify_index().has_value());
@@ -122,9 +120,9 @@ GLIFI_TEST("durable store artifact survives simulated upgrade reopen") {
     {
         auto reader =
             glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                      .storage_mode = glifistore::StorageMode::durable_sync,
-                                      .data_directory = temporary.store_path(),
-                                      .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                     .storage_mode = glifistore::StorageMode::durable_sync,
+                                     .data_directory = temporary.store_path(),
+                                     .durable_open_mode = glifistore::DurableOpenMode::open_existing});
         GLIFI_REQUIRE(reader.has_value());
         const auto value = (*reader)->get(kKey);
         GLIFI_REQUIRE(value.has_value());
@@ -144,9 +142,9 @@ GLIFI_TEST("durable store artifact survives simulated upgrade reopen") {
 GLIFI_TEST("segment container header fixture matches on-disk durable segment prefix") {
     CompatibilityTemporaryDirectory temporary;
     const glifistore::StoreId store_id{std::byte{0x10}, std::byte{0x11}, std::byte{0x12}, std::byte{0x13},
-                                        std::byte{0x14}, std::byte{0x15}, std::byte{0x16}, std::byte{0x17},
-                                        std::byte{0x18}, std::byte{0x19}, std::byte{0x1A}, std::byte{0x1B},
-                                        std::byte{0x1C}, std::byte{0x1D}, std::byte{0x1E}, std::byte{0x1F}};
+                                       std::byte{0x14}, std::byte{0x15}, std::byte{0x16}, std::byte{0x17},
+                                       std::byte{0x18}, std::byte{0x19}, std::byte{0x1A}, std::byte{0x1B},
+                                       std::byte{0x1C}, std::byte{0x1D}, std::byte{0x1E}, std::byte{0x1F}};
     const glifistore::ManifestSegmentEntry active{
         .segment_id = glifistore::SegmentId{1},
         .generation = glifistore::GenerationId{1},
@@ -159,9 +157,9 @@ GLIFI_TEST("segment container header fixture matches on-disk durable segment pre
         GLIFI_REQUIRE(directory.has_value());
         auto created =
             glifistore::DurableSegmentFile::create(*directory, {.store_id = store_id,
-                                                                 .segment_id = active.segment_id,
-                                                                 .generation = active.generation,
-                                                                 .owner_worker = active.owner_worker});
+                                                                .segment_id = active.segment_id,
+                                                                .generation = active.generation,
+                                                                .owner_worker = active.owner_worker});
         GLIFI_REQUIRE(created.durable());
         const glifistore::Manifest manifest{
             .store_id = store_id,
@@ -177,9 +175,9 @@ GLIFI_TEST("segment container header fixture matches on-disk durable segment pre
     }
 
     const auto segment_name = glifistore::segment_filename({.store_id = store_id,
-                                                             .segment_id = active.segment_id,
-                                                             .generation = active.generation,
-                                                             .owner_worker = active.owner_worker});
+                                                            .segment_id = active.segment_id,
+                                                            .generation = active.generation,
+                                                            .owner_worker = active.owner_worker});
     const auto segment_path = temporary.store_path() / segment_name;
     std::ifstream stream(segment_path, std::ios::binary);
     GLIFI_REQUIRE(stream.is_open());

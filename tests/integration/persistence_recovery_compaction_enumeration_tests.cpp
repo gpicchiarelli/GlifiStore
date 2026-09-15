@@ -14,17 +14,17 @@ GLIFI_TEST("online compaction enumerates every reached filesystem failure point"
         const auto store_id = recovery_store_id();
         const std::vector entries{
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::sealed},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::sealed},
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::sealed},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::sealed},
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::active},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::active},
         };
         {
             auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());
@@ -62,7 +62,7 @@ GLIFI_TEST("online compaction enumerates every reached filesystem failure point"
         GLIFI_REQUIRE(result.error.has_value());
         GLIFI_REQUIRE(result.error->code == glifistore::ErrorCode::io_error);
         GLIFI_REQUIRE(result.outcome == glifistore::DurableCompactionOutcome::not_compacted ||
-                       result.outcome == glifistore::DurableCompactionOutcome::recovery_required);
+                      result.outcome == glifistore::DurableCompactionOutcome::recovery_required);
         runtime->reset();
 
         // Reopen is the persisted-state oracle: it must select one clean

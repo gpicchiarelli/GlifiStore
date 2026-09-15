@@ -26,21 +26,21 @@ GLIFI_TEST("exclusive Writer with flusher does not deadlock rotation on compacti
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{4},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const auto first_key = key_for_worker(1, 2, "flusher-rotation-");
     const auto queued_key = key_for_worker(1, 2, "flusher-queue-");
@@ -120,18 +120,17 @@ GLIFI_TEST("exclusive Writer with flusher does not deadlock rotation on compacti
 
     GLIFI_REQUIRE(rotation_stats.attempts == 1);
     GLIFI_REQUIRE(queue_progressed);
-    GLIFI_REQUIRE(
-        queued.committed() ||
-        (queued.error.has_value() && (queued.error->code == glifistore::ErrorCode::sequence_conflict ||
-                                      queued.error->code == glifistore::ErrorCode::resource_exhausted)));
+    GLIFI_REQUIRE(queued.committed() || (queued.error.has_value() &&
+                                         (queued.error->code == glifistore::ErrorCode::sequence_conflict ||
+                                          queued.error->code == glifistore::ErrorCode::resource_exhausted)));
     GLIFI_REQUIRE(!rotating.committed());
     GLIFI_REQUIRE(rotating.error.has_value());
     GLIFI_REQUIRE(rotating.error->code == glifistore::ErrorCode::sequence_conflict ||
-                   rotating.error->code == glifistore::ErrorCode::resource_exhausted);
-    GLIFI_REQUIRE(compaction.compacted() ||
-                   compaction.outcome == glifistore::DurableCompactionOutcome::not_beneficial ||
-                   (compaction.error.has_value() &&
-                    compaction.error->code == glifistore::ErrorCode::sequence_conflict));
+                  rotating.error->code == glifistore::ErrorCode::resource_exhausted);
+    GLIFI_REQUIRE(
+        compaction.compacted() ||
+        compaction.outcome == glifistore::DurableCompactionOutcome::not_beneficial ||
+        (compaction.error.has_value() && compaction.error->code == glifistore::ErrorCode::sequence_conflict));
     GLIFI_REQUIRE((*runtime)->healthy());
 }
 
@@ -143,21 +142,21 @@ GLIFI_TEST("exclusive Writer compact unlocks before hot_path_depth wait") {
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{4},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const auto sealed_key = key_for_worker(0, 2, "depth-sealed-");
     const auto mutate_key = key_for_worker(0, 2, "depth-mutate-");
@@ -234,21 +233,21 @@ GLIFI_TEST("exclusive Writer compact Phase A drains hot_path_depth before Index 
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{4},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const auto in_flight_key = key_for_worker(0, 2, "phase-a-inflight-");
     const auto gated_key = key_for_worker(0, 2, "phase-a-gated-");
@@ -326,9 +325,9 @@ GLIFI_TEST("exclusive Writer compact Phase A drains hot_path_depth before Index 
     compactor.join();
 
     GLIFI_REQUIRE(in_flight.committed());
-    GLIFI_REQUIRE(compaction.compacted() ||
-                   (compaction.error.has_value() &&
-                    compaction.error->code == glifistore::ErrorCode::sequence_conflict));
+    GLIFI_REQUIRE(
+        compaction.compacted() ||
+        (compaction.error.has_value() && compaction.error->code == glifistore::ErrorCode::sequence_conflict));
     GLIFI_REQUIRE((*runtime)->healthy());
     const auto written = (*runtime)->get(in_flight_key);
     GLIFI_REQUIRE(written.has_value());
@@ -344,21 +343,21 @@ GLIFI_TEST("exclusive Writer unread TTL probe drains hot_path_depth before Index
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{4},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const auto in_flight_key = key_for_worker(0, 2, "ttl-probe-inflight-");
     const auto gated_key = key_for_worker(0, 2, "ttl-probe-gated-");
@@ -440,21 +439,21 @@ GLIFI_TEST("exclusive Writer capture_published_read takes Worker mutex under com
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{4},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const auto stable_key = key_for_worker(0, 2, "capture-stable-");
     const auto in_flight_key = key_for_worker(0, 2, "capture-inflight-");
@@ -497,8 +496,8 @@ GLIFI_TEST("exclusive Writer capture_published_read takes Worker mutex under com
     {
         const std::string value{"stable"};
         GLIFI_REQUIRE((*runtime)
-                           ->put(std::as_bytes(std::span{stable_key}), std::as_bytes(std::span{value}))
-                           .committed());
+                          ->put(std::as_bytes(std::span{stable_key}), std::as_bytes(std::span{value}))
+                          .committed());
     }
 
     blocker.append.arm();
@@ -559,21 +558,21 @@ GLIFI_TEST("exclusive Writer prepare_get drains hot_path_depth before Index find
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{4},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const auto stable_key = key_for_worker(0, 2, "prepare-get-stable-");
     const auto in_flight_key = key_for_worker(0, 2, "prepare-get-inflight-");
@@ -605,8 +604,8 @@ GLIFI_TEST("exclusive Writer prepare_get drains hot_path_depth before Index find
     {
         const std::string value{"stable"};
         GLIFI_REQUIRE((*runtime)
-                           ->put(std::as_bytes(std::span{stable_key}), std::as_bytes(std::span{value}))
-                           .committed());
+                          ->put(std::as_bytes(std::span{stable_key}), std::as_bytes(std::span{value}))
+                          .committed());
     }
 
     append.arm();
@@ -660,21 +659,21 @@ GLIFI_TEST("exclusive Writer flush drains hot_path_depth before dirty sync") {
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{4},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const auto in_flight_key = key_for_worker(0, 2, "flush-inflight-");
     const auto gated_key = key_for_worker(0, 2, "flush-gated-");
@@ -752,13 +751,13 @@ GLIFI_TEST("exclusive Writer with flusher re-locks Worker after rotation I/O") {
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const auto rotating_key = key_for_worker(0, 2, "relock-rotate-");
     const auto sibling_key = key_for_worker(0, 2, "relock-sibling-");

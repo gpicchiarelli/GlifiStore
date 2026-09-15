@@ -17,9 +17,9 @@ using glifistore::store::paired::wire_error_code_for;
 
 GLIFI_TEST("completion_policy wire codes match taxonomy") {
     GLIFI_REQUIRE(wire_error_code_for(CompletionDecision::Kind::known_not_committed) ==
-                   glifistore::ErrorCode::resource_exhausted);
+                  glifistore::ErrorCode::resource_exhausted);
     GLIFI_REQUIRE(wire_error_code_for(CompletionDecision::Kind::indeterminate) ==
-                   glifistore::ErrorCode::unavailable);
+                  glifistore::ErrorCode::unavailable);
 }
 
 GLIFI_TEST("completion_policy status_from_completion polarities") {

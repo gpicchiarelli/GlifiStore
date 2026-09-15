@@ -145,24 +145,23 @@ struct CompactionSyncEintrIo {
 };
 
 auto seed_two_sealed_compaction_fixture(const std::filesystem::path& path,
-                                        const glifistore::StoreId& store_id,
-                                        const std::string_view first_key, const std::string_view first_value,
-                                        const std::string_view second_key,
+                                        const glifistore::StoreId& store_id, const std::string_view first_key,
+                                        const std::string_view first_value, const std::string_view second_key,
                                         const std::string_view second_value)
     -> std::vector<glifistore::ManifestSegmentEntry> {
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     auto directory = glifistore::DataDirectory::open_and_lock(path);
     GLIFI_REQUIRE(directory.has_value());
@@ -228,9 +227,9 @@ GLIFI_TEST("online compaction staging retries sync EINTR before intent") {
     auto directory = glifistore::DataDirectory::open_and_lock(
         temporary.path(),
         glifistore::FilesystemHooks{.file_io = {.context = &io,
-                                                 .read_some_at = &CompactionSyncEintrIo::read_some_at,
-                                                 .write_some_at = &CompactionSyncEintrIo::write_some_at,
-                                                 .sync_file = &CompactionSyncEintrIo::sync_file}});
+                                                .read_some_at = &CompactionSyncEintrIo::read_some_at,
+                                                .write_some_at = &CompactionSyncEintrIo::write_some_at,
+                                                .sync_file = &CompactionSyncEintrIo::sync_file}});
     GLIFI_REQUIRE(directory.has_value());
     auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
     GLIFI_REQUIRE(runtime.has_value());
@@ -365,9 +364,9 @@ GLIFI_TEST("online compaction FileIoHooks sync EIO rejects before intent") {
     auto directory = glifistore::DataDirectory::open_and_lock(
         temporary.path(),
         glifistore::FilesystemHooks{.file_io = {.context = &io,
-                                                 .read_some_at = &CompactionSyncEioIo::read_some_at,
-                                                 .write_some_at = &CompactionSyncEioIo::write_some_at,
-                                                 .sync_file = &CompactionSyncEioIo::sync_file}});
+                                                .read_some_at = &CompactionSyncEioIo::read_some_at,
+                                                .write_some_at = &CompactionSyncEioIo::write_some_at,
+                                                .sync_file = &CompactionSyncEioIo::sync_file}});
     GLIFI_REQUIRE(directory.has_value());
     auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
     GLIFI_REQUIRE(runtime.has_value());
@@ -474,11 +473,11 @@ GLIFI_TEST("online compaction FileIoHooks intent write and sync faults reject cl
         auto directory = glifistore::DataDirectory::open_and_lock(
             temporary.path(),
             glifistore::FilesystemHooks{.context = &injected,
-                                         .before = &IntentFault::before,
-                                         .file_io = {.context = &injected,
-                                                     .read_some_at = &IntentFault::read_some_at,
-                                                     .write_some_at = &IntentFault::write_some_at,
-                                                     .sync_file = &IntentFault::sync_file}});
+                                        .before = &IntentFault::before,
+                                        .file_io = {.context = &injected,
+                                                    .read_some_at = &IntentFault::read_some_at,
+                                                    .write_some_at = &IntentFault::write_some_at,
+                                                    .sync_file = &IntentFault::sync_file}});
         GLIFI_REQUIRE(directory.has_value());
         auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
         GLIFI_REQUIRE(runtime.has_value());
@@ -584,11 +583,11 @@ GLIFI_TEST("online compaction FileIoHooks promotion manifest faults recover clea
         auto directory = glifistore::DataDirectory::open_and_lock(
             temporary.path(),
             glifistore::FilesystemHooks{.context = &injected,
-                                         .before = &PromotionFault::before,
-                                         .file_io = {.context = &injected,
-                                                     .read_some_at = &PromotionFault::read_some_at,
-                                                     .write_some_at = &PromotionFault::write_some_at,
-                                                     .sync_file = &PromotionFault::sync_file}});
+                                        .before = &PromotionFault::before,
+                                        .file_io = {.context = &injected,
+                                                    .read_some_at = &PromotionFault::read_some_at,
+                                                    .write_some_at = &PromotionFault::write_some_at,
+                                                    .sync_file = &PromotionFault::sync_file}});
         GLIFI_REQUIRE(directory.has_value());
         auto runtime = glifistore::DurableRuntimeCatalog::open_locked(std::move(*directory));
         GLIFI_REQUIRE(runtime.has_value());

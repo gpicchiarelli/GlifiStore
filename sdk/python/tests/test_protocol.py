@@ -11,6 +11,7 @@ except ImportError:
     sys.path.insert(0, str(PACKAGE_ROOT / "src"))
 
 from glifistore.protocol import (  # noqa: E402
+    INIT_IDENTITY_EXTENDED_BYTES,
     REQUEST_HEADER_BYTES,
     RESPONSE_HEADER_BYTES,
     ROUTING_ALG_SIPHASH24_V1,
@@ -164,7 +165,7 @@ class ProtocolTests(unittest.TestCase):
         extended = encode_init_identity(
             WorkerRouting(algorithm=ROUTING_ALG_SIPHASH24_V1, seed=0xABCD_EF01_2345_6789)
         )
-        self.assertEqual(len(extended), 26)
+        self.assertEqual(len(extended), INIT_IDENTITY_EXTENDED_BYTES)
         self.assertEqual(
             decode_init_identity(extended),
             WorkerRouting(algorithm=ROUTING_ALG_SIPHASH24_V1, seed=0xABCD_EF01_2345_6789),

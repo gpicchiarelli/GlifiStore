@@ -72,15 +72,13 @@ struct CopyWriteFailure {
     bool enabled{};
     bool fired{};
 
-    static auto before(void* context, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* context, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& failure = *static_cast<CopyWriteFailure*>(context);
         if (!failure.enabled || operation != glifistore::FilesystemOperation::write_record) {
             return {};
         }
         failure.fired = true;
-        return glifistore::fail(glifistore::ErrorCode::io_error,
-                                 "injected durable compaction copy failure");
+        return glifistore::fail(glifistore::ErrorCode::io_error, "injected durable compaction copy failure");
     }
 };
 
@@ -91,8 +89,7 @@ struct GeneratedCompactionFailure {
     bool enabled{};
     bool fired{};
 
-    static auto before(void* context, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* context, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& failure = *static_cast<GeneratedCompactionFailure*>(context);
         if (!failure.enabled || operation != failure.target) {
             return {};
@@ -103,7 +100,7 @@ struct GeneratedCompactionFailure {
         }
         failure.fired = true;
         return glifistore::fail(glifistore::ErrorCode::io_error,
-                                 "injected generated-history compaction failure");
+                                "injected generated-history compaction failure");
     }
 };
 
@@ -279,8 +276,7 @@ auto amp_reject_manifest() -> glifistore::Manifest {
     };
 }
 
-auto fill_sealed_with_max_records(glifistore::DataDirectory& directory,
-                                  const glifistore::Manifest& manifest,
+auto fill_sealed_with_max_records(glifistore::DataDirectory& directory, const glifistore::Manifest& manifest,
                                   const glifistore::ManifestSegmentEntry& entry,
                                   const std::uint64_t first_sequence, const std::size_t record_count,
                                   const std::string_view key_prefix) -> std::uint64_t {
@@ -320,8 +316,8 @@ GLIFI_TEST("durable compaction builder copies exact visible Records and preserve
         auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());
         GLIFI_REQUIRE(directory.has_value());
         auto fixture = create_build_fixture(*directory);
-        auto built = glifistore::build_durable_worker_compaction(
-            *directory, fixture.manifest, glifistore::WorkerId{0}, fixture.index, 100);
+        auto built = glifistore::build_durable_worker_compaction(*directory, fixture.manifest,
+                                                                 glifistore::WorkerId{0}, fixture.index, 100);
         GLIFI_REQUIRE(built.succeeded());
         GLIFI_REQUIRE(built.prepared->plan.sources.size() == 2);
         GLIFI_REQUIRE(built.prepared->plan.replacements.size() == 1);
@@ -378,7 +374,7 @@ GLIFI_TEST("durable compaction builder prepares zero-output retirement without f
         glifistore::Index active_only;
         GLIFI_REQUIRE(active_only.insert_or_assign("active", fixture.active).has_value());
         auto built = glifistore::build_durable_worker_compaction(*directory, fixture.manifest,
-                                                                  glifistore::WorkerId{0}, active_only, 100);
+                                                                 glifistore::WorkerId{0}, active_only, 100);
         GLIFI_REQUIRE(built.succeeded());
         GLIFI_REQUIRE(built.prepared->plan.replacements.empty());
         GLIFI_REQUIRE(built.prepared->replacement_commits.empty());
@@ -408,7 +404,7 @@ GLIFI_TEST("durable compaction rejected intent gate leaves the namespace untouch
         .acquire = [](void* opaque) -> glifistore::Status {
             *static_cast<bool*>(opaque) = true;
             return glifistore::fail(glifistore::ErrorCode::sequence_conflict,
-                                     "injected stale compaction authority");
+                                    "injected stale compaction authority");
         },
     };
     auto entries = fixture.index.entries();
@@ -447,8 +443,8 @@ GLIFI_TEST("durable compaction staged copy failure remains pre-intent and cleans
         GLIFI_REQUIRE(directory.has_value());
         auto fixture = create_build_fixture(*directory);
         failure.enabled = true;
-        auto built = glifistore::build_durable_worker_compaction(
-            *directory, fixture.manifest, glifistore::WorkerId{0}, fixture.index, 100);
+        auto built = glifistore::build_durable_worker_compaction(*directory, fixture.manifest,
+                                                                 glifistore::WorkerId{0}, fixture.index, 100);
         GLIFI_REQUIRE(!built.succeeded());
         GLIFI_REQUIRE(built.outcome == glifistore::DurableCompactionBuildOutcome::not_started);
         GLIFI_REQUIRE(built.error.has_value());
@@ -468,7 +464,7 @@ GLIFI_TEST("durable compaction staged copy failure remains pre-intent and cleans
     GLIFI_REQUIRE((*runtime)->get("live-a", 100).has_value());
     GLIFI_REQUIRE((*runtime)->get("replacement", 100).has_value());
     GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() /
-                                            glifistore::segment_filename(identity(manifest, replacement))));
+                                           glifistore::segment_filename(identity(manifest, replacement))));
     GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() / glifistore::kCompactionIntentFilename));
 }
 
@@ -488,8 +484,8 @@ GLIFI_TEST("durable compaction promotion failure after intent is rolled back on 
         GLIFI_REQUIRE(directory.has_value());
         auto fixture = create_build_fixture(*directory);
         failure.enabled = true;
-        auto built = glifistore::build_durable_worker_compaction(
-            *directory, fixture.manifest, glifistore::WorkerId{0}, fixture.index, 100);
+        auto built = glifistore::build_durable_worker_compaction(*directory, fixture.manifest,
+                                                                 glifistore::WorkerId{0}, fixture.index, 100);
         GLIFI_REQUIRE(!built.succeeded());
         GLIFI_REQUIRE(built.outcome == glifistore::DurableCompactionBuildOutcome::recovery_required);
         GLIFI_REQUIRE(built.error.has_value());
@@ -548,9 +544,9 @@ GLIFI_TEST("durable runtime installs and retires one Worker compaction atomicall
     GLIFI_REQUIRE(text(*(*runtime)->get(hot_key, 100)) == hot_value);
     GLIFI_REQUIRE((*runtime)->hot_cache_stats()[0].resident_entries == 1);
     GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() /
-                                            glifistore::segment_filename(identity(old, old.segments[0]))));
+                                           glifistore::segment_filename(identity(old, old.segments[0]))));
     GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() /
-                                            glifistore::segment_filename(identity(old, old.segments[1]))));
+                                           glifistore::segment_filename(identity(old, old.segments[1]))));
     GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() / glifistore::kCompactionIntentFilename));
     runtime->reset();
 
@@ -856,9 +852,9 @@ GLIFI_TEST("multi-seed durable compaction histories match their models before an
             GLIFI_REQUIRE(compacted.error.has_value());
             GLIFI_REQUIRE(compacted.error->code == glifistore::ErrorCode::io_error);
             GLIFI_REQUIRE(compacted.outcome == glifistore::DurableCompactionOutcome::not_compacted ||
-                           compacted.outcome == glifistore::DurableCompactionOutcome::recovery_required);
+                          compacted.outcome == glifistore::DurableCompactionOutcome::recovery_required);
             GLIFI_REQUIRE((*runtime)->healthy() ==
-                           (compacted.outcome == glifistore::DurableCompactionOutcome::not_compacted));
+                          (compacted.outcome == glifistore::DurableCompactionOutcome::not_compacted));
             if ((*runtime)->healthy()) {
                 verify_model(**runtime);
             }

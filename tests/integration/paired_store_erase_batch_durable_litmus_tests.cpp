@@ -29,9 +29,9 @@ auto open_create(const std::filesystem::path& store_path, const glifistore::Stor
 auto open_existing(const std::filesystem::path& store_path, const glifistore::StorageMode mode)
     -> glifistore::Result<std::unique_ptr<glifistore::Store>> {
     return glifistore::Store::open({.worker_config = {.explicit_count = 2},
-                                     .storage_mode = mode,
-                                     .data_directory = store_path,
-                                     .durable_open_mode = glifistore::DurableOpenMode::open_existing});
+                                    .storage_mode = mode,
+                                    .data_directory = store_path,
+                                    .durable_open_mode = glifistore::DurableOpenMode::open_existing});
 }
 
 auto prove_erase_batch_tombstones_across_reopen(const glifistore::StoreConfig& create_config,
@@ -83,7 +83,7 @@ auto prove_erase_batch_tombstones_across_reopen(const glifistore::StoreConfig& c
         const auto kept = store.get(survivor);
         GLIFI_REQUIRE(kept.has_value());
         GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(kept->bytes.data()),
-                                        kept->bytes.size()) == "keep");
+                                       kept->bytes.size()) == "keep");
 
         const std::string same = std::string(key_prefix) + "-same-key";
         GLIFI_REQUIRE(store.put(same, bytes("present")).has_value());
@@ -109,7 +109,7 @@ auto prove_erase_batch_tombstones_across_reopen(const glifistore::StoreConfig& c
         const auto kept = store.get(std::string(key_prefix) + "-survivor");
         GLIFI_REQUIRE(kept.has_value());
         GLIFI_REQUIRE(std::string_view(reinterpret_cast<const char*>(kept->bytes.data()),
-                                        kept->bytes.size()) == "keep");
+                                       kept->bytes.size()) == "keep");
         const auto same = store.get(std::string(key_prefix) + "-same-key");
         GLIFI_REQUIRE(!same.has_value());
         GLIFI_REQUIRE(same.error().code == glifistore::ErrorCode::not_found);

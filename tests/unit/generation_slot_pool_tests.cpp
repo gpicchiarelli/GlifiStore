@@ -70,11 +70,11 @@ GLIFI_TEST("ADR 0036 V8 candidate bounds slots and recovers after Reader adoptio
     GLIFI_REQUIRE((*pool)->adopt() != nullptr);
 
     GLIFI_REQUIRE((*pool)->try_publish(generation(1)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     GLIFI_REQUIRE((*pool)->try_publish(generation(2)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     GLIFI_REQUIRE((*pool)->try_publish(generation(3)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::pool_exhausted);
+                  glifistore::experimental::GenerationSlotPublishStatus::pool_exhausted);
     GLIFI_REQUIRE((*pool)->stats().live_slots == 3);
 
     const auto* adopted = (*pool)->adopt();
@@ -83,7 +83,7 @@ GLIFI_TEST("ADR 0036 V8 candidate bounds slots and recovers after Reader adoptio
     (*pool)->reclaim();
     GLIFI_REQUIRE((*pool)->stats().live_slots == 1);
     GLIFI_REQUIRE((*pool)->try_publish(generation(3)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     GLIFI_REQUIRE((*pool)->adopt()->marker == 3);
     GLIFI_REQUIRE((*pool)->stats().slot_reuses > 0);
 }
@@ -104,7 +104,7 @@ GLIFI_TEST("ADR 0036 V9 candidate applies the official retire-debt capacity form
     // normative retire-debt bound.
     for (std::uint64_t epoch = 1; epoch < kCapacity; ++epoch) {
         GLIFI_REQUIRE((*pool)->try_publish(generation(epoch)) ==
-                       glifistore::experimental::GenerationSlotPublishStatus::published);
+                      glifistore::experimental::GenerationSlotPublishStatus::published);
     }
     const auto saturated = (*pool)->stats();
     GLIFI_REQUIRE(saturated.live_slots == kCapacity);
@@ -118,7 +118,7 @@ GLIFI_TEST("ADR 0036 V9 candidate applies the official retire-debt capacity form
     (*pool)->reclaim();
     GLIFI_REQUIRE((*pool)->stats().live_slots == 1);
     GLIFI_REQUIRE((*pool)->try_publish(generation(kCapacity)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     GLIFI_REQUIRE((*pool)->adopt()->epoch() == kCapacity);
 }
 
@@ -132,12 +132,12 @@ GLIFI_TEST("ADR 0036 V8 candidate cold borrow holds the exact retired epoch") {
     auto borrowed = generation(1);
     std::weak_ptr<const MockGeneration> borrowed_lifetime = borrowed;
     GLIFI_REQUIRE((*pool)->try_publish(borrowed) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     GLIFI_REQUIRE((*pool)->adopt() != nullptr);
     borrowed.reset();
 
     GLIFI_REQUIRE((*pool)->try_publish(generation(2)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     GLIFI_REQUIRE((*pool)->adopt(1)->epoch() == 2);
     (*pool)->reclaim();
     GLIFI_REQUIRE(!borrowed_lifetime.expired());
@@ -155,10 +155,10 @@ GLIFI_TEST("ADR 0036 V8 candidate rejects a late regressing borrow frontier") {
     GLIFI_REQUIRE(pool.has_value());
     GLIFI_REQUIRE((*pool)->adopt() != nullptr);
     GLIFI_REQUIRE((*pool)->try_publish(generation(1)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     GLIFI_REQUIRE((*pool)->adopt()->epoch() == 1);
     GLIFI_REQUIRE((*pool)->try_publish(generation(2)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     GLIFI_REQUIRE((*pool)->adopt()->epoch() == 2);
     GLIFI_REQUIRE((*pool)->stats().reader_safe_epoch == 2);
 
@@ -179,7 +179,7 @@ GLIFI_TEST("ADR 0036 V6 candidate reserves before mutation and fail-closes aband
     GLIFI_REQUIRE(pool.has_value());
     GLIFI_REQUIRE((*pool)->adopt() != nullptr);
     GLIFI_REQUIRE((*pool)->try_publish(generation(1)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
 
     // Full before Store entry: reject without a fail-closed transition.
     GLIFI_REQUIRE(!(*pool)->try_reserve().has_value());
@@ -202,7 +202,7 @@ GLIFI_TEST("ADR 0036 V6 candidate reserves before mutation and fail-closes aband
         auto moved = std::move(*reservation);
         GLIFI_REQUIRE(moved.store_linearized());
         GLIFI_REQUIRE((*pool)->commit(moved, {}) ==
-                       glifistore::experimental::GenerationSlotPublishStatus::invalid_generation);
+                      glifistore::experimental::GenerationSlotPublishStatus::invalid_generation);
         // The moved-to guard owns the transition; both destructors together
         // must invoke fail-closed exactly once.
     }
@@ -215,7 +215,7 @@ GLIFI_TEST("ADR 0036 V6 candidate reserves before mutation and fail-closes aband
     GLIFI_REQUIRE(recovery.has_value());
     recovery->mark_store_linearized();
     GLIFI_REQUIRE((*pool)->commit(*recovery, generation(2)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     GLIFI_REQUIRE((*pool)->adopt()->epoch() == 2);
     GLIFI_REQUIRE(fail_closed_calls.load(std::memory_order_relaxed) == 1);
 }
@@ -239,7 +239,7 @@ GLIFI_TEST("ADR 0036 V5 candidate drains admitted reservations and rejects late 
 
     committed->mark_store_linearized();
     GLIFI_REQUIRE((*pool)->commit(*committed, generation(1)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     cancelled.reset();
     GLIFI_REQUIRE((*pool)->adopt()->epoch() == 1);
     GLIFI_REQUIRE(!(*pool)->try_finish_shutdown());
@@ -264,7 +264,7 @@ GLIFI_TEST("ADR 0036 V5 candidate holds a slow borrow until terminal Reader quie
     GLIFI_REQUIRE(pool.has_value());
     GLIFI_REQUIRE((*pool)->adopt() != nullptr);
     GLIFI_REQUIRE((*pool)->try_publish(generation(1)) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     GLIFI_REQUIRE((*pool)->adopt(0)->epoch() == 1);
 
     (*pool)->stop_admission();
@@ -466,7 +466,7 @@ GLIFI_TEST("ADR 0036 real generation pool reserves and reuses its matching shell
     auto writer_current = *first;
     first_reservation->mark_store_linearized();
     GLIFI_REQUIRE(pool.commit(*first_reservation, writer_current) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     first = glifistore::fail(glifistore::ErrorCode::internal_error, "moved to pool");
     GLIFI_REQUIRE(first_storage->allocation_count() == 1);
     GLIFI_REQUIRE(pool.adopt()->epoch() == 1);
@@ -486,7 +486,7 @@ GLIFI_TEST("ADR 0036 real generation pool reserves and reuses its matching shell
     writer_current = *second;
     second_reservation->mark_store_linearized();
     GLIFI_REQUIRE(pool.commit(*second_reservation, writer_current) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     second = glifistore::fail(glifistore::ErrorCode::internal_error, "moved to pool");
     GLIFI_REQUIRE(pool.adopt()->epoch() == 2);
     auto found = pool.reader_generation()->get(hashed, 0);
@@ -536,7 +536,7 @@ GLIFI_TEST("ADR 0036 inline slot owner publishes without shared backing ownershi
         GLIFI_REQUIRE(reservation.has_value());
         reservation->mark_store_linearized();
         GLIFI_REQUIRE(pool.publish_incremental(*reservation, std::span{&mutation, 1}) ==
-                       glifistore::experimental::GenerationSlotPublishStatus::published);
+                      glifistore::experimental::GenerationSlotPublishStatus::published);
         const auto* adopted = pool.adopt();
         GLIFI_REQUIRE(adopted != nullptr);
         GLIFI_REQUIRE(adopted->epoch() == sequence);
@@ -579,7 +579,7 @@ GLIFI_TEST("ADR 0036 inline slot owner fail-closes a rejected post-linearization
     GLIFI_REQUIRE(reservation.has_value());
     reservation->mark_store_linearized();
     GLIFI_REQUIRE(pool.publish_incremental(*reservation, std::span{&invalid, 1}) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::invalid_generation);
+                  glifistore::experimental::GenerationSlotPublishStatus::invalid_generation);
     GLIFI_REQUIRE(fail_closed_calls.load(std::memory_order_relaxed) == 1);
     GLIFI_REQUIRE(pool.stats().unpublished_linearizations == 1);
     GLIFI_REQUIRE(pool.stats().reserved_slots == 0);
@@ -751,7 +751,7 @@ GLIFI_TEST("ADR 0036 direct slot pool bounds debt and reuses reclaimed object st
         GLIFI_REQUIRE(reservation.has_value());
         reservation->mark_store_linearized();
         GLIFI_REQUIRE(pool.publish_incremental(*reservation, std::span{&mutation, 1}) ==
-                       glifistore::experimental::GenerationSlotPublishStatus::published);
+                      glifistore::experimental::GenerationSlotPublishStatus::published);
     }
     GLIFI_REQUIRE(!pool.try_reserve().has_value());
     GLIFI_REQUIRE(pool.stats().live_slots == 3);
@@ -771,7 +771,7 @@ GLIFI_TEST("ADR 0036 direct slot pool bounds debt and reuses reclaimed object st
     const auto reused_slot = reservation->slot_index();
     reservation->mark_store_linearized();
     GLIFI_REQUIRE(pool.publish_incremental(*reservation, std::span{&third, 1}) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::published);
+                  glifistore::experimental::GenerationSlotPublishStatus::published);
     const auto* adopted = pool.adopt();
     GLIFI_REQUIRE(adopted != nullptr);
     GLIFI_REQUIRE(adopted->epoch() == 3);
@@ -803,7 +803,7 @@ GLIFI_TEST("ADR 0036 direct slot pool holds a cold borrow frontier") {
         GLIFI_REQUIRE(reservation.has_value());
         reservation->mark_store_linearized();
         GLIFI_REQUIRE(pool.publish_incremental(*reservation, std::span{&mutation, 1}) ==
-                       glifistore::experimental::GenerationSlotPublishStatus::published);
+                      glifistore::experimental::GenerationSlotPublishStatus::published);
         if (sequence == 1) {
             GLIFI_REQUIRE(pool.adopt()->epoch() == 1);
         }
@@ -844,7 +844,7 @@ GLIFI_TEST("ADR 0036 direct slot pool fail-closes a rejected linearized build") 
     const auto slot = reservation->slot_index();
     reservation->mark_store_linearized();
     GLIFI_REQUIRE(pool.publish_incremental(*reservation, std::span{&invalid, 1}) ==
-                   glifistore::experimental::GenerationSlotPublishStatus::invalid_generation);
+                  glifistore::experimental::GenerationSlotPublishStatus::invalid_generation);
     GLIFI_REQUIRE(fail_closed_calls.load(std::memory_order_relaxed) == 1);
     GLIFI_REQUIRE(pool.stats().unpublished_linearizations == 1);
     GLIFI_REQUIRE(pool.stats().reserved_slots == 0);

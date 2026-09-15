@@ -91,8 +91,8 @@ GLIFI_TEST("durable runtime completes a sealed-active interrupted rotation") {
     GLIFI_REQUIRE((*runtime)->manifest().segments.size() == 2);
     GLIFI_REQUIRE((*runtime)->manifest().segments[0].role == glifistore::ManifestSegmentRole::sealed);
     GLIFI_REQUIRE((*runtime)->active_segment(0)->value == 2);
-    GLIFI_REQUIRE(std::filesystem::exists(
-        temporary.path() / glifistore::segment_filename(segment_identity(store_id, active))));
+    GLIFI_REQUIRE(std::filesystem::exists(temporary.path() /
+                                          glifistore::segment_filename(segment_identity(store_id, active))));
 }
 
 GLIFI_TEST("durable runtime adopts only the exact pristine prepared rotation Segment") {
@@ -221,11 +221,11 @@ GLIFI_TEST("zero hot-cache budget falls back to pinned active-Segment reads for 
     const std::string first{"first"};
     const std::string second{"second"};
     GLIFI_REQUIRE((*runtime)
-                       ->put(std::as_bytes(std::span{overwrite_key}), std::as_bytes(std::span{first}))
-                       .committed());
+                      ->put(std::as_bytes(std::span{overwrite_key}), std::as_bytes(std::span{first}))
+                      .committed());
     GLIFI_REQUIRE((*runtime)
-                       ->put(std::as_bytes(std::span{overwrite_key}), std::as_bytes(std::span{second}))
-                       .committed());
+                      ->put(std::as_bytes(std::span{overwrite_key}), std::as_bytes(std::span{second}))
+                      .committed());
     GLIFI_REQUIRE(owned_text(*(*runtime)->get(overwrite_key)) == second);
     GLIFI_REQUIRE((*runtime)->erase(std::as_bytes(std::span{overwrite_key})).committed());
     GLIFI_REQUIRE(!(*runtime)->get(overwrite_key).has_value());
@@ -395,11 +395,11 @@ GLIFI_TEST("hot-cache rejects oversized values and can be disabled without corre
     const std::string large_key{"large"};
     const std::string large_value(64, 'L');
     GLIFI_REQUIRE((*runtime)
-                       ->put(std::as_bytes(std::span{small_key}), std::as_bytes(std::span{small_value}))
-                       .committed());
+                      ->put(std::as_bytes(std::span{small_key}), std::as_bytes(std::span{small_value}))
+                      .committed());
     GLIFI_REQUIRE((*runtime)
-                       ->put(std::as_bytes(std::span{large_key}), std::as_bytes(std::span{large_value}))
-                       .committed());
+                      ->put(std::as_bytes(std::span{large_key}), std::as_bytes(std::span{large_value}))
+                      .committed());
     GLIFI_REQUIRE(owned_text(*(*runtime)->get(small_key)) == small_value);
     GLIFI_REQUIRE(owned_text(*(*runtime)->get(large_key)) == large_value);
     auto stats = (*runtime)->hot_cache_stats();
@@ -627,13 +627,13 @@ GLIFI_TEST("durable runtime commits different Worker mutations concurrently") {
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     {
         auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());
@@ -729,7 +729,7 @@ GLIFI_TEST("rotation space preflight fails before sealing the active Segment") {
     auto inspection = glifistore::DataDirectory::open_and_lock(temporary.path());
     GLIFI_REQUIRE(inspection.has_value());
     auto segment = glifistore::DurableSegmentFile::open(*inspection, segment_identity(store_id, active),
-                                                         glifistore::SegmentFileOpenMode::read_only);
+                                                        glifistore::SegmentFileOpenMode::read_only);
     GLIFI_REQUIRE(segment.has_value());
     GLIFI_REQUIRE(segment->selected_commit().commit.state == glifistore::PersistedSegmentState::active);
 }
@@ -813,21 +813,19 @@ GLIFI_TEST("durable runtime rotates a full active Segment before committing the 
         const auto observation = (*runtime)->maintenance_observation(0);
         GLIFI_REQUIRE(observation.has_value());
         GLIFI_REQUIRE(observation->compaction_candidate_worker == 0);
-        GLIFI_REQUIRE(observation->candidate_sealed_record_bytes ==
-                       63ULL * glifistore::kMaxNormalRecordSize);
+        GLIFI_REQUIRE(observation->candidate_sealed_record_bytes == 63ULL * glifistore::kMaxNormalRecordSize);
         GLIFI_REQUIRE(observation->candidate_live_record_bytes == glifistore::kMaxNormalRecordSize);
         GLIFI_REQUIRE(observation->candidate_dead_record_bytes == 62ULL * glifistore::kMaxNormalRecordSize);
         GLIFI_REQUIRE(observation->candidate_dead_byte_ratio_bp ==
-                       static_cast<std::uint32_t>(62ULL * 10'000ULL / 63ULL));
+                      static_cast<std::uint32_t>(62ULL * 10'000ULL / 63ULL));
 
         GLIFI_REQUIRE((*runtime)
-                           ->put(std::as_bytes(std::span{fill_key}), std::as_bytes(std::span{maximum_value}))
-                           .committed());
+                          ->put(std::as_bytes(std::span{fill_key}), std::as_bytes(std::span{maximum_value}))
+                          .committed());
         const auto overwritten = (*runtime)->maintenance_observation(0);
         GLIFI_REQUIRE(overwritten.has_value());
         GLIFI_REQUIRE(overwritten->candidate_live_record_bytes == 0);
-        GLIFI_REQUIRE(overwritten->candidate_dead_record_bytes ==
-                       overwritten->candidate_sealed_record_bytes);
+        GLIFI_REQUIRE(overwritten->candidate_dead_record_bytes == overwritten->candidate_sealed_record_bytes);
         GLIFI_REQUIRE(overwritten->candidate_dead_byte_ratio_bp == 10'000);
     }
 
@@ -873,8 +871,8 @@ GLIFI_TEST("durable group closes a pending batch before rotating a full Segment"
             {.commit_sync = glifistore::SegmentCommitSync::immediate,
              .sync_interval_ms = 50,
              .batch = glifistore::DurableGroupConfig{.max_records = 2,
-                                                      .max_bytes = 2U * glifistore::kMaxNormalRecordSize,
-                                                      .max_wait_ms = 50},
+                                                     .max_bytes = 2U * glifistore::kMaxNormalRecordSize,
+                                                     .max_wait_ms = 50},
              .strict_ack = true});
         GLIFI_REQUIRE(runtime.has_value());
 
@@ -940,8 +938,7 @@ GLIFI_TEST("one-Worker durable group commits on the dedicated commit executor") 
         std::move(*directory), 0,
         {.commit_sync = glifistore::SegmentCommitSync::immediate,
          .sync_interval_ms = 60'000,
-         .batch =
-             glifistore::DurableGroupConfig{.max_records = 2, .max_bytes = 65536, .max_wait_ms = 60'000},
+         .batch = glifistore::DurableGroupConfig{.max_records = 2, .max_bytes = 65536, .max_wait_ms = 60'000},
          .strict_ack = true,
          .limits = limits});
     GLIFI_REQUIRE(runtime.has_value());
@@ -1004,8 +1001,7 @@ GLIFI_TEST("one-Worker commit executor bounds admission at the batch record limi
         std::move(*directory), 0,
         {.commit_sync = glifistore::SegmentCommitSync::immediate,
          .sync_interval_ms = 60'000,
-         .batch =
-             glifistore::DurableGroupConfig{.max_records = 2, .max_bytes = 65536, .max_wait_ms = 60'000},
+         .batch = glifistore::DurableGroupConfig{.max_records = 2, .max_bytes = 65536, .max_wait_ms = 60'000},
          .strict_ack = true});
     GLIFI_REQUIRE(runtime.has_value());
 
@@ -1077,7 +1073,7 @@ GLIFI_TEST("explicit flush completes a partial sequenced durable group") {
     {
         std::unique_lock lock{observer.mutex};
         GLIFI_REQUIRE(observer.written.wait_for(lock, std::chrono::seconds{5},
-                                                 [&] { return observer.record_written; }));
+                                                [&] { return observer.record_written; }));
     }
     GLIFI_REQUIRE((*runtime)->flush().has_value());
     producer.join();
@@ -1167,7 +1163,7 @@ GLIFI_TEST("durable mutation fault matrix preserves pre and post commit recovery
                 auto runtime = glifistore::DurableRuntimeCatalog::open_existing(
                     temporary.path(), 0,
                     glifistore::FilesystemHooks{.context = &failure,
-                                                 .before = &OneShotFilesystemFailure::before});
+                                                .before = &OneShotFilesystemFailure::before});
                 GLIFI_REQUIRE(runtime.has_value());
                 const std::string key{"fault-matrix"};
                 const std::string value{"value"};
@@ -1176,10 +1172,9 @@ GLIFI_TEST("durable mutation fault matrix preserves pre and post commit recovery
                 GLIFI_REQUIRE(!result.committed());
                 GLIFI_REQUIRE(result.error.has_value());
                 GLIFI_REQUIRE(result.error->code == failure_code);
-                GLIFI_REQUIRE(result.outcome ==
-                               (boundary == glifistore::FilesystemOperation::sync_commit_slot
-                                    ? glifistore::DurableMutationOutcome::indeterminate
-                                    : glifistore::DurableMutationOutcome::not_committed));
+                GLIFI_REQUIRE(result.outcome == (boundary == glifistore::FilesystemOperation::sync_commit_slot
+                                                     ? glifistore::DurableMutationOutcome::indeterminate
+                                                     : glifistore::DurableMutationOutcome::not_committed));
             }
             GLIFI_REQUIRE(failure.fired);
 
@@ -1188,7 +1183,7 @@ GLIFI_TEST("durable mutation fault matrix preserves pre and post commit recovery
             const auto visible = (*recovered)->get("fault-matrix");
             if (boundary == glifistore::FilesystemOperation::sync_commit_slot) {
                 GLIFI_REQUIRE(visible.has_value() ||
-                               visible.error().code == glifistore::ErrorCode::not_found);
+                              visible.error().code == glifistore::ErrorCode::not_found);
                 if (visible) {
                     GLIFI_REQUIRE(owned_text(*visible) == "value");
                 }
@@ -1227,8 +1222,7 @@ GLIFI_TEST("durable group flush failure wakes every batch waiter fail-closed") {
         std::move(*directory), 0,
         {.commit_sync = glifistore::SegmentCommitSync::immediate,
          .sync_interval_ms = 60'000,
-         .batch =
-             glifistore::DurableGroupConfig{.max_records = 2, .max_bytes = 65536, .max_wait_ms = 60'000},
+         .batch = glifistore::DurableGroupConfig{.max_records = 2, .max_bytes = 65536, .max_wait_ms = 60'000},
          .strict_ack = true});
     GLIFI_REQUIRE(runtime.has_value());
 

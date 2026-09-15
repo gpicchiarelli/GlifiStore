@@ -29,17 +29,17 @@ GLIFI_TEST("durable recovery rebuilds partitioned visibility and Worker sequence
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{1},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{1},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const auto alpha = key_for_worker(0, 2, "alpha");
     const auto gone = key_for_worker(0, 2, "gone");
@@ -177,13 +177,13 @@ GLIFI_TEST("recovery accepts only the documented sealed-active rotation transiti
         const auto store_id = recovery_store_id();
         const std::vector entries{
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::sealed},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::sealed},
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::active},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::active},
         };
         auto incorrectly_active = create_segment(*directory, store_id, entries[0]);
         auto active = create_segment(*directory, store_id, entries[1]);
@@ -264,13 +264,13 @@ GLIFI_TEST("recovery validates persisted key hashes and Worker routing") {
         const auto store_id = recovery_store_id();
         const std::vector entries{
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::active},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::active},
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{1},
-                                              .role = glifistore::ManifestSegmentRole::active},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{1},
+                                             .role = glifistore::ManifestSegmentRole::active},
         };
         auto wrong_owner = create_segment(*directory, store_id, entries[0]);
         auto other_active = create_segment(*directory, store_id, entries[1]);
@@ -292,13 +292,13 @@ GLIFI_TEST("recovery rejects equal winning sequences and exhausted Worker sequen
         const auto store_id = recovery_store_id();
         const std::vector entries{
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::sealed},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::sealed},
             glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                              .generation = glifistore::GenerationId{1},
-                                              .owner_worker = glifistore::WorkerId{0},
-                                              .role = glifistore::ManifestSegmentRole::active},
+                                             .generation = glifistore::GenerationId{1},
+                                             .owner_worker = glifistore::WorkerId{0},
+                                             .role = glifistore::ManifestSegmentRole::active},
         };
         const auto key = key_for_worker(0, 1, "duplicate");
         auto first = create_segment(*directory, store_id, entries[0]);
@@ -339,13 +339,13 @@ GLIFI_TEST("recovery rejects overlapping sequence ranges across Worker Segments"
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     auto first = create_segment(*directory, store_id, entries[0]);
     append_record(first, 10, "first", "value");
@@ -365,13 +365,13 @@ GLIFI_TEST("durable runtime materializes recovered Indexes with bounded concurre
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     const std::string binary_key{"bin\0key", 7};
     {
@@ -507,17 +507,17 @@ GLIFI_TEST("durable cold read pin survives concurrent source retirement and reli
     const auto store_id = recovery_store_id();
     const std::vector entries{
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{1},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{2},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::sealed},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::sealed},
         glifistore::ManifestSegmentEntry{.segment_id = glifistore::SegmentId{3},
-                                          .generation = glifistore::GenerationId{1},
-                                          .owner_worker = glifistore::WorkerId{0},
-                                          .role = glifistore::ManifestSegmentRole::active},
+                                         .generation = glifistore::GenerationId{1},
+                                         .owner_worker = glifistore::WorkerId{0},
+                                         .role = glifistore::ManifestSegmentRole::active},
     };
     {
         auto directory = glifistore::DataDirectory::open_and_lock(temporary.path());

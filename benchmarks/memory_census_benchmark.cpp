@@ -107,7 +107,7 @@ struct Options final {
 int main(const int argc, char** argv) try {
     const auto options = parse_options(argc, argv);
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = options.workers},
-                                            .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
+                                           .maintenance = {.mode = glifistore::MaintenanceMode::disabled}});
     if (!opened) {
         throw std::runtime_error{"cannot open volatile paired Store"};
     }
@@ -229,9 +229,8 @@ int main(const int argc, char** argv) try {
             : 0U;
     const auto process_before_relief = glifistore::bench::process_memory_snapshot();
     const auto allocator_before_relief = glifistore::bench::allocator_memory_snapshot();
-    const auto pressure_relief = options.pressure_relief
-                                     ? glifistore::bench::allocator_pressure_relief()
-                                     : glifistore::bench::AllocatorPressureReliefSample{};
+    const auto pressure_relief = options.pressure_relief ? glifistore::bench::allocator_pressure_relief()
+                                                         : glifistore::bench::AllocatorPressureReliefSample{};
     const auto process = glifistore::bench::process_memory_snapshot();
     const auto allocator = glifistore::bench::allocator_memory_snapshot();
     const auto unattributed_rss_bytes = process.rss_after_bytes > attributed_live_lower_bound_bytes

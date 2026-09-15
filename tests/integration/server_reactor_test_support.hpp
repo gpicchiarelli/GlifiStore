@@ -374,14 +374,13 @@ class BlockingCompactionIntent final {
         condition_.notify_all();
     }
 
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& state = *static_cast<BlockingCompactionIntent*>(opaque);
         std::unique_lock lock{state.mutex_};
         if (operation == glifistore::FilesystemOperation::write_record && state.force_record_full_) {
             state.force_record_full_ = false;
             return glifistore::fail(glifistore::ErrorCode::segment_full,
-                                     "injected full Segment before publication-lease wait");
+                                    "injected full Segment before publication-lease wait");
         }
         if (operation != glifistore::FilesystemOperation::write_compaction_intent || state.claimed_) {
             return {};
@@ -404,8 +403,7 @@ class BlockingCompactionIntent final {
 
 class GroupBatchObserver final {
   public:
-    static auto before(void* opaque, const glifistore::FilesystemOperation operation)
-        -> glifistore::Status {
+    static auto before(void* opaque, const glifistore::FilesystemOperation operation) -> glifistore::Status {
         auto& state = *static_cast<GroupBatchObserver*>(opaque);
         const std::lock_guard lock{state.mutex_};
         if (operation == glifistore::FilesystemOperation::write_record) {

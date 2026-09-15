@@ -67,7 +67,7 @@ GLIFI_TEST("worker routing seed is stable within a process") {
 GLIFI_TEST("worker routing publishes algorithm and seed as one coherent revision") {
     constexpr glifistore::WorkerRoutingState kFNV{};
     constexpr glifistore::WorkerRoutingState kSip{glifistore::RoutingAlgorithm::siphash24_v1,
-                                                   0xA55A'1234'9876'FEDCULL};
+                                                  0xA55A'1234'9876'FEDCULL};
     RoutingGuard guard{kFNV};
     std::atomic_bool start{};
     std::atomic_bool done{};
@@ -127,7 +127,7 @@ GLIFI_TEST("INIT identity stays plain for FNV and extends for SipHash") {
     GLIFI_REQUIRE(!decoded_plain->keyed());
 
     const glifistore::WorkerRoutingState keyed{glifistore::RoutingAlgorithm::siphash24_v1,
-                                                0xABCDEF0123456789ULL};
+                                               0xABCDEF0123456789ULL};
     const auto extended = glifistore::encode_init_identity_value(keyed);
     GLIFI_REQUIRE(extended.size() == glifistore::kWireInitIdentityExtendedBytes);
     auto decoded = glifistore::decode_init_identity_value(extended);

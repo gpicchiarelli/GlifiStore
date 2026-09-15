@@ -76,7 +76,7 @@ GLIFI_TEST("ADR 0036 production slot V1 token adopt and reincarnation") {
             }
             reservation->mark_store_linearized();
             GLIFI_REQUIRE(pool.publish_incremental(*reservation, std::span{&mutation, 1}) ==
-                           Status::published);
+                          Status::published);
             break;
         }
         const auto token = pool.publication_token();
@@ -116,7 +116,7 @@ GLIFI_TEST("ADR 0036 production slot V6 reserve-before-mutate fail-closed") {
     GLIFI_REQUIRE(reservation.has_value());
     reservation->mark_store_linearized();
     GLIFI_REQUIRE(pool.publish_incremental(*reservation, std::span{&invalid, 1}) ==
-                   Status::invalid_generation);
+                  Status::invalid_generation);
     GLIFI_REQUIRE(fail_closed_calls.load(std::memory_order_relaxed) == 1);
     GLIFI_REQUIRE(pool.stats().unpublished_linearizations == 1);
 }

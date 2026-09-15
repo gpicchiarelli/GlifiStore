@@ -213,10 +213,10 @@ GLIFI_TEST("positional file IO retries EINTR and completes deterministic short t
     const auto path = temporary.path() / "fragmented.bin";
     FragmentedPositionalIo io{};
     glifistore::FileDescriptor original{::open(path.c_str(), O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC, 0600),
-                                         {.context = &io,
-                                          .read_some_at = &FragmentedPositionalIo::read,
-                                          .write_some_at = &FragmentedPositionalIo::write,
-                                          .sync_file = &FragmentedPositionalIo::sync}};
+                                        {.context = &io,
+                                         .read_some_at = &FragmentedPositionalIo::read,
+                                         .write_some_at = &FragmentedPositionalIo::write,
+                                         .sync_file = &FragmentedPositionalIo::sync}};
     glifistore::FileDescriptor file{std::move(original)};
     GLIFI_REQUIRE(file.valid());
     GLIFI_REQUIRE(!original.valid());
@@ -238,10 +238,10 @@ GLIFI_TEST("positional write faults preserve native resource categories") {
     const auto path = temporary.path() / "faulted.bin";
     FailingPositionalIo io{};
     glifistore::FileDescriptor file{::open(path.c_str(), O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC, 0600),
-                                     {.context = &io,
-                                      .read_some_at = &FailingPositionalIo::read,
-                                      .write_some_at = &FailingPositionalIo::write,
-                                      .sync_file = &FailingPositionalIo::sync}};
+                                    {.context = &io,
+                                     .read_some_at = &FailingPositionalIo::read,
+                                     .write_some_at = &FailingPositionalIo::write,
+                                     .sync_file = &FailingPositionalIo::sync}};
     GLIFI_REQUIRE(file.valid());
     static constexpr std::array payload{std::byte{0x01}};
 
@@ -364,11 +364,11 @@ GLIFI_TEST("positional IO fault matrix covers EINTR short IO and capacity errno 
         TemporaryDirectory temporary;
         MatrixIo io{.fatal_errno = error_number};
         glifistore::FileDescriptor file{::open((temporary.path() / "matrix-fail.bin").c_str(),
-                                                O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC, 0600),
-                                         {.context = &io,
-                                          .read_some_at = &MatrixIo::read,
-                                          .write_some_at = &MatrixIo::write,
-                                          .sync_file = &MatrixIo::sync}};
+                                               O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC, 0600),
+                                        {.context = &io,
+                                         .read_some_at = &MatrixIo::read,
+                                         .write_some_at = &MatrixIo::write,
+                                         .sync_file = &MatrixIo::sync}};
         GLIFI_REQUIRE(file.valid());
         const auto result = file.write_all_at(payload, 0);
         GLIFI_REQUIRE(!result.has_value());
@@ -386,11 +386,11 @@ GLIFI_TEST("positional IO fault matrix covers EINTR short IO and capacity errno 
         TemporaryDirectory temporary;
         MatrixIo io{};
         glifistore::FileDescriptor file{::open((temporary.path() / "matrix-sync.bin").c_str(),
-                                                O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC, 0600),
-                                         {.context = &io,
-                                          .read_some_at = &MatrixIo::read,
-                                          .write_some_at = &MatrixIo::write,
-                                          .sync_file = &MatrixIo::sync}};
+                                               O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC, 0600),
+                                        {.context = &io,
+                                         .read_some_at = &MatrixIo::read,
+                                         .write_some_at = &MatrixIo::write,
+                                         .sync_file = &MatrixIo::sync}};
         GLIFI_REQUIRE(file.valid());
         GLIFI_REQUIRE(file.write_all_at(payload, 0).has_value());
         io.fatal_errno = error_number;
@@ -435,7 +435,7 @@ GLIFI_TEST("data directory creation faults distinguish mkdir from parent synchro
                                 .enabled = true};
         const auto rejected =
             glifistore::DataDirectory::open_and_lock(path, glifistore::DataDirectoryOpenMode::create_new,
-                                                      {.context = &failure, .before = &fail_before});
+                                                     {.context = &failure, .before = &fail_before});
         GLIFI_REQUIRE(!rejected.has_value());
         GLIFI_REQUIRE(!std::filesystem::exists(path));
     }
@@ -446,7 +446,7 @@ GLIFI_TEST("data directory creation faults distinguish mkdir from parent synchro
                                 .enabled = true};
         const auto indeterminate =
             glifistore::DataDirectory::open_and_lock(path, glifistore::DataDirectoryOpenMode::create_new,
-                                                      {.context = &failure, .before = &fail_before});
+                                                     {.context = &failure, .before = &fail_before});
         GLIFI_REQUIRE(!indeterminate.has_value());
         GLIFI_REQUIRE(std::filesystem::is_directory(path));
         auto reopened = glifistore::DataDirectory::open_and_lock(path);
@@ -553,7 +553,7 @@ GLIFI_TEST("pre-rename failure preserves the old manifest and keeps the director
     TemporaryDirectory temporary;
     InjectedFailure failure{};
     auto directory = glifistore::DataDirectory::open_and_lock(temporary.path(),
-                                                               {.context = &failure, .before = &fail_before});
+                                                              {.context = &failure, .before = &fail_before});
     GLIFI_REQUIRE(directory.has_value());
     const auto first = test_manifest(1);
     GLIFI_REQUIRE(directory->publish_manifest(first).durable());
@@ -616,7 +616,7 @@ GLIFI_TEST("post-rename sync failure is indeterminate and poisons the directory 
         GLIFI_REQUIRE(!directory->healthy());
         GLIFI_REQUIRE(!directory->read_manifest().has_value());
         GLIFI_REQUIRE(directory->publish_manifest(test_manifest(3)).outcome ==
-                       glifistore::ManifestPublicationOutcome::indeterminate);
+                      glifistore::ManifestPublicationOutcome::indeterminate);
     }
 
     const auto reopened = glifistore::DataDirectory::open_and_lock(temporary.path());
@@ -642,7 +642,7 @@ GLIFI_TEST("bootstrap intent publication cleans pre-rename failures") {
     TemporaryDirectory temporary;
     InjectedFailure failure{.operation = glifistore::FilesystemOperation::sync_bootstrap, .enabled = true};
     auto directory = glifistore::DataDirectory::open_and_lock(temporary.path(),
-                                                               {.context = &failure, .before = &fail_before});
+                                                              {.context = &failure, .before = &fail_before});
     GLIFI_REQUIRE(directory.has_value());
     const auto published = directory->publish_bootstrap_intent(test_manifest());
     GLIFI_REQUIRE(!published.has_value());
@@ -740,8 +740,7 @@ GLIFI_TEST("compaction intent prepublication fault matrix leaves no authority") 
         GLIFI_REQUIRE(rejected.error.has_value());
         GLIFI_REQUIRE(directory->healthy());
         GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() / glifistore::kCompactionIntentFilename));
-        GLIFI_REQUIRE(
-            !std::filesystem::exists(temporary.path() / glifistore::kCompactionTemporaryFilename));
+        GLIFI_REQUIRE(!std::filesystem::exists(temporary.path() / glifistore::kCompactionTemporaryFilename));
     }
 }
 
@@ -792,7 +791,7 @@ GLIFI_TEST("compaction intent removal fault before unlink preserves the authorit
     InjectedFailure failure{.operation = glifistore::FilesystemOperation::remove_compaction_intent,
                             .enabled = true};
     auto directory = glifistore::DataDirectory::open_and_lock(temporary.path(),
-                                                               {.context = &failure, .before = &fail_before});
+                                                              {.context = &failure, .before = &fail_before});
     GLIFI_REQUIRE(directory.has_value());
     const auto expected = test_compaction_intent();
     failure.enabled = false;

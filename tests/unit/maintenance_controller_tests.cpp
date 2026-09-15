@@ -44,7 +44,7 @@ GLIFI_TEST("maintenance integer ratios and pressure thresholds do not overflow")
     for (std::uint64_t denominator = 1; denominator <= 1'000; ++denominator) {
         for (std::uint64_t numerator = 0; numerator <= denominator; ++numerator) {
             GLIFI_REQUIRE(glifistore::basis_points(numerator, denominator) ==
-                           numerator * 10'000U / denominator);
+                          numerator * 10'000U / denominator);
         }
     }
 
@@ -56,7 +56,7 @@ GLIFI_TEST("maintenance integer ratios and pressure thresholds do not overflow")
         .max_segment_count = maximum_size,
     };
     GLIFI_REQUIRE(glifistore::classify_maintenance_pressure(observation, config) ==
-                   glifistore::MaintenancePressureLevel::normal);
+                  glifistore::MaintenancePressureLevel::normal);
 
     observation.segment_count = 1;
     observation.reserved_free_bytes = maximum_u64 - 100U;
@@ -64,7 +64,7 @@ GLIFI_TEST("maintenance integer ratios and pressure thresholds do not overflow")
     observation.available_free_bytes = maximum_u64 - 25U;
     config.free_bytes_pressure_margin = 200;
     GLIFI_REQUIRE(glifistore::classify_maintenance_pressure(observation, config) ==
-                   glifistore::MaintenancePressureLevel::pressure);
+                  glifistore::MaintenancePressureLevel::pressure);
 
     observation.candidate_dead_byte_ratio_bp = 9'999;
     observation.candidate_sealed_record_bytes = maximum_u64;
@@ -138,7 +138,7 @@ GLIFI_TEST("reclaim_threshold skip advances to a reclaimable peer Worker") {
         std::this_thread::sleep_for(std::chrono::milliseconds{5});
     }
     GLIFI_REQUIRE(controller.snapshot().last_skip_reason ==
-                   glifistore::MaintenanceSkipReason::reclaim_threshold);
+                  glifistore::MaintenanceSkipReason::reclaim_threshold);
     GLIFI_REQUIRE(controller.snapshot().last_observation.compaction_candidate_worker == 0);
     GLIFI_REQUIRE(compact_calls->load(std::memory_order_relaxed) == 0);
 
@@ -202,7 +202,7 @@ GLIFI_TEST("normal dead-byte threshold is inclusive and pressure bypasses it") {
         std::this_thread::sleep_for(std::chrono::milliseconds{5});
     }
     GLIFI_REQUIRE(controller.snapshot().last_skip_reason ==
-                   glifistore::MaintenanceSkipReason::reclaim_threshold);
+                  glifistore::MaintenanceSkipReason::reclaim_threshold);
     GLIFI_REQUIRE(compact_calls->load(std::memory_order_relaxed) == 0);
 
     ratio->store(5'000, std::memory_order_relaxed);
@@ -275,7 +275,7 @@ GLIFI_TEST("normal copy budget preflights one candidate and pressure bypasses it
     }
     GLIFI_REQUIRE(controller.snapshot().last_skip_reason == glifistore::MaintenanceSkipReason::copy_budget);
     GLIFI_REQUIRE(controller.snapshot().last_activation_reason ==
-                   glifistore::MaintenanceActivationReason::copy_budget);
+                  glifistore::MaintenanceActivationReason::copy_budget);
     GLIFI_REQUIRE(compact_calls->load(std::memory_order_relaxed) == 0);
 
     candidate_live_bytes->store(1'000, std::memory_order_relaxed);
@@ -306,8 +306,8 @@ GLIFI_TEST("normal copy budget preflights one candidate and pressure bypasses it
     compact_calls->store(0, std::memory_order_relaxed);
     glifistore::MaintenanceController unlimited_controller{config};
     unlimited_controller.bind_observe(
-        [candidate_live_bytes, segment_count](glifistore::MaintenanceObserveRequest)
-            -> glifistore::Result<glifistore::MaintenanceObservation> {
+        [candidate_live_bytes, segment_count](
+            glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
             return glifistore::MaintenanceObservation{
                 .durable = true,
                 .segment_count = segment_count->load(std::memory_order_relaxed),
@@ -401,7 +401,7 @@ GLIFI_TEST("normal rate and cpu budgets suspend and pressure bypasses them") {
     }
     GLIFI_REQUIRE(controller.snapshot().last_skip_reason == glifistore::MaintenanceSkipReason::rate_budget);
     GLIFI_REQUIRE(controller.snapshot().last_activation_reason ==
-                   glifistore::MaintenanceActivationReason::rate_budget);
+                  glifistore::MaintenanceActivationReason::rate_budget);
     GLIFI_REQUIRE(compact_calls->load(std::memory_order_relaxed) == 1);
 
     segment_count->store(90, std::memory_order_relaxed);
@@ -467,7 +467,7 @@ GLIFI_TEST("normal rate and cpu budgets suspend and pressure bypasses them") {
         std::this_thread::sleep_for(std::chrono::milliseconds{5});
     }
     GLIFI_REQUIRE(cpu_controller.snapshot().last_skip_reason ==
-                   glifistore::MaintenanceSkipReason::rate_budget);
+                  glifistore::MaintenanceSkipReason::rate_budget);
     GLIFI_REQUIRE(compact_calls->load(std::memory_order_relaxed) == 1);
     cpu_controller.stop();
 }
@@ -517,7 +517,7 @@ GLIFI_TEST("foreground p99 suspends normal compaction and pressure bypasses late
     const auto suspended = controller.snapshot();
     GLIFI_REQUIRE(suspended.last_skip_reason == glifistore::MaintenanceSkipReason::latency_budget);
     GLIFI_REQUIRE(suspended.last_activation_reason ==
-                   glifistore::MaintenanceActivationReason::latency_budget);
+                  glifistore::MaintenanceActivationReason::latency_budget);
     GLIFI_REQUIRE(suspended.foreground_latency_samples == 1);
     GLIFI_REQUIRE(suspended.last_foreground_p99_ns == 50'000'000ULL);
     GLIFI_REQUIRE(suspended.latency_suspends == 1);
@@ -553,20 +553,20 @@ GLIFI_TEST("foreground latency guard requires a representative sample window") {
 
     glifistore::MaintenanceController controller{config};
     auto compact_calls = std::make_shared<std::atomic<std::uint64_t>>(0);
-    controller.bind_observe([](glifistore::MaintenanceObserveRequest)
-                                -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 3,
-            .sealed_segment_count = 2,
-            .compaction_candidate_worker = 0,
-            .candidate_sealed_record_bytes = 2'000,
-            .candidate_live_record_bytes = 1'000,
-            .candidate_dead_record_bytes = 1'000,
-            .candidate_dead_byte_ratio_bp = 5'000,
-            .max_segment_count = 100,
-        };
-    });
+    controller.bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 3,
+                .sealed_segment_count = 2,
+                .compaction_candidate_worker = 0,
+                .candidate_sealed_record_bytes = 2'000,
+                .candidate_live_record_bytes = 1'000,
+                .candidate_dead_record_bytes = 1'000,
+                .candidate_dead_byte_ratio_bp = 5'000,
+                .max_segment_count = 100,
+            };
+        });
     controller.bind_compact(
         [compact_calls](const std::optional<std::size_t>,
                         const std::uint64_t) -> glifistore::Result<glifistore::CompactionResult> {
@@ -605,20 +605,20 @@ GLIFI_TEST("foreground latency guard uses hysteresis and bounded reclaim debt") 
 
     glifistore::MaintenanceController controller{config};
     auto compact_calls = std::make_shared<std::atomic<std::uint64_t>>(0);
-    controller.bind_observe([](glifistore::MaintenanceObserveRequest)
-                                -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 3,
-            .sealed_segment_count = 2,
-            .compaction_candidate_worker = 0,
-            .candidate_sealed_record_bytes = 2'000,
-            .candidate_live_record_bytes = 1'000,
-            .candidate_dead_record_bytes = 1'000,
-            .candidate_dead_byte_ratio_bp = 5'000,
-            .max_segment_count = 100,
-        };
-    });
+    controller.bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 3,
+                .sealed_segment_count = 2,
+                .compaction_candidate_worker = 0,
+                .candidate_sealed_record_bytes = 2'000,
+                .candidate_live_record_bytes = 1'000,
+                .candidate_dead_record_bytes = 1'000,
+                .candidate_dead_byte_ratio_bp = 5'000,
+                .max_segment_count = 100,
+            };
+        });
     controller.bind_compact(
         [compact_calls](const std::optional<std::size_t>,
                         const std::uint64_t) -> glifistore::Result<glifistore::CompactionResult> {
@@ -676,7 +676,7 @@ GLIFI_TEST("foreground latency guard uses hysteresis and bounded reclaim debt") 
     GLIFI_REQUIRE(debt.latency_debt_overrides == 1);
     GLIFI_REQUIRE(!debt.latency_guard_active);
     GLIFI_REQUIRE(debt.last_activation_reason ==
-                   glifistore::MaintenanceActivationReason::latency_debt_override);
+                  glifistore::MaintenanceActivationReason::latency_debt_override);
     controller.stop();
 }
 
@@ -687,22 +687,22 @@ GLIFI_TEST("maintenance telemetry counts sequence conflicts") {
     config.max_eval_interval_ms = 60'000;
 
     glifistore::MaintenanceController controller{config};
-    controller.bind_observe([](glifistore::MaintenanceObserveRequest)
-                                -> glifistore::Result<glifistore::MaintenanceObservation> {
-        return glifistore::MaintenanceObservation{
-            .durable = true,
-            .segment_count = 3,
-            .sealed_segment_count = 2,
-            .compaction_candidate_worker = 0,
-            .candidate_sealed_record_bytes = 2'000,
-            .candidate_live_record_bytes = 1'000,
-            .candidate_dead_record_bytes = 1'000,
-            .candidate_dead_byte_ratio_bp = 5'000,
-            .max_segment_count = 100,
-            .reserved_free_bytes = 1'024,
-            .available_free_bytes = 1'024ULL + glifistore::kSegmentSizeBytes + 4'096ULL,
-        };
-    });
+    controller.bind_observe(
+        [](glifistore::MaintenanceObserveRequest) -> glifistore::Result<glifistore::MaintenanceObservation> {
+            return glifistore::MaintenanceObservation{
+                .durable = true,
+                .segment_count = 3,
+                .sealed_segment_count = 2,
+                .compaction_candidate_worker = 0,
+                .candidate_sealed_record_bytes = 2'000,
+                .candidate_live_record_bytes = 1'000,
+                .candidate_dead_record_bytes = 1'000,
+                .candidate_dead_byte_ratio_bp = 5'000,
+                .max_segment_count = 100,
+                .reserved_free_bytes = 1'024,
+                .available_free_bytes = 1'024ULL + glifistore::kSegmentSizeBytes + 4'096ULL,
+            };
+        });
     controller.bind_compact([](const std::optional<std::size_t>,
                                const std::uint64_t) -> glifistore::Result<glifistore::CompactionResult> {
         return glifistore::fail(glifistore::ErrorCode::sequence_conflict, "injected maintenance conflict");
@@ -759,7 +759,7 @@ GLIFI_TEST("background store phase1 auto-compacts and reports no_gain on empty v
     GLIFI_REQUIRE(snapshot.evaluation_cycles > 0);
     GLIFI_REQUIRE(snapshot.compact_attempts > 0);
     GLIFI_REQUIRE(snapshot.last_skip_reason == glifistore::MaintenanceSkipReason::no_gain ||
-                   snapshot.compact_completed > 0);
+                  snapshot.compact_completed > 0);
     GLIFI_REQUIRE(!snapshot.last_observation.durable);
 
     const auto compacted = (**store).compact();

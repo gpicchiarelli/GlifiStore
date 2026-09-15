@@ -61,9 +61,9 @@ auto namespace_manifest() -> glifistore::Manifest {
 auto segment_name(const glifistore::Manifest& manifest, glifistore::SegmentId id,
                   glifistore::GenerationId generation) -> std::string {
     return glifistore::segment_filename({.store_id = manifest.store_id,
-                                          .segment_id = id,
-                                          .generation = generation,
-                                          .owner_worker = glifistore::WorkerId{0}});
+                                         .segment_id = id,
+                                         .generation = generation,
+                                         .owner_worker = glifistore::WorkerId{0}});
 }
 
 void create_private_file(const std::filesystem::path& path) {
@@ -92,16 +92,12 @@ GLIFI_TEST("Segment filename parser accepts only exact lowercase non-zero identi
     GLIFI_REQUIRE(parsed->generation.value == 0x2AU);
     GLIFI_REQUIRE(!parsed->temporary);
 
-    const auto temporary =
-        glifistore::parse_segment_filename(".segment-0123456789abcdef-0000002a.glifi.tmp");
+    const auto temporary = glifistore::parse_segment_filename(".segment-0123456789abcdef-0000002a.glifi.tmp");
     GLIFI_REQUIRE(temporary.has_value());
     GLIFI_REQUIRE(temporary->temporary);
-    GLIFI_REQUIRE(
-        !glifistore::parse_segment_filename("segment-0123456789abcdeF-0000002a.glifi").has_value());
-    GLIFI_REQUIRE(
-        !glifistore::parse_segment_filename("segment-0000000000000000-0000002a.glifi").has_value());
-    GLIFI_REQUIRE(
-        !glifistore::parse_segment_filename("segment-0123456789abcdef-00000000.glifi").has_value());
+    GLIFI_REQUIRE(!glifistore::parse_segment_filename("segment-0123456789abcdeF-0000002a.glifi").has_value());
+    GLIFI_REQUIRE(!glifistore::parse_segment_filename("segment-0000000000000000-0000002a.glifi").has_value());
+    GLIFI_REQUIRE(!glifistore::parse_segment_filename("segment-0123456789abcdef-00000000.glifi").has_value());
 }
 
 GLIFI_TEST("namespace audit is repeatable and tolerates only canonical crash temporaries") {
@@ -192,7 +188,7 @@ GLIFI_TEST("namespace audit reports canonical symlinks and hard links as unsafe"
         auto [directory, manifest] = prepare_catalog(temporary);
         const auto expected = segment_name(manifest, glifistore::SegmentId{1}, glifistore::GenerationId{1});
         GLIFI_REQUIRE(::link((temporary.path() / expected).c_str(),
-                              (temporary.path() / "extra-hard-link").c_str()) == 0);
+                             (temporary.path() / "extra-hard-link").c_str()) == 0);
         const auto report = glifistore::audit_data_directory(directory, manifest);
         GLIFI_REQUIRE(report.has_value());
         GLIFI_REQUIRE(!report->recovery_safe());

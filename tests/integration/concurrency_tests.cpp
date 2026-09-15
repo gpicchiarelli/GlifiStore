@@ -25,7 +25,7 @@ GLIFI_TEST("concurrent store puts on distinct routed keys preserve all values") 
     constexpr std::size_t worker_total = 8;
     constexpr std::size_t keys_per_thread = 250;
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = worker_total},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
 
@@ -64,7 +64,7 @@ GLIFI_TEST("concurrent store puts on distinct routed keys preserve all values") 
 
 GLIFI_TEST("concurrent store read after write on one key serializes updates") {
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 4},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     constexpr std::size_t thread_total = 8;
@@ -113,7 +113,7 @@ GLIFI_TEST("concurrent store read after write on one key serializes updates") {
 
 GLIFI_TEST("concurrent store verify index succeeds under mixed traffic") {
     auto opened = glifistore::Store::open({.worker_config = {.explicit_count = 4},
-                                            .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
+                                           .concurrency = glifistore::StoreConcurrencyMode::legacy_mutex});
     GLIFI_REQUIRE(opened.has_value());
     auto& store = **opened;
     std::atomic<bool> verify_failed{false};

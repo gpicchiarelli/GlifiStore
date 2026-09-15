@@ -89,8 +89,7 @@ class DisconnectingPipelineServer final {
         endpoint.sin_family = AF_INET;
         endpoint.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
         endpoint.sin_port = 0;
-        GLIFI_REQUIRE(::bind(listener_, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) ==
-                       0);
+        GLIFI_REQUIRE(::bind(listener_, reinterpret_cast<const sockaddr*>(&endpoint), sizeof(endpoint)) == 0);
         GLIFI_REQUIRE(::listen(listener_, 1) == 0);
         socklen_t endpoint_size = sizeof(endpoint);
         GLIFI_REQUIRE(::getsockname(listener_, reinterpret_cast<sockaddr*>(&endpoint), &endpoint_size) == 0);
@@ -606,7 +605,7 @@ GLIFI_TEST("C++ client bootstraps every worker and handles binary cache operatio
     GLIFI_REQUIRE(missing.error().category == "not_found");
     GLIFI_REQUIRE(missing.error().wire_status.has_value());
     GLIFI_REQUIRE(*missing.error().wire_status ==
-                   static_cast<std::uint16_t>(glifistore::server::ResponseStatus::not_found));
+                  static_cast<std::uint16_t>(glifistore::server::ResponseStatus::not_found));
     GLIFI_REQUIRE(missing.error().retryability == "new_attempt");
     GLIFI_REQUIRE(missing.error().operation == "get");
 
@@ -650,7 +649,7 @@ GLIFI_TEST("C++ client pipeline erase of absent key is failed rejected") {
     auto client = std::move(*connected);
     const std::array requests{
         glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::erase,
-                                             .key = bytes("missing-key")},
+                                            .key = bytes("missing-key")},
     };
     const auto executed = client.execute_pipeline(requests);
     GLIFI_REQUIRE(executed.has_value());
@@ -673,7 +672,7 @@ GLIFI_TEST("C++ client batch erase of absent key is failed rejected") {
     auto client = std::move(*connected);
     const std::array requests{
         glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::erase,
-                                             .key = bytes("missing-key")},
+                                            .key = bytes("missing-key")},
     };
     const auto executed = client.execute_batch(requests);
     GLIFI_REQUIRE(executed.has_value());
@@ -728,7 +727,7 @@ GLIFI_TEST("C++ client maps OVERLOADED mutations to rejected with retryability n
     GLIFI_REQUIRE(put.error->retryability == "never");
     GLIFI_REQUIRE(put.error->wire_status.has_value());
     GLIFI_REQUIRE(*put.error->wire_status ==
-                   static_cast<std::uint16_t>(glifistore::server::ResponseStatus::overloaded));
+                  static_cast<std::uint16_t>(glifistore::server::ResponseStatus::overloaded));
     client.close();
 }
 
@@ -799,9 +798,9 @@ GLIFI_TEST("C++ client pipeline preserves order and enforces one Worker") {
     const auto other_key = key_for_worker(0, workers);
     const std::array mixed{
         glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
-                                             .key = bytes(key)},
+                                            .key = bytes(key)},
         glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
-                                             .key = bytes(other_key)},
+                                            .key = bytes(other_key)},
     };
     auto rejected = client.execute_pipeline(mixed);
     GLIFI_REQUIRE(!rejected.has_value());
@@ -809,7 +808,7 @@ GLIFI_TEST("C++ client pipeline preserves order and enforces one Worker") {
 
     const std::array invalid_opcode{
         glifistore::client::PipelineRequest{.opcode = static_cast<glifistore::client::PipelineOpcode>(255),
-                                             .key = bytes(key)},
+                                            .key = bytes(key)},
     };
     rejected = client.execute_pipeline(invalid_opcode);
     GLIFI_REQUIRE(!rejected.has_value());
@@ -835,9 +834,9 @@ GLIFI_TEST("C++ client batch groups Workers and restores caller order") {
         glifistore::client::PipelineRequest{
             .opcode = glifistore::client::PipelineOpcode::put, .key = bytes(key0), .value = bytes("v0")},
         glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
-                                             .key = bytes(key1)},
+                                            .key = bytes(key1)},
         glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
-                                             .key = bytes(key0)},
+                                            .key = bytes(key0)},
     };
     auto executed = client.execute_batch(requests);
     GLIFI_REQUIRE(executed.has_value());
@@ -855,9 +854,9 @@ GLIFI_TEST("C++ client batch groups Workers and restores caller order") {
     auto limited_client = std::move(*limited);
     const std::array oversized{
         glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
-                                             .key = bytes(key0)},
+                                            .key = bytes(key0)},
         glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
-                                             .key = bytes(key0)},
+                                            .key = bytes(key0)},
     };
     auto rejected = limited_client.execute_batch(oversized);
     GLIFI_REQUIRE(!rejected.has_value());
@@ -939,9 +938,9 @@ GLIFI_TEST("C++ client pipeline preserves indeterminate mutation outcomes after 
         glifistore::client::PipelineRequest{
             .opcode = glifistore::client::PipelineOpcode::put, .key = bytes("key"), .value = bytes("value")},
         glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::get,
-                                             .key = bytes("key")},
+                                            .key = bytes("key")},
         glifistore::client::PipelineRequest{.opcode = glifistore::client::PipelineOpcode::erase,
-                                             .key = bytes("key")},
+                                            .key = bytes("key")},
     };
     auto executed = client.execute_pipeline(requests);
     GLIFI_REQUIRE(executed.has_value());
@@ -1039,7 +1038,7 @@ GLIFI_TEST("C++ client exposes HEALTH READY STATS and routing state") {
     GLIFI_REQUIRE(connected.has_value());
     auto client = std::move(*connected);
     GLIFI_REQUIRE(client.routing().algorithm == glifistore::RoutingAlgorithm::fnv1a64_v1 ||
-                   client.routing().algorithm == glifistore::RoutingAlgorithm::siphash24_v1);
+                  client.routing().algorithm == glifistore::RoutingAlgorithm::siphash24_v1);
     auto health = client.health();
     GLIFI_REQUIRE(health.has_value());
     GLIFI_REQUIRE(text(*health) == "GlifiStore/live");
@@ -1071,7 +1070,7 @@ GLIFI_TEST("authz-enabled server emits wire permission_denied status 8") {
     GLIFI_REQUIRE(denied.error().retryability == "never");
     GLIFI_REQUIRE(denied.error().wire_status.has_value());
     GLIFI_REQUIRE(*denied.error().wire_status ==
-                   static_cast<std::uint16_t>(glifistore::server::ResponseStatus::permission_denied));
+                  static_cast<std::uint16_t>(glifistore::server::ResponseStatus::permission_denied));
 
     const auto put = client.put("key", "value");
     GLIFI_REQUIRE(!put.committed());
@@ -1079,7 +1078,7 @@ GLIFI_TEST("authz-enabled server emits wire permission_denied status 8") {
     GLIFI_REQUIRE(put.error->category == "permission_denied");
     GLIFI_REQUIRE(put.error->wire_status.has_value());
     GLIFI_REQUIRE(*put.error->wire_status ==
-                   static_cast<std::uint16_t>(glifistore::server::ResponseStatus::permission_denied));
+                  static_cast<std::uint16_t>(glifistore::server::ResponseStatus::permission_denied));
 
     client.close();
     (*created)->request_stop();

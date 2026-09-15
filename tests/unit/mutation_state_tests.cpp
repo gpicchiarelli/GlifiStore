@@ -16,13 +16,13 @@ using glifistore::store::paired::PublicationState;
 
 GLIFI_TEST("mutation_state CommitKnowledge aliases DurableMutationOutcome") {
     GLIFI_REQUIRE(commit_knowledge_from(glifistore::DurableMutationOutcome::committed) ==
-                   CommitKnowledge::committed);
+                  CommitKnowledge::committed);
     GLIFI_REQUIRE(commit_knowledge_from(glifistore::DurableMutationOutcome::not_committed) ==
-                   CommitKnowledge::known_not_committed);
+                  CommitKnowledge::known_not_committed);
     GLIFI_REQUIRE(commit_knowledge_from(glifistore::DurableMutationOutcome::indeterminate) ==
-                   CommitKnowledge::indeterminate);
+                  CommitKnowledge::indeterminate);
     GLIFI_REQUIRE(durable_outcome_from(CommitKnowledge::committed) ==
-                   glifistore::DurableMutationOutcome::committed);
+                  glifistore::DurableMutationOutcome::committed);
 }
 
 GLIFI_TEST("mutation_state illegal transitions are rejected by table") {
@@ -33,7 +33,7 @@ GLIFI_TEST("mutation_state illegal transitions are rejected by table") {
     GLIFI_REQUIRE(
         MutationLifecycle::transition_allowed(MutationStage::not_admitted, MutationStage::admitted));
     GLIFI_REQUIRE(MutationLifecycle::transition_allowed(MutationStage::durable_started,
-                                                         MutationStage::authority_committed));
+                                                        MutationStage::authority_committed));
 }
 
 GLIFI_TEST("mutation_state happy durable path reaches completed success") {
@@ -42,8 +42,8 @@ GLIFI_TEST("mutation_state happy durable path reaches completed success") {
     GLIFI_REQUIRE(life.stage_for_writer());
     GLIFI_REQUIRE(life.mark_durable_started());
     glifistore::DurableMutationResult result{.outcome = glifistore::DurableMutationOutcome::committed,
-                                              .sequence = glifistore::SequenceNumber{1},
-                                              .error = std::nullopt};
+                                             .sequence = glifistore::SequenceNumber{1},
+                                             .error = std::nullopt};
     GLIFI_REQUIRE(life.apply_durable_result(result));
     GLIFI_REQUIRE(life.stage() == MutationStage::publication_required);
     GLIFI_REQUIRE(life.mark_publication_staged());
@@ -77,8 +77,8 @@ GLIFI_TEST("mutation_state committed cannot decide known_not_committed") {
     GLIFI_REQUIRE(life.stage_for_writer());
     GLIFI_REQUIRE(life.mark_durable_started());
     glifistore::DurableMutationResult result{.outcome = glifistore::DurableMutationOutcome::committed,
-                                              .sequence = glifistore::SequenceNumber{2},
-                                              .error = std::nullopt};
+                                             .sequence = glifistore::SequenceNumber{2},
+                                             .error = std::nullopt};
     GLIFI_REQUIRE(life.apply_durable_result(result));
     GLIFI_REQUIRE(life.mark_published());
     CompletionDecision illegal{.kind = CompletionDecision::Kind::known_not_committed};

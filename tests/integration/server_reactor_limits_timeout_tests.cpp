@@ -156,9 +156,9 @@ GLIFI_TEST("server request timeout closes in-flight cold read and cancels") {
     const auto path = temporary.store_path();
     {
         auto seed = glifistore::Store::open({.worker_config = {.explicit_count = 1},
-                                              .storage_mode = glifistore::StorageMode::durable_sync,
-                                              .data_directory = path,
-                                              .durable_open_mode = glifistore::DurableOpenMode::create_new});
+                                             .storage_mode = glifistore::StorageMode::durable_sync,
+                                             .data_directory = path,
+                                             .durable_open_mode = glifistore::DurableOpenMode::create_new});
         GLIFI_REQUIRE(seed.has_value());
         GLIFI_REQUIRE((*seed)->put("timeout-read", bytes("value")).has_value());
         GLIFI_REQUIRE((*seed)->close().has_value());

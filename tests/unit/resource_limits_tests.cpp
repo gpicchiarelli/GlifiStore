@@ -140,19 +140,19 @@ GLIFI_TEST("live-key partitions exactly preserve the configured global limit") {
 
 GLIFI_TEST("persistence errno mapping preserves resource failure categories") {
     GLIFI_REQUIRE(glifistore::persistence_system_error("test", ENOSPC).error.code ==
-                   glifistore::ErrorCode::storage_exhausted);
+                  glifistore::ErrorCode::storage_exhausted);
 #if defined(EDQUOT)
     GLIFI_REQUIRE(glifistore::persistence_system_error("test", EDQUOT).error.code ==
-                   glifistore::ErrorCode::storage_exhausted);
+                  glifistore::ErrorCode::storage_exhausted);
 #endif
     GLIFI_REQUIRE(glifistore::persistence_system_error("test", EFBIG).error.code ==
-                   glifistore::ErrorCode::file_too_large);
+                  glifistore::ErrorCode::file_too_large);
     GLIFI_REQUIRE(glifistore::persistence_system_error("test", EMFILE).error.code ==
-                   glifistore::ErrorCode::descriptor_exhausted);
+                  glifistore::ErrorCode::descriptor_exhausted);
     GLIFI_REQUIRE(glifistore::persistence_system_error("test", ENFILE).error.code ==
-                   glifistore::ErrorCode::descriptor_exhausted);
+                  glifistore::ErrorCode::descriptor_exhausted);
     GLIFI_REQUIRE(glifistore::persistence_system_error("test", EROFS).error.code ==
-                   glifistore::ErrorCode::read_only_filesystem);
+                  glifistore::ErrorCode::read_only_filesystem);
     GLIFI_REQUIRE(glifistore::persistence_system_error("test", EIO).error.code ==
-                   glifistore::ErrorCode::io_error);
+                  glifistore::ErrorCode::io_error);
 }

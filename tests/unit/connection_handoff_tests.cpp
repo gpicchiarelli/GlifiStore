@@ -101,7 +101,7 @@ GLIFI_TEST("connection handoff mesh preserves buffered state exactly once") {
     GLIFI_REQUIRE(received.has_value());
     GLIFI_REQUIRE(received->principal == "alice.example");
     GLIFI_REQUIRE(received->capabilities ==
-                   (glifistore::server::Capability::read | glifistore::server::Capability::write));
+                  (glifistore::server::Capability::read | glifistore::server::Capability::write));
     GLIFI_REQUIRE(received->key_prefix == "tenant/");
     GLIFI_REQUIRE(received->input.size() == 2);
     GLIFI_REQUIRE(received->output.size() == 1);
