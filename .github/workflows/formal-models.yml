@@ -1,0 +1,76 @@
+name: Formal models (TLC)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "engineering/formal/**"
+      - "engineering/requirements/concurrency.yaml"
+      - "engineering/requirements/persistence.yaml"
+      - "engineering/gates/quality-gates.yaml"
+      - "include/glifistore/persistence/**"
+      - "include/glifistore/store/paired/**"
+      - "src/persistence/**"
+      - "src/store/paired/**"
+      - "tests/crash/**"
+      - "tests/concurrency/**"
+      - "docs/spec/concurrency-memory-model.md"
+      - "docs/spec/persistence-v1.md"
+      - "docs/spec/recovery-state-matrix-v1.md"
+      - ".github/workflows/formal-models.yml"
+  pull_request:
+    paths:
+      - "engineering/formal/**"
+      - "engineering/requirements/concurrency.yaml"
+      - "engineering/requirements/persistence.yaml"
+      - "engineering/gates/quality-gates.yaml"
+      - "include/glifistore/persistence/**"
+      - "include/glifistore/store/paired/**"
+      - "src/persistence/**"
+      - "src/store/paired/**"
+      - "tests/crash/**"
+      - "tests/concurrency/**"
+      - "docs/spec/concurrency-memory-model.md"
+      - "docs/spec/persistence-v1.md"
+      - "docs/spec/recovery-state-matrix-v1.md"
+      - ".github/workflows/formal-models.yml"
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: formal-models-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tlc:
+    name: TLC ${{ matrix.label }} (bounded, required)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: ShardPair
+            model: shard_pair
+          - label: PersistenceRecovery
+            model: persistence
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Download and verify tla2tools.jar
+        run: |
+          curl -fsSL -o /tmp/tla2tools.jar \
+            "https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar"
+          # Digest from the v1.8.0 GitHub release asset (re-published 2026-09-14).
+          echo "2c903dcd6f50f12b0c0a2e14c1406be782126c7cee64f3e0b8550c2020870293  /tmp/tla2tools.jar" \
+            | sha256sum -c -
+          echo "TLA2TOOLS_JAR=/tmp/tla2tools.jar" >> "$GITHUB_ENV"
+      - name: Run bounded TLC model
+        run: timeout 480 "./engineering/formal/${{ matrix.model }}/run-tlc.sh"

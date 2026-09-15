@@ -1,0 +1,106 @@
+# GlifiStore Ruby client
+
+Native Ruby client for GlifiStore wire protocol v2. One TCP connection per Worker
+(`TCP_NODELAY`), canonical FNV-1a routing, at-most-one automatic retry for safe reads /
+zero-byte mutations, and `committed` / `rejected` / `indeterminate` outcomes.
+
+Implements [client semantics v1](../../docs/spec/client-semantics-v1.md). Roadmap:
+[Ruby SDK roadmap](../../docs/architecture/ruby-sdk-roadmap.md).
+
+Worker routing follows ADR 0030: plain `GlifiStore/2` is FNV-1a; the extended INIT identity selects SipHash-2-4.
+
+**Gem:** `glifistore` · **Module:** `GlifiStore` · **Ruby:** ≥ 3.2 · **License:** BSD-3-Clause
+
+Cleartext TCP by default: treat the server as loopback / private network / sidecar. Opt-in TLS 1.3
+via `ClientConfig#tls` (CA / mTLS / hostname verify) matches Go/C++/Python/Perl/Erlang (ADR 0020).
+See the [security roadmap](../../docs/security/roadmap.md).
+
+```ruby
+require "glifi_store"
+
+config = GlifiStore::ClientConfig.defaults
+config.port = 7379
+# Opt-in TLS 1.3 (fail closed; no cleartext fallback):
+# config.tls = true
+# config.tls_ca = "/path/to/ca.pem"
+# config.server_name = "glifistore.example"
+# config.cert_file / config.key_file for mTLS
+client = GlifiStore::Client.connect(config)
+
+result = client.put("session\x0042".b, "payload".b)
+raise result.error unless result.committed?
+
+value = client.get("session\x0042".b)
+client.close
+```
+
+## Async (optional)
+
+```ruby
+# gem install async
+require "glifi_store/async_client"
+
+Async do
+  client = GlifiStore::AsyncClient.connect(config)
+  client.get("key".b)
+  client.close
+end
+```
+
+Cancellation / task stop poisons the in-flight Worker connection (client-semantics §6.3).
+
+## Online backup
+
+`Client#backup(destination, timeout: ...)` and `AsyncClient#backup` issue wire `BACKUP` and return
+the bounded ASCII report. The destination is a new empty server-side path. This is an admin
+operation under secure authz and an online fenced copy, not a zero-fence hot snapshot; ambiguous
+failures require reconciliation and are never blindly retried.
+
+## Lifecycle probes
+
+`Client` / `AsyncClient` expose `health`, `ready`, and `stats` for wire `HEALTH` / `READY` /
+`STATS` (empty key and value). AF_UNIX dial is supported; combining AF_UNIX with TLS is refused
+fail-closed.
+
+## Concurrency
+
+| Environment | Rule |
+| --- | --- |
+| MRI threads | One sync `Client` may be shared; each Worker connection is mutex-protected. |
+| `fork` (Puma clustered, Unicorn) | Construct a **new** client in the child. Never reuse parent sockets. |
+| Async / Fiber | Use `GlifiStore::AsyncClient` inside an `Async` reactor (`async` gem). |
+
+## Install (from this tree)
+
+```bash
+cd sdk/ruby
+ruby -Ilib -e 'require "glifi_store"; puts GlifiStore::VERSION'
+./scripts/test-ruby-client.sh   # from repo root
+```
+
+## Layout
+
+| Path | Role |
+| --- | --- |
+| `lib/glifi_store/protocol.rb` | Wire codec + FNV/SipHash routing |
+| `lib/glifi_store/error.rb` | Structured errors + outcome types |
+| `lib/glifi_store/client.rb` | Sync TCP/AF_UNIX/TLS client (Get/Put/Erase/Ping/Backup/Health/Ready/Stats; TLS not with AF_UNIX) |
+| `lib/glifi_store/async_client.rb` | Async reactor client (same surface as sync) |
+| `lib/glifi_store/tls.rb` | TLS 1.3 context + wrap helpers |
+| `exe/glifistore-interop` | Interop CLI for `scripts/test-sdk-interop.sh` |
+| `test/fixtures/` | Vendored wire goldens |
+
+## Performance
+
+Prefer deep pipelines and `execute_batch` / `execute_worker_pipelines` so Workers overlap. Scale out with one client per
+prefork worker process. Publish loopback numbers with:
+
+```bash
+./scripts/benchmark_ruby_client.sh
+```
+
+The cross-SDK `./scripts/benchmark_sdk_clients.sh` harness also includes sequential and per-Worker
+threaded Ruby rows when `RUBY` resolves to version 3.2 or newer. Older system Rubies are reported as
+skipped rather than benchmarked outside the gem's supported runtime contract.
+
+Optional C extension for framing remains roadmap Phase 2.6 (measure first).
