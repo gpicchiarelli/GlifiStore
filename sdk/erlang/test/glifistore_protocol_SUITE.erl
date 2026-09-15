@@ -100,7 +100,7 @@ keyed_routing_and_init_identity(_Config) ->
         algorithm => glifistore_protocol:routing_alg_siphash24_v1(),
         seed => ExtendedSeed
     }),
-    true = byte_size(Extended) =:= 25,
+    true = byte_size(Extended) =:= byte_size(glifistore_protocol:identity()) + 1 + 4 + 8,
     {ok, Decoded} = glifistore_protocol:decode_init_identity(Extended),
     true = Decoded =:= #{
         algorithm => glifistore_protocol:routing_alg_siphash24_v1(),

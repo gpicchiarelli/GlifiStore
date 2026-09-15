@@ -75,7 +75,7 @@
 -define(ROUTING_ALG_FNV1A64_V1, 1).
 -define(ROUTING_ALG_SIPHASH24_V1, 2).
 -define(WORKER_ROUTING_SIP_KEY1_XOR, 16#6a09e667f3bcc909).
--define(INIT_IDENTITY_EXTENDED_BYTES, 25).
+-define(INIT_IDENTITY_EXTENDED_BYTES, (byte_size(<<"GlifiStore/2">>) + 1 + 4 + 8)).
 -define(SIP_C0, 16#736f6d6570736575).
 -define(SIP_C1, 16#646f72616e646f6d).
 -define(SIP_C2, 16#6c7967656e657261).
@@ -465,12 +465,13 @@ encode_init_identity(Routing0) ->
 decode_init_identity(Value0) ->
     Value = ensure_binary(Value0),
     Ident = identity(),
+    IdentSize = byte_size(Ident),
     case Value of
         Ident ->
             {ok, default_routing()};
         _ when byte_size(Value) =/= ?INIT_IDENTITY_EXTENDED_BYTES ->
             {error, {invalid_argument, <<"server INIT identity value has unexpected length">>}};
-        <<Prefix:13/binary, 0, Algo:32/little, Seed:64/little>> ->
+        <<Prefix:IdentSize/binary, 0, Algo:32/little, Seed:64/little>> ->
             case Prefix =:= Ident of
                 false ->
                     {error, {invalid_argument, <<"server INIT identity prefix is invalid">>}};
