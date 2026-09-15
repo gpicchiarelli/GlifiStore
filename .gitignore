@@ -78,3 +78,6 @@ erl_crash.dump
 
 # Local durability campaign outputs (retain outside the tree or as CI artifacts)
 /durability-evidence/
+# macOS Finder "foo 2[.ext]" duplicate copies
+* 2
+* 2.*
