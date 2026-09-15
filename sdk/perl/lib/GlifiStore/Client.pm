@@ -354,9 +354,8 @@ sub _receive_response {
                 else {
                     $connection->{input_offset} = $offset;
                 }
-                my $response= eval {
-                    GlifiStore::Protocol::decode_response_fields_internal($frame, $max_frame)
-                };
+                my $response
+                    = eval {GlifiStore::Protocol::decode_response_fields_internal($frame, $max_frame)};
                 _throw('protocol', 'invalid server response: ' . _plain_message($@)) if !$response;
                 return $response;
             }
